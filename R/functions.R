@@ -743,7 +743,7 @@ est_mean_projected=function(co,sigma3,c1,delta4,m,delta3,tol1,tol2,a1)
 
 		for (i in 1:n)
 		{
-			Vdel[2,2]=(vx[i]^(-2*delta4))/(sigma3*(1-c1^2)^0.5)
+			Vdel[2,2]=(vx[i]^(-2*delta4))/(sigma3*(1-c1^2)^0.5) #vx is the `depth` variable in examples, that is a covariate that isn't passed as a function argument
 			Vdel[2,3]=-c1/(1-c1^2)^0.5
 			Vdel[3,2]=Vdel[2,3]
 			Vdel[3,3]=sigma3*(vx[i]^(2*delta4))/((1-c1^2)^(0.5))
@@ -765,7 +765,7 @@ est_mean_projected=function(co,sigma3,c1,delta4,m,delta3,tol1,tol2,a1)
 			
 		
 
-
+                        # prepare matrices s related to the score and J and JS related to the Jacobian of the score
 			s=matrix(0,p-1,1)
 			J=matrix(0,p-1,p-1)
 			JS=matrix(0,p-1,p-1)
@@ -830,7 +830,8 @@ est_mean_projected=function(co,sigma3,c1,delta4,m,delta3,tol1,tol2,a1)
 				
 
 			}
-			
+		
+                        # compute the relevant score function sbeta at measurement i
 			ds=matrix(0,Q,Q)
 			for (k in 1:sum(p-1))
 			{
@@ -842,6 +843,8 @@ est_mean_projected=function(co,sigma3,c1,delta4,m,delta3,tol1,tol2,a1)
 			}
 			#sbeta=sbeta+ds%*%t(t(x[i,]))
 			sbeta=sbeta+0.5*ds%*%t(t(x[i,]))
+
+                        # compute the derivative of the score function Jbeta
 			comp=t(t(x[i,]))%*%t(x[i,])
 			Jtemp=matrix(0,Q,Q)
 			for (k in 1:sum(p,-1))
@@ -859,7 +862,7 @@ est_mean_projected=function(co,sigma3,c1,delta4,m,delta3,tol1,tol2,a1)
 		}
 		#print(co)
 		cprev=co
-		co=co-solve(Jbeta)%*%sbeta
+		co=co-solve(Jbeta)%*%sbeta #this is the Newton-Raphson step
 		dec=max(abs(co-cprev)/(abs(co)+tol1))
 		#conv=0
 		if (dec < tol2){conv=0}

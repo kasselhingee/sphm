@@ -11,20 +11,6 @@
 
 library(scatterplot3d)
 
-vnorm=function(x) sqrt(sum(x^2))
-
-# stereographic projection
-Sp=function(x) {
-  if (all(x==-e1)){rep(1e+9,d-1)}
-  else{2/vnorm(x+e1)^2*x[2:d]}
-}
-
-# inverse stereographic projection
-iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y[1:(d-1)])
-
-# mu(x)
-mu=function(x,P,Q,B) P%*%iSp(B%*%Sp(t(Q)%*%x)) 
-
 # objective function
 pre_est3_mod=function(y,x,theta){
   

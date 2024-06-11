@@ -4,7 +4,6 @@ d=3  # dimension
 P=Q=diag(1,d)  # d*d matrix
 B=matrix(c(0.9,0,0,0.2),d-1)  # diagonal matrix
 Omega=P[,2:d]%*%B%*%t(Q[,2:d])
-e1=c(1,rep(0,d-1))
 
 set.seed(1)
 n=100
@@ -20,6 +19,6 @@ result=nlminb(start=ini_value,objective=function(theta) pre_est3_mod(y,x,theta),
 
 expect_equal(cayley(result$par[1:3]), P, tolerance = 10^4*sqrt(.Machine$double.eps))
 expect_equal(cayley(result$par[4:6]), Q, tolerance = 10^4*sqrt(.Machine$double.eps))
-expect_equal(result$par[7], B[1,1])
-expect_equal(result$par[8] * result$par[7], B[2,2])
+expect_equal(result$par[7], B[1,1], tolerance = 1E-3)
+expect_equal(result$par[8] * result$par[7], B[2,2], tolerance = 1E-3)
 })

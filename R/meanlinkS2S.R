@@ -3,13 +3,13 @@
 # From Shogo's script
 
 # stereographic projection
-Sp=function(x) {
-  if (all(x==-e1)){rep(1e+9,d-1)}
-  else{2/vnorm(x+e1)^2*x[2:d]}
+Sp=function(x, e1 = c(1,rep(0,length(x)-1))) {
+  if (all(x==-e1)){rep(1e+9,length(x)-1)}
+  else{2/vnorm(x+e1)^2*x[2:length(x)]}
 }
 
 # inverse stereographic projection
-iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y[1:(d-1)])
+iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y)
 
 #' The mean link for spherical covariates
 #' @param x a vector of covariate values

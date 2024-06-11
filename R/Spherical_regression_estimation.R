@@ -11,29 +11,8 @@
 
 library(scatterplot3d)
 
-# objective function
-pre_est3_mod=function(y,x,theta){
-  
-  p12=theta[1]
-  p13=theta[2]
-  p23=theta[3]
-  q12=theta[4]
-  q13=theta[5]
-  q23=theta[6]
-  b1=theta[7]
-  b2=theta[8]
-  
-  p=matrix(c(0,p12,p13,-p12,0,p23,-p13,-p23,0),3,3)
-  q=matrix(c(0,q12,q13,-q12,0,q23,-q13,-q23,0),3,3)
-  
-  P=(diag(1,3)-p)%*%solve(diag(1,3)+p)
-  Q=(diag(1,3)-q)%*%solve(diag(1,3)+q)
-  B=b1*diag(c(1,b2))
-  
-  value=0
-  for(j in 1:(dim(y)[2])) value=value+sum(y[,j]*mu(x[,j],P,Q,B))
-  return(-value)
-}
+mu <- meanlinkS2S
+
 
 
 d=3  # dimension

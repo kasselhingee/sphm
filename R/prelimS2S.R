@@ -1,7 +1,7 @@
 #' Preliminary objective function for S2S Link with p=q
 #' @details Uses Cayley transform to parameterise P and Q. 
 #' + Could be more accurate the closer P and Q are to the identity (check notes with Andy).
-#' + Might be missing sign stuff to get negative determinants
+#' + Might be missing sign stuff to get negative determinants for Cayley transform
 #' @export
 pre_est3_mod=function(y,x,theta){
   

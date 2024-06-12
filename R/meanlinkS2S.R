@@ -1,7 +1,4 @@
 # The link function for sphere to sphere.
-
-# From Shogo's script
-
 # stereographic projection
 Sp=function(x, e1 = c(1,rep(0,length(x)-1))) {
   if (all(x==-e1)){rep(1e+9,length(x)-1)}

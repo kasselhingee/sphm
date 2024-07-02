@@ -2,16 +2,23 @@
 # stereographic projection
 
 # e1 should be fixed because x[2:length(x)] is with respect to it!
-Sp=function(x, e1 = c(1,rep(0,length(x)-1))) {
-  if (all(x==-e1)){rep(1e+9,length(x)-1)}
-  else{1/(1+x[1])*x[2:length(x)]}
+# x is a rbind of *row vectors* or a single vector. Outputs row vectors
+Sp=function(x) {
+  if (!inherits(x, "array")){x <- t(x)} #so x becomes a row vector
+  out <- 1/(1+x[, 1]) * x[, 2:ncol(x)]
+  ismpole <- (x[, 1] == -1)
+  if (any(ismpole)){
+    out[ismpole, 1] <- 1e+9
+    out[ismpole, 2:ncol(x)] <- 0 
+  }
+  return(out)
 }
 
 # inverse stereographic projection
 iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y)
 
 #' The mean link for spherical covariates
-#' @param x a vector of covariate values
+#' @param x a vector of covariate values, or an array with each row a vector of covariate values
 #' @param P P matrix: a p x p (?orthonormal) matrix
 #' @param B B matrix: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size.
 #' @param Q The rotation-like matrix `Q` for rotating the covariate vector `x`.
@@ -23,9 +30,10 @@ iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y)
 #' meanlinkS2S(x, P, Q, B)
 #' @export
 meanlinkS2S <- function(x,P,Q,B){
-  stopifnot(abs(sum(x^2) - 1) < sqrt(.Machine$double.eps))
+  if (inherits(x, "array")){x <- t(x)} #so rows of x become column vectors
+  stopifnot(all(abs(colSums(x^2) - 1) < sqrt(.Machine$double.eps)))
   stopifnot(max(abs(B-diag(diag(B)))) < sqrt(.Machine$double.eps))
-  return(P%*%iSp(B%*%Sp(t(Q)%*%x)))
+  return(P%*%iSp(B%*%Sp(t(t(Q)%*%x))))
 }
 
 

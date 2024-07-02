@@ -1,8 +1,10 @@
 # The link function for sphere to sphere.
 # stereographic projection
+
+# e1 should be fixed because x[2:length(x)] is with respect to it!
 Sp=function(x, e1 = c(1,rep(0,length(x)-1))) {
   if (all(x==-e1)){rep(1e+9,length(x)-1)}
-  else{2/vnorm(x+e1)^2*x[2:length(x)]}
+  else{1/(1+x[1])*x[2:length(x)]}
 }
 
 # inverse stereographic projection

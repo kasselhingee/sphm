@@ -19,14 +19,14 @@ test_that("Omega and cannonical versions give same result", {
   x <- x[1, ]
   
   # direct canonical 
-  mnA <- meanlinkS2S(x, P, Q, B)
+  mnA <- meanlinkS2S(x[1, ], P, Q, B)
   # via reparameterisation
-  mnB <- do.call(meanlinkS2S_Omega, c(list(x = x), param_cann2omega(P, Q, B)))
-  rbind(drop(mnA), mnB)
+  mnB <- do.call(meanlinkS2S_Omega, c(list(x = x[1, ]), param_cann2omega(P, Q, B)))
   # back - remember many signs get ignored, only the result of the mean link matters
   newcann <- do.call(param_omega2cann, param_cann2omega(P, Q, B))
-  mnC <- do.call(meanlinkS2S, c(list(x = x), newcann))
+  mnC <- do.call(meanlinkS2S, c(list(x = x[1, ]), newcann))
   
   expect_equal(mnA, mnC)
-  expect_equal(mnA, mnB)
+  expect_equal(drop(mnA), mnB)
 })
+  

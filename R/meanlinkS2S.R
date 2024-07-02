@@ -15,7 +15,12 @@ Sp=function(x) {
 }
 
 # inverse stereographic projection
-iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y)
+# y is a rbind of *row vectors* or a single vector. Outputs row vectors
+iSp=function(y){
+  if (!inherits(y, "array")){y <- t(y)} #so y becomes a row vector
+  sizes2 <- rowSums(y^2)
+  return(1/(1+sizes2) * cbind(1-sizes2, 2*y))
+} 
 
 #' The mean link for spherical covariates
 #' @param x a vector of covariate values, or an array with each row a vector of covariate values
@@ -33,7 +38,9 @@ meanlinkS2S <- function(x,P,Q,B){
   if (inherits(x, "array")){x <- t(x)} #so rows of x become column vectors
   stopifnot(all(abs(colSums(x^2) - 1) < sqrt(.Machine$double.eps)))
   stopifnot(max(abs(B-diag(diag(B)))) < sqrt(.Machine$double.eps))
-  return(P%*%iSp(B%*%Sp(t(t(Q)%*%x))))
+  out <- t(P%*%t(iSp(B%*% t(Sp(t(t(Q)%*%x))))))
+  if (!inherits(x, "array")){out <- drop(out)}
+  return(out)
 }
 
 

@@ -23,7 +23,7 @@ param_cann2omega <- function(P,Q,B, check = TRUE){
 }
 
 #' # Warning
-#' Sign of columns of P and Q cannot be recovered from Omega.
+#' Apart from p1 and q1, sign of columns of P and Q cannot be recovered from Omega.
 param_omega2cann <- function(p1, q1, Omega, check = TRUE){
   if (check){check_omega(p1, q1, Omega)}
   svdres <- svd(Omega, nu = nrow(Omega) - 1, nv = nrow(Omega) - 1)

@@ -3,6 +3,7 @@ test_that("iSp inverses Sp", {
   x <- rnorm(5)
   x <- x / vnorm(x)
   expect_equal(iSp(Sp(x)), x)
+  expect_equal(Spold(x), Spnew(x))
 })
 
 

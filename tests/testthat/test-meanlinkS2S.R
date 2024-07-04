@@ -1,3 +1,11 @@
+test_that("iSp inverses Sp", {
+  set.seed(64)
+  x <- rnorm(5)
+  x <- x / vnorm(x)
+  expect_equal(iSp(Sp(x)), x)
+})
+
+
 test_that("Omega and cannonical versions give same result", {
   set.seed(1)
   p <- 3

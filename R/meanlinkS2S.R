@@ -1,18 +1,10 @@
 # The link function for sphere to sphere.
 # stereographic projection
 
-# e1 should be fixed because x[2:length(x)] is with respect to it!
-Spold=function(x, e1 = c(1,rep(0,length(x)-1))) {
-  if (all(x==-e1)){rep(1e+9,length(x)-1)}
-  else{2/vnorm(x+e1)^2*x[2:length(x)]}
-}
-
-Spnew=function(x, e1 = c(1,rep(0,length(x)-1))) {
+Sp=function(x, e1 = c(1,rep(0,length(x)-1))) {
   if (all(x==-e1)){rep(1e+9,length(x)-1)}
   else{1/(1+x[1])*x[2:length(x)]}
 }
-
-Sp <- Spold
 
 # inverse stereographic projection
 iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y)
@@ -29,17 +21,17 @@ iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y)
 #' x <- x / sqrt(sum(x^2))
 #' meanlinkS2S(x, P, Q, B)
 #' @export
-meanlinkS2S <- function(x,P,Q,B, spfun = Sp){
+meanlinkS2S <- function(x,P,Q,B){
   stopifnot(abs(sum(x^2) - 1) < sqrt(.Machine$double.eps))
   stopifnot(max(abs(B-diag(diag(B)))) < sqrt(.Machine$double.eps))
-  return(P%*%iSp(B%*%spfun(t(Q)%*%x)))
+  return(P%*%iSp(B%*%Sp(t(Q)%*%x)))
 }
 
 
 # want meanlinkS2S with more indenpendent paramaters: p1, q1, Omega
 #' The mean link for spherical covariates using the Omega parameterisation
 #' @description Computes mean from p1, q1, Omega avoiding the svd in [`param_omega2cann()`].
-#' @param x a vector of covariate values, an array of covariate values, each row of length `q`.
+#' @param x a vector of covariate values or tidy-style array of covariate values (each row a vector of covariates)
 #' @param p1 First column of the P matrix (vector of length `p`)
 #' @param q1 First column of the Q matrix (vector of length `q`)
 #' @param Omega A `p` by `q` matrix representing `P* B t(Q*)`.

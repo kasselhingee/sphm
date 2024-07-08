@@ -28,20 +28,20 @@ meanlinkS2S <- function(x,P = NULL,Q = NULL,B = NULL, paramobj = NULL, check = T
   if (is.array(x)){
     if (is.null(P) & is.null(Q) & is.null(B)){paramobj <- as_OmegaS2S(paramobj)}
     else {paramobj <- as_OmegaS2S(cannS2S(P, Q, B))}
-    return(meanlinkS2S_prop1(x, paramobj, check = check))
+    return(meanlinkS2S_Omega(x, paramobj, check = check))
   } else {
     if (is.null(P) & is.null(Q) & is.null(B)){paramobj <- as_cannS2S(paramobj)}
     else {paramobj <- cannS2S(P, Q, B)}
     if (check){cannS2S_check(paramobj)}
-    return(meanlinkS2S_cann(x, paramobj, check = check))
+    return(meanlinkS2S_cann(x, paramobj))
   }
 }
 
 meanlinkS2S_cann <- function(x, paramobj){
-  stopifnot(inherits(obj, "cannS2S"))
+  stopifnot(inherits(paramobj, "cannS2S"))
   list2env(paramobj, envir = environment())
   stopifnot(abs(sum(x^2) - 1) < sqrt(.Machine$double.eps))
-  return(P%*%iSp(B%*%Sp(t(Q)%*%x)))
+  return(drop(P%*%iSp(B%*%Sp(t(Q)%*%x))))
 }
 
 
@@ -50,10 +50,10 @@ meanlinkS2S_cann <- function(x, paramobj){
 #' @description Computes mean from p1, q1, Omega avoiding the svd in [`param_omega2cann()`]. It uses the expression for the link for the Omega parameterisation.
 #' @param x a vector of covariate values or tidy-style array of covariate values (each row a vector of covariates)
 #' @noRd
-meanlinkS2S_prop1 <- function(x, paramvec, check = TRUE){
+meanlinkS2S_Omega <- function(x, paramobj, check = TRUE){
   stopifnot(inherits(paramobj, "OmegaS2S"))
-  list2env(x, envir = environment())
-  if (check){check_omega(p1, q1, Omega)}
+  if (check){OmegaS2S_check(paramobj)}
+  list2env(paramobj, envir = environment())
   if (inherits(x, "array")){x <- t(x)} #so rows of x become column vectors
   
   BQx2 <- rowSums(t(x) * t(t(Omega) %*% Omega %*% x))

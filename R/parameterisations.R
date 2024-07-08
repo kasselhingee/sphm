@@ -1,5 +1,8 @@
 #' Parameterisation Classes
 #' @description Parameterisations of the link functions are stored as lists.
+#' @param P P matrix: a p x p (?orthonormal) matrix
+#' @param B B matrix: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size.
+#' @param Q The rotation-like matrix `Q` for rotating the covariate vector `x`.
 cannS2S <- function(P, Q, B){
   obj <- list(P = P, Q = Q, B = B)
   class(obj) <- c("cannS2S", class(obj))
@@ -14,6 +17,9 @@ as_cannS2S <- function(obj){
   return(obj)
 }
 
+#' @param p1 First column of the P matrix (vector of length `p`)
+#' @param q1 First column of the Q matrix (vector of length `q`)
+#' @param Omega A `p` by `q` matrix representing `P* B t(Q*)`.
 OmegaS2S <- function(p1, q1, Omega){
   obj <- list(
     p1 = p1,

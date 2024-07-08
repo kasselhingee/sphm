@@ -10,7 +10,7 @@ Sp=function(x, e1 = c(1,rep(0,length(x)-1))) {
 iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y)
 
 #' The mean link for spherical covariates
-#' @param x a vector of covariate values
+#' @param x a vector of covariate values or tidy-style array of covariate values (each row a vector of covariates)
 #' @param P P matrix: a p x p (?orthonormal) matrix
 #' @param B B matrix: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size.
 #' @param Q The rotation-like matrix `Q` for rotating the covariate vector `x`.
@@ -20,23 +20,39 @@ iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y)
 #' x <- c(0.1, 0.2, 0.3)
 #' x <- x / sqrt(sum(x^2))
 #' meanlinkS2S(x, P, Q, B)
+#' @param paramobj A parameterisation object for either the cannonical PQB or Omega parameterisation. See [`OmegaS2S()`] and [`cannS2S()`]. Used if P, Q, and B are NULL.
+#' @details If `x` is a single vector then the mean is computed directly.
+#' If `x` is an array then the parameters are converted to `OmegaS2S`.
 #' @export
-meanlinkS2S <- function(x,P,Q,B){
+meanlinkS2S <- function(x,P = NULL,Q = NULL,B = NULL, paramobj = NULL, check = TRUE){
+  if (is.array(x)){
+    if (is.null(P) & is.null(Q) & is.null(B)){paramobj <- as_OmegaS2S(paramobj)}
+    else {paramobj <- as_OmegaS2S(cannS2S(P, Q, B))}
+    return(meanlinkS2S_prop1(x, paramobj, check = check))
+  } else {
+    if (is.null(P) & is.null(Q) & is.null(B)){paramobj <- as_cannS2S(paramobj)}
+    else {paramobj <- cannS2S(P, Q, B)}
+    if (check){cannS2S_check(paramobj)}
+    return(meanlinkS2S_cann(x, paramobj, check = check))
+  }
+}
+
+meanlinkS2S_cann <- function(x, paramobj){
+  stopifnot(inherits(obj, "cannS2S"))
+  list2env(paramobj, envir = environment())
   stopifnot(abs(sum(x^2) - 1) < sqrt(.Machine$double.eps))
-  stopifnot(max(abs(B-diag(diag(B)))) < sqrt(.Machine$double.eps))
   return(P%*%iSp(B%*%Sp(t(Q)%*%x)))
 }
 
 
 # want meanlinkS2S with more indenpendent paramaters: p1, q1, Omega
 #' The mean link for spherical covariates using the Omega parameterisation
-#' @description Computes mean from p1, q1, Omega avoiding the svd in [`param_omega2cann()`].
+#' @description Computes mean from p1, q1, Omega avoiding the svd in [`param_omega2cann()`]. It uses the expression for the link for the Omega parameterisation.
 #' @param x a vector of covariate values or tidy-style array of covariate values (each row a vector of covariates)
-#' @param p1 First column of the P matrix (vector of length `p`)
-#' @param q1 First column of the Q matrix (vector of length `q`)
-#' @param Omega A `p` by `q` matrix representing `P* B t(Q*)`.
-#' @export
-meanlinkS2S_Omega <- function(x, p1, q1, Omega, check = TRUE){
+#' @noRd
+meanlinkS2S_prop1 <- function(x, paramvec, check = TRUE){
+  stopifnot(inherits(paramobj, "OmegaS2S"))
+  list2env(x, envir = environment())
   if (check){check_omega(p1, q1, Omega)}
   if (inherits(x, "array")){x <- t(x)} #so rows of x become column vectors
   

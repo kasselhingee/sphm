@@ -19,9 +19,8 @@ pre_est3_mod=function(y,x,theta){
   Q=cayley(theta[4:6])
   B=b1*diag(c(1,b2))
   
-  value=0
-  for(j in 1:(dim(y)[2])) value=value+sum(y[,j]*meanlinkS2S(x[,j],P,Q,B))
-  return(-value)
+  means <- meanlinkS2S(t(x), P = P, Q = Q, B = B)
+  return(-sum(rowSums(t(y) * means)))
 }
 
 

@@ -29,10 +29,10 @@ iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y)
 #' x <- x / sqrt(sum(x^2))
 #' meanlinkS2S(x, P, Q, B)
 #' @export
-meanlinkS2S <- function(x,P,Q,B){
+meanlinkS2S <- function(x,P,Q,B, spfun = Sp){
   stopifnot(abs(sum(x^2) - 1) < sqrt(.Machine$double.eps))
   stopifnot(max(abs(B-diag(diag(B)))) < sqrt(.Machine$double.eps))
-  return(P%*%iSp(B%*%Sp(t(Q)%*%x)))
+  return(P%*%iSp(B%*%spfun(t(Q)%*%x)))
 }
 
 

@@ -1,3 +1,10 @@
+#' Preliminary objective function for S2S Link
+#' @details Assumes that the distribution is isotropic around the mean with constant concentration, thus maximising
+#' \deqn{\sum_i=1^n y_i^T \mu(x_i).}
+#' @param y A set of unit vectors in embedded coordinates, each row corresponds to a single unit vector.
+#' @param x A set of covariate vectors (also unit vectors), each row corresponds to the same row in `y`.
+#'
+
 #' Preliminary objective function for S2S Link with p=q
 #' @details Uses Cayley transform to parameterise P and Q. 
 #' + Could be more accurate the closer P and Q are to the identity (check notes with Andy).

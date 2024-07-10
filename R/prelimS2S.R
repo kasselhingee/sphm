@@ -14,7 +14,7 @@ pobjS2S <- function(y, x, paramobj){
 
 
 optim_pobjS2S_f <- function(theta, y, x){
-  pobjS2S(y, x, OmegaS2S_unvec(theta, ncol(y), check = FALSE))
+  pobjS2S(y, x, OmegaS2S_proj(OmegaS2S_unvec(theta, ncol(y), check = FALSE)))
 }
 optim_pobjS2S_g_eq <- function(theta, y, x){
   om <- OmegaS2S_unvec(theta, ncol(y), check = FALSE)

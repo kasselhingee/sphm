@@ -26,7 +26,17 @@ test_that("OmegaS2S works and conversions", {
   expect_equal(as_OmegaS2S(as_cannS2S(om)), om)
   expect_equal(OmegaS2S(om$p1, om$q1, om$Omega), om)
   
+  #vec and unvec
   expect_equal(OmegaS2S_unvec(OmegaS2S_vec(om), p), om)
+  
+  # project
+  expect_equal(OmegaS2S_proj(om), om)
+  ommod <- om
+  ommod$p1 <- om$p1 * (1 + 1E-2 * runif(length(om$p1), -1, 1))
+  ommod$q1 <- om$q1 * (1 + 1E-2 * runif(length(om$q1), -1, 1))
+  expect_error(OmegaS2S_check(ommod), "checks failed")
+  expect_equal(OmegaS2S_proj(ommod), om, tolerance = 1E-2)
+  expect_equal(OmegaS2S_proj(ommod)$Omega, om$Omega)
 })
 
 

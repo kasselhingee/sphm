@@ -25,9 +25,11 @@ test_that("preobjS2S() works",{
   # evaluate objective function
   objval <- pobjS2S(y, x, omegapar)
   opt <- optim_pobjS2S(y, x, omegapar)
-  OmegaS2S_check(opt$solution)
+  expect_equal(OmegaS2S_proj(opt$solution), opt$solution, tolerance = 1E-3)
+
   expect_equal(opt$solution, omegapar, tolerance = 0.05)
-  ymean_pred <- meanlinkS2S(x = x, paramobj = opt$solution, check = FALSE)
+  expect_equal(OmegaS2S_proj(opt$solution), omegapar, tolerance = 0.05)
+  ymean_pred <- meanlinkS2S(x = x, paramobj = OmegaS2S_proj(opt$solution), check = FALSE)
   expect_equal(ymean_pred, ymean)
 })
 

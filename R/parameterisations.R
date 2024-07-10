@@ -125,7 +125,7 @@ OmegaS2S_check_internal <- function(obj){ #uses squared values for smoothness
   return(c(
     p1sizediff = (vnorm(p1) - 1)^2,
     q1sizediff = (vnorm(q1) - 1)^2,
-    p1Omega = vnorm2(t(p1) %*% Omega),
-    Omegaq1 = vnorm2(Omega %*% q1))
-  )
+    p1Omega = (t(p1) %*% Omega)^2,
+    Omegaq1 = (Omega %*% q1)^2
+  ))
 }

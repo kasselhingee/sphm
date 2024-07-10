@@ -3,9 +3,10 @@
 #' @param P P matrix: a p x p (?orthonormal) matrix
 #' @param B B matrix: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size.
 #' @param Q The rotation-like matrix `Q` for rotating the covariate vector `x`.
-cannS2S <- function(P, Q, B){
+cannS2S <- function(P, Q, B, check = TRUE){
   obj <- list(P = P, Q = Q, B = B)
   class(obj) <- c("cannS2S", class(obj))
+  cannS2S_check(obj)
   return(obj)
 }
 as_cannS2S <- function(obj){
@@ -20,13 +21,14 @@ as_cannS2S <- function(obj){
 #' @param p1 First column of the P matrix (vector of length `p`)
 #' @param q1 First column of the Q matrix (vector of length `q`)
 #' @param Omega A `p` by `q` matrix representing `P* B t(Q*)`.
-OmegaS2S <- function(p1, q1, Omega){
+OmegaS2S <- function(p1, q1, Omega, check = TRUE){
   obj <- list(
     p1 = p1,
     q1 = q1,
     Omega = Omega
   )
   class(obj) <- c("OmegaS2S", class(obj))
+  if (check) {OmegaS2S_check(obj)}
   return(obj)
 }
 as_OmegaS2S <- function(obj){
@@ -51,16 +53,17 @@ OmegaS2S_vec <- function(obj){
 #' @noRd
 #' @param vec is a vector like `OmegaS2S_vec()`
 #' @param p The dimension of the response (The dimension of covariates will be infered from `p`).
-OmegaS2S_unvec <- function(vec, p){
-  stopifnot(inherits(vec, "OmegaS2S_vec"))
+OmegaS2S_unvec <- function(vec, p, check = TRUE){
   # length of vec = p + q + p*q
   # (l - p)/(1+p) = q
   q <- (length(vec) - p)/(1+p)
   stopifnot(q == as.integer(q))
+  stopifnot(q > p -1)
   
   OmegaS2S(p1 = vec[1:p],
            q1 = vec[p + 1:q],
-           Omega = matrix(vec[p+q+1:(p*q)], nrow = p, ncol = q, byrow = FALSE))
+           Omega = matrix(vec[p+q+1:(p*q)], nrow = p, ncol = q, byrow = FALSE),
+           check = check)
 }
 
 #' For converting between parameterisations of the link function
@@ -75,13 +78,12 @@ OmegaS2S_unvec <- function(vec, p){
 #' Sign of columns of P and Q are lost by this transformation.
 #' @export
 cann2Omega <- function(obj, check = TRUE){
+  if (check){cannS2S_check(obj)}
   list2env(obj, envir = environment())
-  if (check){check_cann(P, Q, B)}
   p1 <- P[, 1]
   q1 <- Q[, 1]
   Omega <- P[,-1] %*% B %*% t(Q[, -1])
-  if (check){check_omega(p1, q1, Omega)}
-  return(OmegaS2S(p1, q1, Omega))
+  return(OmegaS2S(p1, q1, Omega, check = FALSE))
 }
 
 #' # Warning

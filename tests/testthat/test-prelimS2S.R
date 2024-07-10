@@ -12,19 +12,21 @@ test_that("preobjS2S() works",{
   
   #generate covariates uniformly on the sphere
   set.seed(4)
-  x <- matrix(rnorm(100*q), nrow = 100)
+  x <- matrix(rnorm(1000*q), nrow = 1000)
   x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
   
-  y <- meanlinkS2S(x = x, paramobj = omegapar)
+  ymean <- meanlinkS2S(x = x, paramobj = omegapar)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
-  ynoise <- t(apply(y, 1, function(mn){movMF::rmovMF(1, 10*mn)}))
+  set.seed(5)
+  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 1000*mn)}))
   
   # evaluate objective function
-  objval <- pobjS2S(ynoise, x, omegapar)
-  
-  
+  objval <- pobjS2S(y, x, omegapar)
+  opt <- optim_pobjS2S(y, x, omegapar)
+  OmegaS2S_check(opt$solution)
+  expect_equal(opt$solution, omegapar)
 })
 
 test_that("pre_est3_mod optimisation works", {

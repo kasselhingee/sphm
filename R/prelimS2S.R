@@ -18,7 +18,7 @@ optim_pobjS2S_f <- function(theta, y, x){
 }
 optim_pobjS2S_g_eq <- function(theta, y, x){
   om <- OmegaS2S_unvec(theta, ncol(y), check = FALSE)
-  sum(OmegaS2S_check_internal(om))
+  OmegaS2S_check_internal(om)
 }
 
 #' Optimisation of the Preliminary Objectivf Function for S2S Link
@@ -40,8 +40,9 @@ optim_pobjS2S <- function(y, x, paramobj0){ #paramobj0 is the starting parameter
     x = x
   )
   
+  # re do with a local optimisation to polish (NLopt docs suggest this)
   locopt <- nloptr::nloptr(
-    x0 = OmegaS2S_vec(om0),# globopt$solution,
+    x0 = globopt$solution,
     eval_f = optim_pobjS2S_f,
     eval_g_eq = optim_pobjS2S_g_eq,
     lb = OmegaS2S_vec(om0) *0 - 10, #10 is just a guess here. Since everything is related to spheres, I suspect most values are well below 1.
@@ -58,7 +59,6 @@ optim_pobjS2S <- function(y, x, paramobj0){ #paramobj0 is the starting parameter
     glob_nloptr = globopt,
     loc_nloptr = locopt
   ))
-  # re do with a local optimisation to polish (NLopt docs)
 }
 
 #' Preliminary objective function for S2S Link with p=q

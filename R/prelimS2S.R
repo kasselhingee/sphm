@@ -3,7 +3,14 @@
 #' \deqn{\sum_i=1^n y_i^T \mu(x_i).}
 #' @param y A set of unit vectors in embedded coordinates, each row corresponds to a single unit vector.
 #' @param x A set of covariate vectors (also unit vectors), each row corresponds to the same row in `y`.
-#'
+#' @param paramobj A set of link parameters. See [`cannS2S()`] and [`OmegaS2S()`].
+#' @export
+pobjS2S <- function(y, x, paramobj){
+  predictedmeans <- meanlinkS2S(x = x, paramobj = paramobj)
+  stopifnot(nrow(y) == nrow(predictedmeans))
+  stopifnot(ncol(y) == ncol(predictedmeans))
+  return(-sum(rowSums(y * predictedmeans)))
+}
 
 #' Preliminary objective function for S2S Link with p=q
 #' @details Uses Cayley transform to parameterise P and Q. 

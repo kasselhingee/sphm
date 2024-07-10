@@ -25,5 +25,8 @@ test_that("OmegaS2S works and conversions", {
   expect_silent(OmegaS2S_check(om))
   expect_equal(as_OmegaS2S(as_cannS2S(om)), om)
   expect_equal(OmegaS2S(om$p1, om$q1, om$Omega), om)
+  
+  expect_equal(OmegaS2S_unvec(OmegaS2S_vec(om), p), om)
 })
+
 

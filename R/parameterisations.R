@@ -37,6 +37,31 @@ as_OmegaS2S <- function(obj){
   class(obj) <- c("OmegaS2S", class(obj))
   return(obj)
 }
+#' @noRd
+#' Vectorsises and inverse of this vectorisation for the OmegaS2S parameterisation.
+#' @param obj An OmegaS2S parameter object.
+OmegaS2S_vec <- function(obj){
+  stopifnot(inherits(obj, "OmegaS2S"))
+  list2env(obj, envir = environment())
+  out <- c(p1, q1, as.vector(Omega))
+  class(out) <- "OmegaS2S_vec"
+  return(out)
+}
+
+#' @noRd
+#' @param vec is a vector like `OmegaS2S_vec()`
+#' @param p The dimension of the response (The dimension of covariates will be infered from `p`).
+OmegaS2S_unvec <- function(vec, p){
+  stopifnot(inherits(vec, "OmegaS2S_vec"))
+  # length of vec = p + q + p*q
+  # (l - p)/(1+p) = q
+  q <- (length(vec) - p)/(1+p)
+  stopifnot(q == as.integer(q))
+  
+  OmegaS2S(p1 = vec[1:p],
+           q1 = vec[p + 1:q],
+           Omega = matrix(vec[p+q+1:(p*q)], nrow = p, ncol = q, byrow = FALSE))
+}
 
 #' For converting between parameterisations of the link function
 #' @examples

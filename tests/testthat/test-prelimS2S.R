@@ -1,4 +1,4 @@
-test_that("preobjS2S() works"{
+test_that("preobjS2S() works",{
   p <- 3
   q <- 5
   # data generating parameters:
@@ -8,21 +8,21 @@ test_that("preobjS2S() works"{
   Q <- mclust::randomOrthogonalMatrix(q, p)
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
-  omegapar <- param_cann2omega(P, Q, B)
+  omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
   
   #generate covariates uniformly on the sphere
   set.seed(4)
   x <- matrix(rnorm(100*q), nrow = 100)
   x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
   
-  y <- meanlinkS2S_Omega(x = x, p1 = omegapar$p1, q1 = omegapar$q1, Omega = omegapar$Omega)
+  y <- meanlinkS2S(x = x, paramobj = omegapar)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
-  ynoise <- t(apply(y, 1, function(mn){movMF::rmovMF(1, 1000*mn)}))
+  ynoise <- t(apply(y, 1, function(mn){movMF::rmovMF(1, 10*mn)}))
   
   # evaluate objective function
-  preobjS2S(ynoise, x, p1, q1, Omega)
+  objval <- pobjS2S(ynoise, x, omegapar)
 })
 
 test_that("pre_est3_mod optimisation works", {

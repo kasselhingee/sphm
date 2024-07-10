@@ -109,8 +109,16 @@ cannS2S_check <- function(obj){
 }
 
 OmegaS2S_check <- function(obj){
+  vals <- OmegaS2S_check_internal(obj)
+  stopifnot(all(vals < sqrt(.Machine$double.eps)))
+}
+OmegaS2S_check_internal <- function(obj){
   stopifnot(inherits(obj, "OmegaS2S"))
   list2env(obj, envir = environment())
-  stopifnot(max(abs(t(p1) %*% Omega)) < sqrt(.Machine$double.eps))
-  stopifnot(max(abs(Omega %*% q1)) < sqrt(.Machine$double.eps))
+  return(c(
+    p1sizecheck = (vnorm(p1) - 1)^2,
+    q1sizecheck = (vnorm(q1) - 1)^2,
+    p1Omegacheck = vnorm2(t(p1) %*% Omega),
+    Omegaq1check = vnorm2(Omega %*% q1))
+  )
 }

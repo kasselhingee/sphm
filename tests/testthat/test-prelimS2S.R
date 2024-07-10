@@ -23,6 +23,8 @@ test_that("preobjS2S() works",{
   
   # evaluate objective function
   objval <- pobjS2S(ynoise, x, omegapar)
+  
+  
 })
 
 test_that("pre_est3_mod optimisation works", {

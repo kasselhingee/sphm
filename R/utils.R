@@ -1,4 +1,5 @@
-vnorm=function(x) sqrt(sum(x^2))
+vnorm2=function(x) sum(x^2)
+vnorm=function(x) sqrt(vnorm2(x))
 
 
 #' Cayley Transform Reparameterisation

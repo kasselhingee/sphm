@@ -35,7 +35,7 @@ optim_pobjS2S <- function(y, x, paramobj0){ #paramobj0 is the starting parameter
     ub = OmegaS2S_vec(om0) *0 + 10,
     opts = list(algorithm = "NLOPT_GN_ISRES",
                 xtol_rel = 1E-04,
-                maxeval = 1E3), #the only algorthim that natively handles non-linear equality constraints - all the others have to use augmented Lagrangian ideas.
+                maxeval = 1E4), #the only algorthim that natively handles non-linear equality constraints - all the others have to use augmented Lagrangian ideas.
     y = y,
     x = x
   )

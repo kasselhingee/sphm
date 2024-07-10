@@ -20,13 +20,15 @@ test_that("preobjS2S() works",{
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
   set.seed(5)
-  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 1000*mn)}))
+  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 10*mn)}))
   
   # evaluate objective function
   objval <- pobjS2S(y, x, omegapar)
   opt <- optim_pobjS2S(y, x, omegapar)
   OmegaS2S_check(opt$solution)
-  expect_equal(opt$solution, omegapar)
+  expect_equal(opt$solution, omegapar, tolerance = 0.05)
+  ymean_pred <- meanlinkS2S(x = x, paramobj = opt$solution, check = FALSE)
+  expect_equal(ymean_pred, ymean)
 })
 
 test_that("pre_est3_mod optimisation works", {

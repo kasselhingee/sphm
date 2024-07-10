@@ -6,7 +6,7 @@
 cannS2S <- function(P, Q, B, check = TRUE){
   obj <- list(P = P, Q = Q, B = B)
   class(obj) <- c("cannS2S", class(obj))
-  cannS2S_check(obj)
+  if (check){cannS2S_check(obj)}
   return(obj)
 }
 as_cannS2S <- function(obj){
@@ -90,14 +90,13 @@ cann2Omega <- function(obj, check = TRUE){
 #' Apart from p1 and q1, sign of columns of P and Q cannot be recovered from Omega.
 Omega2cann <- function(obj, check = TRUE){
   list2env(obj, envir = environment())
-  if (check){check_omega(p1, q1, Omega)}
+  if (check){Omega2cann_check(p1, q1, Omega)}
   svdres <- svd(Omega, nu = nrow(Omega) - 1, nv = nrow(Omega) - 1)
 
   Q <- cbind(q1, svdres$v)
   P <- cbind(p1, svdres$u)
   B <- diag(svdres$d[-length(svdres$d)])
-  if (check){check_cann(P, Q, B)}
-  return(cannS2S(P, Q, B))
+  return(cannS2S(P, Q, B, check = check))
 }
 
 cannS2S_check <- function(obj){
@@ -128,4 +127,17 @@ OmegaS2S_check_internal <- function(obj){ #uses squared values for smoothness
     p1Omega = (t(p1) %*% Omega)^2,
     Omegaq1 = (Omega %*% q1)^2
   ))
+}
+# if the values are close to satisfying the constraints, it might make sense to project and scale p1 and q1 to satisfy the constraints
+# will use canonical parameterisation to do this because orthogonality of the columns will make for easier projections
+OmegaS2S_proj <- function(obj){
+  cann <- Omega2cann(obj, check = FALSE)
+  newp1 <- cann$P[,1] - cann$P[, -1] %*% t(cann$P[, -1]) %*% cann$P[,1]
+  newp1 <- newp1 / vnorm(newp1)
+  cann$P[,1] <- newp1
+  
+  newq1 <- cann$Q[,1] - cann$Q[, -1] %*% t(cann$Q[, -1]) %*% cann$Q[,1]
+  newq1 <- newq1 / vnorm(newq1)
+  cann$Q[,1] <- newq1
+  return(as_OmegaS2S(cann))
 }

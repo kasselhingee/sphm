@@ -112,15 +112,20 @@ cannS2S_check <- function(obj){
 
 OmegaS2S_check <- function(obj){
   vals <- OmegaS2S_check_internal(obj)
-  stopifnot(all(vals < sqrt(.Machine$double.eps)))
+  good <- (vals < sqrt(.Machine$double.eps))
+  if (!all(good)){
+    stop(paste("The following checks failed.", 
+               paste0(names(vals)[!good], ": ", format(sqrt(vals[!good]), digits = 2), collapse = ", ") #sqrt here converts squared sizes to actual sizes
+    ))
+  }
 }
-OmegaS2S_check_internal <- function(obj){
+OmegaS2S_check_internal <- function(obj){ #uses squared values for smoothness
   stopifnot(inherits(obj, "OmegaS2S"))
   list2env(obj, envir = environment())
   return(c(
-    p1sizecheck = (vnorm(p1) - 1)^2,
-    q1sizecheck = (vnorm(q1) - 1)^2,
-    p1Omegacheck = vnorm2(t(p1) %*% Omega),
-    Omegaq1check = vnorm2(Omega %*% q1))
+    p1sizediff = (vnorm(p1) - 1)^2,
+    q1sizediff = (vnorm(q1) - 1)^2,
+    p1Omega = vnorm2(t(p1) %*% Omega),
+    Omegaq1 = vnorm2(Omega %*% q1))
   )
 }

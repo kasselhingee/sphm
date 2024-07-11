@@ -63,6 +63,7 @@ OmegaS2S_unvec <- function(vec, p, check = TRUE){
   q <- (length(vec) - p)/(1+p)
   stopifnot(q == as.integer(q))
   stopifnot(q > p -1)
+  names(vec) <- NULL
   
   OmegaS2S(p1 = vec[1:p],
            q1 = vec[p + 1:q],

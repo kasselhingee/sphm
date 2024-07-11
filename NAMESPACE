@@ -2,4 +2,5 @@
 
 export(cann2Omega)
 export(meanlinkS2S)
+export(pobjS2S)
 export(pre_est3_mod)

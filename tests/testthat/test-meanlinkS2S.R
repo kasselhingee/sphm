@@ -61,4 +61,21 @@ test_that("meanlinkS2S() works with a variety of inputs", {
   expect_equal(meanlinkS2S(x, P = P, Q = Q, B = B), meanlinkS2S(x, paramobj = as_OmegaS2S(paramobj)))
   expect_equal(meanlinkS2S(x, paramobj = paramobj), meanlinkS2S(x, paramobj = as_OmegaS2S(paramobj)))
 })
+
+test_that("meanlinkS2Scpp() works", {
+  set.seed(1)
+  p <- 3
+  q <- 5
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  set.seed(2)
+  Q <- mclust::randomOrthogonalMatrix(q, p)
+  set.seed(3)
+  B <- diag(sort(runif(p-1), decreasing = TRUE))
+  paramobj <- cannS2S(P, Q, B)
+  set.seed(4)
+  x <- matrix(rnorm(4*q), nrow = 4)
+  x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
+  meanlinkS2S(x, paramobj = as_OmegaS2S(paramobj))
+  a <- Rcpp::sourceCpp("src/meanlinkS2S.cpp")
+})
   

@@ -62,7 +62,7 @@ test_that("meanlinkS2S() works with a variety of inputs", {
   expect_equal(meanlinkS2S(x, paramobj = paramobj), meanlinkS2S(x, paramobj = as_OmegaS2S(paramobj)))
 })
 
-test_that("meanlinkS2Scpp() works", {
+test_that("meanlinkS2Scpp() works and matches R version", {
   set.seed(1)
   p <- 3
   q <- 5
@@ -76,6 +76,6 @@ test_that("meanlinkS2Scpp() works", {
   x <- matrix(rnorm(4*q), nrow = 4)
   x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
   meanlinkS2S(x, paramobj = as_OmegaS2S(paramobj))
-  a <- Rcpp::sourceCpp("src/meanlinkS2S.cpp")
+  meanlinkS2Scpp(t(x), vec = OmegaS2S_vec(as_OmegaS2S(paramobj)), p)
 })
   

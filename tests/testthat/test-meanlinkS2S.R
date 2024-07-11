@@ -75,7 +75,8 @@ test_that("meanlinkS2Scpp() works and matches R version", {
   set.seed(4)
   x <- matrix(rnorm(4*q), nrow = 4)
   x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
-  meanlinkS2S(x, paramobj = as_OmegaS2S(paramobj))
-  meanlinkS2Scpp(t(x), vec = OmegaS2S_vec(as_OmegaS2S(paramobj)), p)
+  ymeanR <- meanlinkS2S(x, paramobj = as_OmegaS2S(paramobj))
+  ymeanCpp <- meanlinkS2Scpp(t(x), vec = OmegaS2S_vec(as_OmegaS2S(paramobj)), p)
+  expect_equal(t(ymeanCpp), ymeanR)
 })
   

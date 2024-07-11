@@ -45,7 +45,11 @@ as_OmegaS2S <- function(obj){
 OmegaS2S_vec <- function(obj){
   stopifnot(inherits(obj, "OmegaS2S"))
   list2env(obj, envir = environment())
+  names(p1) <- paste0("p1_", 1:length(p1))
+  names(q1) <- paste0("q1_", 1:length(q1))
   out <- c(p1, q1, as.vector(Omega))
+  names(out)[(1 + length(p1) + length(q1)):length(out)] <- 
+    paste0("Omega_", as.vector(outer(1:nrow(Omega), 1:ncol(Omega), function(x,y){paste0(x, ",", y)})))
   class(out) <- "OmegaS2S_vec"
   return(out)
 }

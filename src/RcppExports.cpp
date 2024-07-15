@@ -2,7 +2,11 @@
 // Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #include <RcppEigen.h>
+#include <scorematchingad.h>
 #include <Rcpp.h>
+#include <utils/PrintFor.hpp>
+#include <utils/wrapas.hpp>
+#include <likelihoods/likelihoods.hpp>
 
 using namespace Rcpp;
 
@@ -12,13 +16,13 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // meanlinkS2Scpp
-Eigen::MatrixXd meanlinkS2Scpp(const Eigen::MatrixXd& x, const Eigen::VectorXd& vec, int p);
+mata1 meanlinkS2Scpp(mata1& x, veca1& vec, int p);
 RcppExport SEXP _sphm_meanlinkS2Scpp(SEXP xSEXP, SEXP vecSEXP, SEXP pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type vec(vecSEXP);
+    Rcpp::traits::input_parameter< mata1& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< veca1& >::type vec(vecSEXP);
     Rcpp::traits::input_parameter< int >::type p(pSEXP);
     rcpp_result_gen = Rcpp::wrap(meanlinkS2Scpp(x, vec, p));
     return rcpp_result_gen;

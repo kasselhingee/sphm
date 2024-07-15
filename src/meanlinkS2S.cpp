@@ -1,4 +1,5 @@
 #include <RcppEigen.h>
+#include <scorematchingad.h>
 
 // [[Rcpp::depends(RcppEigen)]]
 

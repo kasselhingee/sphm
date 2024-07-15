@@ -5,7 +5,6 @@
 #include <scorematchingad.h>
 #include <Rcpp.h>
 #include <utils/PrintFor.hpp>
-#include <utils/wrapas.hpp>
 #include <likelihoods/likelihoods.hpp>
 
 using namespace Rcpp;

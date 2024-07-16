@@ -28,9 +28,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// OmegaS2S_constraints_quad
+veca1 OmegaS2S_constraints_quad(veca1& vec, int p);
+RcppExport SEXP _sphm_OmegaS2S_constraints_quad(SEXP vecSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< veca1& >::type vec(vecSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(OmegaS2S_constraints_quad(vec, p));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},
+    {"_sphm_OmegaS2S_constraints_quad", (DL_FUNC) &_sphm_OmegaS2S_constraints_quad, 2},
     {NULL, NULL, 0}
 };
 

@@ -5,3 +5,7 @@ meanlinkS2Scpp <- function(x, vec, p) {
     .Call('_sphm_meanlinkS2Scpp', PACKAGE = 'sphm', x, vec, p)
 }
 
+OmegaS2S_constraints_quad <- function(vec, p) {
+    .Call('_sphm_OmegaS2S_constraints_quad', PACKAGE = 'sphm', vec, p)
+}
+

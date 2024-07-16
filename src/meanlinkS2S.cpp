@@ -1,6 +1,7 @@
 // using the forward declarations because only the translational unit for RcppExports.cpp need to have access to the wrappers
 #include <RcppEigenForward.h>
 #include <scorematchingad_forward.h>
+#include "OmegaS2S.h"
 
 // [[Rcpp::depends(RcppEigen)]]
 
@@ -21,11 +22,13 @@ mata1 meanlinkS2Scpp(mata1 &x, veca1 &vec, int p) {
     Rcpp::stop("q must be greater than p - 1");
   }
 
+  // Convert vector to a OmegaS2Scpp object
+  OmegaS2Scpp<a1type> ompar = OmegaS2Scpp_unvec(vec, p);
 
   // Extract p1, q1, and Omega
-  veca1 p1 = vec.segment(0, p);
-  veca1 q1 = vec.segment(p, q);
-  mata1 Omega = Eigen::Map<mata1>(vec.segment(p + q, p * q).data(), p, q);
+  veca1 p1 = ompar.p1;
+  veca1 q1 = ompar.q1;
+  mata1 Omega = ompar.Omega;
 
   // Compute the amount of p1 and Omegax corresponding to each column of x
   veca1 BQx2 = (Omega.transpose() * Omega * x).cwiseProduct(x).colwise().sum();

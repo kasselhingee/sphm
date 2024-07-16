@@ -11,17 +11,6 @@
 // @value is a matrix of column vectors of means
 // [[Rcpp::export]]
 mata1 meanlinkS2Scpp(mata1 &x, veca1 &vec, int p) {
-  int n = vec.size();
-  int q = (n - p) / (1 + p);
-
-  if (q != static_cast<int>(q)) {
-    Rcpp::stop("q is not an integer");
-  }
-
-  if (q <= p - 1) {
-    Rcpp::stop("q must be greater than p - 1");
-  }
-
   // Convert vector to a OmegaS2Scpp object
   OmegaS2Scpp<a1type> ompar = OmegaS2Scpp_unvec(vec, p);
 

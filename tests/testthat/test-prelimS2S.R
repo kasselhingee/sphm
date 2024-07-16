@@ -31,6 +31,20 @@ test_that("preobjS2S() works",{
   expect_equal(opt$solution, omegapar, tolerance = 0.05)
 })
 
+test_that("OmegaS2S_constraints_quad() is zero correctly", {
+  p <- 3
+  q <- 5
+  # data generating parameters:
+  set.seed(1)
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  set.seed(2)
+  Q <- mclust::randomOrthogonalMatrix(q, p)
+  set.seed(3)
+  B <- diag(sort(runif(p-1), decreasing = TRUE))
+  omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
+  expect_equal(OmegaS2S_constraints_quad(OmegaS2S_vec(omegapar), p), rep(0, 1 + 1 + p + q))
+})
+
 test_that("pre_est3_mod optimisation works", {
 
 d=3  # dimension

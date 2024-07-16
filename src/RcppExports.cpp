@@ -15,28 +15,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// R2OmegaS2Scpp_double
-OmegaS2Scpp<double> R2OmegaS2Scpp_double(List obj);
-RcppExport SEXP _sphm_R2OmegaS2Scpp_double(SEXP objSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type obj(objSEXP);
-    rcpp_result_gen = Rcpp::wrap(R2OmegaS2Scpp_double(obj));
-    return rcpp_result_gen;
-END_RCPP
-}
-// R2OmegaS2Scpp_a1type
-OmegaS2Scpp<a1type> R2OmegaS2Scpp_a1type(List obj);
-RcppExport SEXP _sphm_R2OmegaS2Scpp_a1type(SEXP objSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type obj(objSEXP);
-    rcpp_result_gen = Rcpp::wrap(R2OmegaS2Scpp_a1type(obj));
-    return rcpp_result_gen;
-END_RCPP
-}
 // meanlinkS2Scpp
 mata1 meanlinkS2Scpp(mata1& x, veca1& vec, int p);
 RcppExport SEXP _sphm_meanlinkS2Scpp(SEXP xSEXP, SEXP vecSEXP, SEXP pSEXP) {
@@ -52,8 +30,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_sphm_R2OmegaS2Scpp_double", (DL_FUNC) &_sphm_R2OmegaS2Scpp_double, 1},
-    {"_sphm_R2OmegaS2Scpp_a1type", (DL_FUNC) &_sphm_R2OmegaS2Scpp_a1type, 1},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},
     {NULL, NULL, 0}
 };

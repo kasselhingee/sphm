@@ -1,4 +1,4 @@
-test_that("preobjS2S() works",{
+test_that("pobjS2S() and pobjS2SCpp() works",{
   p <- 3
   q <- 5
   # data generating parameters:
@@ -22,8 +22,11 @@ test_that("preobjS2S() works",{
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 10*mn)}))
   
-  # evaluate objective function
+  # objective function in C++ and R should match when omegapar passes OmegaS2S_check()
   objval <- pobjS2S(y, x, omegapar)
+ pobjS2Scpp(OmegaS2S_vec(omegapar), vector(), p, cbind(y,x))
+
+  # optimise
   opt <- optim_pobjS2S(y, x, omegapar)
   #OmegaS2S_check(opt$solution)
   expect_equal(OmegaS2S_proj(opt$solution), opt$solution, tolerance = 1E-3)

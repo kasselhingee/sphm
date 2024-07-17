@@ -1,6 +1,6 @@
 # include "tapegeneral.h"
 
-CppAD::ADFun<double> tapefun(generalfunction fun, veca1 & ind_t, veca1 & dyn_t, const vecd & constvec, matd & constmat) {
+CppAD::ADFun<double> tapefun(generalfunction fun, const veca1 & ind_t, const veca1 & dyn_t, const vecd & constvec, const matd & constmat) {
   CppAD::Independent(ind_t, dyn_t);
   veca1 y;
   y = fun(ind_t, dyn_t, constvec, constmat);
@@ -10,7 +10,7 @@ CppAD::ADFun<double> tapefun(generalfunction fun, veca1 & ind_t, veca1 & dyn_t, 
 }
 
 
-Rcpp::XPtr< CppAD::ADFun<double> > tapefun(Rcpp::XPtr<generalfunction> funptr, veca1 & ind_t, veca1 & dyn_t, const vecd & constvec, matd & constmat) {
+Rcpp::XPtr< CppAD::ADFun<double> > tapefun(Rcpp::XPtr<generalfunction> funptr, const veca1 & ind_t, const veca1 & dyn_t, const vecd & constvec, const matd & constmat) {
   generalfunction fun = *Rcpp::XPtr<generalfunction>(funptr);
 
   CppAD::ADFun<double>* out = new CppAD::ADFun<double>; //returning a pointer

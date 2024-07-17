@@ -17,9 +17,9 @@
 //' @param ind_t The value of the independent argument to use for taping.
 //' @param dyn_t The value of the dynamic argument to use for taping.
 //' @param constants The value of the constants argument.
-CppAD::ADFun<double> tapefun(generalfunction fun, const veca1 & ind_t, const veca1 & dyn_t, const vecd & constvec, const matd & constmat);
+CppAD::ADFun<double> tapefun(generalfunction fun, veca1 & ind_t, veca1 & dyn_t, const vecd & constvec, matd & constmat);
 
 //' Tape using a pointer to a function created by RcppXPtrUtils::cppXPtr
 //' [[Rcpp::Export]]
-Rcpp::XPtr< CppAD::ADFun<double> > tapefun(Rcpp::XPtr<generalfunction> funptr, const veca1 & ind_t, const veca1 & dyn_t, const vecd & constvec, const matd & constmat);
+Rcpp::XPtr< CppAD::ADFun<double> > tapefun(Rcpp::XPtr<generalfunction> funptr, veca1 & ind_t, veca1 & dyn_t, const vecd & constvec, matd & constmat);
 # endif

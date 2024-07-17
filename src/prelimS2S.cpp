@@ -2,7 +2,6 @@
 #include <scorematchingad_forward.h>
 #include "OmegaS2S.h"
 #include "meanlinkS2S.h"
-#include "tapegeneral.h"
 
 //' Preliminary Objective in the style of the `generalfunction` class:
 //' @param yx is the response and covariates *cbind* together. Each row an observation.
@@ -14,22 +13,17 @@ veca1 pobjS2Scpp(const veca1 & omvec, const veca1 & dyn, const vecd & p_in, cons
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   mata1 y = yx.leftCols(p);
   mata1 x = yx.block(0, p, yx.rows(), yx.cols() - p);
+  Rcpp::Rcout << "y and x separated" << std::endl;
 
   mata1 ypred;
   ypred = meanlinkS2Scpp(x, omvec, p);
+  Rcpp::Rcout << "meanlink computed" << std::endl;
   veca1 obj(1);
   obj(0) = -1 * (ypred.array() * y.array()).sum();
+  Rcpp::Rcout << "objective computed" << std::endl;
   return(obj);
 }
 
-//' Tape the preliminary objective
-//' [[Rcpp::Export]]
-Rcpp::XPtr< CppAD::ADFun<double> > pobjS2Stape(const veca1 & omvec, const veca1 & dyn, const vecd & p_in, const matd & yx) {
-  CppAD::ADFun<double>* out = new CppAD::ADFun<double>; //returning a pointer
-  *out = tapefun(*pobjS2Scpp, omvec, dyn, p_in, yx);
-  Rcpp::XPtr< CppAD::ADFun<double> > pout(out, true);
-  return(pout);
-}
 
 
 // For a parameter set return quadratic distance to constraints matching
@@ -48,6 +42,4 @@ veca1 OmegaS2S_constraints_quad(veca1 & vec, int p) {
   out.segment(2 + q1_size, p1_size) = (ompar.Omega * ompar.q1).array().square();
   return(out);
 }
-
-
 

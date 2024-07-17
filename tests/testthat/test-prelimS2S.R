@@ -1,3 +1,4 @@
+
 test_that("pobjS2S() and pobjS2SCpp() works",{
   p <- 3
   q <- 5
@@ -73,3 +74,46 @@ expect_equal(cayley(result$par[4:6]), Q, tolerance = 10^4*sqrt(.Machine$double.e
 expect_equal(result$par[7], B[1,1], tolerance = 1E-3)
 expect_equal(result$par[8] * result$par[7], B[2,2], tolerance = 1E-3)
 })
+
+test_that("taping of pobjS2S() and pobjS2SCpp() runs and evaluates", {
+  p <- 3
+  q <- 5
+  # data generating parameters:
+  set.seed(1)
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  set.seed(2)
+  Q <- mclust::randomOrthogonalMatrix(q, p)
+  set.seed(3)
+  B <- diag(sort(runif(p-1), decreasing = TRUE))
+  omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
+  
+  #generate covariates uniformly on the sphere
+  set.seed(4)
+  x <- matrix(rnorm(1000*q), nrow = 1000)
+  x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
+  
+  ymean <- meanlinkS2S(x = x, paramobj = omegapar)
+  
+  # generate noise
+  if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
+  set.seed(5)
+  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 10*mn)}))
+
+  atapeptr <- pobjS2Stape(OmegaS2S_vec(omegapar), vector(), p, cbind(y,x))
+#  atape <- scorematchingad:::ADFun$new(ptr = atapeptr,
+#                   name = "pobjS2S",
+#                   xtape = unclass(OmegaS2S_vec(omegapar)), #unclass needed to pass the isa(, "numeric") check!
+#                   dyntape =  vector(mode = "numeric"),
+#                   usertheta = unclass(NA * OmegaS2S_vec(omegapar)))
+  directeval <- pobjS2Scpp(OmegaS2S_vec(omegapar), vector(), p, cbind(y,x))
+  tapeeval <- scorematchingad:::pForward0(atapeptr, unclass(OmegaS2S_vec(omegapar)), vector(mode = "numeric"))
+  expect_equal(tapeeval, directeval)
+
+  # if taping worked the results should match for a different value of the parameters
+  omparo <- omegapar
+  omparo$Omega <- omparo$Omega + 1
+  directeval <- pobjS2Scpp(OmegaS2S_vec(omparo), vector(), p, cbind(y,x))
+  tapeeval <- scorematchingad:::pForward0(atapeptr, unclass(OmegaS2S_vec(omparo)), vector(mode = "numeric"))
+  expect_equal(tapeeval, directeval)
+})
+

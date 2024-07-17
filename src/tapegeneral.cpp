@@ -1,5 +1,6 @@
 # include <RcppEigenForward.h>
 # include <scorematchingad_forward.h>
+# include "sphm_forward.h"
 
 
 //' Function for taping a general function. The function must have signature
@@ -13,7 +14,7 @@
 //' @param dyn_t The value of the dynamic argument to use for taping.
 //' @param constants The value of the constants argument.
 
-CppAD::ADFun<double> tapefun(veca1 (*fun)(const veca1 &, const veca1 &, const vecd &, const matd &), veca1 & ind_t, veca1 & dyn_t, const vecd & constvec, matd & constmat) {
+CppAD::ADFun<double> tapefun(generalfunction fun, veca1 & ind_t, veca1 & dyn_t, const vecd & constvec, matd & constmat) {
   CppAD::Independent(ind_t, dyn_t);
   veca1 y;
   y = fun(ind_t, dyn_t, constvec, constmat);
@@ -23,4 +24,18 @@ CppAD::ADFun<double> tapefun(veca1 (*fun)(const veca1 &, const veca1 &, const ve
 }
 
 
-//' Tape a function created by RcppXPtrUtils::cppXPtr
+//' Tape using a pointer to a function created by RcppXPtrUtils::cppXPtr
+//' [[Rcpp::Export]]
+Rcpp::XPtr< CppAD::ADFun<double> > tapefun(Rcpp::XPtr<generalfunction> funptr, veca1 & ind_t, veca1 & dyn_t, const vecd & constvec, matd & constmat) {
+  generalfunction fun = *Rcpp::XPtr<generalfunction>(funptr);
+
+  CppAD::ADFun<double>* out = new CppAD::ADFun<double>; //returning a pointer
+  *out = tapefun(fun,
+                 ind_t,
+                 dyn_t,
+                 constvec,
+                 constmat);
+
+  Rcpp::XPtr< CppAD::ADFun<double> > pout(out, true);
+  return(pout);
+}

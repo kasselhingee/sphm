@@ -5,6 +5,15 @@ meanlinkS2Scpp <- function(x, vec, p) {
     .Call('_sphm_meanlinkS2Scpp', PACKAGE = 'sphm', x, vec, p)
 }
 
+#' Preliminary Objective in the style of the `generalfunction` class:
+#' @param yx is the response and covariates *cbind* together. Each row an observation.
+#' @param dyn is a zero length vector
+#' @param p is required to separate yx and omvec. It is passed as a double for compatiblility witn generalfunction, so will have to be rounded to a integer within the function
+#' @param dyn ignored
+pobjS2Scpp <- function(omvec, dyn, p_in, yx) {
+    .Call('_sphm_pobjS2Scpp', PACKAGE = 'sphm', omvec, dyn, p_in, yx)
+}
+
 OmegaS2S_constraints_quad <- function(vec, p) {
     .Call('_sphm_OmegaS2S_constraints_quad', PACKAGE = 'sphm', vec, p)
 }

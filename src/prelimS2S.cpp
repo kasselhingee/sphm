@@ -3,10 +3,12 @@
 #include "OmegaS2S.h"
 #include "meanlinkS2S.h"
 
-// Preliminary Objective in the style of the `generalfunction` class:
-// @param yx is the response and covariates *cbind* together. Each row an observation.
-// @param dyn is a zero length vector
-// @param p is required to separate yx and omvec. It is passed as a double for compatiblility witn generalfunction, so will have to be rounded to a integer within the function
+//' Preliminary Objective in the style of the `generalfunction` class:
+//' @param yx is the response and covariates *cbind* together. Each row an observation.
+//' @param dyn is a zero length vector
+//' @param p is required to separate yx and omvec. It is passed as a double for compatiblility witn generalfunction, so will have to be rounded to a integer within the function
+//' @param dyn ignored
+// [[Rcpp::export]]
 veca1 pobjS2Scpp(const veca1 & omvec, const veca1 & dyn, const vecd & p_in, const matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   mata1 y = yx.leftCols(p);

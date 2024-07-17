@@ -2,7 +2,23 @@
 #include <scorematchingad_forward.h>
 #include "OmegaS2S.h"
 
-// Preliminary Objective::
+// Preliminary Objective in the style of the `generalfunction` class:
+// @param yx is the response and covariates *cbind* together. Each row an observation.
+// @param dyn is a zero length vector
+// @param p is required to separate yx and omvec. It is passed as a double for compatiblility witn generalfunction, so will have to be rounded to a integer within the function
+veca1 (*pobjS2Scpp)(const veca1 & omvec, const veca1 & dyn = veca1(), const vecd & p_in, const matd & yx){
+  int p = int(p_in + 0.1); //0.1 to make sure p_in is above the integer it represents
+  mata1 y = yx.leftCols(p);
+  mata1 x = mat.block(0, p, mat.rows(), mat.cols() - p);
+
+  mata1 ypred;
+  ypred = meanlinkS2Scpp(x.transpose(), omvec, p);
+  veca1 obj(1);
+  obj(0) = -1 * (ypred.array() * y.array()).sum();
+  return(obj);
+}
+
+
 
 // For a parameter set return quadratic distance to constraints matching
 // [[Rcpp::export]]

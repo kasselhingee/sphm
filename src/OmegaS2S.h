@@ -20,7 +20,7 @@ struct OmegaS2Scpp {
 
 // Function to vectorize an OmegaS2Scpp object
 template <typename T>
-Eigen::Matrix<T, Eigen::Dynamic, 1> OmegaS2Scpp_vec(OmegaS2Scpp<T>& obj) {
+Eigen::Matrix<T, Eigen::Dynamic, 1> OmegaS2Scpp_vec(const OmegaS2Scpp<T>& obj) {
     int p1_size = obj.p1.size();
     int q1_size = obj.q1.size();
     int Omega_size = obj.Omega.size();
@@ -33,7 +33,7 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> OmegaS2Scpp_vec(OmegaS2Scpp<T>& obj) {
 
 // Function to unvectorize into an OmegaS2Scpp object
 template <typename T>
-OmegaS2Scpp<T> OmegaS2Scpp_unvec(Eigen::Matrix<T, Eigen::Dynamic, 1>& vec, int p) {
+OmegaS2Scpp<T> OmegaS2Scpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vec, const int p) {
     int total_length = vec.size();
     int q = (total_length - p) / (1 + p);
     
@@ -43,8 +43,7 @@ OmegaS2Scpp<T> OmegaS2Scpp_unvec(Eigen::Matrix<T, Eigen::Dynamic, 1>& vec, int p
     
     Eigen::Matrix<T, Eigen::Dynamic, 1> p1 = vec.segment(0, p);
     Eigen::Matrix<T, Eigen::Dynamic, 1> q1 = vec.segment(p, q);
-    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega(p, q);
-    Omega = Eigen::Map< Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> >(vec.segment(p + q, p * q).data(), p, q);
+    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega = Eigen::Map<const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> >(vec.segment(p + q, p * q).data(), p, q);
 
     return OmegaS2Scpp<T>(p1, q1, Omega);
 }

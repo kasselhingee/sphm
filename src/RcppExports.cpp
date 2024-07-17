@@ -16,14 +16,14 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // meanlinkS2Scpp
-mata1 meanlinkS2Scpp(mata1& x, veca1& vec, int p);
+mata1 meanlinkS2Scpp(const mata1& x, const veca1& vec, const int p);
 RcppExport SEXP _sphm_meanlinkS2Scpp(SEXP xSEXP, SEXP vecSEXP, SEXP pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< mata1& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< veca1& >::type vec(vecSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const mata1& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const veca1& >::type vec(vecSEXP);
+    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
     rcpp_result_gen = Rcpp::wrap(meanlinkS2Scpp(x, vec, p));
     return rcpp_result_gen;
 END_RCPP

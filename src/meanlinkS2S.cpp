@@ -1,16 +1,7 @@
-// using the forward declarations because only the translational unit for RcppExports.cpp need to have access to the wrappers
-#include <RcppEigenForward.h>
-#include <scorematchingad_forward.h>
-#include "OmegaS2S.h"
 
-// [[Rcpp::depends(RcppEigen)]]
+# include "meanlinkS2S.h"
 
-// @param x is made of column vectors of covariates
-// @param vec is the vectorised form of an OmegaS2S parameterisation
-// @param p is the dimension of the response (in ambient space), which is needed to separate `vec` into p1, q1 and Omega.
-// @value is a matrix of column vectors of means
-// [[Rcpp::export]]
-mata1 meanlinkS2Scpp(mata1 &x, veca1 &vec, int p) {
+mata1 meanlinkS2Scpp(const mata1 &x, const veca1 &vec, const int p) {
   // Convert vector to a OmegaS2Scpp object
   OmegaS2Scpp<a1type> ompar = OmegaS2Scpp_unvec(vec, p);
 

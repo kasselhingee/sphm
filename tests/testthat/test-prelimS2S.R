@@ -24,7 +24,8 @@ test_that("pobjS2S() and pobjS2SCpp() works",{
   
   # objective function in C++ and R should match when omegapar passes OmegaS2S_check()
   objval <- pobjS2S(y, x, omegapar)
- pobjS2Scpp(OmegaS2S_vec(omegapar), vector(), p, cbind(y,x))
+  objvalcpp <-  pobjS2Scpp(OmegaS2S_vec(omegapar), vector(), p, cbind(y,x))
+  expect_equal(objvalcpp, objval)
 
   # optimise
   opt <- optim_pobjS2S(y, x, omegapar)

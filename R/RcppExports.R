@@ -5,10 +5,6 @@ meanlinkS2Scpp <- function(x, vec, p) {
     .Call('_sphm_meanlinkS2Scpp', PACKAGE = 'sphm', x, vec, p)
 }
 
-#' Tape the preliminary objective
-#' [[Rcpp::Export]]
-NULL
-
 #' Preliminary Objective in the style of the `generalfunction` class:
 #' @param yx is the response and covariates *cbind* together. Each row an observation.
 #' @param dyn is a zero length vector
@@ -16,6 +12,11 @@ NULL
 #' @param dyn ignored
 pobjS2Scpp <- function(omvec, dyn, p_in, yx) {
     .Call('_sphm_pobjS2Scpp', PACKAGE = 'sphm', omvec, dyn, p_in, yx)
+}
+
+#' Tape the preliminary objective
+pobjS2Stape <- function(omvec, dyn, p_in, yx) {
+    .Call('_sphm_pobjS2Stape', PACKAGE = 'sphm', omvec, dyn, p_in, yx)
 }
 
 OmegaS2S_constraints_quad <- function(vec, p) {

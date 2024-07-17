@@ -42,6 +42,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// pobjS2Stape
+Rcpp::XPtr< CppAD::ADFun<double> > pobjS2Stape(veca1& omvec, veca1& dyn, vecd& p_in, matd& yx);
+RcppExport SEXP _sphm_pobjS2Stape(SEXP omvecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< veca1& >::type omvec(omvecSEXP);
+    Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
+    Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
+    Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
+    rcpp_result_gen = Rcpp::wrap(pobjS2Stape(omvec, dyn, p_in, yx));
+    return rcpp_result_gen;
+END_RCPP
+}
 // OmegaS2S_constraints_quad
 veca1 OmegaS2S_constraints_quad(veca1& vec, int p);
 RcppExport SEXP _sphm_OmegaS2S_constraints_quad(SEXP vecSEXP, SEXP pSEXP) {
@@ -58,6 +72,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
+    {"_sphm_pobjS2Stape", (DL_FUNC) &_sphm_pobjS2Stape, 4},
     {"_sphm_OmegaS2S_constraints_quad", (DL_FUNC) &_sphm_OmegaS2S_constraints_quad, 2},
     {NULL, NULL, 0}
 };

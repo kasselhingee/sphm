@@ -23,7 +23,7 @@ veca1 pobjS2Scpp(const veca1 & omvec, const veca1 & dyn, const vecd & p_in, cons
 }
 
 //' Tape the preliminary objective
-//' [[Rcpp::Export]]
+// [[Rcpp::export]]
 Rcpp::XPtr< CppAD::ADFun<double> > pobjS2Stape(veca1 & omvec, veca1 & dyn, vecd & p_in, matd & yx) {
   CppAD::ADFun<double>* out = new CppAD::ADFun<double>; //returning a pointer
   *out = tapefun(*pobjS2Scpp, omvec, dyn, p_in, yx);

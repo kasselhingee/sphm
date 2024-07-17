@@ -75,7 +75,7 @@ expect_equal(result$par[7], B[1,1], tolerance = 1E-3)
 expect_equal(result$par[8] * result$par[7], B[2,2], tolerance = 1E-3)
 })
 
-test_that("taping of pobjS2S() and pobjS2SCpp() runs and evaluates", {
+test_that("taping of pobjS2S and OmegaS2S_constraints_quad runs and evaluates", {
   p <- 3
   q <- 5
   # data generating parameters:
@@ -100,11 +100,6 @@ test_that("taping of pobjS2S() and pobjS2SCpp() runs and evaluates", {
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 10*mn)}))
 
   atapeptr <- pobjS2Stape(OmegaS2S_vec(omegapar), vector(), p, cbind(y,x))
-#  atape <- scorematchingad:::ADFun$new(ptr = atapeptr,
-#                   name = "pobjS2S",
-#                   xtape = unclass(OmegaS2S_vec(omegapar)), #unclass needed to pass the isa(, "numeric") check!
-#                   dyntape =  vector(mode = "numeric"),
-#                   usertheta = unclass(NA * OmegaS2S_vec(omegapar)))
   directeval <- pobjS2Scpp(OmegaS2S_vec(omegapar), vector(), p, cbind(y,x))
   tapeeval <- scorematchingad:::pForward0(atapeptr, unclass(OmegaS2S_vec(omegapar)), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)
@@ -115,5 +110,18 @@ test_that("taping of pobjS2S() and pobjS2SCpp() runs and evaluates", {
   directeval <- pobjS2Scpp(OmegaS2S_vec(omparo), vector(), p, cbind(y,x))
   tapeeval <- scorematchingad:::pForward0(atapeptr, unclass(OmegaS2S_vec(omparo)), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)
+
+  
+  jac <- scorematchingad:::pJacobian(atapeptr, unclass(OmegaS2S_vec(omparo)), vector(mode = "numeric"))
+  expect_vector(jac, ptype = vector(mode = "numeric"))
+
+  atape <- scorematchingad:::ADFun$new(ptr = atapeptr,
+                   name = "pobjS2S",
+                   xtape = unclass(OmegaS2S_vec(omegapar)), #unclass needed to pass the isa(, "numeric") check!
+                   dyntape =  vector(mode = "numeric"),
+                   usertheta = unclass(NA * OmegaS2S_vec(omegapar)))
+  jactape <- scorematchingad::tapeJacobian(atape)
+  jactapeeval <- scorematchingad:::pForward0(jactape$ptr, unclass(OmegaS2S_vec(omparo)), vector(mode = "numeric"))
+  expect_equal(jactapeeval, jac)
 })
 

@@ -12,14 +12,14 @@
 veca1 pobjS2Scpp(const veca1 & omvec, const veca1 & dyn, const vecd & p_in, const matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   mata1 y = yx.leftCols(p);
-  mata1 x_transpose = yx.block(0, p, yx.rows(), yx.cols() - p).transpose();
+  mata1 x = yx.block(0, p, yx.rows(), yx.cols() - p);
   Rcpp::Rcout << "y and x separated" << std::endl;
 
   mata1 ypred;
-  ypred = meanlinkS2Scpp(x_transpose, omvec, p);
+  ypred = meanlinkS2Scpp(x, omvec, p);
   Rcpp::Rcout << "meanlink computed" << std::endl;
   veca1 obj(1);
-  obj(0) = -1 * (ypred.transpose().array() * y.array()).sum();
+  obj(0) = -1 * (ypred.array() * y.array()).sum();
   Rcpp::Rcout << "objective computed" << std::endl;
   return(obj);
 }

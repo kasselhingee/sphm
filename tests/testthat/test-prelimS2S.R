@@ -86,6 +86,7 @@ test_that("taping of pobjS2S and OmegaS2S_constraints_quad runs and evaluates", 
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
   omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
+
   
   #generate covariates uniformly on the sphere
   set.seed(4)
@@ -123,5 +124,25 @@ test_that("taping of pobjS2S and OmegaS2S_constraints_quad runs and evaluates", 
   jactape <- scorematchingad::tapeJacobian(atape)
   jactapeeval <- scorematchingad:::pForward0(jactape$ptr, unclass(OmegaS2S_vec(omparo)), vector(mode = "numeric"))
   expect_equal(jactapeeval, jac)
+
+  # check constraints
+  btapeptr <- OmegaS2S_constraints_quadtape(OmegaS2S_vec(omegapar), p)
+  directeval <- OmegaS2S_constraints_quad(OmegaS2S_vec(omparo), p)
+  tapeeval <- scorematchingad:::pForward0(btapeptr, unclass(OmegaS2S_vec(omparo)), vector(mode = "numeric"))
+  expect_equal(tapeeval, directeval)
+
+
+  jac <- scorematchingad:::pJacobian(btapeptr, unclass(OmegaS2S_vec(omparo)), vector(mode = "numeric"))
+  atape <- scorematchingad:::ADFun$new(ptr = btapeptr,
+                   name = "constraint",
+                   xtape = unclass(OmegaS2S_vec(omegapar)), #unclass needed to pass the isa(, "numeric") check!
+                   dyntape =  vector(mode = "numeric"),
+                   usertheta = unclass(NA * OmegaS2S_vec(omegapar)))
+  jactape <- scorematchingad::tapeJacobian(atape)
+  jactapeeval <- scorematchingad:::pForward0(jactape$ptr, unclass(OmegaS2S_vec(omparo)), vector(mode = "numeric"))
+  expect_equal(jactapeeval, jac)
 })
+
+
+
 

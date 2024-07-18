@@ -24,38 +24,54 @@ optim_pobjS2S_g_eq <- function(theta, y, x){
 #' Optimisation of the Preliminary Objectivf Function for S2S Link
 #' @details Uses `nloptr`. First a global optimisation with +/-10 of `paramobj0` using algorthim `NLOPT_GN_ISRES` (the only algorthim that natively handles non-linear equality constraints - all the others have to use augmented Lagrangian ideas). The a local optimisation using algorithm `NLOPT_LN_COBYLA`.
 #' @param paramobj0 is a starting parameter object.
-optim_pobjS2S_pureR <- function(y, x, paramobj0){ #paramobj0 is the starting parameter object
+#' @param global If `TRUE` will do a global search.
+#' @param local If `TRUE` will do a local search
+optim_pobjS2S_pureR <- function(y, x, paramobj0, global = TRUE, local = TRUE){ #paramobj0 is the starting parameter object
   p <- ncol(y)
   om0 <- as_OmegaS2S(paramobj0)
-  globopt <- nloptr::nloptr(
-    x0 = OmegaS2S_vec(om0),
-    eval_f = optim_pobjS2S_f,
-    eval_g_eq = optim_pobjS2S_g_eq,
-    lb = OmegaS2S_vec(om0) *0 - 10, #10 is just a guess here. Since everything is related to spheres, I suspect most values are well below 1.
-    ub = OmegaS2S_vec(om0) *0 + 10,
-    opts = list(algorithm = "NLOPT_GN_ISRES",
-                xtol_rel = 1E-04,
-                maxeval = 1E4), #the only algorthim that natively handles non-linear equality constraints - all the others have to use augmented Lagrangian ideas.
-    y = y,
-    x = x
-  )
+  om0_local <- om0
+  globopt <- locopt <- NULL
+  if (global){
+    globopt <- nloptr::nloptr(
+      x0 = OmegaS2S_vec(om0),
+      eval_f = optim_pobjS2S_f,
+      eval_g_eq = optim_pobjS2S_g_eq,
+      lb = OmegaS2S_vec(om0) *0 - 10, #10 is just a guess here. Since everything is related to spheres, I suspect most values are well below 1.
+      ub = OmegaS2S_vec(om0) *0 + 10,
+      opts = list(algorithm = "NLOPT_GN_ISRES",
+                  xtol_rel = 1E-04,
+                  maxeval = 1E4), #the only algorthim that natively handles non-linear equality constraints - all the others have to use augmented Lagrangian ideas.
+      y = y,
+      x = x
+    )
+    om0_local <- OmegaS2S_unvec(globopt$solution, p, check = FALSE)
+  }
+ 
+  if (local){
+    # re do with a local optimisation to polish (NLopt docs suggest this)
+    locopt <- nloptr::nloptr(
+      x0 = OmegaS2S_vec(om0_local),
+      eval_f = optim_pobjS2S_f,
+      eval_g_eq = optim_pobjS2S_g_eq,
+      lb = OmegaS2S_vec(om0) *0 - 10, #10 is just a guess here. Since everything is related to spheres, I suspect most values are well below 1.
+      ub = OmegaS2S_vec(om0) *0 + 10,
+      opts = list(algorithm = "NLOPT_LN_COBYLA",
+                  xtol_rel = 1E-04,
+                  maxeval = 1E3),
+      y = y,
+      x = x
+    )
+  } 
   
-  # re do with a local optimisation to polish (NLopt docs suggest this)
-  locopt <- nloptr::nloptr(
-    x0 = globopt$solution,
-    eval_f = optim_pobjS2S_f,
-    eval_g_eq = optim_pobjS2S_g_eq,
-    lb = OmegaS2S_vec(om0) *0 - 10, #10 is just a guess here. Since everything is related to spheres, I suspect most values are well below 1.
-    ub = OmegaS2S_vec(om0) *0 + 10,
-    opts = list(algorithm = "NLOPT_LN_COBYLA",
-                xtol_rel = 1E-04,
-                maxeval = 1E3),
-    y = y,
-    x = x
-  )
+  solutionvec <- switch(1 + global + 2*local,
+                        stop("At least one of global or local must be TRUE"),
+                        globopt$solution,
+                        locopt$solution,
+                        locopt$solution
+                        )
   
   return(list(
-    solution = OmegaS2S_unvec(locopt$solution, p, check = FALSE),
+    solution = OmegaS2S_unvec(solutionvec, p, check = FALSE),
     glob_nloptr = globopt,
     loc_nloptr = locopt
   ))

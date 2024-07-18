@@ -23,6 +23,11 @@ OmegaS2S_constraints_quad <- function(vec, p) {
     .Call('_sphm_OmegaS2S_constraints_quad', PACKAGE = 'sphm', vec, p)
 }
 
+#' Tape the constraint
+OmegaS2S_constraints_quadtape <- function(omvec, p_in) {
+    .Call('_sphm_OmegaS2S_constraints_quadtape', PACKAGE = 'sphm', omvec, p_in)
+}
+
 #' Function for taping a general function. The function must have signature
 #' `veca1 fun(const veca1 & independent, const veca2 & dynamic, const vecd & constvec, const matd & constmat)`.
 #' Differentiation of `fun` will occur with respect to the independent arguments. The taping will keep of dependence on the dynamic arguments so that the value of the dynamic arguments can be changed in the tape. The constants (constvec and constmat) will be baked into the tape (to change these constants `tapefun` will have to be called again.

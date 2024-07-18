@@ -1,5 +1,5 @@
 
-test_that("pobjS2S() and pobjS2SCpp() works",{
+test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   p <- 3
   q <- 5
   # data generating parameters:
@@ -28,12 +28,21 @@ test_that("pobjS2S() and pobjS2SCpp() works",{
   objvalcpp <-  pobjS2Scpp(OmegaS2S_vec(omegapar), vector(), p, cbind(y,x))
   expect_equal(objvalcpp, objval)
 
-  # optimise
-  opt <- optim_pobjS2S(y, x, omegapar)
-  #OmegaS2S_check(opt$solution)
+  # optimise using pure R
+  opt <- optim_pobjS2S_pureR(y, x, omegapar)
   expect_equal(OmegaS2S_proj(opt$solution), opt$solution, tolerance = 1E-3)
-
   expect_equal(opt$solution, omegapar, tolerance = 0.05)
+  
+  # optimise locally using derivative information
+  # starting at the optimum
+  tmp <- optim_pobjS2S_parttape(y, x, omegapar)
+  expect_equal(tmp$solution, omegapar)
+  expect_equal(tmp$loc_nloptr$iterations, 1)
+  
+  # starting away from optimum
+  start <- OmegaS2S_proj(OmegaS2S_unvec(OmegaS2S_vec(omegapar) + 10, p, check = FALSE))
+  opt2 <- optim_pobjS2S_parttape(y, x, start)
+  expect_equal(opt2$solution, omegapar, tolerance = 0.05)
 })
 
 test_that("OmegaS2S_constraints_quad() is zero correctly", {

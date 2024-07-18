@@ -22,9 +22,9 @@ optim_pobjS2S_g_eq <- function(theta, y, x){
 }
 
 #' Optimisation of the Preliminary Objectivf Function for S2S Link
-#' @details Uses `nloptr`.
+#' @details Uses `nloptr`. First a global optimisation with +/-10 of `paramobj0` using algorthim `NLOPT_GN_ISRES` (the only algorthim that natively handles non-linear equality constraints - all the others have to use augmented Lagrangian ideas). The a local optimisation using algorithm `NLOPT_LN_COBYLA`.
 #' @param paramobj0 is a starting parameter object.
-optim_pobjS2S <- function(y, x, paramobj0){ #paramobj0 is the starting parameter object
+optim_pobjS2S_pureR <- function(y, x, paramobj0){ #paramobj0 is the starting parameter object
   p <- ncol(y)
   om0 <- as_OmegaS2S(paramobj0)
   globopt <- nloptr::nloptr(
@@ -49,7 +49,7 @@ optim_pobjS2S <- function(y, x, paramobj0){ #paramobj0 is the starting parameter
     ub = OmegaS2S_vec(om0) *0 + 10,
     opts = list(algorithm = "NLOPT_LN_COBYLA",
                 xtol_rel = 1E-04,
-                maxeval = 1E3), #the only algorthim that natively handles non-linear equality constraints - all the others have to use augmented Lagrangian ideas.
+                maxeval = 1E3),
     y = y,
     x = x
   )
@@ -57,6 +57,33 @@ optim_pobjS2S <- function(y, x, paramobj0){ #paramobj0 is the starting parameter
   return(list(
     solution = OmegaS2S_unvec(locopt$solution, p, check = FALSE),
     glob_nloptr = globopt,
+    loc_nloptr = locopt
+  ))
+}
+
+#' Optimisation of the Preliminary Objectivf Function for S2S Link
+#' @details Uses `nloptr`. `NLopt` doesn't have any algorithms for global optimisation with non-linear equality constraints that use provided gradients. So `_parttape` only does local optimisation and uses `NLOPT_LD_SLSQP` which is the only algorithm that takes advantage of derivatives and can handle non-linear equality constraints.
+#' @param paramobj0 is a starting parameter object.
+optim_pobjS2S_parttape <- function(y, x, paramobj0){ #paramobj0 is the starting parameter object
+  p <- ncol(y)
+  om0 <- as_OmegaS2S(paramobj0)
+  
+  obj_tape <- pobjS2Stape(OmegaS2S_vec(om0), p, cbind(y,x))
+  constraint_tape <- OmegaS2S_constraints_quadtape(OmegaS2S_vec(om0), p)
+  
+  locopt <- nloptr::nloptr(
+    x0 = OmegaS2S_vec(om0),
+    eval_f = function(theta){scorematchingad:::pForward0(obj_tape, theta, vector(mode = "numeric"))},
+    eval_grad_f = function(theta){scorematchingad:::pJacobian(obj_tape, theta, vector(mode = "numeric"))},
+    eval_g_eq =  function(theta){scorematchingad:::pForward0(constraint_tape, theta, vector(mode = "numeric"))},
+    eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(constraint_tape, theta, vector(mode = "numeric")), byrow = FALSE, ncol = length(theta))},
+    opts = list(algorithm = "NLOPT_LD_SLSQP",
+                xtol_rel = 1E-04,
+                maxeval = 1E4),
+  )
+  
+  return(list(
+    solution = OmegaS2S_unvec(locopt$solution, p, check = FALSE),
     loc_nloptr = locopt
   ))
 }

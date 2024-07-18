@@ -93,7 +93,7 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0){ #paramobj0 is the starting 
     eval_grad_f = function(theta){scorematchingad:::pJacobian(obj_tape, theta, vector(mode = "numeric"))},
     eval_g_eq =  function(theta){scorematchingad:::pForward0(constraint_tape, theta, vector(mode = "numeric"))},
     eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(constraint_tape, theta, vector(mode = "numeric")), byrow = FALSE, ncol = length(theta))},
-    opts = list(algorithm = "NLOPT_LD_SLSQP",
+    opts = list(algorithm = "NLOPT_LN_COBYLA",
                 xtol_rel = 1E-04,
                 maxeval = 1E4),
   )

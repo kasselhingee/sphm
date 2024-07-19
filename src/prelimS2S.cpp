@@ -17,8 +17,8 @@ veca1 pobjS2Scpp(const veca1 & omvec, const veca1 & dyn, const vecd & p_in, cons
 
   mata1 ypred;
   ypred = meanlinkS2Scpp(x, omvec, p);
-  veca1 obj(1);
-  obj(0) = -1 * (ypred.array() * y.array()).sum();
+  veca1 obj(0);
+  obj(0) = -1 * (ypred.array() * y.array()).rowwise().sum().mean();
   return(obj);
 }
 

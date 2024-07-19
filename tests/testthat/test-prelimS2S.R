@@ -29,7 +29,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   expect_equal(objvalcpp, objval)
 
   # optimise using pure R
-  opt <- optim_pobjS2S_pureR(y, x, omegapar)
+  opt <- optim_pobjS2S_pureR(y, x, omegapar, global = TRUE, local = TRUE)
   expect_equal(OmegaS2S_proj(opt$solution), opt$solution, tolerance = 1E-3)
   expect_equal(opt$solution, omegapar, tolerance = 0.05)
   

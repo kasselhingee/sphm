@@ -101,6 +101,7 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0){ #paramobj0 is the starting 
     opts = list(algorithm = "NLOPT_LD_SLSQP",
                 xtol_rel = 1E-04,
                 maxeval = 1E4,
+                tol_constraints_eq = rep(1E-4, 10),
                 check_derivatives = TRUE),
   )
   

@@ -47,7 +47,6 @@ veca1 OmegaS2S_constraints_quad(const veca1 & vec, const int p) {
   out(1) = ompar.q1.squaredNorm() - 1.;
   out.segment(2, q1_size) = (ompar.p1.transpose() * ompar.Omega).array().square();
   out.segment(2 + q1_size, p1_size) = (ompar.Omega * ompar.q1).array().square();
-  out = out.array().square();
   return(out);
 }
 

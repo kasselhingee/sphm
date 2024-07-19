@@ -25,8 +25,15 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> OmegaS2Scpp_vec(const OmegaS2Scpp<T>& obj) {
     int q1_size = obj.q1.size();
     int Omega_size = obj.Omega.size();
 
+    // explicitly copy the parameters - need to do this because Eigen will be doing passing of pointers if it can
+
+    Eigen::Matrix<T, Eigen::Dynamic, 1> p1 = obj.p1;
+    Eigen::Matrix<T, Eigen::Dynamic, 1> q1 = obj.q1;
+    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega = obj.Omega;
+
+    //vectorise
     Eigen::Matrix<T, Eigen::Dynamic, 1> out(p1_size + q1_size + Omega_size);
-    out << obj.p1, obj.q1, Eigen::Map< Eigen::Matrix<T, Eigen::Dynamic, 1> >(obj.Omega.data(), Omega_size);
+    out << p1, q1, Eigen::Map< Eigen::Matrix<T, Eigen::Dynamic, 1> >(Omega.data(), Omega_size);
 
     return out;
 }
@@ -46,6 +53,16 @@ OmegaS2Scpp<T> OmegaS2Scpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vec,
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega = Eigen::Map<const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> >(vec.segment(p + q, p * q).data(), p, q);
 
     return OmegaS2Scpp<T>(p1, q1, Omega);
+}
+
+// Function to project the Omega in an OmegaS2S object to be perpendicular to p1 and q1
+template <typename T>
+OmegaS2Scpp<T> OmegaS2Sproj(const OmegaS2Scpp<T>& obj) {
+    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omegaperpp1;
+    Omegaperpp1 = obj.Omega - obj.p1 * (obj.p1.transpose()) * obj.Omega; //remove p1 component
+    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omegaperpq1;
+    Omegaperpq1 = Omegaperpp1 - Omegaperpp1 * obj.q1 * (obj.q1.transpose()); //remove q1 component
+    return OmegaS2Scpp<T>(obj.p1, obj.q1, Omegaperpq1);
 }
 
 // Convert an R list to an OmegaS2Scpp struct

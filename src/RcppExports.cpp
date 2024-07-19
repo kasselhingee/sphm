@@ -55,27 +55,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// OmegaS2S_constraints_quad
-veca1 OmegaS2S_constraints_quad(const veca1& vec, const int p);
-RcppExport SEXP _sphm_OmegaS2S_constraints_quad(SEXP vecSEXP, SEXP pSEXP) {
+// OmegaS2S_constraints
+veca1 OmegaS2S_constraints(const veca1& vec, const int p);
+RcppExport SEXP _sphm_OmegaS2S_constraints(SEXP vecSEXP, SEXP pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const veca1& >::type vec(vecSEXP);
     Rcpp::traits::input_parameter< const int >::type p(pSEXP);
-    rcpp_result_gen = Rcpp::wrap(OmegaS2S_constraints_quad(vec, p));
+    rcpp_result_gen = Rcpp::wrap(OmegaS2S_constraints(vec, p));
     return rcpp_result_gen;
 END_RCPP
 }
-// OmegaS2S_constraints_quadtape
-Rcpp::XPtr< CppAD::ADFun<double> > OmegaS2S_constraints_quadtape(veca1& omvec, vecd& p_in);
-RcppExport SEXP _sphm_OmegaS2S_constraints_quadtape(SEXP omvecSEXP, SEXP p_inSEXP) {
+// OmegaS2S_constraintstape
+Rcpp::XPtr< CppAD::ADFun<double> > OmegaS2S_constraintstape(veca1& omvec, vecd& p_in);
+RcppExport SEXP _sphm_OmegaS2S_constraintstape(SEXP omvecSEXP, SEXP p_inSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< veca1& >::type omvec(omvecSEXP);
     Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
-    rcpp_result_gen = Rcpp::wrap(OmegaS2S_constraints_quadtape(omvec, p_in));
+    rcpp_result_gen = Rcpp::wrap(OmegaS2S_constraintstape(omvec, p_in));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -84,8 +84,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
     {"_sphm_pobjS2Stape", (DL_FUNC) &_sphm_pobjS2Stape, 3},
-    {"_sphm_OmegaS2S_constraints_quad", (DL_FUNC) &_sphm_OmegaS2S_constraints_quad, 2},
-    {"_sphm_OmegaS2S_constraints_quadtape", (DL_FUNC) &_sphm_OmegaS2S_constraints_quadtape, 2},
+    {"_sphm_OmegaS2S_constraints", (DL_FUNC) &_sphm_OmegaS2S_constraints, 2},
+    {"_sphm_OmegaS2S_constraintstape", (DL_FUNC) &_sphm_OmegaS2S_constraintstape, 2},
     {NULL, NULL, 0}
 };
 

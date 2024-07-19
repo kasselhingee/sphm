@@ -19,13 +19,13 @@ pobjS2Stape <- function(omvec, p_in, yx) {
     .Call('_sphm_pobjS2Stape', PACKAGE = 'sphm', omvec, p_in, yx)
 }
 
-OmegaS2S_constraints_quad <- function(vec, p) {
-    .Call('_sphm_OmegaS2S_constraints_quad', PACKAGE = 'sphm', vec, p)
+OmegaS2S_constraints <- function(vec, p) {
+    .Call('_sphm_OmegaS2S_constraints', PACKAGE = 'sphm', vec, p)
 }
 
 #' Tape the constraint
-OmegaS2S_constraints_quadtape <- function(omvec, p_in) {
-    .Call('_sphm_OmegaS2S_constraints_quadtape', PACKAGE = 'sphm', omvec, p_in)
+OmegaS2S_constraintstape <- function(omvec, p_in) {
+    .Call('_sphm_OmegaS2S_constraintstape', PACKAGE = 'sphm', omvec, p_in)
 }
 
 #' Function for taping a general function. The function must have signature

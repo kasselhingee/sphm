@@ -45,7 +45,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   expect_equal(opt2$solution, omegapar, tolerance = 0.05)
 })
 
-test_that("OmegaS2S_constraints_quad() is zero correctly", {
+test_that("OmegaS2S_constraints() is zero correctly", {
   p <- 3
   q <- 5
   # data generating parameters:
@@ -56,7 +56,7 @@ test_that("OmegaS2S_constraints_quad() is zero correctly", {
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
   omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
-  expect_equal(OmegaS2S_constraints_quad(OmegaS2S_vec(omegapar), p), rep(0, 1 + 1 + p + q))
+  expect_equal(OmegaS2S_constraints(OmegaS2S_vec(omegapar), p), rep(0, 1 + 1 + p + q))
 })
 
 test_that("pre_est3_mod optimisation works", {
@@ -84,7 +84,7 @@ expect_equal(result$par[7], B[1,1], tolerance = 1E-3)
 expect_equal(result$par[8] * result$par[7], B[2,2], tolerance = 1E-3)
 })
 
-test_that("taping of pobjS2S and OmegaS2S_constraints_quad runs and evaluates", {
+test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   p <- 3
   q <- 5
   # data generating parameters:
@@ -137,8 +137,8 @@ test_that("taping of pobjS2S and OmegaS2S_constraints_quad runs and evaluates", 
   expect_equal(jactapeeval, jac)
 
   # check constraints
-  btapeptr <- OmegaS2S_constraints_quadtape(OmegaS2S_vec(omegapar), p)
-  directeval <- OmegaS2S_constraints_quad(omparovec, p)
+  btapeptr <- OmegaS2S_constraintstape(OmegaS2S_vec(omegapar), p)
+  directeval <- OmegaS2S_constraints(omparovec, p)
   tapeeval <- scorematchingad:::pForward0(btapeptr, unclass(omparovec), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)
 

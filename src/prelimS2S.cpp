@@ -35,7 +35,7 @@ Rcpp::XPtr< CppAD::ADFun<double> > pobjS2Stape(veca1 & omvec, vecd & p_in, matd 
 
 // For a parameter set return quadratic distance to constraints matching
 // [[Rcpp::export]]
-veca1 OmegaS2S_constraints_quad(const veca1 & vec, const int p) {
+veca1 OmegaS2S_constraints(const veca1 & vec, const int p) {
   // Convert vector to a OmegaS2Scpp object
   OmegaS2Scpp<a1type> ompar = OmegaS2Scpp_unvec(vec, p);
 
@@ -45,27 +45,27 @@ veca1 OmegaS2S_constraints_quad(const veca1 & vec, const int p) {
   veca1 out(1 + 1 + p1_size + q1_size);
   out(0) = ompar.p1.squaredNorm() - 1.;
   out(1) = ompar.q1.squaredNorm() - 1.;
-  out.segment(2, q1_size) = (ompar.p1.transpose() * ompar.Omega).array().square();
-  out.segment(2 + q1_size, p1_size) = (ompar.Omega * ompar.q1).array().square();
+  out.segment(2, q1_size) = (ompar.p1.transpose() * ompar.Omega).array();
+  out.segment(2 + q1_size, p1_size) = (ompar.Omega * ompar.q1).array();
   return(out);
 }
 
-//a wrap around OmegaS2S_constraints_quad for use with tapegeneral
-veca1 wrap_OmegaS2S_constraints_quad(const veca1 & vec, const veca1 & ignore1, const vecd & p_in, const matd & ignore2) {
+//a wrap around OmegaS2S_constraints for use with tapegeneral
+veca1 wrap_OmegaS2S_constraints(const veca1 & vec, const veca1 & ignore1, const vecd & p_in, const matd & ignore2) {
   veca1 out;
   int p = int(p_in(0) + 0.1);
-  out = OmegaS2S_constraints_quad(vec,p);
+  out = OmegaS2S_constraints(vec,p);
   return(out);
 }
 
 
 //' Tape the constraint
 // [[Rcpp::export]]
-Rcpp::XPtr< CppAD::ADFun<double> > OmegaS2S_constraints_quadtape(veca1 & omvec, vecd & p_in) {
+Rcpp::XPtr< CppAD::ADFun<double> > OmegaS2S_constraintstape(veca1 & omvec, vecd & p_in) {
   CppAD::ADFun<double>* out = new CppAD::ADFun<double>; //returning a pointer
   veca1 dyn(0); //empty vector for passing to general taping function
   matd constmat; //empty matrix for passing to general taping function
-  *out = tapefun(*wrap_OmegaS2S_constraints_quad, omvec, dyn, p_in, constmat);
+  *out = tapefun(*wrap_OmegaS2S_constraints, omvec, dyn, p_in, constmat);
   Rcpp::XPtr< CppAD::ADFun<double> > pout(out, true);
   return(pout);
 }

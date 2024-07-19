@@ -85,7 +85,7 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0){ #paramobj0 is the starting 
   om0 <- as_OmegaS2S(paramobj0)
   
   obj_tape <- pobjS2Stape(OmegaS2S_vec(om0), p, cbind(y,x))
-  constraint_tape <- OmegaS2S_constraints_quadtape(OmegaS2S_vec(om0), p)
+  constraint_tape <- OmegaS2S_constraintstape(OmegaS2S_vec(om0), p)
   
   print(scorematchingad:::pForward0(obj_tape, OmegaS2S_vec(om0), vector(mode = "numeric")))
   print(scorematchingad:::pJacobian(obj_tape, OmegaS2S_vec(om0), vector(mode = "numeric")))

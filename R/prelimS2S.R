@@ -87,6 +87,11 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0){ #paramobj0 is the starting 
   obj_tape <- pobjS2Stape(OmegaS2S_vec(om0), p, cbind(y,x))
   constraint_tape <- OmegaS2S_constraints_quadtape(OmegaS2S_vec(om0), p)
   
+  print(scorematchingad:::pForward0(obj_tape, OmegaS2S_vec(om0), vector(mode = "numeric")))
+  print(scorematchingad:::pJacobian(obj_tape, OmegaS2S_vec(om0), vector(mode = "numeric")))
+  print(scorematchingad:::pForward0(constraint_tape, OmegaS2S_vec(om0), vector(mode = "numeric")))
+  print(matrix(scorematchingad:::pJacobian(constraint_tape, OmegaS2S_vec(om0), vector(mode = "numeric")), byrow = TRUE, ncol = length(OmegaS2S_vec(om0))))
+  
   locopt <- nloptr::nloptr(
     x0 = OmegaS2S_vec(om0),
     eval_f = function(theta){scorematchingad:::pForward0(obj_tape, theta, vector(mode = "numeric"))},
@@ -95,7 +100,8 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0){ #paramobj0 is the starting 
     eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(constraint_tape, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
     opts = list(algorithm = "NLOPT_LD_SLSQP",
                 xtol_rel = 1E-04,
-                maxeval = 1E4),
+                maxeval = 1E4,
+                check_derivatives = TRUE),
   )
   
   return(list(

@@ -135,14 +135,27 @@ OmegaS2S_check_internal <- function(obj){ #uses squared values for smoothness
 }
 # if the values are close to satisfying the constraints, it might make sense to project and scale p1 and q1 to satisfy the constraints
 # will use canonical parameterisation to do this because orthogonality of the columns will make for easier projections
-OmegaS2S_proj <- function(obj){
-  cann <- Omega2cann(obj, check = FALSE)
-  newp1 <- cann$P[,1] - cann$P[, -1] %*% t(cann$P[, -1]) %*% cann$P[,1]
-  newp1 <- newp1 / vnorm(newp1)
-  cann$P[,1] <- newp1
+OmegaS2S_proj <- function(obj, method = "p1q1"){
+  stopifnot(inherits(obj, "OmegaS2S"))
+  if (method == "Omega") {
+    list2env(obj, envir = environment())
+    # first project orthogonal to p1 (needs p1 unit vector)
+    p1 <- p1/vnorm(p1)
+    Omegaperpp1 <- Omega -  (p1 %*% t(p1)) %*% Omega
+    # similarly to q1
+    q1 <- q1/vnorm(q1)
+    Omegaperpq1 <- Omegaperpp1 - Omegaperpp1 %*% q1 %*% t(q1)
+    return(OmegaS2S(p1, q1, Omegaperpq1, check = FALSE))
+  }
+  if (method == "p1q1") {
+    cann <- Omega2cann(obj, check = FALSE)
+    newp1 <- cann$P[,1] - cann$P[, -1] %*% t(cann$P[, -1]) %*% cann$P[,1]
+    newp1 <- newp1 / vnorm(newp1)
+    cann$P[,1] <- newp1
   
-  newq1 <- cann$Q[,1] - cann$Q[, -1] %*% t(cann$Q[, -1]) %*% cann$Q[,1]
-  newq1 <- newq1 / vnorm(newq1)
-  cann$Q[,1] <- newq1
-  return(as_OmegaS2S(cann))
+    newq1 <- cann$Q[,1] - cann$Q[, -1] %*% t(cann$Q[, -1]) %*% cann$Q[,1]
+    newq1 <- newq1 / vnorm(newq1)
+    cann$Q[,1] <- newq1
+    return(as_OmegaS2S(cann))
+  }
 }

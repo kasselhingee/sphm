@@ -14,7 +14,7 @@ pobjS2S <- function(y, x, paramobj){
 
 
 optim_pobjS2S_f <- function(theta, y, x){
-  pobjS2S(y, x, OmegaS2S_proj(OmegaS2S_unvec(theta, ncol(y), check = FALSE)))
+  pobjS2S(y, x, OmegaS2S_proj(OmegaS2S_unvec(theta, ncol(y), check = FALSE), method = "Omega"))
 }
 optim_pobjS2S_g_eq <- function(theta, y, x){
   om <- OmegaS2S_unvec(theta, ncol(y), check = FALSE)
@@ -96,13 +96,13 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0){ #paramobj0 is the starting 
     x0 = OmegaS2S_vec(om0),
     eval_f = function(theta){scorematchingad:::pForward0(obj_tape, theta, vector(mode = "numeric"))},
     eval_grad_f = function(theta){scorematchingad:::pJacobian(obj_tape, theta, vector(mode = "numeric"))},
-    eval_g_eq =  function(theta){scorematchingad:::pForward0(constraint_tape, theta, vector(mode = "numeric"))},
-    eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(constraint_tape, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
+    eval_g_eq =  function(theta){scorematchingad:::pForward0(constraint_tape, theta, vector(mode = "numeric"))[1:2]},
+    eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(constraint_tape, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))[1:2, ]},
     opts = list(algorithm = "NLOPT_LD_SLSQP",
-                xtol_rel = 0, #1E-04,
+                xtol_rel = 1E-10, #1E-04,
                 ftol_rel = 1E-10,
                 ftol_abs = 1E-10,
-                tol_constraints_eq = rep(1E-2, p + ncol(x) + 2),
+                tol_constraints_eq = rep(1E-1, 2),
                 maxeval = 1E4,
                 check_derivatives_print = "errors",
                 check_derivatives = TRUE),

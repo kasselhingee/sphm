@@ -29,7 +29,7 @@ test_that("OmegaS2S works and conversions", {
   #vec and unvec
   expect_equal(OmegaS2S_unvec(OmegaS2S_vec(om), p), om)
   
-  # project
+  # project p1 and q1 perpendicular to Omega
   expect_equal(OmegaS2S_proj(om), om)
   ommod <- om
   ommod$p1 <- om$p1 * (1 + 1E-2 * runif(length(om$p1), -1, 1))
@@ -37,6 +37,14 @@ test_that("OmegaS2S works and conversions", {
   expect_error(OmegaS2S_check(ommod), "checks failed")
   expect_equal(OmegaS2S_proj(ommod), om, tolerance = 1E-2)
   expect_equal(OmegaS2S_proj(ommod)$Omega, om$Omega)
+  
+  # project Omega perpendicular to p1 and q1
+  expect_equal(OmegaS2S_proj(om, method = "Omega"), om)
+  ommod <- om
+  ommod$Omega <- om$Omega * (1 + 1E-2 * matrix(runif(length(om$Omega), -1, 1), p, q))
+  expect_error(OmegaS2S_check(ommod), "checks failed")
+  expect_equal(OmegaS2S_proj(ommod, method = "Omega"), om, tolerance = 1E-2)
+  expect_equal(OmegaS2S_proj(ommod, method = "Omega")[c("q1", "p1")], om[c("q1", "p1")])
 })
 
 

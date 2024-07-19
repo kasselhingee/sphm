@@ -137,6 +137,7 @@ OmegaS2S_check_internal <- function(obj){ #uses squared values for smoothness
 # will use canonical parameterisation to do this because orthogonality of the columns will make for easier projections
 OmegaS2S_proj <- function(obj, method = "p1q1"){
   stopifnot(inherits(obj, "OmegaS2S"))
+  stopifnot(method %in% c("Omega", "p1q1"))
   if (method == "Omega") {
     list2env(obj, envir = environment())
     # first project orthogonal to p1 (needs p1 unit vector)

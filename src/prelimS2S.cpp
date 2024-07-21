@@ -15,20 +15,15 @@ veca1 pobjS2Scpp(const veca1 & omvec, const veca1 & dyn, const vecd & p_in, cons
   mata1 y = yx.leftCols(p);
   mata1 x = yx.block(0, p, yx.rows(), yx.cols() - p);
  
-  Rcpp::Rcout << "Input vector: " << omvec.transpose() << std::endl; 
   OmegaS2Scpp<a1type> om = OmegaS2Scpp_unvec(omvec, p);
   OmegaS2Scpp<a1type> om_projected = OmegaS2Sproj(om);
-  Rcpp::Rcout << "Projection returned." << std::endl;
   veca1 omvec_projected;
   omvec_projected = OmegaS2Scpp_vec(om_projected);  
-  Rcpp::Rcout << "Projection vectorised." << std::endl;
-  Rcpp::Rcout << "Projected vector: " << omvec_projected.transpose() << std::endl; 
 
   mata1 ypred;
-
   ypred = meanlinkS2Scpp(x, omvec_projected, p);
-  veca1 obj(0);
-  obj(0) = -1 * (ypred.array() * y.array()).rowwise().sum().mean();
+  veca1 obj(1);
+  obj(0) = -1 * (ypred.array() * y.array()).sum()/y.rows();
   return(obj);
 }
 

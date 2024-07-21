@@ -58,10 +58,16 @@ OmegaS2Scpp<T> OmegaS2Scpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vec,
 // Function to project the Omega in an OmegaS2S object to be perpendicular to p1 and q1
 template <typename T>
 OmegaS2Scpp<T> OmegaS2Sproj(const OmegaS2Scpp<T>& obj) {
+    Rcpp::Rcout << "Projection started" << std::endl;
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omegaperpp1;
     Omegaperpp1 = obj.Omega - obj.p1 * (obj.p1.transpose()) * obj.Omega; //remove p1 component
+    Rcpp::Rcout << "Projection perpendicular to p1 finished." << std::endl;
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omegaperpq1;
     Omegaperpq1 = Omegaperpp1 - Omegaperpp1 * obj.q1 * (obj.q1.transpose()); //remove q1 component
+    Rcpp::Rcout << "Projection perpendicular to q1 finished." << std::endl;
+    Rcpp::Rcout << "p1 length: " << obj.p1.rows() << std::endl;
+    Rcpp::Rcout << "q1 length: " << obj.q1.rows() << std::endl;
+    Rcpp::Rcout << "Omega: " << Omegaperpq1.rows() << " x " << Omegaperpq1.cols() << std::endl;
     return OmegaS2Scpp<T>(obj.p1, obj.q1, Omegaperpq1);
 }
 

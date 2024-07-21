@@ -14,11 +14,15 @@ veca1 pobjS2Scpp(const veca1 & omvec, const veca1 & dyn, const vecd & p_in, cons
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   mata1 y = yx.leftCols(p);
   mata1 x = yx.block(0, p, yx.rows(), yx.cols() - p);
-  
+ 
+  Rcpp::Rcout << "Input vector: " << omvec.transpose() << std::endl; 
   OmegaS2Scpp<a1type> om = OmegaS2Scpp_unvec(omvec, p);
   OmegaS2Scpp<a1type> om_projected = OmegaS2Sproj(om);
+  Rcpp::Rcout << "Projection returned." << std::endl;
   veca1 omvec_projected;
   omvec_projected = OmegaS2Scpp_vec(om_projected);  
+  Rcpp::Rcout << "Projection vectorised." << std::endl;
+  Rcpp::Rcout << "Projected vector: " << omvec_projected.transpose() << std::endl; 
 
   mata1 ypred;
 

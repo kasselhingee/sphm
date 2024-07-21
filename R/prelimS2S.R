@@ -87,11 +87,6 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0){ #paramobj0 is the starting 
   obj_tape <- pobjS2Stape(OmegaS2S_vec(om0), p, cbind(y,x))
   constraint_tape <- OmegaS2S_constraintstape(OmegaS2S_vec(om0), p)
   
-  print(scorematchingad:::pForward0(obj_tape, OmegaS2S_vec(om0), vector(mode = "numeric")))
-  print(scorematchingad:::pJacobian(obj_tape, OmegaS2S_vec(om0), vector(mode = "numeric")))
-  print(scorematchingad:::pForward0(constraint_tape, OmegaS2S_vec(om0), vector(mode = "numeric")))
-  print(matrix(scorematchingad:::pJacobian(constraint_tape, OmegaS2S_vec(om0), vector(mode = "numeric")), byrow = TRUE, ncol = length(OmegaS2S_vec(om0))))
-  
   locopt <- nloptr::nloptr(
     x0 = OmegaS2S_vec(om0),
     eval_f = function(theta){scorematchingad:::pForward0(obj_tape, theta, vector(mode = "numeric"))},

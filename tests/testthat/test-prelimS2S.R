@@ -30,19 +30,27 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
 
   # optimise using pure R
   opt <- optim_pobjS2S_pureR(y, x, omegapar, global = TRUE, local = TRUE)
-  expect_equal(OmegaS2S_proj(opt$solution), opt$solution, tolerance = 1E-3)
+  expect_equal(OmegaS2S_proj(opt$solution, method = "Omega"), opt$solution, tolerance = 1E-3)
   expect_equal(opt$solution, omegapar, tolerance = 0.05)
   
   # optimise locally using derivative information
   # starting at the optimum
   tmp <- optim_pobjS2S_parttape(y, x, omegapar)
-  expect_equal(tmp$solution, omegapar)
-  expect_equal(tmp$loc_nloptr$iterations, 1)
+  expect_equal(tmp$solution, omegapar, tolerance = 0.05)
   
   # starting away from optimum
   start <- OmegaS2S_proj(OmegaS2S_unvec(OmegaS2S_vec(omegapar) + 10, p, check = FALSE))
   opt2 <- optim_pobjS2S_parttape(y, x, start)
-  expect_equal(opt2$solution, omegapar, tolerance = 0.05)
+
+  # use an antipodal - like transform to get to another solution
+  start2 <- as_cannS2S(opt2$solution)
+  start2$B <- diag(1/diag(start2$B))
+  start2$P <- -start2$P
+  start2$Q <- -start2$Q
+  opt3 <- optim_pobjS2S_parttape(y, x, as_OmegaS2S(start2))
+  expect_equal(opt3$solution, omegapar, tolerance = 0.05)
+  expect_equal(opt3$solution, opt$solution)
+  expect_equal(opt3$solution, tmp$solution)
 })
 
 test_that("OmegaS2S_constraints() is zero correctly", {

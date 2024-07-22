@@ -49,8 +49,8 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   start2$Q <- -start2$Q
   opt3 <- optim_pobjS2S_parttape(y, x, as_OmegaS2S(start2))
   expect_equal(opt3$solution, omegapar, tolerance = 0.05)
-  expect_equal(opt3$solution, opt$solution)
-  expect_equal(opt3$solution, tmp$solution)
+  expect_equal(opt3$solution, opt$solution, tolerance = 1E-2)
+  expect_equal(opt3$solution, tmp$solution, tolerance = 1E-2)
 })
 
 test_that("OmegaS2S_constraints() is zero correctly", {

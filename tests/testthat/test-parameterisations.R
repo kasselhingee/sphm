@@ -35,8 +35,8 @@ test_that("OmegaS2S works and conversions", {
   ommod$p1 <- om$p1 * (1 + 1E-2 * runif(length(om$p1), -1, 1))
   ommod$q1 <- om$q1 * (1 + 1E-2 * runif(length(om$q1), -1, 1))
   expect_error(OmegaS2S_check(ommod), "checks failed")
-  expect_equal(OmegaS2S_proj(ommod), om, tolerance = 1E-2)
-  expect_equal(OmegaS2S_proj(ommod)$Omega, om$Omega)
+  expect_equal(OmegaS2S_proj(ommod, method = "p1q1"), om, tolerance = 1E-2)
+  expect_equal(OmegaS2S_proj(ommod, method = "p1q1")$Omega, om$Omega)
   
   # project Omega perpendicular to p1 and q1
   expect_equal(OmegaS2S_proj(om, method = "Omega"), om)

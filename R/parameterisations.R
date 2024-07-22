@@ -135,7 +135,7 @@ OmegaS2S_check_internal <- function(obj){ #uses squared values for smoothness
 }
 # if the values are close to satisfying the constraints, it might make sense to project and scale p1 and q1 to satisfy the constraints
 # will use canonical parameterisation to do this because orthogonality of the columns will make for easier projections
-OmegaS2S_proj <- function(obj, method = "p1q1"){
+OmegaS2S_proj <- function(obj, method = "Omega"){
   stopifnot(inherits(obj, "OmegaS2S"))
   stopifnot(method %in% c("Omega", "p1q1"))
   if (method == "Omega") {

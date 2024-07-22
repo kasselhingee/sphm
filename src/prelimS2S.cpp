@@ -47,11 +47,9 @@ veca1 OmegaS2S_constraints(const veca1 & vec, const int p) {
   // design so that function returns zero vector when constraints satisfied
   int p1_size = ompar.p1.size();
   int q1_size = ompar.q1.size();
-  veca1 out(1 + 1 + p1_size + q1_size);
+  veca1 out(1 + 1);
   out(0) = ompar.p1.squaredNorm() - 1.;
   out(1) = ompar.q1.squaredNorm() - 1.;
-  out.segment(2, q1_size) = (ompar.p1.transpose() * ompar.Omega).array();
-  out.segment(2 + q1_size, p1_size) = (ompar.Omega * ompar.q1).array();
   return(out);
 }
 

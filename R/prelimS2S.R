@@ -71,7 +71,7 @@ optim_pobjS2S_pureR <- function(y, x, paramobj0, global = TRUE, local = TRUE){ #
                         )
   
   return(list(
-    solution = OmegaS2S_unvec(solutionvec, p, check = FALSE),
+    solution = OmegaS2S_proj(OmegaS2S_unvec(solutionvec, p, check = FALSE), method = "Omega"),
     glob_nloptr = globopt,
     loc_nloptr = locopt
   ))
@@ -80,12 +80,21 @@ optim_pobjS2S_pureR <- function(y, x, paramobj0, global = TRUE, local = TRUE){ #
 #' Optimisation of the Preliminary Objectivf Function for S2S Link
 #' @details Uses `nloptr`. `NLopt` doesn't have any algorithms for global optimisation with non-linear equality constraints that use provided gradients. So `_parttape` only does local optimisation and uses `NLOPT_LD_SLSQP` which is the only algorithm that takes advantage of derivatives and can handle non-linear equality constraints.
 #' @param paramobj0 is a starting parameter object.
-optim_pobjS2S_parttape <- function(y, x, paramobj0){ #paramobj0 is the starting parameter object
+#' @param ... Passed as options to [`nloptr()`]. Default is
+optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the starting parameter object
   p <- ncol(y)
   om0 <- as_OmegaS2S(paramobj0)
   
   obj_tape <- pobjS2Stape(OmegaS2S_vec(om0), p, cbind(y,x))
   constraint_tape <- OmegaS2S_constraintstape(OmegaS2S_vec(om0), p)
+
+  # prepare nloptr options
+  default_opts <- list(algorithm = "NLOPT_LD_SLSQP",
+                xtol_rel = 1E-10, #1E-04,
+                tol_constraints_eq = rep(1E-1, 2),
+                maxeval = 1E4)
+  ellipsis_args <- list(...)
+  combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
   locopt <- nloptr::nloptr(
     x0 = OmegaS2S_vec(om0),
@@ -93,18 +102,11 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0){ #paramobj0 is the starting 
     eval_grad_f = function(theta){scorematchingad:::pJacobian(obj_tape, theta, vector(mode = "numeric"))},
     eval_g_eq =  function(theta){scorematchingad:::pForward0(constraint_tape, theta, vector(mode = "numeric"))[1:2]},
     eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(constraint_tape, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))[1:2, ]},
-    opts = list(algorithm = "NLOPT_LD_SLSQP",
-                xtol_rel = 1E-10, #1E-04,
-                ftol_rel = 1E-10,
-                ftol_abs = 1E-10,
-                tol_constraints_eq = rep(1E-1, 2),
-                maxeval = 1E4,
-                check_derivatives_print = "errors",
-                check_derivatives = TRUE),
+    opts = combined_opts
   )
   
   return(list(
-    solution = OmegaS2S_unvec(locopt$solution, p, check = FALSE),
+    solution = OmegaS2S_proj(OmegaS2S_unvec(locopt$solution, p, check = FALSE), method = "Omega"),
     loc_nloptr = locopt
   ))
 }

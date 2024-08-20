@@ -12,4 +12,6 @@ test_that("SvMF_ll is the same using either parameterisatiion", {
   obj2 <- SvMF_cann2muV(obj)
   ll_muV <- SvMF_ll_muV(y, obj2)
   expect_equal(ll_muV, ll_cann)
+  
+  expect_equal(dSvMF(y, obj), dSvMF(y, obj2))
 })

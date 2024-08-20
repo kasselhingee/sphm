@@ -1,5 +1,17 @@
 #' Log-likelihood of SvMF
 #' @param y is row-vectors of data
+#' @param param is a set of parameters from either [`SvMFcann()`] or [`SvMFmuV()`].
+#' @param log Return log density?
+#' @export
+#' @return A vector of values.
+dSvMF <- function(y, param, log = FALSE){
+  if (inherits(param, "SvMFmuV")){ll <- SvMF_ll_muV(y, param)}
+  if (inherits(param, "SvMFcann")){ll <- SvMF_ll_cann(y, param)}
+  if (log){return(ll)}
+  else {return(exp(ll))}
+}
+
+
 SvMF_ll_cann <- function(y, param){
   list2env(param, envir = environment())
   p <- nrow(G)

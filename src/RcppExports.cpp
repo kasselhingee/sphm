@@ -15,6 +15,18 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// ldSvMF
+veca1 ldSvMF(mata1 y, Rcpp::List obj);
+RcppExport SEXP _sphm_ldSvMF(SEXP ySEXP, SEXP objSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< mata1 >::type y(ySEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type obj(objSEXP);
+    rcpp_result_gen = Rcpp::wrap(ldSvMF(y, obj));
+    return rcpp_result_gen;
+END_RCPP
+}
 // meanlinkS2Scpp
 mata1 meanlinkS2Scpp(const mata1& x, const veca1& vec, const int p);
 RcppExport SEXP _sphm_meanlinkS2Scpp(SEXP xSEXP, SEXP vecSEXP, SEXP pSEXP) {
@@ -81,6 +93,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_sphm_ldSvMF", (DL_FUNC) &_sphm_ldSvMF, 2},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
     {"_sphm_pobjS2Stape", (DL_FUNC) &_sphm_pobjS2Stape, 3},

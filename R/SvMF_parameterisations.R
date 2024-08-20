@@ -56,6 +56,13 @@ SvMFmuV_check <- function(obj){
   }
   return(NULL)
 }
+as_SvMFmuV <- function(obj){
+  if (inherits(obj, "SvMFmuV")){return(obj)}
+  if (inherits(obj, "SvMFcann")){return(SvMF_cann2muV(obj))}
+  if (!inherits(obj, "list")){stop("obj isn't a SvMFmuV, SvMFcann or a list.")}
+  if ("V" %in% names(obj)){return(do.call(SvMFmuV, obj))}
+  if ("G" %in% names(obj)){return(SvMFmuV(do.call(SvMFcann, obj)))}
+}
 
 # conversion
 SvMF_cann2muV <- function(obj){

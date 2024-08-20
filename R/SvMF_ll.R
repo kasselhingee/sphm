@@ -19,7 +19,7 @@ SvMF_ll_muV <- function(y, param){
   ystarstarL <- y %*% Hstar
   denom <- sqrt(drop((y %*% m/a1)^2) + rowSums((ystarstarL %*% solve(V))*ystarstarL))
   
-  ll <- lconst - (p-1) * log(denom) + drop(y %*% m/a1)/denom
+  ll <- lconst - (p-1) * log(denom) + drop(k * y %*% m/a1)/denom
   return(ll)
 }
 

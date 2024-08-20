@@ -7,5 +7,9 @@ test_that("SvMF_ll is the same using either parameterisatiion", {
   obj <- SvMFcann(0.5, a, Gamma)
   set.seed(2)
   y <-  rSvMF(10, obj)
-  SvMF_ll_cann(y, obj)
+  ll_cann <- SvMF_ll_cann(y, obj)
+  
+  obj2 <- SvMF_cann2muV(obj)
+  ll_muV <- SvMF_ll_muV(y, obj2)
+  expect_equal(ll_muV, ll_cann)
 })

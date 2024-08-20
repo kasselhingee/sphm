@@ -3,8 +3,7 @@
 SvMF_ll_cann <- function(y, param){
   list2env(param, envir = environment())
   p <- nrow(G)
-  if (p == 3){lconst <- -log(2*pi*(exp(k) - exp(-k))/k) - log(a[1])}
-  if (p != 3){stop("vMF normalising constant for p != 3 implemented yet")}
+  lconst <- -log(vMFnormconst(k, p)) - log(a[1]) #from Scealy and Wood 2019, this nice and simple for p = 3
   Gscal <- t(t(G)/a) #scale columns of Gamma by a
   denom <- sqrt(rowSums((y %*% Gscal)^2)) #the denominator in the density exponent
   
@@ -12,7 +11,19 @@ SvMF_ll_cann <- function(y, param){
   return(ll)
 }
 
-#' How to calculate the vMF normalisation `c_p(kappa)`? When p=3, it simple:
-#' `c_p(kappa) = 2*pi * (exp(kappa) - exp(-kappa))/kappa`. When p!=3 need to approximate c_p or use Score Matching.
+SvMF_ll_muV <- function(y, param){
+  list2env(param, envir = environment())
+  p <- length(m)
+  lconst <- -log(vMFnormconst(k, p)) - log(a1) #from Scealy and Wood 2019, this nice and simple for p = 3
+  Hstar <- getHstar(m)
+  ystarstarL <- y %*% Hstar
+  denom <- sqrt(drop((y %*% m/a1)^2) + rowSums((ystarstarL %*% solve(V))*ystarstarL))
+  
+  ll <- lconst - (p-1) * log(denom) + drop(y %*% m/a1)/denom
+  return(ll)
+}
 
-
+vMFnormconst <- function(kappa, p){
+  if (p == 3){return(2*pi*(exp(k) - exp(-k))/k)} #from Scealy and Wood 2019, this nice and simple for p = 3
+  if (p != 3){stop("vMF normalising constant for p != 3 implemented yet")}
+}

@@ -68,19 +68,22 @@ as_SvMFmuV <- function(obj){
 SvMF_cann2muV <- function(obj){
   list2env(obj, envir = environment())
   m <- G[, 1]
-  m1 <- m[1]
-  mL <- m[-1]
-  Hstar <- rbind(mL, (1/(1+m1)) * mL %*% t(mL) - diag(1, length(mL)))
+  Hstar <- getHstar(m)
   Kstar <- t(Hstar) %*% G[, -1] #this solves Hstar %*% Kstar = G[, -1] because by orthogonality of H, t(Hstar) %*% Hstar = I.
   V <- Kstar %*% diag(a[-1]^2) %*% t(Kstar)
   SvMFmuV(k, m, a[1], V)
 }
 SvMF_muV2cann <- function(obj){
   list2env(obj, envir = environment())
-  m1 <- m[1]
-  mL <- m[-1]
-  Hstar <- rbind(mL, (1/(1+m1)) * mL %*% t(mL) - diag(1, length(mL)))
+  Hstar <- getHstar(m)
   es <- eigen(V)
   Kstar <- es$vectors
   SvMFcann(k, c(a1, sqrt(es$values)), G = cbind(m, Hstar %*% Kstar))
+}
+
+getHstar <- function(m){
+  m1 <- m[1]
+  mL <- m[-1]
+  Hstar <- rbind(mL, (1/(1+m1)) * mL %*% t(mL) - diag(1, length(mL)))
+  return(Hstar)
 }

@@ -3,7 +3,6 @@ rSvMF <- function(n, param, check = TRUE)
 {
   param <- as_SvMFmuV(param)
   SvMFmuV_check(param)
-  browser()
   kappa <- param$k
   V <- param$V
   mu <- param$m
@@ -68,7 +67,7 @@ rSvMF <- function(n, param, check = TRUE)
 
 
 
-	return(list(y=y))
+	return(y)
 }
 
 
@@ -76,7 +75,7 @@ rSvMF <- function(n, param, check = TRUE)
 ##kappa,beta,mu and K are the values of the parameters
 simKent=function(n, kappa,beta,mu,K)
 {
-  p <- length
+  p <- length(mu)
   skappa=matrix(kappa,n,1)
   
   sbeta=matrix(0,n,sum(p,-1))

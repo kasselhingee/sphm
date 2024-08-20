@@ -30,12 +30,12 @@ SvMF_ll_muV <- function(y, param){
   Hstar <- getHstar(m)
   ystarstarL <- y %*% Hstar
   denom <- sqrt(drop((y %*% m/a1)^2) + rowSums((ystarstarL %*% solve(V))*ystarstarL))
-  
+
   ll <- lconst - (p-1) * log(denom) + drop(k * y %*% m/a1)/denom
   return(ll)
 }
 
-vMFnormconst <- function(kappa, p){
+vMFnormconst <- function(k, p){
   if (p == 3){return(2*pi*(exp(k) - exp(-k))/k)} #from Scealy and Wood 2019, this nice and simple for p = 3
   if (p != 3){stop("vMF normalising constant for p != 3 implemented yet")}
 }

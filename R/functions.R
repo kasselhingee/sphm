@@ -4,8 +4,9 @@
 ##kappa,beta,mu and K are the values of the parameters
 ############################################################################
 
-simKent=function(kappa,beta,mu,K)
+simKent=function(n, kappa,beta,mu,K)
 {
+  p <- length(mu)
 	skappa=matrix(kappa,n,1)
 
 	sbeta=matrix(0,n,sum(p,-1))
@@ -139,71 +140,10 @@ simKent=function(kappa,beta,mu,K)
 ##simProject simulates a value of y from the SvMF distribution.
 ##kappa,V,mu,a1 are the values of the parameters
 ############################################################################
-
-simProject=function(kappa,V,mu,a1)
-{
-
-	kappav=kappa
-	av=a1
-
-	betav=matrix(0,p-2,1)
-	betav[1]=0*kappav
-	muv=matrix(0,p,1)
-	muv[1]=1
-	K=diag(p)
-	#simulated sample from von mises fisher distribution:
-	sims=simKent(kappav,betav,muv,K)
-	yv=sims$y
-
-	a=eigen(V)$values
-	a=rbind(av^2,t(t(a)))
-	a=sqrt(a)
-	
-	yp=matrix(0,n,p)
-	for (j in 1:p)
-	{
-		yp[,j]=yv[,j]*a[j]
-
-	}
-
-	sumsq=0
-	for (j in 1:p)
-	{
-		sumsq=sumsq+yp[,j]^2
-	}
-	yp=yp/sqrt(sumsq)
-
-
-	H=diag(1,p)
-	H[,1]=t(t(mu))
-	H[1,]=t(mu)
-	mu_L=t(t(mu[2:p]))
-	H[2:p,2:p]=(1/(1+H[1,1]))*mu_L%*%t(mu_L)-diag(1,sum(p,-1))
-
-	K=diag(1,p)
-	K[2:p,2:p]=eigen(V)$vectors
-
-	Gamma=H%*%K
-
-	ypn=matrix(0,n,p)
-	fold=0
-	for (i in 1:n)
-	{
-		ypn[i,]=yp[i,]%*%t(Gamma)
-	
-
-	}
-
-
-
-	#response
-	y=ypn
-
-
-
-	return(list(y=y))
+# moved to SvMF_r.R
+simProject <- function(kappa, V, mu, a1){
+  rSvMF(SvMFmuV(kappa, mu, a1, V))
 }
-
 
 
 ########################################################################

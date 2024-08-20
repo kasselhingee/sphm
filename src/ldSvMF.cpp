@@ -22,7 +22,7 @@ mata1 getHstar(veca1 m) {
   mata1 Hstar = mata1(mL.size() + 1, mL.size());
   Hstar.row(0) = mL.transpose();  // First row is mL
   Hstar.block(1, 0, mL.size(), mL.size()) = (1 / (1 + m1)) * mL_outer - identity;  // Remaining rows
-  
+
   return Hstar;
 }
 
@@ -40,8 +40,9 @@ veca1 ldSvMF(mata1 y, Rcpp::List obj) {
   mata1 Hstar = getHstar(m); // You'll need to define this
   
   mata1 ystarstarL = y * Hstar;
-  veca1 denom = ((y * m / a1).array().square()
-                             + ((ystarstarL * V.inverse()).array() * ystarstarL.array()).rowwise().sum().square()).sqrt();
+  veca1 denomA = (y * m / a1).array().square();
+  veca1 denomB = ((ystarstarL * V.inverse()).array() * ystarstarL.array()).rowwise().sum();
+  veca1 denom = (denomA + denomB).array().sqrt();
   
   veca1 ll = lconst - (p - 1) * denom.array().log() 
     + (k * (y * m).array()) / (a1 * denom).array();

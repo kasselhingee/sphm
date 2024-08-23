@@ -35,5 +35,8 @@ test_that("alignedG() gives an orthogonal matrix", {
   G <- alignedG(m, P)
   expect_equal(G[,1], m)
   expect_equal(G %*% t(G), diag(1, p))
+
+  Gcpp <- alignedGcpp(m, P)
+  expect_equal(Gcpp, G)
 })
 

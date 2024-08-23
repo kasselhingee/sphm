@@ -15,15 +15,18 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// ldSvMF
-veca1 ldSvMF(mata1 y, Rcpp::List obj);
-RcppExport SEXP _sphm_ldSvMF(SEXP ySEXP, SEXP objSEXP) {
+// ldSvMF_muV
+veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
+RcppExport SEXP _sphm_ldSvMF_muV(SEXP ySEXP, SEXP kSEXP, SEXP mSEXP, SEXP a1SEXP, SEXP VSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< mata1 >::type y(ySEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type obj(objSEXP);
-    rcpp_result_gen = Rcpp::wrap(ldSvMF(y, obj));
+    Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
+    Rcpp::traits::input_parameter< veca1 >::type m(mSEXP);
+    Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
+    Rcpp::traits::input_parameter< mata1 >::type V(VSEXP);
+    rcpp_result_gen = Rcpp::wrap(ldSvMF_muV(y, k, m, a1, V));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -93,7 +96,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_sphm_ldSvMF", (DL_FUNC) &_sphm_ldSvMF, 2},
+    {"_sphm_ldSvMF_muV", (DL_FUNC) &_sphm_ldSvMF_muV, 5},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
     {"_sphm_pobjS2Stape", (DL_FUNC) &_sphm_pobjS2Stape, 3},

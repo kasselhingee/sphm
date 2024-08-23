@@ -26,13 +26,9 @@ mata1 getHstar(veca1 m) {
   return Hstar;
 }
 
+// #' Log density of the SvMF using the muV parameterisation
 // [[Rcpp::export]]
-veca1 ldSvMF(mata1 y, Rcpp::List obj) {
-  a1type k = Rcpp::as<a1type>(obj["k"]);
-  veca1 m = Rcpp::as<veca1>(obj["m"]);
-  a1type a1 = Rcpp::as<a1type>(obj["a1"]);
-  mata1 V = Rcpp::as<mata1>(obj["V"]);
-  
+veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V) {
   int p = m.size();
   a1type lconst = - CppAD::log(vMFnormconst(k, p)) - CppAD::log(a1);
   

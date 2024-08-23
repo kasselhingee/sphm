@@ -11,6 +11,7 @@ a1type vMFnormconst(a1type kappa, int p) {
   }
 }
 
+// Helper getHstar
 mata1 getHstar(veca1 m) {
   a1type m1 = m(0);  // First element of m
   veca1 mL = m.tail(m.size() - 1);  // Vector m without the first element
@@ -26,14 +27,31 @@ mata1 getHstar(veca1 m) {
   return Hstar;
 }
 
+// #' Log density of the SvMF using the cannonical parameterisation of k, a and G
+// [[Rcpp::export]]
+veca1 ldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G) {
+  int p = a.size();
+  a1type lconst = - CppAD::log(vMFnormconst(k, p)) - CppAD::log(a.coeff(0));
+ 
+  // Scale columns of G by the corresponding elements of a
+  mata1 Gscal = G.array().rowwise() / a.transpose().array();
+ 
+  // Compute the denominator sqrt(rowSums((y %*% Gscal)^2))
+  veca1 denom = (y * Gscal).rowwise().squaredNorm().cwiseSqrt();
+  
+  veca1 ll = lconst - (p - 1) * denom.array().log() 
+    + (k * (y * Gscal.col(0)).array()) / denom.array();
+  
+  return ll;
+}
+
 // #' Log density of the SvMF using the muV parameterisation
 // [[Rcpp::export]]
 veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V) {
   int p = m.size();
   a1type lconst = - CppAD::log(vMFnormconst(k, p)) - CppAD::log(a1);
   
-  // Assuming getHstar is implemented elsewhere
-  mata1 Hstar = getHstar(m); // You'll need to define this
+  mata1 Hstar = getHstar(m);
   
   mata1 ystarstarL = y * Hstar;
   veca1 denomA = (y * m / a1).array().square();
@@ -45,3 +63,4 @@ veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V) {
   
   return ll;
 }
+

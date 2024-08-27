@@ -21,7 +21,7 @@ veca1 ll_SvMF_S2S_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
   mata1 x = yx.rightCols(yx.cols() - p);
 
   // extract the Omega vector for the mean link, and project it to satisfy p1, q1 orthogonality constraints
-  veca1 omvec = vec.block(0,0, p + q.rows() + p*q, 1);
+  veca1 omvec = vec.block(0,0, p + x.cols() + p*x.cols(), 1);
   OmegaS2Scpp<a1type> om = OmegaS2Scpp_unvec(omvec, p);
   OmegaS2Scpp<a1type> om_projected = OmegaS2Sproj(om);
   veca1 omvec_projected;
@@ -34,18 +34,18 @@ veca1 ll_SvMF_S2S_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
   //evaluate SvMF density using ldSvMF_cann for each row.
   //first get G without its first column and other constant parameters
   a1type k = dyn(0);
-  Rcpp::Rout << k << std::endl;
+  Rcpp::Rcout << k << std::endl;
   veca1 a = dyn.segment(1, p);
-  Rcpp::Rout << a << std::endl;
+  Rcpp::Rcout << a << std::endl;
   veca1 Gm1vec = dyn.segment(1+p, (p-1) * p);
   mata1 Gm1 = Eigen::Map< mata1 > (Gm1vec.data(), p, p-1);
-  Rcpp::Rout << Gm1 << std::endl;
+  Rcpp::Rcout << Gm1 << std::endl;
   veca1 ld(y.rows());
   mata1 G(p, p);
   for (int i = 0; i < y.rows(); ++i){
     G.leftCols(1) = ypred.row(i);
     G.rightCols(p-1) = Gm1;
-    ld(i) = ldSvMF_cann(y.row(i), k, a, G);
+    ld(i) = ldSvMF_cann(y.row(i), k, a, G)(0);
   }
   
   return ld;

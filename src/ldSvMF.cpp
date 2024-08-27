@@ -27,8 +27,6 @@ mata1 getHstar(veca1 m) {
   return Hstar;
 }
 
-// #' Log density of the SvMF using the cannonical parameterisation of k, a and G
-// [[Rcpp::export]]
 veca1 ldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G) {
   int p = a.size();
   a1type lconst = - CppAD::log(vMFnormconst(k, p)) - CppAD::log(a.coeff(0));
@@ -45,8 +43,6 @@ veca1 ldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G) {
   return ll;
 }
 
-// #' Log density of the SvMF using the muV parameterisation
-// [[Rcpp::export]]
 veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V) {
   int p = m.size();
   a1type lconst = - CppAD::log(vMFnormconst(k, p)) - CppAD::log(a1);

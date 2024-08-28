@@ -1,9 +1,5 @@
-#include <RcppEigenForward.h>
-#include <scorematchingad_forward.h>
-#include <Rcpp.h>
+#include "SvMF_links.h"
 
-//' @describeIn SvMF_varlinks Aligns the columns of the Mobius-link rotation matrix `P` for the mean to the columns of G. Note that the first column of the returned G is the given mean. Returns the matrix G.
-// [[Rcpp::export]]
 mata1 alignedGcpp(veca1 m, mata1 P) {
     int p = m.size();
     

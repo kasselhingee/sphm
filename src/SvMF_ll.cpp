@@ -7,13 +7,13 @@
 
 
 //' The log-likelihood of a SvMF Sphere-Sphere Regression with Mobius Mean Link and Variance Axes Aligned with P.
-//' @description Three functions in a format compatible with `tapefun`. A difficulty is that the P matrix needs and SVD to get out of the Omega parameterisation so two functions for alternating between optimising the mean (with `kappa`, `G` and `a` fixed) and optimising G and a, with the mean fixed and concentration fixed.
-//' @param vec For `_mean`: A parameter vector specifying the mean via the Omega vectorisation.
-//' @param dyn For `_mean`: A p+1+(p-1)*p length vector of kappa, then a1, a2, ..., then G[,-1] as a vector of stacked columns.
+//' @description Three functions in a format compatible with `tapefun`. A difficulty is that the P matrix needs and SVD to get out of the Omega parameterisation so two functions for alternating between optimising the mean (with `kappa` and `a` fixed, and `G` aligned to a fixed `P`) and optimising a, with the mean fixed and concentration fixed, and updating `P` inbetween.
+//' @param vec For `_aligned_mean`: A parameter vector specifying the mean via the Omega vectorisation.
+//' @param dyn For `_aligned_mean`: A p+1+p*p length vector of kappa, then a1, a2, ..., then P as a vector of stacked columns.
 //' @param p_in The dimension p
 //' @param yx The observations and covariates cbind together as row vectors
 // [[Rcpp::export]]
-veca1 ll_SvMF_S2S_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
+veca1 ll_SvMF_S2S_aligned_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
 
   // separate the response the covariates
@@ -37,14 +37,12 @@ veca1 ll_SvMF_S2S_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
   Rcpp::Rcout << k << std::endl;
   veca1 a = dyn.segment(1, p);
   Rcpp::Rcout << a << std::endl;
-  veca1 Gm1vec = dyn.segment(1+p, (p-1) * p);
-  mata1 Gm1 = Eigen::Map< mata1 > (Gm1vec.data(), p, p-1);
-  Rcpp::Rcout << Gm1 << std::endl;
+  mata1 P = Eigen::Map< mata1 > (dyn.segment(1+p, p * p).data(), p, p);
+  Rcpp::Rcout << P << std::endl;
   veca1 ld(y.rows());
   mata1 G(p, p);
   for (int i = 0; i < y.rows(); ++i){
-    G.leftCols(1) = ypred.row(i);
-    G.rightCols(p-1) = Gm1;
+    G = alignedGcpp(ypred.row(i).transpose(), P);
     ld(i) = ldSvMF_cann(y.row(i), k, a, G)(0);
   }
   

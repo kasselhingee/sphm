@@ -15,15 +15,46 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// alignedGcpp
-mata1 alignedGcpp(veca1 m, mata1 P);
-RcppExport SEXP _sphm_alignedGcpp(SEXP mSEXP, SEXP PSEXP) {
+// ldSvMF_cann
+veca1 ldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
+RcppExport SEXP _sphm_ldSvMF_cann(SEXP ySEXP, SEXP kSEXP, SEXP aSEXP, SEXP GSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< mata1 >::type y(ySEXP);
+    Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
+    Rcpp::traits::input_parameter< veca1 >::type a(aSEXP);
+    Rcpp::traits::input_parameter< mata1 >::type G(GSEXP);
+    rcpp_result_gen = Rcpp::wrap(ldSvMF_cann(y, k, a, G));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ldSvMF_muV
+veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
+RcppExport SEXP _sphm_ldSvMF_muV(SEXP ySEXP, SEXP kSEXP, SEXP mSEXP, SEXP a1SEXP, SEXP VSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< mata1 >::type y(ySEXP);
+    Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
     Rcpp::traits::input_parameter< veca1 >::type m(mSEXP);
-    Rcpp::traits::input_parameter< mata1 >::type P(PSEXP);
-    rcpp_result_gen = Rcpp::wrap(alignedGcpp(m, P));
+    Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
+    Rcpp::traits::input_parameter< mata1 >::type V(VSEXP);
+    rcpp_result_gen = Rcpp::wrap(ldSvMF_muV(y, k, m, a1, V));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ll_SvMF_S2S_aligned_mean
+veca1 ll_SvMF_S2S_aligned_mean(veca1& vec, veca1& dyn, vecd& p_in, matd& yx);
+RcppExport SEXP _sphm_ll_SvMF_S2S_aligned_mean(SEXP vecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< veca1& >::type vec(vecSEXP);
+    Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
+    Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
+    Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
+    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_aligned_mean(vec, dyn, p_in, yx));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -122,7 +153,9 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_sphm_alignedGcpp", (DL_FUNC) &_sphm_alignedGcpp, 2},
+    {"_sphm_ldSvMF_cann", (DL_FUNC) &_sphm_ldSvMF_cann, 4},
+    {"_sphm_ldSvMF_muV", (DL_FUNC) &_sphm_ldSvMF_muV, 5},
+    {"_sphm_ll_SvMF_S2S_aligned_mean", (DL_FUNC) &_sphm_ll_SvMF_S2S_aligned_mean, 4},
     {"_sphm_ldSvMF_cann", (DL_FUNC) &_sphm_ldSvMF_cann, 4},
     {"_sphm_ldSvMF_muV", (DL_FUNC) &_sphm_ldSvMF_muV, 5},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},

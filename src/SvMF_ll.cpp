@@ -4,6 +4,7 @@
 #include "OmegaS2S.h"
 #include "meanlinkS2S.h"
 #include "ldSvMF.h"
+#include "SvMF_links.h"
 
 
 //' The log-likelihood of a SvMF Sphere-Sphere Regression with Mobius Mean Link and Variance Axes Aligned with P.
@@ -34,11 +35,8 @@ veca1 ll_SvMF_S2S_aligned_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx)
   //evaluate SvMF density using ldSvMF_cann for each row.
   //first get G without its first column and other constant parameters
   a1type k = dyn(0);
-  Rcpp::Rcout << k << std::endl;
   veca1 a = dyn.segment(1, p);
-  Rcpp::Rcout << a << std::endl;
   mata1 P = Eigen::Map< mata1 > (dyn.segment(1+p, p * p).data(), p, p);
-  Rcpp::Rcout << P << std::endl;
   veca1 ld(y.rows());
   mata1 G(p, p);
   for (int i = 0; i < y.rows(); ++i){

@@ -1,6 +1,4 @@
-#include <RcppEigenForward.h>
-#include <scorematchingad_forward.h>
-#include <Rcpp.h>
+#include "ldSvMF.h"
 
 // Helper function vMFnormconst
 a1type vMFnormconst(a1type kappa, int p) {

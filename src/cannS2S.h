@@ -8,7 +8,7 @@
 
 // Define the templated C++ struct for the cannS2S parametetrisation
 template <typename T>
-struct OmegaS2Scpp {
+struct cannS2Scpp {
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> P;
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Q;
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> B;

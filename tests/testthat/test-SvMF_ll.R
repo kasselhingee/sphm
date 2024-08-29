@@ -21,7 +21,7 @@ test_that("SvMF_ll is the same using either parameterisatiion", {
   expect_equal(ll_cpp, ll_muV)
 })
 
-test_that("ll using mean link in C++ matches R", {
+test_that("ll using aligned_mean link in C++ matches R", {
   p <- 3
   q <- 5
   # data generating parameters:
@@ -48,13 +48,22 @@ test_that("ll using mean link in C++ matches R", {
   # log-likelihood via R
   k <- 10
   a <- c(1, seq(5, 0.2, length.out = p-1))
-  # fix a P matrix
-  P <- diag(1, p)
+  # fix a P matrix, may as well be the true one
   ld <- rep(NA, nrow(y))
   for (i in 1:nrow(y)){
     G <- alignedG(ymean[i, ], P)
     ld[i] <- ldSvMF_cann(y[i, , drop = FALSE], k, a, G)
   }
   
+  ldcpp <- ll_SvMF_S2S_aligned_mean(OmegaS2S_vec(omegapar), dyn = c(k, a, as.vector(P)), p, cbind(y, x))
+  expect_equal(ld, ldcpp)
   
+  # compute likelihood when a2, ... is the independent vector and P, k is fixed
+  vec <- a[-1]
+  a1 <- 1
+  dyn <- c(k, OmegaS2S_vec(omegapar))
+  
+  
+  P <- Omega2cann(OmegaS2S_unvec(dyn[-1], p), check = FALSE)$P
+  ll_SvMF_S2S_aligned_mean(dyn[-1], c(dyn[1], a1, vec, as.vector(P)), p, cbind(y, x))
 })

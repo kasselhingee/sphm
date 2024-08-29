@@ -94,8 +94,8 @@ cann2Omega <- function(obj, check = TRUE){
 #' # Warning
 #' Apart from p1 and q1, sign of columns of P and Q cannot be recovered from Omega.
 Omega2cann <- function(obj, check = TRUE){
+  if (check){OmegaS2S_check(obj)}
   list2env(obj, envir = environment())
-  if (check){Omega2cann_check(p1, q1, Omega)}
   svdres <- svd(Omega, nu = nrow(Omega) - 1, nv = nrow(Omega) - 1)
 
   Q <- cbind(q1, svdres$v)

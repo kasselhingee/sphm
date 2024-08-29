@@ -5,6 +5,7 @@
 #include "meanlinkS2S.h"
 #include "ldSvMF.h"
 #include "SvMF_links.h"
+#include "cannS2S.h"
 
 
 //' The log-likelihood of a SvMF Sphere-Sphere Regression with Mobius Mean Link and Variance Axes Aligned with P.
@@ -47,3 +48,19 @@ veca1 ll_SvMF_S2S_aligned_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx)
   return ld;
 }
 
+//' @param vec For `_aligned_a`: A p-1 vector of a2, a3, ...
+//' @param dyn For `_aligned_a`: A vector of kappa then a1, then the Omega vectorisation
+// [[Rcpp::export]]
+veca1 ll_SvMF_S2S_aligned_a(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
+  int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
+
+  //convert to parameterisation of _aligned_mean()
+  veca1 newvec = dyn.tail(dyn.size() - 2);
+  // extract P matrix
+  mata1 P = Omega2cann(OmegaS2Scpp_unvec(newvec, p)).P;
+  veca1 Pvec = Eigen::Map<veca1>(P.data(), P.size());
+  veca1 newdyn(p+1+p*p);
+  newdyn << dyn(0), dyn(2), vec, Pvec;
+  veca1 ld = ll_SvMF_S2S_aligned_mean(newvec, newdyn, p_in, yx);
+  return ld;
+}

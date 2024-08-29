@@ -16,6 +16,12 @@ ll_SvMF_S2S_aligned_mean <- function(vec, dyn, p_in, yx) {
     .Call('_sphm_ll_SvMF_S2S_aligned_mean', PACKAGE = 'sphm', vec, dyn, p_in, yx)
 }
 
+#' @param vec For `_aligned_a`: A p-1 vector of a2, a3, ...
+#' @param dyn For `_aligned_a`: A vector of kappa then a1, then the Omega vectorisation
+ll_SvMF_S2S_aligned_a <- function(vec, dyn, p_in, yx) {
+    .Call('_sphm_ll_SvMF_S2S_aligned_a', PACKAGE = 'sphm', vec, dyn, p_in, yx)
+}
+
 ldSvMF_cann <- function(y, k, a, G) {
     .Call('_sphm_ldSvMF_cann', PACKAGE = 'sphm', y, k, a, G)
 }

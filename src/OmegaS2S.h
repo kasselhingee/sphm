@@ -3,6 +3,7 @@
 
 # include <sphm_forward.h>
 # include <scorematchingad_forward.h> // includes <RcppEigenForward.h>
+# include <RcppEigen.h> //for access to Rcpp::as and Rcpp::wrap for Eigen objects
 # include <Rcpp.h>
 
 // Define the templated C++ struct for the OmegaS2S parametetrisation

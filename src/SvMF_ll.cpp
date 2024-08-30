@@ -48,18 +48,20 @@ veca1 ll_SvMF_S2S_aligned_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx)
 }
 
 //' @param vec For `_aligned_a`: A p-1 vector of a2, a3, ...
-//' @param dyn For `_aligned_a`: A vector of kappa then a1, then the Omega vectorisation. Due to a SVD to extract P, retaping will be needed for each change in Omega
+//' @param dyn For `_aligned_a`: A vector of kappa then a1
+//' @param pOmegavec For `_aligned_a`: A vector of p then the Omega vectorisation. Due to an SVD to extract P from Omega vec, taping the dependence on Omega would be unreliable.
 // [[Rcpp::export]]
-veca1 ll_SvMF_S2S_aligned_a(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
-  int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
+veca1 ll_SvMF_S2S_aligned_a(veca1 & vec, veca1 & dyn, vecd & pOmegavec, matd & yx){
+  int p = int(pOmegavec(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
 
   //convert to parameterisation of _aligned_mean()
-  veca1 newvec = dyn.tail(dyn.size() - 2);
+  veca1 newvec = pOmegavec.tail(pOmegavec.size() - 1);
   // extract P matrix
   mata1 P = Omega2cann(OmegaS2Scpp_unvec(newvec, p)).P;
   veca1 Pvec = Eigen::Map<veca1>(P.data(), P.size());
   veca1 newdyn(p+1+p*p);
   newdyn << dyn(0), dyn(2), vec, Pvec;
+  vecd p_in = pOmegavec.segment(0,1);
   veca1 ld = ll_SvMF_S2S_aligned_mean(newvec, newdyn, p_in, yx);
   return ld;
 }

@@ -47,15 +47,8 @@ veca1 ll_SvMF_S2S_aligned_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx)
   return ld;
 }
 
-// Overload std::isfinite for a1type
-namespace std {
-    bool isfinite(const a1type& x) {
-        return std::isfinite(CppAD::Value(x));
-    }
-}
-
 //' @param vec For `_aligned_a`: A p-1 vector of a2, a3, ...
-//' @param dyn For `_aligned_a`: A vector of kappa then a1, then the Omega vectorisation
+//' @param dyn For `_aligned_a`: A vector of kappa then a1, then the Omega vectorisation. Due to a SVD to extract P, retaping will be needed for each change in Omega
 // [[Rcpp::export]]
 veca1 ll_SvMF_S2S_aligned_a(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents

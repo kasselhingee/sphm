@@ -59,11 +59,6 @@ test_that("ll using aligned_mean link in C++ matches R", {
   expect_equal(ld, ldcpp)
   
   # compute likelihood when a2, ... is the independent vector and P, k is fixed
-  vec <- a[-1]
-  a1 <- 1
-  dyn <- c(k, OmegaS2S_vec(omegapar))
-  
-  
-  P <- Omega2cann(OmegaS2S_unvec(dyn[-1], p), check = FALSE)$P
-  ll_SvMF_S2S_aligned_mean(dyn[-1], c(dyn[1], a1, vec, as.vector(P)), p, cbind(y, x))
+  ldcpp <- ll_SvMF_S2S_aligned_a(a[-1], c(k, a[1]), c(p, OmegaS2S_vec(omegapar)), cbind(y, x))
+  expect_equal(ld, ldcpp)
 })

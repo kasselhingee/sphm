@@ -60,7 +60,7 @@ veca1 ll_SvMF_S2S_aligned_a(veca1 & vec, veca1 & dyn, vecd & pOmegavec, matd & y
   mata1 P = Omega2cann(OmegaS2Scpp_unvec(newvec, p)).P;
   veca1 Pvec = Eigen::Map<veca1>(P.data(), P.size());
   veca1 newdyn(p+1+p*p);
-  newdyn << dyn(0), dyn(2), vec, Pvec;
+  newdyn << dyn(0), dyn(1), vec, Pvec;
   vecd p_in = pOmegavec.segment(0,1);
   veca1 ld = ll_SvMF_S2S_aligned_mean(newvec, newdyn, p_in, yx);
   return ld;

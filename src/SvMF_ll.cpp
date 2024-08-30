@@ -1,5 +1,4 @@
-#include <RcppEigenForward.h>
-#include <scorematchingad_forward.h>
+#include <scorematchingad_forward.h> //includes RcppEigenForward
 #include <Rcpp.h>
 #include "OmegaS2S.h"
 #include "meanlinkS2S.h"
@@ -46,6 +45,13 @@ veca1 ll_SvMF_S2S_aligned_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx)
   }
   
   return ld;
+}
+
+// Overload std::isfinite for a1type
+namespace std {
+    bool isfinite(const a1type& x) {
+        return std::isfinite(CppAD::Value(x));
+    }
 }
 
 //' @param vec For `_aligned_a`: A p-1 vector of a2, a3, ...

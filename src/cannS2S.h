@@ -3,7 +3,6 @@
 
 # include <sphm_forward.h>
 # include <scorematchingad_forward.h>
-# include <RcppEigen.h>
 # include <Rcpp.h>
 
 // Define the templated C++ struct for the cannS2S parametetrisation
@@ -21,6 +20,12 @@ struct cannS2Scpp {
 // Convert OmegaS2Scpp to cannS2Scpp
 template <typename T>
 cannS2Scpp<T> Omega2cann(const OmegaS2Scpp<T>& obj) {
+    //try using isfinite overloading from cppad
+    CppAD::AD<double> test_var = 1.0;
+    // Explicitly call the functions to force instantiation
+    bool test_isfinite = std::isfinite(test_var);
+
+
     // Perform SVD on the Omega matrix
     Eigen::JacobiSVD<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>> svd(obj.Omega, Eigen::ComputeThinU | Eigen::ComputeThinV);
     Rcpp::Rcout << svd.matrixU() << std::endl;

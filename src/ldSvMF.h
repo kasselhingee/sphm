@@ -2,8 +2,7 @@
 # define LDSVMF
 
 // using the forward declarations because only the translational unit for RcppExports.cpp need to have access to the wrappers
-#include <RcppEigenForward.h>
-#include <scorematchingad_forward.h>
+#include <scorematchingad_forward.h> //includes RcppEigen_forward.h
 #include <Rcpp.h>
 
 // [[Rcpp::depends(RcppEigen)]]

@@ -1,5 +1,4 @@
-#include <RcppEigenForward.h>
-#include <scorematchingad_forward.h>
+#include <scorematchingad_forward.h> //includes <RcppEigenForward.h>
 #include "OmegaS2S.h"
 #include "meanlinkS2S.h"
 #include "tapegeneral.h"

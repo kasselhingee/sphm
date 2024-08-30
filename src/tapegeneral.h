@@ -1,8 +1,7 @@
 # ifndef TAPEGENERAL
 # define TAPEGENERAL
 
-# include <RcppEigenForward.h>
-# include <scorematchingad_forward.h>
+# include <scorematchingad_forward.h> // includes <RcppEigenForward.h>
 # include "sphm_forward.h"
 # include <Rcpp.h>
 

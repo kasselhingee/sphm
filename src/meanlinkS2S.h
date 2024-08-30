@@ -2,8 +2,7 @@
 # define MEANLINKS2S
 
 // using the forward declarations because only the translational unit for RcppExports.cpp need to have access to the wrappers
-#include <RcppEigenForward.h>
-#include <scorematchingad_forward.h>
+#include <scorematchingad_forward.h> //includes <RcppEigenForward.h>
 #include "OmegaS2S.h"
 
 // [[Rcpp::depends(RcppEigen)]]

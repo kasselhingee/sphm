@@ -2,8 +2,7 @@
 # define OMEGAS2S_H
 
 # include <sphm_forward.h>
-# include <scorematchingad_forward.h>
-# include <RcppEigen.h>
+# include <scorematchingad_forward.h> // includes <RcppEigenForward.h>
 # include <Rcpp.h>
 
 // Define the templated C++ struct for the OmegaS2S parametetrisation

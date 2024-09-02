@@ -17,9 +17,17 @@ ll_SvMF_S2S_aligned_mean <- function(vec, dyn, p_in, yx) {
 }
 
 #' @param vec For `_aligned_a`: A p-1 vector of a2, a3, ...
-#' @param dyn For `_aligned_a`: A vector of kappa then a1, then the Omega vectorisation
-ll_SvMF_S2S_aligned_a <- function(vec, dyn, p_in, yx) {
-    .Call('_sphm_ll_SvMF_S2S_aligned_a', PACKAGE = 'sphm', vec, dyn, p_in, yx)
+#' @param dyn For `_aligned_a`: A vector of kappa then a1
+#' @param pOmegavec For `_aligned_a`: A vector of p then the Omega vectorisation. Due to an SVD to extract P from Omega vec, taping the dependence on Omega would be unreliable.
+ll_SvMF_S2S_aligned_a <- function(vec, dyn, pOmegavec, yx) {
+    .Call('_sphm_ll_SvMF_S2S_aligned_a', PACKAGE = 'sphm', vec, dyn, pOmegavec, yx)
+}
+
+#' @param k For `_aligned_k`: A parameter vector specifying the concentration k
+#' @param dyn For `_aligned_k`: A p*q + p + p*p length vector of Omegavec, then a1, a2, ..., then P as a vector of stacked columns.
+#' The P and Omega are provided seperately because of the non-smooth nature of SVD.
+ll_SvMF_S2S_aligned_k <- function(k, dyn, p_in, yx) {
+    .Call('_sphm_ll_SvMF_S2S_aligned_k', PACKAGE = 'sphm', k, dyn, p_in, yx)
 }
 
 ldSvMF_cann <- function(y, k, a, G) {

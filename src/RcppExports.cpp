@@ -42,16 +42,30 @@ BEGIN_RCPP
 END_RCPP
 }
 // ll_SvMF_S2S_aligned_a
-veca1 ll_SvMF_S2S_aligned_a(veca1& vec, veca1& dyn, vecd& p_in, matd& yx);
-RcppExport SEXP _sphm_ll_SvMF_S2S_aligned_a(SEXP vecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
+veca1 ll_SvMF_S2S_aligned_a(veca1& vec, veca1& dyn, vecd& pOmegavec, matd& yx);
+RcppExport SEXP _sphm_ll_SvMF_S2S_aligned_a(SEXP vecSEXP, SEXP dynSEXP, SEXP pOmegavecSEXP, SEXP yxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< veca1& >::type vec(vecSEXP);
     Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
+    Rcpp::traits::input_parameter< vecd& >::type pOmegavec(pOmegavecSEXP);
+    Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
+    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_aligned_a(vec, dyn, pOmegavec, yx));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ll_SvMF_S2S_aligned_k
+veca1 ll_SvMF_S2S_aligned_k(veca1& k, veca1& dyn, vecd& p_in, matd& yx);
+RcppExport SEXP _sphm_ll_SvMF_S2S_aligned_k(SEXP kSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< veca1& >::type k(kSEXP);
+    Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
     Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
     Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
-    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_aligned_a(vec, dyn, p_in, yx));
+    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_aligned_k(k, dyn, p_in, yx));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -153,6 +167,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_alignedGcpp", (DL_FUNC) &_sphm_alignedGcpp, 2},
     {"_sphm_ll_SvMF_S2S_aligned_mean", (DL_FUNC) &_sphm_ll_SvMF_S2S_aligned_mean, 4},
     {"_sphm_ll_SvMF_S2S_aligned_a", (DL_FUNC) &_sphm_ll_SvMF_S2S_aligned_a, 4},
+    {"_sphm_ll_SvMF_S2S_aligned_k", (DL_FUNC) &_sphm_ll_SvMF_S2S_aligned_k, 4},
     {"_sphm_ldSvMF_cann", (DL_FUNC) &_sphm_ldSvMF_cann, 4},
     {"_sphm_ldSvMF_muV", (DL_FUNC) &_sphm_ldSvMF_muV, 5},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},

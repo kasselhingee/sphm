@@ -65,3 +65,20 @@ veca1 ll_SvMF_S2S_aligned_a(veca1 & vec, veca1 & dyn, vecd & pOmegavec, matd & y
   veca1 ld = ll_SvMF_S2S_aligned_mean(newvec, newdyn, p_in, yx);
   return ld;
 }
+
+
+//' @param k For `_aligned_k`: A parameter vector specifying the concentration k
+//' @param dyn For `_aligned_k`: A p*q + p + p*p length vector of Omegavec, then a1, a2, ..., then P as a vector of stacked columns.
+//' The P and Omega are provided seperately because of the non-smooth nature of SVD.
+// [[Rcpp::export]]
+veca1 ll_SvMF_S2S_aligned_k(veca1 & k, veca1 & dyn, vecd & p_in, matd & yx){
+  int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
+
+  //convert to parameterisation of _aligned_mean()
+  veca1 newvec = dyn.head(dyn.size() - p - p*p); //should just be the Omegavec
+  veca1 newdyn(p + 1 + p*p);
+  newdyn << k, dyn.tail(p + p*p);
+
+  veca1 ld = ll_SvMF_S2S_aligned_mean(newvec, newdyn, p_in, yx);
+  return ld;
+}

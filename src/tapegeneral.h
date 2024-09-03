@@ -17,17 +17,19 @@
 //' @param ind_t The value of the independent argument to use for taping.
 //' @param dyn_t The value of the dynamic argument to use for taping.
 //' @param constants The value of the constants argument.
-CppAD::ADFun<double> tapefun(generalfunction fun, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat);
-
-//' Tape using a pointer to a function created by RcppXPtrUtils::cppXPtr
-//' @param funptr A pointer to a function created by RcppXPtrUtils::cppXPtr
-// [[Rcpp::export]]
-Rcpp::XPtr< CppAD::ADFun<double> > tape_funptr(Rcpp::XPtr<generalfunction> funptr, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat);
-
 
 //' Tape using a function name in function_map 
 //' @param func_name Name of function to tape. Name must be in the internal `function_map` object.
 // [[Rcpp::export]]
 Rcpp::XPtr< CppAD::ADFun<double> > tape_namedfun(std::string func_name, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat);
+
+// tape purely within C++ using generalfunction class (which isn't exported yet)
+CppAD::ADFun<double> tapefun(generalfunction fun, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat);
+
+//' @describeIn tape_namedfun Tape using a pointer to a function created by RcppXPtrUtils::cppXPtr
+//' @param funptr A pointer to a function created by RcppXPtrUtils::cppXPtr
+// [[Rcpp::export]]
+Rcpp::XPtr< CppAD::ADFun<double> > tape_funptr(Rcpp::XPtr<generalfunction> funptr, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat);
+
 
 # endif

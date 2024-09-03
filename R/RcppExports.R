@@ -77,15 +77,15 @@ OmegaS2S_constraintstape <- function(omvec, p_in) {
 #' @param constants The value of the constants argument.
 NULL
 
-#' Tape using a pointer to a function created by RcppXPtrUtils::cppXPtr
-#' @param funptr A pointer to a function created by RcppXPtrUtils::cppXPtr
-tape_funptr <- function(funptr, ind_t, dyn_t, constvec, constmat) {
-    .Call('_sphm_tape_funptr', PACKAGE = 'sphm', funptr, ind_t, dyn_t, constvec, constmat)
-}
-
 #' Tape using a function name in function_map 
 #' @param func_name Name of function to tape. Name must be in the internal `function_map` object.
 tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat) {
     .Call('_sphm_tape_namedfun', PACKAGE = 'sphm', func_name, ind_t, dyn_t, constvec, constmat)
+}
+
+#' @describeIn tape_namedfun Tape using a pointer to a function created by RcppXPtrUtils::cppXPtr
+#' @param funptr A pointer to a function created by RcppXPtrUtils::cppXPtr
+tape_funptr <- function(funptr, ind_t, dyn_t, constvec, constmat) {
+    .Call('_sphm_tape_funptr', PACKAGE = 'sphm', funptr, ind_t, dyn_t, constvec, constmat)
 }
 

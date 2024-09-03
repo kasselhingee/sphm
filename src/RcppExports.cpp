@@ -162,21 +162,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// tape_funptr
-Rcpp::XPtr< CppAD::ADFun<double> > tape_funptr(Rcpp::XPtr<generalfunction> funptr, veca1& ind_t, veca1& dyn_t, vecd& constvec, matd& constmat);
-RcppExport SEXP _sphm_tape_funptr(SEXP funptrSEXP, SEXP ind_tSEXP, SEXP dyn_tSEXP, SEXP constvecSEXP, SEXP constmatSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::XPtr<generalfunction> >::type funptr(funptrSEXP);
-    Rcpp::traits::input_parameter< veca1& >::type ind_t(ind_tSEXP);
-    Rcpp::traits::input_parameter< veca1& >::type dyn_t(dyn_tSEXP);
-    Rcpp::traits::input_parameter< vecd& >::type constvec(constvecSEXP);
-    Rcpp::traits::input_parameter< matd& >::type constmat(constmatSEXP);
-    rcpp_result_gen = Rcpp::wrap(tape_funptr(funptr, ind_t, dyn_t, constvec, constmat));
-    return rcpp_result_gen;
-END_RCPP
-}
 // tape_namedfun
 Rcpp::XPtr< CppAD::ADFun<double> > tape_namedfun(std::string func_name, veca1& ind_t, veca1& dyn_t, vecd& constvec, matd& constmat);
 RcppExport SEXP _sphm_tape_namedfun(SEXP func_nameSEXP, SEXP ind_tSEXP, SEXP dyn_tSEXP, SEXP constvecSEXP, SEXP constmatSEXP) {
@@ -189,6 +174,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< vecd& >::type constvec(constvecSEXP);
     Rcpp::traits::input_parameter< matd& >::type constmat(constmatSEXP);
     rcpp_result_gen = Rcpp::wrap(tape_namedfun(func_name, ind_t, dyn_t, constvec, constmat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// tape_funptr
+Rcpp::XPtr< CppAD::ADFun<double> > tape_funptr(Rcpp::XPtr<generalfunction> funptr, veca1& ind_t, veca1& dyn_t, vecd& constvec, matd& constmat);
+RcppExport SEXP _sphm_tape_funptr(SEXP funptrSEXP, SEXP ind_tSEXP, SEXP dyn_tSEXP, SEXP constvecSEXP, SEXP constmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::XPtr<generalfunction> >::type funptr(funptrSEXP);
+    Rcpp::traits::input_parameter< veca1& >::type ind_t(ind_tSEXP);
+    Rcpp::traits::input_parameter< veca1& >::type dyn_t(dyn_tSEXP);
+    Rcpp::traits::input_parameter< vecd& >::type constvec(constvecSEXP);
+    Rcpp::traits::input_parameter< matd& >::type constmat(constmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(tape_funptr(funptr, ind_t, dyn_t, constvec, constmat));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -205,8 +205,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_pobjS2Stape", (DL_FUNC) &_sphm_pobjS2Stape, 3},
     {"_sphm_OmegaS2S_constraints", (DL_FUNC) &_sphm_OmegaS2S_constraints, 2},
     {"_sphm_OmegaS2S_constraintstape", (DL_FUNC) &_sphm_OmegaS2S_constraintstape, 2},
-    {"_sphm_tape_funptr", (DL_FUNC) &_sphm_tape_funptr, 5},
     {"_sphm_tape_namedfun", (DL_FUNC) &_sphm_tape_namedfun, 5},
+    {"_sphm_tape_funptr", (DL_FUNC) &_sphm_tape_funptr, 5},
     {NULL, NULL, 0}
 };
 

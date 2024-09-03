@@ -4,6 +4,7 @@
 # include <scorematchingad_forward.h> // includes <RcppEigenForward.h>
 # include "sphm_forward.h"
 # include <Rcpp.h>
+# include "function_map.h"
 
 
 //' Function for taping a general function. The function must have signature

@@ -26,7 +26,6 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
   
   # prepare nloptr options
   default_opts <- list(xtol_rel = xtol_rel, #1E-04,
-                       tol_constraints_eq = rep(1E-1, 2),
                        maxeval = 1E4,
                        check_derivatives = TRUE)
   ellipsis_args <- list(...)
@@ -60,13 +59,16 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
                           c(est$k, a1),
                           c(p, est$mean),
                           cbind(y, x))
-    newaremaining <- nloptr::nloptr(
-      x0 = est$aremaining,
-      eval_f = function(aremaining){-sum(scorematchingad:::pForward0(ll_aremaining, aremaining, c(est$k, a1)))},
-      eval_grad_f = function(aremaining){-colSums(matrix(scorematchingad:::pJacobian(ll_aremaining, aremaining, c(est$k, a1)), byrow = TRUE, ncol = length(aremaining)))},
-      opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts[names(combined_opts) != "tol_constraints_eq"])
+    # optimizing log a's in the following (optimising the aremaining would have first steps that went to below zero or super high)
+    newlaremaining <- nloptr::nloptr(
+      x0 = log(est$aremaining),
+      eval_f = function(laremaining){-sum(scorematchingad:::pForward0(ll_aremaining, exp(laremaining), c(est$k, a1)))},
+      eval_grad_f = function(laremaining){-colSums(matrix(scorematchingad:::pJacobian(ll_aremaining, exp(laremaining), c(est$k, a1)), byrow = TRUE, ncol = length(laremaining))) * exp(laremaining)},
+      eval_g_eq =  function(laremaining){sum(laremaining)},
+      eval_jac_g_eq =  function(laremaining){rep(1, length(laremaining))},
+      opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = 1E-1), combined_opts)
     )
-    est$aremaining <- newaremaining$solution
+    est$aremaining <- exp(newlaremaining$solution)
     
     #update mean link
     P <- Omega2cann(OmegaS2S_unvec(est$mean, p))$P
@@ -76,13 +78,14 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
       eval_grad_f = function(theta){-colSums(matrix(scorematchingad:::pJacobian(ll_mean, theta, c(est$k, a1, est$aremaining, as.vector(P))), byrow = TRUE, ncol = length(theta)))},
       eval_g_eq =  function(theta){scorematchingad:::pForward0(ll_mean_constraint, theta, vector(mode = "numeric"))[1:2]},
       eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(ll_mean_constraint, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
-      opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts)
+      opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2)), combined_opts)
     )
     est$mean <- OmegaS2S_vec(OmegaS2S_proj(OmegaS2S_unvec(newmean$solution, p, check = FALSE), method = "Omega"))
     
     iter <- iter + 1
     diff <- unlist(est) - unlist(estprev)
     print(est)
+    browser()
   }
   
   return(list(

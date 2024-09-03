@@ -125,19 +125,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// pobjS2Stape
-Rcpp::XPtr< CppAD::ADFun<double> > pobjS2Stape(veca1& omvec, vecd& p_in, matd& yx);
-RcppExport SEXP _sphm_pobjS2Stape(SEXP omvecSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< veca1& >::type omvec(omvecSEXP);
-    Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
-    Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
-    rcpp_result_gen = Rcpp::wrap(pobjS2Stape(omvec, p_in, yx));
-    return rcpp_result_gen;
-END_RCPP
-}
 // OmegaS2S_constraints
 veca1 OmegaS2S_constraints(veca1& vec, int p);
 RcppExport SEXP _sphm_OmegaS2S_constraints(SEXP vecSEXP, SEXP pSEXP) {
@@ -147,18 +134,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< veca1& >::type vec(vecSEXP);
     Rcpp::traits::input_parameter< int >::type p(pSEXP);
     rcpp_result_gen = Rcpp::wrap(OmegaS2S_constraints(vec, p));
-    return rcpp_result_gen;
-END_RCPP
-}
-// OmegaS2S_constraintstape
-Rcpp::XPtr< CppAD::ADFun<double> > OmegaS2S_constraintstape(veca1& omvec, vecd& p_in);
-RcppExport SEXP _sphm_OmegaS2S_constraintstape(SEXP omvecSEXP, SEXP p_inSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< veca1& >::type omvec(omvecSEXP);
-    Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
-    rcpp_result_gen = Rcpp::wrap(OmegaS2S_constraintstape(omvec, p_in));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -202,9 +177,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_ldSvMF_muV", (DL_FUNC) &_sphm_ldSvMF_muV, 5},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
-    {"_sphm_pobjS2Stape", (DL_FUNC) &_sphm_pobjS2Stape, 3},
     {"_sphm_OmegaS2S_constraints", (DL_FUNC) &_sphm_OmegaS2S_constraints, 2},
-    {"_sphm_OmegaS2S_constraintstape", (DL_FUNC) &_sphm_OmegaS2S_constraintstape, 2},
     {"_sphm_tape_namedfun", (DL_FUNC) &_sphm_tape_namedfun, 5},
     {"_sphm_tape_funptr", (DL_FUNC) &_sphm_tape_funptr, 5},
     {NULL, NULL, 0}

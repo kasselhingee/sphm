@@ -85,8 +85,8 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the star
   p <- ncol(y)
   om0 <- as_OmegaS2S(paramobj0)
   
-  obj_tape <- pobjS2Stape(OmegaS2S_vec(om0), p, cbind(y,x))
-  constraint_tape <- OmegaS2S_constraintstape(OmegaS2S_vec(om0), p)
+  obj_tape <- tape_namedfun("pobjS2Scpp", OmegaS2S_vec(om0), vector(mode = "numeric"), p, cbind(y,x))
+  constraint_tape <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0))
 
   # prepare nloptr options
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",

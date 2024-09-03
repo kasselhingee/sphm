@@ -20,15 +20,6 @@ veca1 pobjS2Scpp(veca1 & omvec, veca1 & dyn, vecd & p_in, matd & yx){
   return(obj);
 }
 
-Rcpp::XPtr< CppAD::ADFun<double> > pobjS2Stape(veca1 & omvec, vecd & p_in, matd & yx) {
-  CppAD::ADFun<double>* out = new CppAD::ADFun<double>; //returning a pointer
-  veca1 dyn(0); //empty vector for passing to general taping function
-  *out = tapefun(*pobjS2Scpp, omvec, dyn, p_in, yx);
-  Rcpp::XPtr< CppAD::ADFun<double> > pout(out, true);
-  return(pout);
-}
-
-
 veca1 OmegaS2S_constraints(veca1 & vec, int p) {
   // Convert vector to a OmegaS2Scpp object
   OmegaS2Scpp<a1type> ompar = OmegaS2Scpp_unvec(vec, p);
@@ -48,13 +39,4 @@ veca1 wrap_OmegaS2S_constraints(veca1 & vec, veca1 & ignore1, vecd & p_in, matd 
   return(out);
 }
 
-
-Rcpp::XPtr< CppAD::ADFun<double> > OmegaS2S_constraintstape(veca1 & omvec, vecd & p_in) {
-  CppAD::ADFun<double>* out = new CppAD::ADFun<double>; //returning a pointer
-  veca1 dyn(0); //empty vector for passing to general taping function
-  matd constmat; //empty matrix for passing to general taping function
-  *out = tapefun(*wrap_OmegaS2S_constraints, omvec, dyn, p_in, constmat);
-  Rcpp::XPtr< CppAD::ADFun<double> > pout(out, true);
-  return(pout);
-}
 

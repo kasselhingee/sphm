@@ -51,18 +51,8 @@ pobjS2Scpp <- function(omvec, dyn, p_in, yx) {
     .Call('_sphm_pobjS2Scpp', PACKAGE = 'sphm', omvec, dyn, p_in, yx)
 }
 
-#' Tape the preliminary objective
-pobjS2Stape <- function(omvec, p_in, yx) {
-    .Call('_sphm_pobjS2Stape', PACKAGE = 'sphm', omvec, p_in, yx)
-}
-
 OmegaS2S_constraints <- function(vec, p) {
     .Call('_sphm_OmegaS2S_constraints', PACKAGE = 'sphm', vec, p)
-}
-
-#' Tape the constraint
-OmegaS2S_constraintstape <- function(omvec, p_in) {
-    .Call('_sphm_OmegaS2S_constraintstape', PACKAGE = 'sphm', omvec, p_in)
 }
 
 #' Function for taping a general function. The function must have signature

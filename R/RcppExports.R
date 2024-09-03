@@ -79,11 +79,13 @@ NULL
 
 #' Tape using a pointer to a function created by RcppXPtrUtils::cppXPtr
 #' @param funptr A pointer to a function created by RcppXPtrUtils::cppXPtr
-#' [[Rcpp::Export]]
-NULL
+tape_funptr <- function(funptr, ind_t, dyn_t, constvec, constmat) {
+    .Call('_sphm_tape_funptr', PACKAGE = 'sphm', funptr, ind_t, dyn_t, constvec, constmat)
+}
 
 #' Tape using a function name in function_map 
 #' @param func_name Name of function to tape. Name must be in the internal `function_map` object.
-#' [[Rcpp::Export]]
-NULL
+tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat) {
+    .Call('_sphm_tape_namedfun', PACKAGE = 'sphm', func_name, ind_t, dyn_t, constvec, constmat)
+}
 

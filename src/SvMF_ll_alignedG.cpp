@@ -33,7 +33,7 @@ veca1 ll_SvMF_S2S_alignedG_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx
   veca1 ld(y.rows());
   mata1 G(p, p);
   for (int i = 0; i < y.rows(); ++i){
-    G = alignedG_cpp(ypred.row(i).transpose(), P);
+    G = alignedGcpp(ypred.row(i).transpose(), P);
     ld(i) = ldSvMF_cann(y.row(i), k, a, G)(0);
   }
   

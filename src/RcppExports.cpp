@@ -15,15 +15,15 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// alignedG_cpp
-mata1 alignedG_cpp(veca1 m, mata1 P);
-RcppExport SEXP _sphm_alignedG_cpp(SEXP mSEXP, SEXP PSEXP) {
+// alignedGcpp
+mata1 alignedGcpp(veca1 m, mata1 P);
+RcppExport SEXP _sphm_alignedGcpp(SEXP mSEXP, SEXP PSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< veca1 >::type m(mSEXP);
     Rcpp::traits::input_parameter< mata1 >::type P(PSEXP);
-    rcpp_result_gen = Rcpp::wrap(alignedG_cpp(m, P));
+    rcpp_result_gen = Rcpp::wrap(alignedGcpp(m, P));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -169,7 +169,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_sphm_alignedG_cpp", (DL_FUNC) &_sphm_alignedG_cpp, 2},
+    {"_sphm_alignedGcpp", (DL_FUNC) &_sphm_alignedGcpp, 2},
     {"_sphm_ll_SvMF_S2S_alignedG_mean", (DL_FUNC) &_sphm_ll_SvMF_S2S_alignedG_mean, 4},
     {"_sphm_ll_SvMF_S2S_alignedG_a", (DL_FUNC) &_sphm_ll_SvMF_S2S_alignedG_a, 4},
     {"_sphm_ll_SvMF_S2S_alignedG_k", (DL_FUNC) &_sphm_ll_SvMF_S2S_alignedG_k, 4},

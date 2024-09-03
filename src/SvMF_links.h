@@ -8,7 +8,7 @@
 
 //' @describeIn SvMF_varlinks Aligns the columns of the Mobius-link rotation matrix `P` for the mean to the columns of G. Note that the first column of the returned G is the given mean. Returns the matrix G.
 // [[Rcpp::export]]
-mata1 alignedG_cpp(veca1 m, mata1 P);
+mata1 alignedGcpp(veca1 m, mata1 P);
 
 #endif
 

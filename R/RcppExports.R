@@ -2,8 +2,8 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @describeIn SvMF_varlinks Aligns the columns of the Mobius-link rotation matrix `P` for the mean to the columns of G. Note that the first column of the returned G is the given mean. Returns the matrix G.
-alignedG_cpp <- function(m, P) {
-    .Call('_sphm_alignedG_cpp', PACKAGE = 'sphm', m, P)
+alignedGcpp <- function(m, P) {
+    .Call('_sphm_alignedGcpp', PACKAGE = 'sphm', m, P)
 }
 
 #' The log-likelihood of a SvMF Sphere-Sphere Regression with Mobius Mean Link and Variance Axes Aligned with P.

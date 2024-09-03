@@ -72,6 +72,8 @@ test_that("maximum likelihood for alignedG link", {
     G <- alignedG(mn, P)
     rSvMF(1, SvMFcann(k, a, G))
   }))
-  
+
+  # when at the starting guess
+  out <- optim_alignedG(y, x, a[1], omegapar, k, a[-1])
 
 })

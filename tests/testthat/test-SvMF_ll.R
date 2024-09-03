@@ -20,3 +20,4 @@ test_that("SvMF_ll is the same using either parameterisatiion", {
   ll_cpp <- do.call(ldSvMF_muV, c(list(y = y), obj2))
   expect_equal(ll_cpp, ll_muV)
 })
+

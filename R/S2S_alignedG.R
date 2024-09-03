@@ -30,7 +30,8 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
   # prepare nloptr options
   default_opts <- list(xtol_rel = xtol_rel, #1E-04,
                        tol_constraints_eq = rep(1E-1, 2),
-                       maxeval = 1E4)
+                       maxeval = 1E4,
+                       check_derivatives = TRUE)
   ellipsis_args <- list(...)
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
@@ -42,7 +43,6 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
   )
   est <- est0 #iteratively update est
   diff <- abs(unlist(est)) * xtol_rel * 3
-  browser()
   while (max(abs(diff)/abs(unlist(est))) > xtol_rel){ #tol is a relative finish
     estprev <- est
     
@@ -50,11 +50,11 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
     P <- Omega2cann(OmegaS2S_unvec(est$mean, p))$P
     newk <- nloptr::nloptr(
       x0 = est$k,
-      eval_f = function(k){mean(scorematchingad:::pForward0(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
-      eval_grad_f = function(k){mean(scorematchingad:::pJacobian(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
+      eval_f = function(k){-sum(scorematchingad:::pForward0(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
+      eval_grad_f = function(k){-sum(scorematchingad:::pJacobian(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
       opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts[names(combined_opts) != "tol_constraints_eq"])
     )
-    
+    browser()
     
     diff <- unlist(est) - unlist(estprev)
   }

@@ -148,7 +148,7 @@ test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   expect_equal(jactapeeval, jac)
 
   # check constraints
-  btapeptr <- OmegaS2S_constraintstape(OmegaS2S_vec(omegapar), p)
+  btapeptr <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(omegapar), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0))
   directeval <- OmegaS2S_constraints(omparovec, p)
   tapeeval <- scorematchingad:::pForward0(btapeptr, unclass(omparovec), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)

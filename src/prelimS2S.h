@@ -1,5 +1,5 @@
-# ifndef PRELIMS2S
-# define PRELIMS2S
+#ifndef PRELIMS2S
+#define PRELIMS2S
 
 
 #include <scorematchingad_forward.h> //includes <RcppEigenForward.h>
@@ -32,4 +32,4 @@ veca1 wrap_OmegaS2S_constraints(veca1 & vec, veca1 & ignore1, vecd & p_in, matd 
 // [[Rcpp::export]]
 Rcpp::XPtr< CppAD::ADFun<double> > OmegaS2S_constraintstape(veca1 & omvec, vecd & p_in);
 
-# endif
+#endif

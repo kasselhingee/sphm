@@ -1,5 +1,5 @@
-# ifndef FUNCTION_MAP
-# define FUNCTION_MAP
+#ifndef FUNCTION_MAP
+#define FUNCTION_MAP
 
 # include <sphm_forward.h>
 # include "prelimS2S.h"
@@ -11,4 +11,4 @@ std::map<std::string, generalfunction> function_map = {
 };
 
 
-# endif
+#endif

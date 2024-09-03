@@ -1,5 +1,5 @@
-# ifndef TAPEGENERAL
-# define TAPEGENERAL
+#ifndef TAPEGENERAL
+#define TAPEGENERAL
 
 # include <scorematchingad_forward.h> // includes <RcppEigenForward.h>
 # include "sphm_forward.h"
@@ -32,4 +32,4 @@ CppAD::ADFun<double> tapefun(generalfunction fun, veca1 & ind_t, veca1 & dyn_t, 
 Rcpp::XPtr< CppAD::ADFun<double> > tape_funptr(Rcpp::XPtr<generalfunction> funptr, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat);
 
 
-# endif
+#endif

@@ -1,5 +1,5 @@
-# ifndef OMEGAS2S_H
-# define OMEGAS2S_H
+#ifndef OMEGAS2S_H
+#define OMEGAS2S_H
 
 # include <sphm_forward.h>
 # include <scorematchingad_forward.h> // includes <RcppEigenForward.h>
@@ -71,4 +71,4 @@ OmegaS2Scpp<double> R2OmegaS2Scpp_double(Rcpp::List obj);
 OmegaS2Scpp<a1type> R2OmegaS2Scpp_a1type(Rcpp::List obj);
 
 
-# endif
+#endif

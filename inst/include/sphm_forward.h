@@ -1,5 +1,5 @@
-# ifndef SPHM_FORWARD
-# define SPHM_FORWARD
+#ifndef SPHM_FORWARD
+#define SPHM_FORWARD
 
 # include <scorematchingad_forward.h> // includes <RcppEigenForward.h>
 
@@ -7,4 +7,4 @@
 // Each object of this class *points* to function with the required signature below
 typedef veca1 (*generalfunction)(veca1 &, veca1 &, vecd &, matd &);
 
-# endif
+#endif

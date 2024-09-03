@@ -1,5 +1,5 @@
-# ifndef CANNS2S_H
-# define CANNS2S_H
+#ifndef CANNS2S_H
+#define CANNS2S_H
 
 # include <sphm_forward.h>
 # include <scorematchingad_forward.h>
@@ -46,4 +46,4 @@ cannS2Scpp<T> Omega2cann(const OmegaS2Scpp<T>& obj) {
     return cannS2Scpp<T>(P, Q, B);
 }
 
-# endif
+#endif

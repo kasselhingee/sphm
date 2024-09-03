@@ -1,5 +1,5 @@
-# ifndef MEANLINKS2S
-# define MEANLINKS2S
+#ifndef MEANLINKS2S
+#define MEANLINKS2S
 
 // using the forward declarations because only the translational unit for RcppExports.cpp need to have access to the wrappers
 #include <scorematchingad_forward.h> //includes <RcppEigenForward.h>
@@ -14,5 +14,5 @@
 // [[Rcpp::export]]
 mata1 meanlinkS2Scpp(const mata1 &x, const veca1 &vec, const int p);
 
-# endif
+#endif
 

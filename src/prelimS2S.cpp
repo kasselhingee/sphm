@@ -34,8 +34,6 @@ veca1 OmegaS2S_constraints(veca1 & vec, int p) {
   OmegaS2Scpp<a1type> ompar = OmegaS2Scpp_unvec(vec, p);
 
   // design so that function returns zero vector when constraints satisfied
-  int p1_size = ompar.p1.size();
-  int q1_size = ompar.q1.size();
   veca1 out(1 + 1);
   out(0) = ompar.p1.squaredNorm() - 1.;
   out(1) = ompar.q1.squaredNorm() - 1.;

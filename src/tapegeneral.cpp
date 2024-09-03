@@ -1,4 +1,5 @@
 # include "tapegeneral.h"
+# include "function_map.h"
 
 CppAD::ADFun<double> tapefun(generalfunction fun, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat) {
   CppAD::Independent(ind_t, dyn_t);

@@ -83,9 +83,3 @@ veca1 ll_SvMF_S2S_aligned_k(veca1 & k, veca1 & dyn, vecd & p_in, matd & yx){
   return ld;
 }
 
-static bool init_function_map_aligned = []() {
-  function_map["ll_SvMF_S2S_aligned_mean"] = &ll_SvMF_S2S_aligned_mean;
-  return true;
-}();
-
-

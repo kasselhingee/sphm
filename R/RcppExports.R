@@ -78,6 +78,12 @@ OmegaS2S_constraintstape <- function(omvec, p_in) {
 NULL
 
 #' Tape using a pointer to a function created by RcppXPtrUtils::cppXPtr
+#' @param funptr A pointer to a function created by RcppXPtrUtils::cppXPtr
+#' [[Rcpp::Export]]
+NULL
+
+#' Tape using a function name in function_map 
+#' @param func_name Name of function to tape. Name must be in the internal `function_map` object.
 #' [[Rcpp::Export]]
 NULL
 

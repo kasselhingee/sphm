@@ -69,7 +69,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
     est$aremaining <- newaremaining$solution
     
     #update mean link
-    P <- Omega2cann(OmegaS2S_unvec(est$mean), p)
+    P <- Omega2cann(OmegaS2S_unvec(est$mean, p))
     newmean <- nloptr::nloptr(
       x0 = est$mean,
       eval_f = function(theta){-sum(scorematchingad:::pForward0(ll_mean, theta, c(est$k, a1, est$aremaining, as.vector(P))))},

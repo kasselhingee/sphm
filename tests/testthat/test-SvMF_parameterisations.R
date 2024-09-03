@@ -8,7 +8,7 @@ test_that("SvMFcann() creates objects that pass checks", {
   expect_silent(SvMFcann_check(obj))
 })
 
-test_that("SvMF_cann2muV and reversible passes checks", {
+test_that("SvMF_cann2muV and reverse passes checks", {
   p <- 5
   set.seed(1)
   a <- runif(p)
@@ -21,7 +21,7 @@ test_that("SvMF_cann2muV and reversible passes checks", {
   expect_silent(SvMFmuV_check(obj2))
   
   expect_equal(SvMF_muV2cann(obj2)[1:2], obj[1:2]) #up to directions of G[, -1]!
-  expect_equal(abs(SvMF_muV2cann(obj2)[3]), abs(obj[3])) #up to directions of G[, -1]!
+  expect_equal(abs(SvMF_muV2cann(obj2)[[3]]), abs(obj[[3]]), ignore_attr = TRUE) #up to directions of G[, -1]!
 })
 
 

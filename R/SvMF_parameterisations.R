@@ -78,7 +78,9 @@ SvMF_muV2cann <- function(obj){
   Hstar <- getHstar(m)
   es <- eigen(V)
   Kstar <- es$vectors
-  SvMFcann(k, c(a1, sqrt(es$values)), G = cbind(m, Hstar %*% Kstar))
+  G <- cbind(m, Hstar %*% Kstar)
+  rownames(G) <- NULL
+  SvMFcann(k, c(a1, sqrt(es$values)), G = G)
 }
 
 getHstar <- function(m){

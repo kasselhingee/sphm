@@ -1,4 +1,4 @@
-#include "SvMF_ll_alignedG_.h"
+#include "SvMF_ll_alignedG.h"
 #include <Rcpp.h>
 #include "OmegaS2S.h"
 #include "meanlinkS2S.h"

@@ -1,4 +1,4 @@
-test_that("ll using alignedGmean link in C++ matches R", {
+test_that("ll using alignedG_mean link in C++ matches R", {
   p <- 3
   q <- 5
   # data generating parameters:
@@ -32,20 +32,20 @@ test_that("ll using alignedGmean link in C++ matches R", {
     ld[i] <- ldSvMF_cann(y[i, , drop = FALSE], k, a, G)
   }
   
-  ldcpp <- ll_SvMF_S2S_alignedGmean(OmegaS2S_vec(omegapar), dyn = c(k, a, as.vector(P)), p, cbind(y, x))
+  ldcpp <- ll_SvMF_S2S_alignedG_mean(OmegaS2S_vec(omegapar), dyn = c(k, a, as.vector(P)), p, cbind(y, x))
   expect_equal(ld, ldcpp)
   
   # compute likelihood when a2, ... is the independent vector and P, k is fixed
-  ldcpp <- ll_SvMF_S2S_alignedGa(a[-1], c(k, a[1]), c(p, OmegaS2S_vec(omegapar)), cbind(y, x))
+  ldcpp <- ll_SvMF_S2S_alignedG_a(a[-1], c(k, a[1]), c(p, OmegaS2S_vec(omegapar)), cbind(y, x))
   expect_equal(ld, ldcpp)
 
   # compute likelihood when k is the only independent vector
-  ldcpp <- ll_SvMF_S2S_alignedGk(k, c(OmegaS2S_vec(omegapar), a, as.vector(P)), p, cbind(y, x))
+  ldcpp <- ll_SvMF_S2S_alignedG_k(k, c(OmegaS2S_vec(omegapar), a, as.vector(P)), p, cbind(y, x))
   expect_equal(ld, ldcpp)
 })
 
 
-test_that("maximum likelihood for alignedP link", {
+test_that("maximum likelihood for alignedG link", {
   p <- 3
   q <- 5
   # data generating parameters:

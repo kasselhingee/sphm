@@ -9,7 +9,7 @@
 NULL
 
 #' @describeIn SvMF_varlinks Aligns the columns of the Mobius-link rotation matrix `P` for the mean to the columns of G. Note that the first column of the returned G is the given mean. Returns the matrix G.
-alignedG_ <- function(m, P){
+alignedG <- function(m, P){
   mproj <- m %*% t(m)
   
   #first remove the mean direction from all directions in P. P 'no m'

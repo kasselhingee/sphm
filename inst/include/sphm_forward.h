@@ -5,7 +5,7 @@
 
 // the following is for passing around general functions for taping by tapefun
 // Each object of this class *points* to function with the required signature below
-typedef veca1 (*generalfunction)(const veca1 &, const veca1 &, const vecd &, const matd &);
+typedef veca1 (*generalfunction)(veca1 &, veca1 &, vecd &, matd &);
 
 // defining a function map that will convert string names to a pointer to the function
 // it will declared as extern here so that when the compiler will look elsewhere for the definition

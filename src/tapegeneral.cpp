@@ -23,3 +23,10 @@ Rcpp::XPtr< CppAD::ADFun<double> > tapefun(Rcpp::XPtr<generalfunction> funptr, v
   Rcpp::XPtr< CppAD::ADFun<double> > pout(out, true);
   return(pout);
 }
+
+
+//function_map definition, the ONLY definition of this global variable
+//see sphm_forward.h for more explanation on use
+std::map<std::string, generalfunction> function_map;
+
+

@@ -1,4 +1,4 @@
-#include "SvMF_ll_alignedG.h"
+#include "SvMF_ll_alignedG_.h"
 #include <Rcpp.h>
 #include "OmegaS2S.h"
 #include "meanlinkS2S.h"
@@ -7,7 +7,7 @@
 #include "cannS2S.h"
 
 
-veca1 ll_SvMF_S2S_alignedGmean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
+veca1 ll_SvMF_S2S_alignedG_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
 
   // separate the response the covariates
@@ -33,17 +33,17 @@ veca1 ll_SvMF_S2S_alignedGmean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx)
   veca1 ld(y.rows());
   mata1 G(p, p);
   for (int i = 0; i < y.rows(); ++i){
-    G = alignedGcpp(ypred.row(i).transpose(), P);
+    G = alignedG_cpp(ypred.row(i).transpose(), P);
     ld(i) = ldSvMF_cann(y.row(i), k, a, G)(0);
   }
   
   return ld;
 }
 
-veca1 ll_SvMF_S2S_alignedGa(veca1 & vec, veca1 & dyn, vecd & pOmegavec, matd & yx){
+veca1 ll_SvMF_S2S_alignedG_a(veca1 & vec, veca1 & dyn, vecd & pOmegavec, matd & yx){
   int p = int(pOmegavec(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
 
-  //convert to parameterisation of _alignedGmean()
+  //convert to parameterisation of _alignedG_mean()
   veca1 newvec = pOmegavec.tail(pOmegavec.size() - 1);
   // extract P matrix
   mata1 P = Omega2cann(OmegaS2Scpp_unvec(newvec, p)).P;
@@ -51,20 +51,20 @@ veca1 ll_SvMF_S2S_alignedGa(veca1 & vec, veca1 & dyn, vecd & pOmegavec, matd & y
   veca1 newdyn(p+1+p*p);
   newdyn << dyn(0), dyn(1), vec, Pvec;
   vecd p_in = pOmegavec.segment(0,1);
-  veca1 ld = ll_SvMF_S2S_alignedGmean(newvec, newdyn, p_in, yx);
+  veca1 ld = ll_SvMF_S2S_alignedG_mean(newvec, newdyn, p_in, yx);
   return ld;
 }
 
 
-veca1 ll_SvMF_S2S_alignedGk(veca1 & k, veca1 & dyn, vecd & p_in, matd & yx){
+veca1 ll_SvMF_S2S_alignedG_k(veca1 & k, veca1 & dyn, vecd & p_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
 
-  //convert to parameterisation of _alignedGmean()
+  //convert to parameterisation of _alignedG_mean()
   veca1 newvec = dyn.head(dyn.size() - p - p*p); //should just be the Omegavec
   veca1 newdyn(p + 1 + p*p);
   newdyn << k, dyn.tail(p + p*p);
 
-  veca1 ld = ll_SvMF_S2S_alignedGmean(newvec, newdyn, p_in, yx);
+  veca1 ld = ll_SvMF_S2S_alignedG_mean(newvec, newdyn, p_in, yx);
   return ld;
 }
 

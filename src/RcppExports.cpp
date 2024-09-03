@@ -15,21 +15,21 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// alignedGcpp
-mata1 alignedGcpp(veca1 m, mata1 P);
-RcppExport SEXP _sphm_alignedGcpp(SEXP mSEXP, SEXP PSEXP) {
+// alignedG_cpp
+mata1 alignedG_cpp(veca1 m, mata1 P);
+RcppExport SEXP _sphm_alignedG_cpp(SEXP mSEXP, SEXP PSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< veca1 >::type m(mSEXP);
     Rcpp::traits::input_parameter< mata1 >::type P(PSEXP);
-    rcpp_result_gen = Rcpp::wrap(alignedGcpp(m, P));
+    rcpp_result_gen = Rcpp::wrap(alignedG_cpp(m, P));
     return rcpp_result_gen;
 END_RCPP
 }
-// ll_SvMF_S2S_alignedGmean
-veca1 ll_SvMF_S2S_alignedGmean(veca1& vec, veca1& dyn, vecd& p_in, matd& yx);
-RcppExport SEXP _sphm_ll_SvMF_S2S_alignedGmean(SEXP vecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
+// ll_SvMF_S2S_alignedG_mean
+veca1 ll_SvMF_S2S_alignedG_mean(veca1& vec, veca1& dyn, vecd& p_in, matd& yx);
+RcppExport SEXP _sphm_ll_SvMF_S2S_alignedG_mean(SEXP vecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -37,13 +37,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
     Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
     Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
-    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_alignedGmean(vec, dyn, p_in, yx));
+    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_alignedG_mean(vec, dyn, p_in, yx));
     return rcpp_result_gen;
 END_RCPP
 }
-// ll_SvMF_S2S_alignedGa
-veca1 ll_SvMF_S2S_alignedGa(veca1& vec, veca1& dyn, vecd& pOmegavec, matd& yx);
-RcppExport SEXP _sphm_ll_SvMF_S2S_alignedGa(SEXP vecSEXP, SEXP dynSEXP, SEXP pOmegavecSEXP, SEXP yxSEXP) {
+// ll_SvMF_S2S_alignedG_a
+veca1 ll_SvMF_S2S_alignedG_a(veca1& vec, veca1& dyn, vecd& pOmegavec, matd& yx);
+RcppExport SEXP _sphm_ll_SvMF_S2S_alignedG_a(SEXP vecSEXP, SEXP dynSEXP, SEXP pOmegavecSEXP, SEXP yxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -51,13 +51,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
     Rcpp::traits::input_parameter< vecd& >::type pOmegavec(pOmegavecSEXP);
     Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
-    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_alignedGa(vec, dyn, pOmegavec, yx));
+    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_alignedG_a(vec, dyn, pOmegavec, yx));
     return rcpp_result_gen;
 END_RCPP
 }
-// ll_SvMF_S2S_alignedGk
-veca1 ll_SvMF_S2S_alignedGk(veca1& k, veca1& dyn, vecd& p_in, matd& yx);
-RcppExport SEXP _sphm_ll_SvMF_S2S_alignedGk(SEXP kSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
+// ll_SvMF_S2S_alignedG_k
+veca1 ll_SvMF_S2S_alignedG_k(veca1& k, veca1& dyn, vecd& p_in, matd& yx);
+RcppExport SEXP _sphm_ll_SvMF_S2S_alignedG_k(SEXP kSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -65,7 +65,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
     Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
     Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
-    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_alignedGk(k, dyn, p_in, yx));
+    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_alignedG_k(k, dyn, p_in, yx));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -169,10 +169,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_sphm_alignedGcpp", (DL_FUNC) &_sphm_alignedGcpp, 2},
-    {"_sphm_ll_SvMF_S2S_alignedGmean", (DL_FUNC) &_sphm_ll_SvMF_S2S_alignedGmean, 4},
-    {"_sphm_ll_SvMF_S2S_alignedGa", (DL_FUNC) &_sphm_ll_SvMF_S2S_alignedGa, 4},
-    {"_sphm_ll_SvMF_S2S_alignedGk", (DL_FUNC) &_sphm_ll_SvMF_S2S_alignedGk, 4},
+    {"_sphm_alignedG_cpp", (DL_FUNC) &_sphm_alignedG_cpp, 2},
+    {"_sphm_ll_SvMF_S2S_alignedG_mean", (DL_FUNC) &_sphm_ll_SvMF_S2S_alignedG_mean, 4},
+    {"_sphm_ll_SvMF_S2S_alignedG_a", (DL_FUNC) &_sphm_ll_SvMF_S2S_alignedG_a, 4},
+    {"_sphm_ll_SvMF_S2S_alignedG_k", (DL_FUNC) &_sphm_ll_SvMF_S2S_alignedG_k, 4},
     {"_sphm_ldSvMF_cann", (DL_FUNC) &_sphm_ldSvMF_cann, 4},
     {"_sphm_ldSvMF_muV", (DL_FUNC) &_sphm_ldSvMF_muV, 5},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},

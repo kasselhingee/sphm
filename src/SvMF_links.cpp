@@ -1,7 +1,7 @@
 #include "SvMF_links.h"
 #include <Rcpp.h>
 
-mata1 alignedGcpp(veca1 m, mata1 P) {
+mata1 alignedG_cpp(veca1 m, mata1 P) {
     int p = m.size();
     
     // Compute m %*% t(m) which is the outer product of m with itself

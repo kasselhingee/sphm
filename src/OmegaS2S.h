@@ -6,6 +6,9 @@
 # include <RcppEigen.h> //for access to Rcpp::as and Rcpp::wrap for Eigen objects
 # include <Rcpp.h>
 
+// [[Rcpp::depends(RcppEigen)]]
+
+
 // Define the templated C++ struct for the OmegaS2S parametetrisation
 template <typename T>
 struct OmegaS2Scpp {

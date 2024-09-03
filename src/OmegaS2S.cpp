@@ -1,7 +1,5 @@
 # include "OmegaS2S.h"
 
-// [[Rcpp::depends(RcppEigen)]]
-
 OmegaS2Scpp<double> R2OmegaS2S_double(Rcpp::List obj) {
     Eigen::Matrix<double, Eigen::Dynamic, 1> p1 = Rcpp::as<Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, 1>>>(obj["p1"]);
     Eigen::Matrix<double, Eigen::Dynamic, 1> q1 = Rcpp::as<Eigen::Matrix<double, Eigen::Dynamic, 1>>(obj["q1"]);

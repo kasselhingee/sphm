@@ -1,4 +1,5 @@
 #include "ldSvMF.h"
+#include <Rcpp.h>
 
 // Helper function vMFnormconst
 a1type vMFnormconst(a1type kappa, int p) {

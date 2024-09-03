@@ -1,8 +1,12 @@
 #' Simulate the SmVF Distribution
+#' @param n The number of samples to simulate
+#' @param param A parameter object. See [`SvMFcann()`] or [`SvMFmuV()`].
+#' @param check If TRUE, will check that the parameters are appropriate for a SvMF model.
+#' @export
 rSvMF <- function(n, param, check = TRUE)
 {
   param <- as_SvMFmuV(param)
-  SvMFmuV_check(param)
+  if (check){SvMFmuV_check(param)}
   kappa <- param$k
   V <- param$V
   mu <- param$m

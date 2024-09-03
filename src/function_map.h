@@ -9,9 +9,9 @@
 std::map<std::string, generalfunction> function_map = {
    {"pobjS2Scpp", &pobjS2Scpp},
    {"wrap_OmegaS2S_constraints", &wrap_OmegaS2S_constraints},
-   {"ll_SvMF_S2S_aligned_mean", &ll_SvMF_S2S_aligned_mean},
-   {"ll_SvMF_S2S_aligned_a", &ll_SvMF_S2S_aligned_a},
-   {"ll_SvMF_S2S_aligned_k", &ll_SvMF_S2S_aligned_k},
+   {"ll_SvMF_S2S_alignedGmean", &ll_SvMF_S2S_alignedGmean},
+   {"ll_SvMF_S2S_alignedGa", &ll_SvMF_S2S_alignedGa},
+   {"ll_SvMF_S2S_alignedGk", &ll_SvMF_S2S_alignedGk},
 };
 
 

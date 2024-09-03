@@ -10,9 +10,6 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
   om0 <- as_OmegaS2S(param_mean)
   P <- Omega2cann(om0)$P
   
-  # preliminary estimate of the mean
-  prelim <- optim_pobjS2S_parttape(y, x, om0)
-  
   # generate tapes of ll that can be reused
   ll_mean <- tape_namedfun("ll_SvMF_S2S_alignedG_mean", 
                            OmegaS2S_vec(om0),
@@ -37,13 +34,14 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
   
   # optimise iteratively. Start with k, then do a, then mean and repeat
   est0 <- list(
-    mean = OmegaS2S_vec(prelim$solution),
+    mean = OmegaS2S_vec(om0),
     k = k,
     aremaining = aremaining
   )
   est <- est0 #iteratively update est
   diff <- abs(unlist(est)) * xtol_rel * 3
-  while (max(abs(diff)/abs(unlist(est))) > xtol_rel){ #tol is a relative finish
+  iter <- 0
+  while ( (iter < combined_opts$maxeval)  & (max(abs(diff)/abs(unlist(est))) > xtol_rel)){
     estprev <- est
     
     # update k
@@ -54,33 +52,39 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
       eval_grad_f = function(k){-sum(scorematchingad:::pJacobian(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
       opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts[names(combined_opts) != "tol_constraints_eq"])
     )
-    browser()
+    est$k <- newk$solution
     
+    # update aremaining
+    ll_aremaining <- tape_namedfun("ll_SvMF_S2S_alignedG_a",
+                          est$aremaining,
+                          c(est$k, a1),
+                          c(p, est$mean),
+                          cbind(y, x))
+    newaremaining <- nloptr::nloptr(
+      x0 = est$aremaining,
+      eval_f = function(aremaining){-sum(scorematchingad:::pForward0(ll_aremaining, aremaining, c(est$k, a1)))},
+      eval_grad_f = function(aremaining){-colSums(matrix(scorematchingad:::pJacobian(ll_aremaining, aremaining, c(est$k, a1)), byrow = TRUE, ncol = length(aremaining)))},
+      opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts[names(combined_opts) != "tol_constraints_eq"])
+    )
+    est$aremaining <- newaremaining$solution
+    
+    #update mean link
+    P <- Omega2cann(OmegaS2S_unvec(est$mean), p)
+    newmean <- nloptr::nloptr(
+      x0 = est$mean,
+      eval_f = function(theta){-sum(scorematchingad:::pForward0(ll_mean, theta, c(est$k, a1, est$aremaining, as.vector(P))))},
+      eval_grad_f = function(theta){-colSums(matrix(scorematchingad:::pJacobian(ll_mean, theta, c(est$k, a1, est$aremaining, as.vector(P))), byrow = TRUE, ncol = length(theta)))},
+      opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts[names(combined_opts) != "tol_constraints_eq"])
+    )
+    est$mean <- newmean$solution
+    
+    iter <- iter + 1
     diff <- unlist(est) - unlist(estprev)
+    print(est)
   }
-  newk <- nloptr::nloptr(
-    x0 = est$k,
-    eval_f = function(theta){scorematchingad:::pForward0(ll_k, theta, vector(mode = "numeric"))},
-    eval_grad_f = function(theta){scorematchingad:::pJacobian(obj_tape, theta, vector(mode = "numeric"))},
-    eval_g_eq =  function(theta){scorematchingad:::pForward0(constraint_tape, theta, vector(mode = "numeric"))[1:2]},
-    eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(constraint_tape, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
-    opts = combined_opts
-  )
-  
-  
-
-  
-  locopt <- nloptr::nloptr(
-    x0 = OmegaS2S_vec(om0),
-    eval_f = function(theta){scorematchingad:::pForward0(obj_tape, theta, vector(mode = "numeric"))},
-    eval_grad_f = function(theta){scorematchingad:::pJacobian(obj_tape, theta, vector(mode = "numeric"))},
-    eval_g_eq =  function(theta){scorematchingad:::pForward0(constraint_tape, theta, vector(mode = "numeric"))[1:2]},
-    eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(constraint_tape, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
-    opts = combined_opts
-  )
   
   return(list(
-    solution = OmegaS2S_proj(OmegaS2S_unvec(locopt$solution, p, check = FALSE), method = "Omega"),
-    loc_nloptr = locopt
+    solution = est,
+    iter = iter
   ))
 }

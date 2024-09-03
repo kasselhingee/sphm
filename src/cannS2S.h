@@ -21,11 +21,6 @@ struct cannS2Scpp {
 template <typename T>
 cannS2Scpp<T> Omega2cann(const OmegaS2Scpp<T>& obj) {
     int p = obj.p1.size();
-    //try using isfinite overloading from cppad
-    CppAD::AD<double> test_var = 1.0;
-    // Explicitly call the functions to force instantiation
-    bool test_isfinite = std::isfinite(test_var);
-
 
     // Perform SVD on the Omega matrix
     Eigen::JacobiSVD<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>> svd(obj.Omega, Eigen::ComputeThinU | Eigen::ComputeThinV);

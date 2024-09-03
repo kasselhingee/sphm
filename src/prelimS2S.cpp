@@ -1,4 +1,7 @@
 #include "prelimS2S.h"
+#include "OmegaS2S.h"
+#include "meanlinkS2S.h"
+#include "tapegeneral.h"
 
 veca1 pobjS2Scpp(veca1 & omvec, veca1 & dyn, vecd & p_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents

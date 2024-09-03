@@ -1,5 +1,6 @@
 
-# include "meanlinkS2S.h"
+#include "meanlinkS2S.h"
+#include "OmegaS2S.h"
 
 mata1 meanlinkS2Scpp(const mata1 &x, const veca1 &vec, const int p) {
   // Convert vector to a OmegaS2Scpp object

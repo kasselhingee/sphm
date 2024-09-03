@@ -1,4 +1,5 @@
 #include "SvMF_links.h"
+#include <Rcpp.h>
 
 mata1 alignedGcpp(veca1 m, mata1 P) {
     int p = m.size();

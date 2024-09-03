@@ -3,9 +3,7 @@
 
 
 #include <scorematchingad_forward.h> //includes <RcppEigenForward.h>
-#include "OmegaS2S.h"
-#include "meanlinkS2S.h"
-#include "tapegeneral.h"
+#include <Rcpp.h>
 
 //' Preliminary Objective in the style of the `generalfunction` class:
 //' @param yx is the response and covariates *cbind* together. Each row an observation.

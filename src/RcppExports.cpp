@@ -112,15 +112,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // pobjS2Scpp
-veca1 pobjS2Scpp(const veca1& omvec, const veca1& dyn, const vecd& p_in, const matd& yx);
+veca1 pobjS2Scpp(veca1& omvec, veca1& dyn, vecd& p_in, matd& yx);
 RcppExport SEXP _sphm_pobjS2Scpp(SEXP omvecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const veca1& >::type omvec(omvecSEXP);
-    Rcpp::traits::input_parameter< const veca1& >::type dyn(dynSEXP);
-    Rcpp::traits::input_parameter< const vecd& >::type p_in(p_inSEXP);
-    Rcpp::traits::input_parameter< const matd& >::type yx(yxSEXP);
+    Rcpp::traits::input_parameter< veca1& >::type omvec(omvecSEXP);
+    Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
+    Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
+    Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
     rcpp_result_gen = Rcpp::wrap(pobjS2Scpp(omvec, dyn, p_in, yx));
     return rcpp_result_gen;
 END_RCPP
@@ -139,13 +139,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // OmegaS2S_constraints
-veca1 OmegaS2S_constraints(const veca1& vec, const int p);
+veca1 OmegaS2S_constraints(veca1& vec, int p);
 RcppExport SEXP _sphm_OmegaS2S_constraints(SEXP vecSEXP, SEXP pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const veca1& >::type vec(vecSEXP);
-    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< veca1& >::type vec(vecSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
     rcpp_result_gen = Rcpp::wrap(OmegaS2S_constraints(vec, p));
     return rcpp_result_gen;
 END_RCPP

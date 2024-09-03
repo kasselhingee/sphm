@@ -9,7 +9,7 @@
 //' @param p is required to separate yx and omvec. It is passed as a double for compatiblility witn generalfunction, so will have to be rounded to a integer within the function
 //' @param dyn ignored
 // [[Rcpp::export]]
-veca1 pobjS2Scpp(const veca1 & omvec, const veca1 & dyn, const vecd & p_in, const matd & yx){
+veca1 pobjS2Scpp(veca1 & omvec, veca1 & dyn, vecd & p_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   mata1 y = yx.leftCols(p);
   mata1 x = yx.block(0, p, yx.rows(), yx.cols() - p);
@@ -39,7 +39,7 @@ Rcpp::XPtr< CppAD::ADFun<double> > pobjS2Stape(veca1 & omvec, vecd & p_in, matd 
 
 // For a parameter set return quadratic distance to constraints matching
 // [[Rcpp::export]]
-veca1 OmegaS2S_constraints(const veca1 & vec, const int p) {
+veca1 OmegaS2S_constraints(veca1 & vec, int p) {
   // Convert vector to a OmegaS2Scpp object
   OmegaS2Scpp<a1type> ompar = OmegaS2Scpp_unvec(vec, p);
 
@@ -53,7 +53,7 @@ veca1 OmegaS2S_constraints(const veca1 & vec, const int p) {
 }
 
 //a wrap around OmegaS2S_constraints for use with tapegeneral
-veca1 wrap_OmegaS2S_constraints(const veca1 & vec, const veca1 & ignore1, const vecd & p_in, const matd & ignore2) {
+veca1 wrap_OmegaS2S_constraints(veca1 & vec, veca1 & ignore1, vecd & p_in, matd & ignore2) {
   veca1 out;
   int p = int(p_in(0) + 0.1);
   out = OmegaS2S_constraints(vec,p);

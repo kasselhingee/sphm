@@ -42,13 +42,16 @@ veca1 ll_SvMF_S2S_alignedG_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx
 
 veca1 ll_SvMF_S2S_alignedG_a(veca1 & vec, veca1 & dyn, vecd & pOmegavecP, matd & yx){
   int p = int(pOmegavecP(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
+  //
+  veca1 aremaining(p-1);
+  aremaining << CppAD::exp(-vec.sum()), vec.array().exp();
 
   //convert to parameterisation of _alignedG_mean()
   veca1 newvec = pOmegavecP.segment(1, p + (yx.cols() - p) + p * (yx.cols() - p));
   // extract P matrix
   veca1 Pvec = pOmegavecP.tail(p*p);
   veca1 newdyn(p+1+p*p);
-  newdyn << dyn(0), dyn(1), vec, Pvec;
+  newdyn << dyn(0), dyn(1), aremaining, Pvec;
   vecd p_in = pOmegavecP.head(1);
   veca1 ld = ll_SvMF_S2S_alignedG_mean(newvec, newdyn, p_in, yx);
   return ld;

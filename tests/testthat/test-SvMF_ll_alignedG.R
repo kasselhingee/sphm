@@ -36,7 +36,7 @@ test_that("ll using alignedG_mean link in C++ matches R", {
   expect_equal(ld, ldcpp)
   
   # compute likelihood when a2, ... is the independent vector and P, k is fixed
-  ldcpp <- ll_SvMF_S2S_alignedG_a(a[-1], c(k, a[1]), c(p, OmegaS2S_vec(omegapar), as.vector(P)), cbind(y, x))
+  ldcpp <- ll_SvMF_S2S_alignedG_a(log(a[-c(1,2)]), c(k, a[1]), c(p, OmegaS2S_vec(omegapar), as.vector(P)), cbind(y, x))
   expect_equal(ld, ldcpp)
 
   # compute likelihood when k is the only independent vector

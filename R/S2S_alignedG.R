@@ -8,6 +8,7 @@
 optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5, ...){ #all the parameters are used as starting guesses, except a[1] that is a tuning parameter
   p <- ncol(y)
   om0 <- as_OmegaS2S(param_mean)
+  OmegaS2S_check(om0)
   P <- Omega2cann(om0)$P
   
   # generate tapes of ll that can be reused
@@ -60,21 +61,26 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
     
     # update aremaining
     atime_start <- proc.time() # for timing
-    ll_aremaining <- tape_namedfun("ll_SvMF_S2S_alignedG_a",
-                          est$aremaining,
+    if (length(est$aremaining) > 1) {
+      #if its length one then the value must be exactly 1
+      #otherwise here aremaining[1] will be derived from all the others
+      ll_aremaining <- tape_namedfun("ll_SvMF_S2S_alignedG_a",
+                          log(est$aremaining[-1]),
                           c(est$k, a1),
                           c(p, est$mean, as.vector(P)),
                           cbind(y, x))
+      newlaremaining <- nloptr::nloptr( #searching for log(a) to avoid non-zero bound AND deriving the first value from all the others to avoid prod=1 requirement
+        x0 = log(est$aremaining[-1]),
+        eval_f = function(theta){
+          -sum(scorematchingad:::pForward0(ll_aremaining, theta, c(est$k, a1)))},
+        eval_grad_f = function(theta){
+          -colSums(matrix(scorematchingad:::pJacobian(ll_aremaining, theta, c(est$k, a1)), byrow = TRUE, ncol = length(theta)))
+          },
+        opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts)
+      )
+      est$aremaining <- exp(c(-sum(newlaremaining$solution), newlaremaining$solution))
+    }
     # optimizing log a's in the following (optimising the aremaining would have first steps that went to below zero or super high)
-    newlaremaining <- nloptr::nloptr(
-      x0 = log(est$aremaining),
-      eval_f = function(laremaining){-sum(scorematchingad:::pForward0(ll_aremaining, exp(laremaining), c(est$k, a1)))},
-      eval_grad_f = function(laremaining){-colSums(matrix(scorematchingad:::pJacobian(ll_aremaining, exp(laremaining), c(est$k, a1)), byrow = TRUE, ncol = length(laremaining))) * exp(laremaining)},
-      eval_g_eq =  function(laremaining){sum(laremaining)},
-      eval_jac_g_eq =  function(laremaining){rep(1, length(laremaining))},
-      opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = 1E-1), combined_opts)
-    )
-    est$aremaining <- exp(newlaremaining$solution)
     atime <- proc.time() - atime_start
     times[iter, "aremaining"] <- sum(atime[c("user.self", "user.child")])
     

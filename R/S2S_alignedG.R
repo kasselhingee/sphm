@@ -5,7 +5,7 @@
 #' @param a1 The first element of the vector a, which is tuning parameter.
 #' @param aremaining The remaining vector a, used as a starting guess.
 #' @param param_mean Parameters for the mean link, used as a starting guess.
-optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2, ...){ #all the parameters are used as starting guesses, except a[1] that is a tuning parameter
+optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5, ...){ #all the parameters are used as starting guesses, except a[1] that is a tuning parameter
   p <- ncol(y)
   om0 <- as_OmegaS2S(param_mean)
   P <- Omega2cann(om0)$P
@@ -27,7 +27,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
   # prepare nloptr options
   default_opts <- list(xtol_rel = xtol_rel, #1E-04,
                        maxeval = 1E4,
-                       check_derivatives = TRUE)
+                       check_derivatives = FALSE)
   ellipsis_args <- list(...)
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
@@ -40,20 +40,26 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
   est <- est0 #iteratively update est
   diff <- abs(unlist(est)) * xtol_rel * 3
   iter <- 0
+  times <- data.frame(list(k = NA, aremaining = NA, mean = NA)) #record times
+  ests <- list() #track estimates
   while ( (iter < combined_opts$maxeval)  & (max(abs(diff)/abs(unlist(est))) > xtol_rel)){
     estprev <- est
+    iter <- iter + 1
+    P <- Omega2cann(OmegaS2S_unvec(est$mean, p))$P
     
     # update k
-    P <- Omega2cann(OmegaS2S_unvec(est$mean, p))$P
+    ktime <- system.time({
     newk <- nloptr::nloptr(
       x0 = est$k,
       eval_f = function(k){-sum(scorematchingad:::pForward0(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
       eval_grad_f = function(k){-sum(scorematchingad:::pJacobian(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
       opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts[names(combined_opts) != "tol_constraints_eq"])
-    )
+    )})
     est$k <- newk$solution
+    times[iter, "k"] <- sum(ktime[c("user.self", "user.child")])
     
     # update aremaining
+    atime_start <- proc.time() # for timing
     ll_aremaining <- tape_namedfun("ll_SvMF_S2S_alignedG_a",
                           est$aremaining,
                           c(est$k, a1),
@@ -62,20 +68,18 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
     # optimizing log a's in the following (optimising the aremaining would have first steps that went to below zero or super high)
     newlaremaining <- nloptr::nloptr(
       x0 = log(est$aremaining),
-      eval_f = function(laremaining){
-        print(exp(laremaining))
-        -sum(scorematchingad:::pForward0(ll_aremaining, exp(laremaining), c(est$k, a1)))},
-      eval_grad_f = function(laremaining){
-        exp(laremaining)
-        -colSums(matrix(scorematchingad:::pJacobian(ll_aremaining, exp(laremaining), c(est$k, a1)), byrow = TRUE, ncol = length(laremaining))) * exp(laremaining)},
+      eval_f = function(laremaining){-sum(scorematchingad:::pForward0(ll_aremaining, exp(laremaining), c(est$k, a1)))},
+      eval_grad_f = function(laremaining){-colSums(matrix(scorematchingad:::pJacobian(ll_aremaining, exp(laremaining), c(est$k, a1)), byrow = TRUE, ncol = length(laremaining))) * exp(laremaining)},
       eval_g_eq =  function(laremaining){sum(laremaining)},
       eval_jac_g_eq =  function(laremaining){rep(1, length(laremaining))},
-      opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = 1E-1, print_level = 3), combined_opts)
+      opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = 1E-1), combined_opts)
     )
     est$aremaining <- exp(newlaremaining$solution)
+    atime <- proc.time() - atime_start
+    times[iter, "aremaining"] <- sum(atime[c("user.self", "user.child")])
     
     #update mean link
-    P <- Omega2cann(OmegaS2S_unvec(est$mean, p))$P
+    mntime_start <- proc.time()
     newmean <- nloptr::nloptr(
       x0 = est$mean,
       eval_f = function(theta){-sum(scorematchingad:::pForward0(ll_mean, theta, c(est$k, a1, est$aremaining, as.vector(P))))},
@@ -85,14 +89,18 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
       opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2)), combined_opts)
     )
     est$mean <- OmegaS2S_vec(OmegaS2S_proj(OmegaS2S_unvec(newmean$solution, p, check = FALSE), method = "Omega"))
+    mntime <- proc.time() - mntime_start
+    times[iter, "mean"] <- sum(mntime[c("user.self", "user.child")])
     
-    iter <- iter + 1
+    ests[[iter]] <- est
     diff <- unlist(est) - unlist(estprev)
-    print(est)
+    cat(".")
   }
   
   return(list(
     solution = est,
-    iter = iter
+    iter = iter,
+    ests = ests,
+    times = times
   ))
 }

@@ -65,7 +65,7 @@ test_that("maximum likelihood for alignedG link", {
   ymean <- meanlinkS2S(x = x, paramobj = omegapar)
   
   # generate noise according to SvMF
-  k <- 10
+  k <- 20
   a <- c(1, seq(5, 0.2, length.out = p-1))
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){
@@ -73,17 +73,10 @@ test_that("maximum likelihood for alignedG link", {
     rSvMF(1, SvMFcann(k, a, G))
   }))
 
-  # aremaining tape seems difficult for this value
-  badest <- readRDS("bad_est.rds")
-  ll_aremaining <- tape_namedfun("ll_SvMF_S2S_alignedG_a",
-                        a[-1],
-                        c(k, a[1]),
-                        c(p, badest$mean, as.vector(Omega2cann(OmegaS2S_unvec(badest$mean, p))$P)),
-                        cbind(y, x))
-  scorematchingad:::pForward0(ll_aremaining, a[-1], c(k, a[1]))
+  # when at the starting guess, expect it to work well
+  out <- optim_alignedG(y, x, a[1], omegapar, k, a[-1], xtol_rel = 1E-3)
   
-
-  # when at the starting guess
-  out <- optim_alignedG(y, x, a[1], omegapar, k, a[-1])
+  expect_equal(out$solution, list(mean = OmegaS2S_vec(omegapar), k = k, aremaining = a[-1]),
+               tolerance = 1E-2)
 
 })

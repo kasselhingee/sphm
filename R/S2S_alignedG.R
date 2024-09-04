@@ -54,19 +54,25 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
     est$k <- newk$solution
     
     # update aremaining
+    warning("search for a incomplete")
     ll_aremaining <- tape_namedfun("ll_SvMF_S2S_alignedG_a",
                           est$aremaining,
                           c(est$k, a1),
-                          c(p, est$mean),
+                          c(p, est0$mean), #using est instead of est0 creates problems, but really NEED est$mean for search to work
                           cbind(y, x))
     # optimizing log a's in the following (optimising the aremaining would have first steps that went to below zero or super high)
+    browser()
     newlaremaining <- nloptr::nloptr(
       x0 = log(est$aremaining),
-      eval_f = function(laremaining){-sum(scorematchingad:::pForward0(ll_aremaining, exp(laremaining), c(est$k, a1)))},
-      eval_grad_f = function(laremaining){-colSums(matrix(scorematchingad:::pJacobian(ll_aremaining, exp(laremaining), c(est$k, a1)), byrow = TRUE, ncol = length(laremaining))) * exp(laremaining)},
+      eval_f = function(laremaining){
+        print(exp(laremaining))
+        -sum(scorematchingad:::pForward0(ll_aremaining, exp(laremaining), c(est$k, a1)))},
+      eval_grad_f = function(laremaining){
+        exp(laremaining)
+        -colSums(matrix(scorematchingad:::pJacobian(ll_aremaining, exp(laremaining), c(est$k, a1)), byrow = TRUE, ncol = length(laremaining))) * exp(laremaining)},
       eval_g_eq =  function(laremaining){sum(laremaining)},
       eval_jac_g_eq =  function(laremaining){rep(1, length(laremaining))},
-      opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = 1E-1), combined_opts)
+      opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = 1E-1, print_level = 3), combined_opts)
     )
     est$aremaining <- exp(newlaremaining$solution)
     
@@ -85,7 +91,6 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
     iter <- iter + 1
     diff <- unlist(est) - unlist(estprev)
     print(est)
-    browser()
   }
   
   return(list(

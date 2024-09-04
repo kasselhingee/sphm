@@ -73,6 +73,21 @@ test_that("maximum likelihood for alignedG link", {
     rSvMF(1, SvMFcann(k, a, G))
   }))
 
+  # re-calling of aremaining tape seems difficult
+  ll_aremaining <- tape_namedfun("ll_SvMF_S2S_alignedG_a",
+                        a[-1],
+                        c(k, a[1]),
+                        c(p, OmegaS2S_vec(omegapar)),
+                        cbind(y, x))
+  scorematchingad:::pForward0(ll_aremaining, a[-1], c(k, a[1]))
+  ll_aremaining <- tape_namedfun("ll_SvMF_S2S_alignedG_a",
+                        a[-1],
+                        c(k + 0.2, a[1]),
+                        c(p, OmegaS2S_vec(omegapar)),
+                        cbind(y, x))
+  scorematchingad:::pForward0(ll_aremaining, a[-1], c(k, a[1]))
+  
+
   # when at the starting guess
   out <- optim_alignedG(y, x, a[1], omegapar, k, a[-1])
 

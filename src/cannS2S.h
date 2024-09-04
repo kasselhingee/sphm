@@ -23,7 +23,15 @@ cannS2Scpp<T> Omega2cann(const OmegaS2Scpp<T>& obj) {
     int p = obj.p1.size();
 
     // Perform SVD on the Omega matrix
-    Eigen::JacobiSVD<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>> svd(obj.Omega, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    Rcpp::Rcout << "Omega:" << std::endl;
+    Rcpp::Rcout << obj.Omega << std::endl;
+    Eigen::BDCSVD<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>> svd(obj.Omega, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    Rcpp::Rcout << "Singular Vals:" << std::endl;
+    Rcpp::Rcout << svd.singularValues() << std::endl;
+    Rcpp::Rcout << "U:" << std::endl;
+    Rcpp::Rcout << svd.matrixU() << std::endl;
+    Rcpp::Rcout << "V:" << std::endl;
+    Rcpp::Rcout << svd.matrixV() << std::endl;
     
     // Create Q by combining q1 with the V matrix from SVD
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Q(obj.q1.size(), p);

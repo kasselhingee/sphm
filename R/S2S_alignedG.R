@@ -58,7 +58,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-2,
     ll_aremaining <- tape_namedfun("ll_SvMF_S2S_alignedG_a",
                           est$aremaining,
                           c(est$k, a1),
-                          c(p, est0$mean), #using est instead of est0 creates problems, but really NEED est$mean for search to work
+                          c(p, est$mean), #using est instead of est0 creates problems, but really NEED est$mean for search to work
                           cbind(y, x))
     # optimizing log a's in the following (optimising the aremaining would have first steps that went to below zero or super high)
     browser()

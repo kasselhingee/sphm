@@ -47,7 +47,13 @@ veca1 ll_SvMF_S2S_alignedG_a(veca1 & vec, veca1 & dyn, vecd & pOmegavec, matd & 
   veca1 newvec = pOmegavec.tail(pOmegavec.size() - 1);
   // extract P matrix
   mata1 P = Omega2cann(OmegaS2Scpp_unvec(newvec, p)).P;
+  if (P.array().isNaN().any()){
+    Rcpp::Rcout << P << std::endl;
+    Rcpp::stop("P matrix in mean link has nan values.");
+  }
+  Rcpp::Rcout << P << std::endl;
   veca1 Pvec = Eigen::Map<veca1>(P.data(), P.size());
+  Rcpp::Rcout << Pvec << std::endl;
   veca1 newdyn(p+1+p*p);
   newdyn << dyn(0), dyn(1), vec, Pvec;
   vecd p_in = pOmegavec.segment(0,1);

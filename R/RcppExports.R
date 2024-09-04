@@ -18,9 +18,9 @@ ll_SvMF_S2S_alignedG_mean <- function(vec, dyn, p_in, yx) {
 
 #' @param vec For `_alignedG_a`: A p-1 vector of a2, a3, ...
 #' @param dyn For `_alignedG_a`: A vector of kappa then a1
-#' @param pOmegavec For `_alignedG_a`: A vector of p then the Omega vectorisation. Due to an SVD to extract P from Omega vec, taping the dependence on Omega would be unreliable.
-ll_SvMF_S2S_alignedG_a <- function(vec, dyn, pOmegavec, yx) {
-    .Call('_sphm_ll_SvMF_S2S_alignedG_a', PACKAGE = 'sphm', vec, dyn, pOmegavec, yx)
+#' @param pOmegavec For `_alignedG_a`: A vector of p then the Omega vectorisation, then `as.vector(P)`. Due to an SVD to extract P from Omega vec, taping the dependence on Omega would be unreliable. Furthermore R's SVD routine seems more reliable than Eigen's.
+ll_SvMF_S2S_alignedG_a <- function(vec, dyn, pOmegavecP, yx) {
+    .Call('_sphm_ll_SvMF_S2S_alignedG_a', PACKAGE = 'sphm', vec, dyn, pOmegavecP, yx)
 }
 
 #' @param k For `_alignedG_k`: A parameter vector specifying the concentration k

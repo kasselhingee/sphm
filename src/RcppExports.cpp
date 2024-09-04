@@ -42,16 +42,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // ll_SvMF_S2S_alignedG_a
-veca1 ll_SvMF_S2S_alignedG_a(veca1& vec, veca1& dyn, vecd& pOmegavec, matd& yx);
-RcppExport SEXP _sphm_ll_SvMF_S2S_alignedG_a(SEXP vecSEXP, SEXP dynSEXP, SEXP pOmegavecSEXP, SEXP yxSEXP) {
+veca1 ll_SvMF_S2S_alignedG_a(veca1& vec, veca1& dyn, vecd& pOmegavecP, matd& yx);
+RcppExport SEXP _sphm_ll_SvMF_S2S_alignedG_a(SEXP vecSEXP, SEXP dynSEXP, SEXP pOmegavecPSEXP, SEXP yxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< veca1& >::type vec(vecSEXP);
     Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
-    Rcpp::traits::input_parameter< vecd& >::type pOmegavec(pOmegavecSEXP);
+    Rcpp::traits::input_parameter< vecd& >::type pOmegavecP(pOmegavecPSEXP);
     Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
-    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_alignedG_a(vec, dyn, pOmegavec, yx));
+    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_alignedG_a(vec, dyn, pOmegavecP, yx));
     return rcpp_result_gen;
 END_RCPP
 }

@@ -40,22 +40,16 @@ veca1 ll_SvMF_S2S_alignedG_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx
   return ld;
 }
 
-veca1 ll_SvMF_S2S_alignedG_a(veca1 & vec, veca1 & dyn, vecd & pOmegavec, matd & yx){
-  int p = int(pOmegavec(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
+veca1 ll_SvMF_S2S_alignedG_a(veca1 & vec, veca1 & dyn, vecd & pOmegavecP, matd & yx){
+  int p = int(pOmegavecP(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
 
   //convert to parameterisation of _alignedG_mean()
-  veca1 newvec = pOmegavec.tail(pOmegavec.size() - 1);
+  veca1 newvec = pOmegavecP.segment(1, p + (yx.cols() - p) + p * (yx.cols() - p));
   // extract P matrix
-  mata1 P = Omega2cann(OmegaS2Scpp_unvec(newvec, p)).P;
-  if (P.array().isNaN().any()){
-    Rcpp::Rcout << P << std::endl;
-    a1type::abort_recording(); //if an ADFUN is recording, then abort
-    Rcpp::stop("P matrix in mean link has nan values.");
-  }
-  veca1 Pvec = Eigen::Map<veca1>(P.data(), P.size());
+  veca1 Pvec = pOmegavecP.tail(p*p);
   veca1 newdyn(p+1+p*p);
   newdyn << dyn(0), dyn(1), vec, Pvec;
-  vecd p_in = pOmegavec.segment(0,1);
+  vecd p_in = pOmegavecP.head(1);
   veca1 ld = ll_SvMF_S2S_alignedG_mean(newvec, newdyn, p_in, yx);
   return ld;
 }

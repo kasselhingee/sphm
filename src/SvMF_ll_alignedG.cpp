@@ -49,6 +49,7 @@ veca1 ll_SvMF_S2S_alignedG_a(veca1 & vec, veca1 & dyn, vecd & pOmegavec, matd & 
   mata1 P = Omega2cann(OmegaS2Scpp_unvec(newvec, p)).P;
   if (P.array().isNaN().any()){
     Rcpp::Rcout << P << std::endl;
+    a1type::abort_recording(); //if an ADFUN is recording, then abort
     Rcpp::stop("P matrix in mean link has nan values.");
   }
   Rcpp::Rcout << P << std::endl;

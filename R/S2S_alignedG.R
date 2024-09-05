@@ -1,10 +1,12 @@
 #' MLE for the SvMF with S2S Mobius Link and alignedG_
 
+#' @details The `NLOPT_LD_SLSQP` algorithm is a bit inconvenient as it seems to choose huge values of the parameters to try even though it is meant to local optimisation! I've had to put upper bounds of log(.Machine$double.xmax)/2-10 (~344) on aremaining
 #' @param y Response data on a sphere
 #' @param x Covariate data on a sphere
 #' @param a1 The first element of the vector a, which is tuning parameter.
 #' @param aremaining The remaining vector a, used as a starting guess.
 #' @param param_mean Parameters for the mean link, used as a starting guess.
+#' @export
 optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5, ...){ #all the parameters are used as starting guesses, except a[1] that is a tuning parameter
   p <- ncol(y)
   om0 <- as_OmegaS2S(param_mean)
@@ -54,6 +56,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
       x0 = est$k,
       eval_f = function(k){-sum(scorematchingad:::pForward0(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
       eval_grad_f = function(k){-sum(scorematchingad:::pJacobian(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
+      lb = 0, ub = .Machine$double.xmax,
       opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts[names(combined_opts) != "tol_constraints_eq"])
     )})
     est$k <- newk$solution
@@ -76,6 +79,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
         eval_grad_f = function(theta){
           -colSums(matrix(scorematchingad:::pJacobian(ll_aremaining, theta, c(est$k, a1)), byrow = TRUE, ncol = length(theta)))
           },
+        ub = log(.Machine$double.xmax)/2-10, #this is needed to keep the tapes evaluating to non infinite values. Note that R's (and I suspect C++'s generally) limit is log(.Machine$double.xmax), not sure why half is needed here.
         opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts)
       )
       est$aremaining <- exp(c(-sum(newlaremaining$solution), newlaremaining$solution))

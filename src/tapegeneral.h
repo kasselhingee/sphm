@@ -16,7 +16,7 @@
 //' @param ind_t The value of the independent argument to use for taping.
 //' @param dyn_t The value of the dynamic argument to use for taping.
 //' @param constants The value of the constants argument.
-//' @param check_for_nan Should the tape watch for nan values when in use?
+//' @param check_for_nan Should the tape watch for nan values when in use? This can be useful to let the tape pass nan back to R
 
 //' Tape using a function name in function_map 
 //' @param func_name Name of function to tape. Name must be in the internal `function_map` object.

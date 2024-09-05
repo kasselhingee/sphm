@@ -120,7 +120,7 @@ test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 10*mn)}))
 
-  atapeptr <- tape_namedfun("pobjS2Scpp", OmegaS2S_vec(omegapar), vector(mode = "numeric"), p, cbind(y,x))
+  atapeptr <- tape_namedfun("pobjS2Scpp", OmegaS2S_vec(omegapar), vector(mode = "numeric"), p, cbind(y,x), check_for_nan = FALSE)
   directeval <- pobjS2Scpp(OmegaS2S_vec(omegapar), vector(), p, cbind(y,x))
   tapeeval <- scorematchingad:::pForward0(atapeptr, unclass(OmegaS2S_vec(omegapar)), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)
@@ -148,7 +148,7 @@ test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   expect_equal(jactapeeval, jac)
 
   # check constraints
-  btapeptr <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(omegapar), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0))
+  btapeptr <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(omegapar), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   directeval <- OmegaS2S_constraints(omparovec, p)
   tapeeval <- scorematchingad:::pForward0(btapeptr, unclass(omparovec), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)

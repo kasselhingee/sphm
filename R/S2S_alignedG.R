@@ -18,13 +18,15 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
                            OmegaS2S_vec(om0),
                            c(k, a1, aremaining, as.vector(P)),
                            p,
-                           cbind(y, x))
-  ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0))
+                           cbind(y, x),
+                           check_for_nan = FALSE)
+  ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   ll_k <- tape_namedfun("ll_SvMF_S2S_alignedG_k",
                         k,
                         c(OmegaS2S_vec(om0), a1, aremaining, as.vector(P)),
                         p,
-                        cbind(y, x))
+                        cbind(y, x),
+                        check_for_nan = FALSE)
   #skipped here: the tape for a must be recreated for each new version of Omega
   
   # prepare nloptr options
@@ -71,7 +73,8 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
                           log(est$aremaining[-1]),
                           c(est$k, a1),
                           c(p, est$mean, as.vector(P)),
-                          cbind(y, x))
+                          cbind(y, x),
+                          check_for_nan = FALSE)
       newlaremaining <- nloptr::nloptr( #searching for log(a) to avoid non-zero bound AND deriving the first value from all the others to avoid prod=1 requirement
         x0 = log(est$aremaining[-1]),
         eval_f = function(theta){

@@ -65,7 +65,7 @@ OmegaS2S_constraints <- function(vec, p) {
 #' @param ind_t The value of the independent argument to use for taping.
 #' @param dyn_t The value of the dynamic argument to use for taping.
 #' @param constants The value of the constants argument.
-#' @param check_for_nan Should the tape watch for nan values when in use?
+#' @param check_for_nan Should the tape watch for nan values when in use? This can be useful to let the tape pass nan back to R
 NULL
 
 #' Tape using a function name in function_map 

@@ -82,7 +82,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
         eval_grad_f = function(theta){
           -colSums(matrix(scorematchingad:::pJacobian(ll_aremaining, theta, c(est$k, a1)), byrow = TRUE, ncol = length(theta)))
           },
-        ub = log(.Machine$double.xmax)/2-10, #this is needed to keep the tapes evaluating to non infinite values. Note that R's (and I suspect C++'s generally) limit is log(.Machine$double.xmax), not sure why half is needed here.
+        ub = log(.Machine$double.xmax), #this keeps the tapes evaluating to non infinite values. Note that R's (and I suspect C++'s generally) limit is log(.Machine$double.xmax), not sure why half is needed here. It isn't really needed if the tapes return the nan to R rather than erroring (check_for_nan = FALSE)
         opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts)
       )
       est$aremaining <- exp(c(-sum(newlaremaining$solution), newlaremaining$solution))

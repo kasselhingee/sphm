@@ -16,7 +16,7 @@ ll_SvMF_S2S_alignedG_mean <- function(vec, dyn, p_in, yx) {
     .Call('_sphm_ll_SvMF_S2S_alignedG_mean', PACKAGE = 'sphm', vec, dyn, p_in, yx)
 }
 
-#' @param vec For `_alignedG_a`: A p-1 vector of a2, a3, ...
+#' @param vec For `_alignedG_a`: A p-2 vector of log(a3), log(a4), log(a5), ... log(a2) will be calculated as the negative sum of the others to satisfy the prod=1 constraint on a2,...
 #' @param dyn For `_alignedG_a`: A vector of kappa then a1
 #' @param pOmegavec For `_alignedG_a`: A vector of p then the Omega vectorisation, then `as.vector(P)`. Due to an SVD to extract P from Omega vec, taping the dependence on Omega would be unreliable. Furthermore R's SVD routine seems more reliable than Eigen's.
 ll_SvMF_S2S_alignedG_a <- function(vec, dyn, pOmegavecP, yx) {
@@ -65,17 +65,18 @@ OmegaS2S_constraints <- function(vec, p) {
 #' @param ind_t The value of the independent argument to use for taping.
 #' @param dyn_t The value of the dynamic argument to use for taping.
 #' @param constants The value of the constants argument.
+#' @param check_for_nan Should the tape watch for nan values when in use?
 NULL
 
 #' Tape using a function name in function_map 
 #' @param func_name Name of function to tape. Name must be in the internal `function_map` object.
-tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat) {
-    .Call('_sphm_tape_namedfun', PACKAGE = 'sphm', func_name, ind_t, dyn_t, constvec, constmat)
+tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for_nan) {
+    .Call('_sphm_tape_namedfun', PACKAGE = 'sphm', func_name, ind_t, dyn_t, constvec, constmat, check_for_nan)
 }
 
 #' @describeIn tape_namedfun Tape using a pointer to a function created by RcppXPtrUtils::cppXPtr
 #' @param funptr A pointer to a function created by RcppXPtrUtils::cppXPtr
-tape_funptr <- function(funptr, ind_t, dyn_t, constvec, constmat) {
-    .Call('_sphm_tape_funptr', PACKAGE = 'sphm', funptr, ind_t, dyn_t, constvec, constmat)
+tape_funptr <- function(funptr, ind_t, dyn_t, constvec, constmat, check_for_nan) {
+    .Call('_sphm_tape_funptr', PACKAGE = 'sphm', funptr, ind_t, dyn_t, constvec, constmat, check_for_nan)
 }
 

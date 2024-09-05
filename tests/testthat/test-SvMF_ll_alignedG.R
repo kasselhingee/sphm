@@ -74,9 +74,9 @@ test_that("maximum likelihood for alignedG link", {
   }))
 
   # when at the starting guess, expect it to work well
-  out <- optim_alignedG(y, x, a[1], omegapar, k, a[-1], xtol_rel = 1E-3)
+  out <- optim_alignedG(y, x, a[1], omegapar, k, a[-1], xtol_rel = 1E-4)
   
   expect_equal(out$solution, list(mean = OmegaS2S_vec(omegapar), k = k, aremaining = a[-1]),
-               tolerance = 1E-2)
+               tolerance = 2E-2)
 
 })

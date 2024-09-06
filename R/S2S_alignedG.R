@@ -46,6 +46,8 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
   diff <- abs(unlist(est)) * xtol_rel * 3
   iter <- 0
   times <- data.frame(list(k = NA, aremaining = NA, mean = NA)) #record times
+  estinfo_k <- data.frame(list("status" = NA, "message" = NA, "iterations" = NA, "objective" = NA)) #record iterations etc of each
+  estinfo_mn <- estinfo_a <- estinfo_k
   ests <- list() #track estimates
   while ( (iter < combined_opts$maxeval)  & (max(abs(diff)/abs(unlist(est))) > xtol_rel)){
     estprev <- est
@@ -63,6 +65,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
     )})
     est$k <- newk$solution
     times[iter, "k"] <- sum(ktime[c("user.self", "user.child")])
+    estinfo_k[iter,] <- newk[c("status", "message", "iterations", "objective")]
     
     # update aremaining
     atime_start <- proc.time() # for timing
@@ -87,9 +90,13 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
       )
       est$aremaining <- exp(c(-sum(newlaremaining$solution), newlaremaining$solution))
     }
-    # optimizing log a's in the following (optimising the aremaining would have first steps that went to below zero or super high)
     atime <- proc.time() - atime_start
     times[iter, "aremaining"] <- sum(atime[c("user.self", "user.child")])
+    if (length(est$aremaining) > 1) {
+      estinfo_a[iter,] <- newlaremaining[c("status", "message", "iterations", "objective")]
+    } else {
+      estinfo_a[iter,] <- NA
+    }
     
     #update mean link
     mntime_start <- proc.time()
@@ -104,16 +111,20 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
     est$mean <- OmegaS2S_vec(OmegaS2S_proj(OmegaS2S_unvec(newmean$solution, p, check = FALSE), method = "Omega"))
     mntime <- proc.time() - mntime_start
     times[iter, "mean"] <- sum(mntime[c("user.self", "user.child")])
+    estinfo_mn[iter,] <- newmean[c("status", "message", "iterations", "objective")]
     
     ests[[iter]] <- est
     diff <- unlist(est) - unlist(estprev)
     cat(".")
   }
   
+  colnames(times) <- paste0(colnames(times), ".usertime")
+  estinfo <- cbind(times, k = estinfo_k, aremaining = estinfo_a, mean = estinfo_mn)
+  
   return(list(
     solution = est,
     iter = iter,
     ests = ests,
-    times = times
+    estinfo = estinfo
   ))
 }

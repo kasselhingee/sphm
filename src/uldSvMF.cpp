@@ -28,7 +28,7 @@ mata1 getHstar(veca1 m) {
 
 veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G) {
   int p = a.size();
-  a1type lconst = - CppAD::log(lvMFnormconst(k, p)) - CppAD::log(a.coeff(0));
+  a1type lconst = - lvMFnormconst(k, p) - CppAD::log(a.coeff(0));
  
   // Scale columns of G by the corresponding elements of a
   mata1 Gscal = G.array().rowwise() / a.transpose().array();
@@ -44,7 +44,7 @@ veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G) {
 
 veca1 uldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V) {
   int p = m.size();
-  a1type lconst = - CppAD::log(lvMFnormconst(k, p)) - CppAD::log(a1);
+  a1type lconst = - lvMFnormconst(k, p) - CppAD::log(a1);
   
   mata1 Hstar = getHstar(m);
   

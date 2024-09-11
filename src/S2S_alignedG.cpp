@@ -6,7 +6,7 @@
 #include "cannS2S.h"
 
 
-veca1 ll_SvMF_S2S_alignedG_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
+veca1 ull_S2S_alignedG_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
 
   // separate the response the covariates
@@ -39,7 +39,7 @@ veca1 ll_SvMF_S2S_alignedG_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx
   return ld;
 }
 
-veca1 ll_SvMF_S2S_alignedG_a(veca1 & vec, veca1 & dyn, vecd & pOmegavecP, matd & yx){
+veca1 ull_S2S_alignedG_a(veca1 & vec, veca1 & dyn, vecd & pOmegavecP, matd & yx){
   int p = int(pOmegavecP(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   //
   veca1 aremaining(p-1);
@@ -52,12 +52,12 @@ veca1 ll_SvMF_S2S_alignedG_a(veca1 & vec, veca1 & dyn, vecd & pOmegavecP, matd &
   veca1 newdyn(p+1+p*p);
   newdyn << dyn(0), dyn(1), aremaining, Pvec;
   vecd p_in = pOmegavecP.head(1);
-  veca1 ld = ll_SvMF_S2S_alignedG_mean(newvec, newdyn, p_in, yx);
+  veca1 ld = ull_S2S_alignedG_mean(newvec, newdyn, p_in, yx);
   return ld;
 }
 
 
-veca1 ll_SvMF_S2S_alignedG_k(veca1 & k, veca1 & dyn, vecd & p_in, matd & yx){
+veca1 ull_S2S_alignedG_k(veca1 & k, veca1 & dyn, vecd & p_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
 
   //convert to parameterisation of _alignedG_mean()
@@ -65,7 +65,7 @@ veca1 ll_SvMF_S2S_alignedG_k(veca1 & k, veca1 & dyn, vecd & p_in, matd & yx){
   veca1 newdyn(p + 1 + p*p);
   newdyn << k, dyn.tail(p + p*p);
 
-  veca1 ld = ll_SvMF_S2S_alignedG_mean(newvec, newdyn, p_in, yx);
+  veca1 ld = ull_S2S_alignedG_mean(newvec, newdyn, p_in, yx);
   return ld;
 }
 

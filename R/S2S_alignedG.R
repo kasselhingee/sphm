@@ -14,14 +14,14 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
   P <- Omega2cann(om0)$P
   
   # generate tapes of ll that can be reused
-  ll_mean <- tape_namedfun("ll_SvMF_S2S_alignedG_mean", 
+  ll_mean <- tape_namedfun("ull_S2S_alignedG_mean", 
                            OmegaS2S_vec(om0),
                            c(k, a1, aremaining, as.vector(P)),
                            p,
                            cbind(y, x),
                            check_for_nan = FALSE)
   ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  ll_k <- tape_namedfun("ll_SvMF_S2S_alignedG_k",
+  ll_k <- tape_namedfun("ull_S2S_alignedG_k",
                         k,
                         c(OmegaS2S_vec(om0), a1, aremaining, as.vector(P)),
                         p,
@@ -72,7 +72,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
     if (length(est$aremaining) > 1) {
       #if its length one then the value must be exactly 1
       #otherwise here aremaining[1] will be derived from all the others
-      ll_aremaining <- tape_namedfun("ll_SvMF_S2S_alignedG_a",
+      ll_aremaining <- tape_namedfun("ull_S2S_alignedG_a",
                           log(est$aremaining[-1]),
                           c(est$k, a1),
                           c(p, est$mean, as.vector(P)),

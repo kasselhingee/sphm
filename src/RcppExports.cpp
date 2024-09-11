@@ -15,9 +15,9 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// ll_SvMF_S2S_alignedG_mean
-veca1 ll_SvMF_S2S_alignedG_mean(veca1& vec, veca1& dyn, vecd& p_in, matd& yx);
-RcppExport SEXP _sphm_ll_SvMF_S2S_alignedG_mean(SEXP vecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
+// ull_S2S_alignedG_mean
+veca1 ull_S2S_alignedG_mean(veca1& vec, veca1& dyn, vecd& p_in, matd& yx);
+RcppExport SEXP _sphm_ull_S2S_alignedG_mean(SEXP vecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -25,13 +25,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
     Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
     Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
-    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_alignedG_mean(vec, dyn, p_in, yx));
+    rcpp_result_gen = Rcpp::wrap(ull_S2S_alignedG_mean(vec, dyn, p_in, yx));
     return rcpp_result_gen;
 END_RCPP
 }
-// ll_SvMF_S2S_alignedG_a
-veca1 ll_SvMF_S2S_alignedG_a(veca1& vec, veca1& dyn, vecd& pOmegavecP, matd& yx);
-RcppExport SEXP _sphm_ll_SvMF_S2S_alignedG_a(SEXP vecSEXP, SEXP dynSEXP, SEXP pOmegavecPSEXP, SEXP yxSEXP) {
+// ull_S2S_alignedG_a
+veca1 ull_S2S_alignedG_a(veca1& vec, veca1& dyn, vecd& pOmegavecP, matd& yx);
+RcppExport SEXP _sphm_ull_S2S_alignedG_a(SEXP vecSEXP, SEXP dynSEXP, SEXP pOmegavecPSEXP, SEXP yxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -39,13 +39,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
     Rcpp::traits::input_parameter< vecd& >::type pOmegavecP(pOmegavecPSEXP);
     Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
-    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_alignedG_a(vec, dyn, pOmegavecP, yx));
+    rcpp_result_gen = Rcpp::wrap(ull_S2S_alignedG_a(vec, dyn, pOmegavecP, yx));
     return rcpp_result_gen;
 END_RCPP
 }
-// ll_SvMF_S2S_alignedG_k
-veca1 ll_SvMF_S2S_alignedG_k(veca1& k, veca1& dyn, vecd& p_in, matd& yx);
-RcppExport SEXP _sphm_ll_SvMF_S2S_alignedG_k(SEXP kSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
+// ull_S2S_alignedG_k
+veca1 ull_S2S_alignedG_k(veca1& k, veca1& dyn, vecd& p_in, matd& yx);
+RcppExport SEXP _sphm_ull_S2S_alignedG_k(SEXP kSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -53,7 +53,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
     Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
     Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
-    rcpp_result_gen = Rcpp::wrap(ll_SvMF_S2S_alignedG_k(k, dyn, p_in, yx));
+    rcpp_result_gen = Rcpp::wrap(ull_S2S_alignedG_k(k, dyn, p_in, yx));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -171,9 +171,9 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_sphm_ll_SvMF_S2S_alignedG_mean", (DL_FUNC) &_sphm_ll_SvMF_S2S_alignedG_mean, 4},
-    {"_sphm_ll_SvMF_S2S_alignedG_a", (DL_FUNC) &_sphm_ll_SvMF_S2S_alignedG_a, 4},
-    {"_sphm_ll_SvMF_S2S_alignedG_k", (DL_FUNC) &_sphm_ll_SvMF_S2S_alignedG_k, 4},
+    {"_sphm_ull_S2S_alignedG_mean", (DL_FUNC) &_sphm_ull_S2S_alignedG_mean, 4},
+    {"_sphm_ull_S2S_alignedG_a", (DL_FUNC) &_sphm_ull_S2S_alignedG_a, 4},
+    {"_sphm_ull_S2S_alignedG_k", (DL_FUNC) &_sphm_ull_S2S_alignedG_k, 4},
     {"_sphm_alignedGcpp", (DL_FUNC) &_sphm_alignedGcpp, 2},
     {"_sphm_ldSvMF_cann", (DL_FUNC) &_sphm_ldSvMF_cann, 4},
     {"_sphm_ldSvMF_muV", (DL_FUNC) &_sphm_ldSvMF_muV, 5},

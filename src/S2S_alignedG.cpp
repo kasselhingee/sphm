@@ -59,6 +59,9 @@ veca1 ull_S2S_alignedG_a(veca1 & vec, veca1 & dyn, vecd & pOmegavecP, matd & yx)
 
 veca1 ull_S2S_alignedG_k(veca1 & k, veca1 & dyn, vecd & p_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
+  if (p != 3){//then the normalising constant for the vMF is hard to compute
+    Rcpp::warning("This function should only be used when p=3. Analytic expressions for the vMF normalising constant are only available when p=3.");
+  }
 
   //convert to parameterisation of _alignedG_mean()
   veca1 newvec = dyn.head(dyn.size() - p - p*p); //should just be the Omegavec

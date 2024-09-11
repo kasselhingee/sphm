@@ -21,3 +21,11 @@ test_that("SvMF_ll is the same using either parameterisatiion", {
   expect_equal(ll_cpp, ll_muV)
 })
 
+test_that("vMF normalising constant for p!=3 is the same from multiple methods", {
+  set.seed(3)
+  k <- runif(1, 0, 100)
+  p <- 15
+  basec <- vMFnormconst(k, p, method = 'base')
+  expect_equal(vMFnormconst(k, p, method = 'Bessel'), basec)
+  expect_equal(vMFnormconst(k, p, method = 'movMF'), basec)
+})

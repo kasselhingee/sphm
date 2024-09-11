@@ -1,4 +1,4 @@
-#include "ldSvMF.h"
+#include "uldSvMF.h"
 #include <Rcpp.h>
 
 // Helper function vMFnormconst

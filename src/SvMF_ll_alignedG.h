@@ -25,5 +25,9 @@ veca1 ll_SvMF_S2S_alignedG_a(veca1 & vec, veca1 & dyn, vecd & pOmegavecP, matd &
 // [[Rcpp::export]]
 veca1 ll_SvMF_S2S_alignedG_k(veca1 & k, veca1 & dyn, vecd & p_in, matd & yx);
 
+//' @describeIn ll_SvMF_S2S_alignedG_mean Aligns the columns of the Mobius-link rotation matrix `P` for the mean to the columns of G. Note that the first column of the returned G is the given mean. Returns the matrix G.
+// [[Rcpp::export]]
+mata1 alignedGcpp(veca1 m, mata1 P);
+
 #endif
 

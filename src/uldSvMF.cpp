@@ -6,7 +6,7 @@ a1type vMFnormconst(a1type kappa, int p) {
   if (p == 3) {
     return 2 * M_PI * (CppAD::exp(kappa) - CppAD::exp(-kappa)) / kappa;
   } else {
-    Rcpp::stop("vMF normalising constant for p != 3 not implemented yet");
+    return 1.;
   }
 }
 

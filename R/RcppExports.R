@@ -30,12 +30,12 @@ alignedGcpp <- function(m, P) {
     .Call('_sphm_alignedGcpp', PACKAGE = 'sphm', m, P)
 }
 
-ldSvMF_cann <- function(y, k, a, G) {
-    .Call('_sphm_ldSvMF_cann', PACKAGE = 'sphm', y, k, a, G)
+uldSvMF_cann <- function(y, k, a, G) {
+    .Call('_sphm_uldSvMF_cann', PACKAGE = 'sphm', y, k, a, G)
 }
 
-ldSvMF_muV <- function(y, k, m, a1, V) {
-    .Call('_sphm_ldSvMF_muV', PACKAGE = 'sphm', y, k, m, a1, V)
+uldSvMF_muV <- function(y, k, m, a1, V) {
+    .Call('_sphm_uldSvMF_muV', PACKAGE = 'sphm', y, k, m, a1, V)
 }
 
 meanlinkS2Scpp <- function(x, vec, p) {

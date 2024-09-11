@@ -69,9 +69,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// ldSvMF_cann
-veca1 ldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
-RcppExport SEXP _sphm_ldSvMF_cann(SEXP ySEXP, SEXP kSEXP, SEXP aSEXP, SEXP GSEXP) {
+// uldSvMF_cann
+veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
+RcppExport SEXP _sphm_uldSvMF_cann(SEXP ySEXP, SEXP kSEXP, SEXP aSEXP, SEXP GSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -79,13 +79,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
     Rcpp::traits::input_parameter< veca1 >::type a(aSEXP);
     Rcpp::traits::input_parameter< mata1 >::type G(GSEXP);
-    rcpp_result_gen = Rcpp::wrap(ldSvMF_cann(y, k, a, G));
+    rcpp_result_gen = Rcpp::wrap(uldSvMF_cann(y, k, a, G));
     return rcpp_result_gen;
 END_RCPP
 }
-// ldSvMF_muV
-veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
-RcppExport SEXP _sphm_ldSvMF_muV(SEXP ySEXP, SEXP kSEXP, SEXP mSEXP, SEXP a1SEXP, SEXP VSEXP) {
+// uldSvMF_muV
+veca1 uldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
+RcppExport SEXP _sphm_uldSvMF_muV(SEXP ySEXP, SEXP kSEXP, SEXP mSEXP, SEXP a1SEXP, SEXP VSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -94,7 +94,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< veca1 >::type m(mSEXP);
     Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
     Rcpp::traits::input_parameter< mata1 >::type V(VSEXP);
-    rcpp_result_gen = Rcpp::wrap(ldSvMF_muV(y, k, m, a1, V));
+    rcpp_result_gen = Rcpp::wrap(uldSvMF_muV(y, k, m, a1, V));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -175,8 +175,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_ull_S2S_alignedG_a", (DL_FUNC) &_sphm_ull_S2S_alignedG_a, 4},
     {"_sphm_ull_S2S_alignedG_k", (DL_FUNC) &_sphm_ull_S2S_alignedG_k, 4},
     {"_sphm_alignedGcpp", (DL_FUNC) &_sphm_alignedGcpp, 2},
-    {"_sphm_ldSvMF_cann", (DL_FUNC) &_sphm_ldSvMF_cann, 4},
-    {"_sphm_ldSvMF_muV", (DL_FUNC) &_sphm_ldSvMF_muV, 5},
+    {"_sphm_uldSvMF_cann", (DL_FUNC) &_sphm_uldSvMF_cann, 4},
+    {"_sphm_uldSvMF_muV", (DL_FUNC) &_sphm_uldSvMF_muV, 5},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
     {"_sphm_OmegaS2S_constraints", (DL_FUNC) &_sphm_OmegaS2S_constraints, 2},

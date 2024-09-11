@@ -24,7 +24,7 @@ veca1 ull_S2S_alignedG_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
   mata1 ypred;
   ypred = meanlinkS2Scpp(x, omvec_projected, p);
 
-  //evaluate SvMF density using ldSvMF_cann for each row.
+  //evaluate SvMF density using uldSvMF_cann for each row.
   //first get G without its first column and other constant parameters
   a1type k = dyn(0);
   veca1 a = dyn.segment(1, p);
@@ -33,7 +33,7 @@ veca1 ull_S2S_alignedG_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
   mata1 G(p, p);
   for (int i = 0; i < y.rows(); ++i){
     G = alignedGcpp(ypred.row(i).transpose(), P);
-    ld(i) = ldSvMF_cann(y.row(i), k, a, G)(0);
+    ld(i) = uldSvMF_cann(y.row(i), k, a, G)(0);
   }
   
   return ld;

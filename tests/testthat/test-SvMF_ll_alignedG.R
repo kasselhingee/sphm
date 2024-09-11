@@ -29,7 +29,7 @@ test_that("ll using alignedG_mean link in C++ matches R", {
   ld <- rep(NA, nrow(y))
   for (i in 1:nrow(y)){
     G <- alignedG(ymean[i, ], P)
-    ld[i] <- ldSvMF_cann(y[i, , drop = FALSE], k, a, G)
+    ld[i] <- uldSvMF_cann(y[i, , drop = FALSE], k, a, G)
   }
   
   ldcpp <- ull_S2S_alignedG_mean(OmegaS2S_vec(omegapar), dyn = c(k, a, as.vector(P)), p, cbind(y, x))

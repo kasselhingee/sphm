@@ -30,14 +30,6 @@ alignedGcpp <- function(m, P) {
     .Call('_sphm_alignedGcpp', PACKAGE = 'sphm', m, P)
 }
 
-uldSvMF_cann <- function(y, k, a, G) {
-    .Call('_sphm_uldSvMF_cann', PACKAGE = 'sphm', y, k, a, G)
-}
-
-uldSvMF_muV <- function(y, k, m, a1, V) {
-    .Call('_sphm_uldSvMF_muV', PACKAGE = 'sphm', y, k, m, a1, V)
-}
-
 meanlinkS2Scpp <- function(x, vec, p) {
     .Call('_sphm_meanlinkS2Scpp', PACKAGE = 'sphm', x, vec, p)
 }
@@ -78,5 +70,13 @@ tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for
 #' @param funptr A pointer to a function created by RcppXPtrUtils::cppXPtr
 tape_funptr <- function(funptr, ind_t, dyn_t, constvec, constmat, check_for_nan) {
     .Call('_sphm_tape_funptr', PACKAGE = 'sphm', funptr, ind_t, dyn_t, constvec, constmat, check_for_nan)
+}
+
+uldSvMF_cann <- function(y, k, a, G) {
+    .Call('_sphm_uldSvMF_cann', PACKAGE = 'sphm', y, k, a, G)
+}
+
+uldSvMF_muV <- function(y, k, m, a1, V) {
+    .Call('_sphm_uldSvMF_muV', PACKAGE = 'sphm', y, k, m, a1, V)
 }
 

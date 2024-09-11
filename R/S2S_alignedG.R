@@ -56,13 +56,9 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
     
     # update k
     ktime <- system.time({
-    newk <- nloptr::nloptr(
-      x0 = est$k,
-      eval_f = function(k){-sum(scorematchingad:::pForward0(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
-      eval_grad_f = function(k){-sum(scorematchingad:::pJacobian(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
-      lb = 0, ub = .Machine$double.xmax,
-      opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts[names(combined_opts) != "tol_constraints_eq"])
-    )})
+      #if (p==3){newk <- optim_alignedG_k_3(est, ll_k, P, a1, combined_opts)}
+      newk <- optim_alignedG_k_nograd(est, ll_k, P, a1, combined_opts)
+    })
     est$k <- newk$solution
     times[iter, "k"] <- sum(ktime[c("user.self", "user.child")])
     estinfo_k[iter,] <- newk[c("status", "message", "iterations", "objective")]
@@ -128,3 +124,37 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
     estinfo = estinfo
   ))
 }
+
+#optimisation of k for p=3 using gradient
+optim_alignedG_k_3 <- function(est, ll_k, P, a1, combined_opts){
+    newk <- nloptr::nloptr(
+      x0 = est$k,
+      eval_f = function(k){-sum(scorematchingad:::pForward0(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
+      eval_grad_f = function(k){-sum(scorematchingad:::pJacobian(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
+      lb = 0, ub = .Machine$double.xmax,
+      opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts[names(combined_opts) != "tol_constraints_eq"])
+    )
+  return(newk)
+}
+
+# optimisation without using gradient
+optim_alignedG_k_nograd <- function(est, ll_k, P, a1, combined_opts){
+    newk <- nloptr::nloptr(
+      x0 = est$k,
+      eval_f = function(k){
+        if (length(est$aremaining) + 1 == 3){ #p == 3
+          lnormconst <- 0
+        } else {
+          lnormconst <- lvMFnormconst(k, length(est$aremaining) + 1)
+        }
+        -sum(-lnormconst + scorematchingad:::pForward0(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
+      lb = 0, ub = .Machine$double.xmax,
+      opts = c(list(algorithm = "NLOPT_LN_COBYLA"), combined_opts[names(combined_opts) != "tol_constraints_eq"])
+    )
+  return(newk)
+}
+
+
+
+
+

@@ -1,6 +1,6 @@
 
 test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
-  p <- 3
+  p <- 4
   q <- 5
   # data generating parameters:
   set.seed(1)
@@ -21,7 +21,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
   set.seed(5)
-  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 10*mn)}))
+  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
   
   # objective function in C++ and R should match when omegapar passes OmegaS2S_check()
   objval <- pobjS2S(y, x, omegapar)

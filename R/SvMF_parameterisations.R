@@ -40,16 +40,16 @@ SvMFmuV <- function(k, m, a1, V){
   class(obj) <- c("SvMFmuV", class(obj))
   return(obj)
 }
-SvMFmuV_check <- function(obj){
+SvMFmuV_check <- function(obj, tol = sqrt(.Machine$double.eps)){
   list2env(obj, envir = environment())
   checks <- c(
     `kappa positive` = k > 0,
     `a1 positive` = a1 > 0,
-    `m size` = (vnorm(m) - 1)^2 <  sqrt(.Machine$double.eps),
+    `m size` = (vnorm(m) - 1)^2 <  tol,
     `V square` = ncol(V) == nrow(V),
     `V size` = ncol(V) == length(m) - 1,
-    `V symmetric` = isSymmetric(V),
-    `det(V)` = (det(V) - 1)^2 < sqrt(.Machine$double.eps)
+    `V symmetric` = isSymmetric(V, tol = tol),
+    `det(V)` = (det(V) - 1)^2 < tol
   )
   if (any(!checks)){
     stop(sprintf("Parameters fail checks: %s", paste(names(checks)[!checks], collapse = ", ")))

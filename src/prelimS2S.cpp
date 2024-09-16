@@ -39,4 +39,15 @@ veca1 wrap_OmegaS2S_constraints(veca1 & vec, veca1 & ignore1, vecd & p_in, matd 
   return(out);
 }
 
+//Constraints on the singular values of Omega - not exact unfortunately, just on total sum
+veca1 OmegaS2S_ineqconstaints(veca1 & vec, veca1 & ignore1, vecd & p_in, matd & ignore2){
+  int p = int(p_in(0) + 0.1);
+  // Convert vector to a OmegaS2Scpp object
+  OmegaS2Scpp<a1type> ompar = OmegaS2Scpp_unvec(vec, p);
+  a1type ssq_sv = (ompar.Omega.transpose() * ompar.Omega).diagonal().sum();
+  veca1 out(1);
+  out(0) = ssq_sv - (p-1.);
+  return(out);
+}
+
 

@@ -41,6 +41,6 @@ standardise_mat <- function(y){
   mom2 <- t(y) %*% y #quickly calculates the sum of projection matrices of rows of y
   projmom2 <- mnproj %*% mom2 %*% mnproj
 
-  Ghat <- cbind(mn, eigen(projquasicov)$vectors[, 1:(p-1)])
+  Ghat <- cbind(mn, eigen(projmom2)$vectors[, 1:(p-1)])
   return(Ghat)
 }

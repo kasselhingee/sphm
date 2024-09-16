@@ -80,3 +80,40 @@ test_that("maximum likelihood for alignedG link", {
                tolerance = 2E-2)
 
 })
+
+test_that("maximum likelihood for alignedG link p = 4", {
+  p <- 4
+  q <- 5
+  # data generating parameters:
+  set.seed(1)
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  set.seed(2)
+  Q <- mclust::randomOrthogonalMatrix(q, p)
+  set.seed(3)
+  B <- diag(sort(runif(p-1), decreasing = TRUE))
+  omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
+  
+  #generate covariates uniformly on the sphere
+  set.seed(4)
+  x <- matrix(rnorm(1000*q), nrow = 1000)
+  x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
+  
+  ymean <- meanlinkS2S(x = x, paramobj = omegapar)
+  
+  # generate noise according to SvMF
+  k <- 30
+  a <- c(1, seq(5, 0.2, length.out = p-1))
+  a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
+  set.seed(5)
+  y <- t(apply(ymean, 1, function(mn){
+    G <- alignedG(mn, P)
+    rSvMF(1, SvMFcann(k, a, G))
+  }))
+
+  # when at the starting guess, expect it to work well
+  out <- optim_alignedG(y, x, a[1], omegapar, k, a[-1], xtol_rel = 1E-4)
+  
+  expect_equal(out$solution, list(mean = OmegaS2S_vec(omegapar), k = k, aremaining = a[-1]),
+               tolerance = 2E-2)
+
+})

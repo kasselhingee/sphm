@@ -164,6 +164,25 @@ test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   jactape <- scorematchingad::tapeJacobian(atape)
   jactapeeval <- scorematchingad:::pForward0(jactape$ptr, unclass(omparovec), vector(mode = "numeric"))
   expect_equal(jactapeeval, jac)
+
+  ## check inequality constraints
+  ctapeptr <- tape_namedfun("OmegaS2S_ineqconstaints", OmegaS2S_vec(omegapar), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  directeval <- sum(diag(t(OmegaS2S_unvec(omparovec, p, check = FALSE)$Omega) %*% OmegaS2S_unvec(omparovec, p, check = FALSE)$Omega)) - (p-1)
+  tapeeval <- scorematchingad:::pForward0(ctapeptr, unclass(omparovec), vector(mode = "numeric"))
+  expect_equal(tapeeval, directeval)
+
+  jac_numeric <- attr(numericDeriv(quote(scorematchingad:::pForward0(ctapeptr, unclass(omparovec), vector(mode = "numeric"))), c("omparovec")), "gradient")
+  jac <- scorematchingad:::pJacobian(ctapeptr, unclass(omparovec), vector(mode = "numeric"))
+  expect_equal(matrix(jac, nrow = length(tapeeval), byrow = TRUE), jac_numeric, tolerance = 1E-3)
+  atape <- scorematchingad:::ADFun$new(ptr = ctapeptr,
+                   name = "constraint",
+                   xtape = unclass(OmegaS2S_vec(omegapar)), #unclass needed to pass the isa(, "numeric") check!
+                   dyntape =  vector(mode = "numeric"),
+                   usertheta = unclass(NA * OmegaS2S_vec(omegapar)))
+  jactape <- scorematchingad::tapeJacobian(atape)
+  jactapeeval <- scorematchingad:::pForward0(jactape$ptr, unclass(omparovec), vector(mode = "numeric"))
+  expect_equal(jactapeeval, jac)
+
 })
 
 

@@ -6,8 +6,9 @@
 #' @param a1 The first element of the vector a, which is tuning parameter.
 #' @param aremaining The remaining vector a, used as a starting guess.
 #' @param param_mean Parameters for the mean link, used as a starting guess.
+#' @param verbose `0` means no extra output. `1` means objective is printed each time `aremaining`, `k` and `param_mean` have all been updated. `2` further prints values of the parameters. (this roughly mirrors the behaviour of `print_level` for `nloptr()`).
 #' @export
-optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5, ...){ #all the parameters are used as starting guesses, except a[1] that is a tuning parameter
+optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5, verbose = 0, ...){ #all the parameters are used as starting guesses, except a[1] that is a tuning parameter
   p <- ncol(y)
   om0 <- as_OmegaS2S(param_mean)
   OmegaS2S_check(om0)
@@ -114,8 +115,18 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
     times[iter, "mean"] <- sum(mntime[c("user.self", "user.child")])
     estinfo_mn[iter,] <- newmean[c("status", "message", "iterations", "objective")]
     
+    # get likelihood from newmean computations
+    ll <- -newmean$objective
+    if (p != 3){ll <- ll - nrow(y) * lvMFnormconst(est$k, length(est$aremaining) + 1)} #if p!=3 account for normalising constant outside the optimisation of the mean parameters
+    
     ests[[iter]] <- est
     diff <- unlist(est) - unlist(estprev)
+    if (verbose > 0.1){
+      print(-ll)
+      if (verbose > 1.1){
+      print(unlist(est))
+      } 
+    }
     cat(".")
   }
   
@@ -124,6 +135,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
   
   return(list(
     solution = est,
+    objective = -ll,
     iter = iter,
     ests = ests,
     estinfo = estinfo

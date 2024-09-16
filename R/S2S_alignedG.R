@@ -22,6 +22,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
                            cbind(y, x),
                            check_for_nan = FALSE)
   ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  ll_mean_ineqconstraint <- tape_namedfun("OmegaS2S_ineqconstaints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   withCallingHandlers({
   ll_k <- tape_namedfun("ull_S2S_alignedG_k",
                         k,
@@ -108,6 +109,8 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
       eval_grad_f = function(theta){-colSums(matrix(scorematchingad:::pJacobian(ll_mean, theta, c(est$k, a1, est$aremaining, as.vector(P))), byrow = TRUE, ncol = length(theta)))},
       eval_g_eq =  function(theta){scorematchingad:::pForward0(ll_mean_constraint, theta, vector(mode = "numeric"))[1:2]},
       eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(ll_mean_constraint, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
+      eval_g_ineq =  function(theta){scorematchingad:::pForward0(ll_mean_ineqconstraint, theta, vector(mode = "numeric"))},
+      eval_jac_g_ineq =  function(theta){matrix(scorematchingad:::pJacobian(ll_mean_ineqconstraint, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
       opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2)), combined_opts)
     )
     est$mean <- OmegaS2S_vec(OmegaS2S_proj(OmegaS2S_unvec(newmean$solution, p, check = FALSE), method = "Omega"))

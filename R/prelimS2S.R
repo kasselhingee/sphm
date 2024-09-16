@@ -83,6 +83,7 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the star
   
   obj_tape <- tape_namedfun("pobjS2Scpp", OmegaS2S_vec(om0), vector(mode = "numeric"), p, cbind(y,x), check_for_nan = FALSE)
   constraint_tape <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  ineqconstraint_tape <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
 
   # prepare nloptr options
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",
@@ -98,6 +99,8 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the star
     eval_grad_f = function(theta){scorematchingad:::pJacobian(obj_tape, theta, vector(mode = "numeric"))},
     eval_g_eq =  function(theta){scorematchingad:::pForward0(constraint_tape, theta, vector(mode = "numeric"))[1:2]},
     eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(constraint_tape, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
+    eval_g_ineq =  function(theta){scorematchingad:::pForward0(ineqconstraint_tape, theta, vector(mode = "numeric"))},
+    eval_jac_g_ineq =  function(theta){matrix(scorematchingad:::pJacobian(ineqconstraint_tape, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
     opts = combined_opts
   )
   

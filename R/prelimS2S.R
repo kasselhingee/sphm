@@ -77,12 +77,6 @@ optim_pobjS2S_pureR <- function(y, x, paramobj0, global = TRUE, local = TRUE){ #
   ))
 }
 
-#' Optimisation of the Preliminary Objectivf Function for S2S Link
-#' @details Uses `nloptr`. `NLopt` doesn't have any algorithms for global optimisation with non-linear equality constraints that use provided gradients. So `_parttape` only does local optimisation and uses `NLOPT_LD_SLSQP` which is the only algorithm that takes advantage of derivatives and can handle non-linear equality constraints.
-#' @param paramobj0 is a starting parameter object.
-#' @param ... Passed as options to [`nloptr()`]. 
-#' @export
-S2S_prelim <- optim_pobjS2S_parttape
 optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the starting parameter object
   p <- ncol(y)
   om0 <- as_OmegaS2S(paramobj0)
@@ -132,3 +126,9 @@ pre_est3_mod=function(y,x,theta){
 }
 
 
+#' Optimisation of the Preliminary Objectivf Function for S2S Link
+#' @details Uses `nloptr`. `NLopt` doesn't have any algorithms for global optimisation with non-linear equality constraints that use provided gradients. So `_parttape` only does local optimisation and uses `NLOPT_LD_SLSQP` which is the only algorithm that takes advantage of derivatives and can handle non-linear equality constraints.
+#' @param paramobj0 is a starting parameter object.
+#' @param ... Passed as options to [`nloptr()`]. 
+#' @export
+S2S_prelim <- optim_pobjS2S_parttape

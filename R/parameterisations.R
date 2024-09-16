@@ -125,7 +125,8 @@ OmegaS2S_check <- function(obj){
                paste0(names(vals)[!good], ": ", format(sqrt(vals[!good]), digits = 2), collapse = ", ") #sqrt here converts squared sizes to actual sizes
     ))
   }
-  if (sum(diag(t(obj$Omega) %*% obj$Omega)) > nrow(obj$Omega) - 1){warning("The sum of squared singular values of Omega is greater than p - 1, which means that there are singular values of Omega with size greater than 1.")}
+  singularvalssumsquared <- sum(diag(t(obj$Omega) %*% obj$Omega))
+  if (singularvalssumsquared > nrow(obj$Omega) - 1){warning(sprintf("The sum of squared singular values of Omega is %0.2f, which is greater than p - 1, which means that there are singular values of Omega with size greater than 1.", singularvalssumsquared))}
   return(NULL)
 }
 OmegaS2S_check_internal <- function(obj){ #uses squared values for smoothness

@@ -121,13 +121,14 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
     
     ests[[iter]] <- est
     diff <- unlist(est) - unlist(estprev)
-    if (verbose > 0.1){
+    if (verbose < 0.1){
+      cat(".")
+    } else {
       print(-ll)
       if (verbose > 1.1){
       print(unlist(est))
       } 
     }
-    cat(".")
   }
   
   colnames(times) <- paste0(colnames(times), ".usertime")

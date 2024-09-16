@@ -21,12 +21,17 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
                            cbind(y, x),
                            check_for_nan = FALSE)
   ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  withCallingHandlers({
   ll_k <- tape_namedfun("ull_S2S_alignedG_k",
                         k,
                         c(OmegaS2S_vec(om0), a1, aremaining, as.vector(P)),
                         p,
                         cbind(y, x),
                         check_for_nan = FALSE)
+  },
+    warning = function(w){if (grepl("p=3", conditionMessage(w))){invokeRestart("muffleWarning")}}
+  ) #this muffles a warning that the ull_S2S_alignedG_k function doesn't compute the normalising constant for p!=3.
+
   #skipped here: the tape for a must be recreated for each new version of Omega
   
   # prepare nloptr options

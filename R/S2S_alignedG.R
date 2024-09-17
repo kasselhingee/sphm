@@ -59,7 +59,6 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
   while ( (iter < combined_opts$maxeval)  & (max(abs(diff)/abs(unlist(est))) > xtol_rel)){
     estprev <- est
     iter <- iter + 1
-    P <- Omega2cann(OmegaS2S_unvec(est$mean, p))$P
     
     # update k
     ktime <- system.time({
@@ -118,6 +117,12 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
     times[iter, "mean"] <- sum(mntime[c("user.self", "user.child")])
     estinfo_mn[iter,] <- newmean[c("status", "message", "iterations", "objective")]
     
+    # Update P and check params
+    Omegapar <- OmegaS2S_unvec(est$mean, p, check = FALSE)
+    cannpar <- Omega2cann(Omegapar, check = FALSE)
+    tryCatch({cannS2S_check(cannpar)}, error = function(e){warning(conditionMessage(e)); return(NULL)})
+    P <- cannpar$P
+
     # get likelihood from newmean computations
     ll <- -newmean$objective
     if (p != 3){ll <- ll - nrow(y) * lvMFnormconst(est$k, length(est$aremaining) + 1)} #if p!=3 account for normalising constant outside the optimisation of the mean parameters
@@ -129,7 +134,9 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
     } else {
       print(-ll)
       if (verbose > 1.1){
-      print(unlist(est))
+        print(cannpar)
+        print(est$k)
+        print(est$aremaining)
       } 
     }
   }

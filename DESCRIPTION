@@ -7,9 +7,12 @@ Authors@R:
 Description: What the package does (one paragraph).
 Imports:
   Rcpp (>= 1.0.11),
-  Rdpack
+  Rdpack,
+  movMF,
+  mclust
 Suggests:
-    testthat (>= 3.0.0)
+  testthat (>= 3.0.0),
+  Bessel
 RdMacros: Rdpack
 License: GPL (>= 3)
 Encoding: UTF-8

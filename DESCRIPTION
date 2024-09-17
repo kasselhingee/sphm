@@ -10,7 +10,8 @@ Imports:
   Rdpack,
   movMF,
   mclust,
-  scorematchingad
+  scorematchingad,
+  nloptr
 Suggests:
   testthat (>= 3.0.0),
   Bessel

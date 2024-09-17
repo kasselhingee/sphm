@@ -9,7 +9,8 @@ Imports:
   Rcpp (>= 1.0.11),
   Rdpack,
   movMF,
-  mclust
+  mclust,
+  scorematchingad
 Suggests:
   testthat (>= 3.0.0),
   Bessel

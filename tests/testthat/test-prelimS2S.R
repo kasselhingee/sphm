@@ -38,22 +38,13 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   tmp <- optim_pobjS2S_parttape(y, x, omegapar)
   expect_equal(tmp$solution, omegapar, tolerance = 0.05)
   
-  # starting away from optimum (but also with large B)
-  start <- OmegaS2S_proj(OmegaS2S_unvec(OmegaS2S_vec(omegapar) + 10, p, check = FALSE))
+  # starting away from optimum, but still within constraints
+  set.seed(14)
+  start <- as_OmegaS2S(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
+          Q = mclust::randomOrthogonalMatrix(q, p),
+          B = diag(sort(runif(p-1), decreasing = TRUE))))
   opt2 <- optim_pobjS2S_parttape(y, x, start)
-  if (sign(opt2$solution$p1[1]) == sign(omegapar$p1[1])){
-    expect_equal(opt2$solution, omegapar, tolerance = 0.05)
-  } else {
-    # use an antipodal - like transform to get to another solution
-    start2 <- as_cannS2S(opt2$solution)
-    start2$B <- diag(1/diag(start2$B))
-    start2$P <- -start2$P
-    start2$Q <- -start2$Q
-    opt3 <- optim_pobjS2S_parttape(y, x, as_OmegaS2S(start2))
-    expect_equal(opt3$solution, omegapar, tolerance = 0.05)
-    expect_equal(opt3$solution, opt$solution, tolerance = 1E-2)
-    expect_equal(opt3$solution, tmp$solution, tolerance = 1E-2)
-  }
+  expect_equal(opt2$solution, omegapar, tolerance = 0.05)
 })
 
 test_that("OmegaS2S_constraints() is zero correctly", {

@@ -82,9 +82,9 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
       newlaremaining <- nloptr::nloptr( #searching for log(a) to avoid non-zero bound AND deriving the first value from all the others to avoid prod=1 requirement
         x0 = log(est$aremaining[-1]),
         eval_f = function(theta){
-          -sum(scorematchingad:::pForward0(ll_aremaining, theta, c(est$k, a1)))},
+          -sum(ll_aremaining$eval(theta, c(est$k, a1)))},
         eval_grad_f = function(theta){
-          -colSums(matrix(scorematchingad:::pJacobian(ll_aremaining, theta, c(est$k, a1)), byrow = TRUE, ncol = length(theta)))
+          -colSums(matrix(ll_aremaining$Jac(theta, c(est$k, a1)), byrow = TRUE, ncol = length(theta)))
           },
         ub = rep(1, length(est$aremaining)-1) * log(.Machine$double.xmax), #this keeps the tapes evaluating to non infinite values. Note that R's (and I suspect C++'s generally) limit is log(.Machine$double.xmax), not sure why half is needed here. It isn't really needed if the tapes return the nan to R rather than erroring (check_for_nan = FALSE)
         opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts)
@@ -103,10 +103,10 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
     mntime_start <- proc.time()
     newmean <- nloptr::nloptr(
       x0 = est$mean,
-      eval_f = function(theta){-sum(scorematchingad:::pForward0(ll_mean, theta, c(est$k, a1, est$aremaining, as.vector(P))))},
-      eval_grad_f = function(theta){-colSums(matrix(scorematchingad:::pJacobian(ll_mean, theta, c(est$k, a1, est$aremaining, as.vector(P))), byrow = TRUE, ncol = length(theta)))},
-      eval_g_eq =  function(theta){scorematchingad:::pForward0(ll_mean_constraint, theta, vector(mode = "numeric"))[1:2]},
-      eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(ll_mean_constraint, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
+      eval_f = function(theta){-sum(ll_mean$eval(theta, c(est$k, a1, est$aremaining, as.vector(P))))},
+      eval_grad_f = function(theta){-colSums(matrix(ll_mean$Jac(theta, c(est$k, a1, est$aremaining, as.vector(P))), byrow = TRUE, ncol = length(theta)))},
+      eval_g_eq =  function(theta){ll_mean_constraint$eval(theta, vector(mode = "numeric"))[1:2]},
+      eval_jac_g_eq =  function(theta){matrix(ll_mean_constraint$Jac(theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
       opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2)), combined_opts)
     )
     est$mean <- OmegaS2S_vec(OmegaS2S_proj(OmegaS2S_unvec(newmean$solution, p, check = FALSE), method = "Omega"))
@@ -154,8 +154,8 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
 optim_alignedG_k_3 <- function(est, ll_k, P, a1, combined_opts){
     newk <- nloptr::nloptr(
       x0 = est$k,
-      eval_f = function(k){-sum(scorematchingad:::pForward0(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
-      eval_grad_f = function(k){-sum(scorematchingad:::pJacobian(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
+      eval_f = function(k){-sum(ll_k$eval(k, c(est$mean, a1, est$aremaining, as.vector(P))))},
+      eval_grad_f = function(k){-sum(ll_k$Jac(k, c(est$mean, a1, est$aremaining, as.vector(P))))},
       lb = 0, ub = .Machine$double.xmax,
       opts = c(list(algorithm = "NLOPT_LD_SLSQP"), combined_opts[names(combined_opts) != "tol_constraints_eq"])
     )
@@ -172,7 +172,7 @@ optim_alignedG_k_nograd <- function(est, ll_k, P, a1, combined_opts){
         } else {
           lnormconst <- lvMFnormconst(k, length(est$aremaining) + 1)
         }
-        -sum(-lnormconst + scorematchingad:::pForward0(ll_k, k, c(est$mean, a1, est$aremaining, as.vector(P))))},
+        -sum(-lnormconst + ll_k$eval(k, c(est$mean, a1, est$aremaining, as.vector(P))))},
       lb = 0, ub = .Machine$double.xmax,
       opts = c(list(algorithm = "NLOPT_LN_COBYLA"), combined_opts[names(combined_opts) != "tol_constraints_eq"])
     )

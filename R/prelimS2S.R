@@ -95,12 +95,12 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the star
   
   locopt <- nloptr::nloptr(
     x0 = OmegaS2S_vec(om0),
-    eval_f = function(theta){scorematchingad:::pForward0(obj_tape, theta, vector(mode = "numeric"))},
-    eval_grad_f = function(theta){scorematchingad:::pJacobian(obj_tape, theta, vector(mode = "numeric"))},
-    eval_g_eq =  function(theta){scorematchingad:::pForward0(constraint_tape, theta, vector(mode = "numeric"))[1:2]},
-    eval_jac_g_eq =  function(theta){matrix(scorematchingad:::pJacobian(constraint_tape, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
-    eval_g_ineq =  function(theta){scorematchingad:::pForward0(ineqconstraint_tape, theta, vector(mode = "numeric")) - 2},
-    eval_jac_g_ineq =  function(theta){matrix(scorematchingad:::pJacobian(ineqconstraint_tape, theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
+    eval_f = function(theta){obj_tape$eval(theta, vector(mode = "numeric"))},
+    eval_grad_f = function(theta){obj_tape$Jac(theta, vector(mode = "numeric"))},
+    eval_g_eq =  function(theta){constraint_tape$eval(theta, vector(mode = "numeric"))[1:2]},
+    eval_jac_g_eq =  function(theta){matrix(constraint_tape$Jac(theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
+    eval_g_ineq =  function(theta){ineqconstraint_tape$eval(theta, vector(mode = "numeric")) - 2},
+    eval_jac_g_ineq =  function(theta){matrix(ineqconstraint_tape$Jac(theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
     opts = combined_opts
   )
   

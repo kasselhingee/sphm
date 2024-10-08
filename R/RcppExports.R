@@ -66,12 +66,6 @@ tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for
     .Call('_sphm_tape_namedfun', PACKAGE = 'sphm', func_name, ind_t, dyn_t, constvec, constmat, check_for_nan)
 }
 
-#' @describeIn tape_namedfun Tape using a pointer to a function created by RcppXPtrUtils::cppXPtr
-#' @param funptr A pointer to a function created by RcppXPtrUtils::cppXPtr
-tape_funptr <- function(funptr, ind_t, dyn_t, constvec, constmat, check_for_nan) {
-    .Call('_sphm_tape_funptr', PACKAGE = 'sphm', funptr, ind_t, dyn_t, constvec, constmat, check_for_nan)
-}
-
 uldSvMF_cann <- function(y, k, a, G) {
     .Call('_sphm_uldSvMF_cann', PACKAGE = 'sphm', y, k, a, G)
 }

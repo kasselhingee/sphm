@@ -12,38 +12,22 @@ CppAD::ADFun<double> tapefun(generalfunction fun, veca1 & ind_t, veca1 & dyn_t, 
 }
 
 
-Rcpp::XPtr< CppAD::ADFun<double> > tape_funptr(Rcpp::XPtr<generalfunction> funptr, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat, bool check_for_nan) {
-  generalfunction fun = *Rcpp::XPtr<generalfunction>(funptr);
-
-  CppAD::ADFun<double>* out = new CppAD::ADFun<double>; //returning a pointer
-  *out = tapefun(fun,
-                 ind_t,
-                 dyn_t,
-                 constvec,
-                 constmat,
-                 check_for_nan);
-
-  Rcpp::XPtr< CppAD::ADFun<double> > pout(out, true);
-  return(pout);
-}
-
-
-Rcpp::XPtr< CppAD::ADFun<double> > tape_namedfun(std::string func_name, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat, bool check_for_nan) {
+pADFun tape_namedfun(std::string func_name, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat, bool check_for_nan) {
   //look up the function
   if (function_map.find(func_name) == function_map.end()) {
       Rcpp::stop("Function not found: " + func_name);
   }
   generalfunction fun = function_map[func_name];
 
-  CppAD::ADFun<double>* out = new CppAD::ADFun<double>; //returning a pointer
-  *out = tapefun(fun,
+  CppAD::ADFun<double> tape;
+  tape = tapefun(fun,
                  ind_t,
                  dyn_t,
                  constvec,
                  constmat,
                  check_for_nan);
 
-  Rcpp::XPtr< CppAD::ADFun<double> > pout(out, true);
-  return(pout);
+  pADFun out(tape, ind_t, dyn_t, func_name);
+  return(out);
 }
 

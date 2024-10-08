@@ -109,7 +109,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // tape_namedfun
-Rcpp::XPtr< CppAD::ADFun<double> > tape_namedfun(std::string func_name, veca1& ind_t, veca1& dyn_t, vecd& constvec, matd& constmat, bool check_for_nan);
+pADFun tape_namedfun(std::string func_name, veca1& ind_t, veca1& dyn_t, vecd& constvec, matd& constmat, bool check_for_nan);
 RcppExport SEXP _sphm_tape_namedfun(SEXP func_nameSEXP, SEXP ind_tSEXP, SEXP dyn_tSEXP, SEXP constvecSEXP, SEXP constmatSEXP, SEXP check_for_nanSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -121,22 +121,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< matd& >::type constmat(constmatSEXP);
     Rcpp::traits::input_parameter< bool >::type check_for_nan(check_for_nanSEXP);
     rcpp_result_gen = Rcpp::wrap(tape_namedfun(func_name, ind_t, dyn_t, constvec, constmat, check_for_nan));
-    return rcpp_result_gen;
-END_RCPP
-}
-// tape_funptr
-Rcpp::XPtr< CppAD::ADFun<double> > tape_funptr(Rcpp::XPtr<generalfunction> funptr, veca1& ind_t, veca1& dyn_t, vecd& constvec, matd& constmat, bool check_for_nan);
-RcppExport SEXP _sphm_tape_funptr(SEXP funptrSEXP, SEXP ind_tSEXP, SEXP dyn_tSEXP, SEXP constvecSEXP, SEXP constmatSEXP, SEXP check_for_nanSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::XPtr<generalfunction> >::type funptr(funptrSEXP);
-    Rcpp::traits::input_parameter< veca1& >::type ind_t(ind_tSEXP);
-    Rcpp::traits::input_parameter< veca1& >::type dyn_t(dyn_tSEXP);
-    Rcpp::traits::input_parameter< vecd& >::type constvec(constvecSEXP);
-    Rcpp::traits::input_parameter< matd& >::type constmat(constmatSEXP);
-    Rcpp::traits::input_parameter< bool >::type check_for_nan(check_for_nanSEXP);
-    rcpp_result_gen = Rcpp::wrap(tape_funptr(funptr, ind_t, dyn_t, constvec, constmat, check_for_nan));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -179,7 +163,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
     {"_sphm_OmegaS2S_constraints", (DL_FUNC) &_sphm_OmegaS2S_constraints, 2},
     {"_sphm_tape_namedfun", (DL_FUNC) &_sphm_tape_namedfun, 6},
-    {"_sphm_tape_funptr", (DL_FUNC) &_sphm_tape_funptr, 6},
     {"_sphm_uldSvMF_cann", (DL_FUNC) &_sphm_uldSvMF_cann, 4},
     {"_sphm_uldSvMF_muV", (DL_FUNC) &_sphm_uldSvMF_muV, 5},
     {NULL, NULL, 0}

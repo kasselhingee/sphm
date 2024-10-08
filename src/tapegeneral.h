@@ -2,6 +2,7 @@
 #define TAPEGENERAL
 
 # include <scorematchingad_forward.h> // includes <RcppEigenForward.h>
+# include <utils/pADFun.h>
 # include "sphm_forward.h"
 # include <Rcpp.h>
 
@@ -21,15 +22,10 @@
 //' Tape using a function name in function_map 
 //' @param func_name Name of function to tape. Name must be in the internal `function_map` object.
 // [[Rcpp::export]]
-Rcpp::XPtr< CppAD::ADFun<double> > tape_namedfun(std::string func_name, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat, bool check_for_nan);
+pADFun tape_namedfun(std::string func_name, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat, bool check_for_nan);
 
 // tape purely within C++ using generalfunction class (which isn't exported yet)
 CppAD::ADFun<double> tapefun(generalfunction fun, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat, bool check_for_nan);
-
-//' @describeIn tape_namedfun Tape using a pointer to a function created by RcppXPtrUtils::cppXPtr
-//' @param funptr A pointer to a function created by RcppXPtrUtils::cppXPtr
-// [[Rcpp::export]]
-Rcpp::XPtr< CppAD::ADFun<double> > tape_funptr(Rcpp::XPtr<generalfunction> funptr, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat, bool check_for_nan);
 
 
 #endif

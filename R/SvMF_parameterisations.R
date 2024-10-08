@@ -89,3 +89,7 @@ getHstar <- function(m){
   Hstar <- rbind(mL, (1/(1+m1)) * mL %*% t(mL) - diag(1, length(mL)))
   return(Hstar)
 }
+
+getH <- function(m){
+  cbind(m, getHstar(m))
+}

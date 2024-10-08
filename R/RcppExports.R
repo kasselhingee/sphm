@@ -74,3 +74,10 @@ uldSvMF_muV <- function(y, k, m, a1, V) {
     .Call('_sphm_uldSvMF_muV', PACKAGE = 'sphm', y, k, m, a1, V)
 }
 
+#' @param Vvec Vectorised form of matrix V ala vech
+#' @param yk vector of y values, then the k. Will be dynamic parameters because the 'y' may be residuals and be updated frequently
+#' @param a1m The tuning parameter a1 and the mean, which will often be the northpole
+ull_SvMF_V <- function(Vvec, yk, a1m) {
+    .Call('_sphm_ull_SvMF_V', PACKAGE = 'sphm', Vvec, yk, a1m)
+}
+

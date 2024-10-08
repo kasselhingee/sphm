@@ -153,6 +153,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ull_SvMF_V
+veca1 ull_SvMF_V(veca1& Vvec, veca1& yk, vecd& a1m);
+RcppExport SEXP _sphm_ull_SvMF_V(SEXP VvecSEXP, SEXP ykSEXP, SEXP a1mSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< veca1& >::type Vvec(VvecSEXP);
+    Rcpp::traits::input_parameter< veca1& >::type yk(ykSEXP);
+    Rcpp::traits::input_parameter< vecd& >::type a1m(a1mSEXP);
+    rcpp_result_gen = Rcpp::wrap(ull_SvMF_V(Vvec, yk, a1m));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_sphm_ull_S2S_alignedG_mean", (DL_FUNC) &_sphm_ull_S2S_alignedG_mean, 4},
@@ -165,6 +178,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_tape_namedfun", (DL_FUNC) &_sphm_tape_namedfun, 6},
     {"_sphm_uldSvMF_cann", (DL_FUNC) &_sphm_uldSvMF_cann, 4},
     {"_sphm_uldSvMF_muV", (DL_FUNC) &_sphm_uldSvMF_muV, 5},
+    {"_sphm_ull_SvMF_V", (DL_FUNC) &_sphm_ull_SvMF_V, 3},
     {NULL, NULL, 0}
 };
 

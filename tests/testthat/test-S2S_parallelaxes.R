@@ -40,6 +40,7 @@ test_that("maximum likelihood for constant parallel transport axes", {
   rresid[, 1] <- sqrt(1-rowSums(rresid[, -1]^2))
   
   ull_SvMF_V_R(TFORGE::vech(V), c(rresid[1, ], k), a[1], m = nthpole(p))
+  ull_SvMF_V(TFORGE::vech(V), c(rresid[1, ], k), c(a[1], nthpole(p)))
   
   
   #Scealy optimisation of kappa using getH(nth pole) = diag(c(1, -1, -1, -1...))

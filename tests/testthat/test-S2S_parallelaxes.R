@@ -33,8 +33,14 @@ test_that("maximum likelihood for constant parallel transport axes", {
   # rotated resids
   rresid <- rotatedresid(y, ymean, P[, 1])
   # shift P[, 1] to north pole to reduce computational issues
-  rot <- JuppRmat(P[, 1], c(1, rep(0, p-1)))
+  rot <- JuppRmat(P[, 1], nthpole(p))
   rresid <- rresid %*% t(rot)
+  
+  # return residuals to the sphere!? Seems like a should be able to do something direcly using likelihood, except likelihood is on the sphere
+  rresid[, 1] <- sqrt(1-rowSums(rresid[, -1]^2))
+  
+  ull_SvMF_V_R(TFORGE::vech(V), c(rresid[1, ], k), a[1], m = nthpole(p))
+  
   
   #Scealy optimisation of kappa using getH(nth pole) = diag(c(1, -1, -1, -1...))
   # use regression form to be able to use residuals rather than data on the sphere

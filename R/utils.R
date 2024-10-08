@@ -44,3 +44,5 @@ standardise_mat <- function(y){
   Ghat <- cbind(mn, eigen(projmom2)$vectors[, 1:(p-1)])
   return(Ghat)
 }
+
+nthpole <- function(p){c(1, rep(0, p-1))}

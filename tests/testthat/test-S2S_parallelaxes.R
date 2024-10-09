@@ -39,7 +39,6 @@ test_that("maximum likelihood for constant parallel transport axes", {
   # return residuals to the sphere!? Seems like a should be able to do something direcly using likelihood, except likelihood is on the sphere
   rresid[, 1] <- sqrt(1-rowSums(rresid[, -1]^2))
   
-  ull_SvMF_V_R(TFORGE::vech(V), c(rresid[1, ], k), a[1], m = nthpole(p))
   ull_SvMF_V(TFORGE::vech(V), c(rresid[1, ], k), c(a[1], nthpole(p)))
   
   

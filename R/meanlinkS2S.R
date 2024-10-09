@@ -23,7 +23,7 @@ iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y)
 #' @param paramobj A parameterisation object for either the cannonical PQB or Omega parameterisation. See [`OmegaS2S()`] and [`cannS2S()`]. Used if P, Q, and B are NULL.
 #' @details If `x` is a single vector then the mean is computed directly.
 #' If `x` is an array then the parameters are converted to `OmegaS2S`.
-#' @useDynLib sphm
+#' @useDynLib sphm, .registration = TRUE
 #' @importFrom Rcpp evalCpp
 #' @export
 meanlinkS2S <- function(x,P = NULL,Q = NULL,B = NULL, paramobj = NULL, check = TRUE){

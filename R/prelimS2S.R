@@ -1,4 +1,5 @@
 #' Preliminary objective function for S2S Link
+#' @importFrom scorematchingad ADFun
 #' @details Assumes that the distribution is isotropic around the mean with constant concentration, thus maximising
 #' \deqn{\sum_i=1^n y_i^T \mu(x_i).}
 #' @param y A set of unit vectors in embedded coordinates, each row corresponds to a single unit vector.

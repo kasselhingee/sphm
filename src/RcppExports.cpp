@@ -69,6 +69,51 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cayleyTransform
+mata1 cayleyTransform(const mata1& A);
+RcppExport SEXP _sphm_cayleyTransform(SEXP ASEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const mata1& >::type A(ASEXP);
+    rcpp_result_gen = Rcpp::wrap(cayleyTransform(A));
+    return rcpp_result_gen;
+END_RCPP
+}
+// inverseCayleyTransform
+mata1 inverseCayleyTransform(const mata1& M);
+RcppExport SEXP _sphm_inverseCayleyTransform(SEXP MSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const mata1& >::type M(MSEXP);
+    rcpp_result_gen = Rcpp::wrap(inverseCayleyTransform(M));
+    return rcpp_result_gen;
+END_RCPP
+}
+// vectorizeLowerTriangle
+veca1 vectorizeLowerTriangle(const mata1& A);
+RcppExport SEXP _sphm_vectorizeLowerTriangle(SEXP ASEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const mata1& >::type A(ASEXP);
+    rcpp_result_gen = Rcpp::wrap(vectorizeLowerTriangle(A));
+    return rcpp_result_gen;
+END_RCPP
+}
+// inverseVectorizeLowerTriangle
+mata1 inverseVectorizeLowerTriangle(const veca1& vec, int n);
+RcppExport SEXP _sphm_inverseVectorizeLowerTriangle(SEXP vecSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const veca1& >::type vec(vecSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(inverseVectorizeLowerTriangle(vec, n));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ull_S2S_constV_forR
 veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Gstar);
 RcppExport SEXP _sphm_ull_S2S_constV_forR(SEXP ySEXP, SEXP xSEXP, SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP GstarSEXP) {
@@ -189,6 +234,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_ull_S2S_alignedG_a", (DL_FUNC) &_sphm_ull_S2S_alignedG_a, 4},
     {"_sphm_ull_S2S_alignedG_k", (DL_FUNC) &_sphm_ull_S2S_alignedG_k, 4},
     {"_sphm_alignedGcpp", (DL_FUNC) &_sphm_alignedGcpp, 2},
+    {"_sphm_cayleyTransform", (DL_FUNC) &_sphm_cayleyTransform, 1},
+    {"_sphm_inverseCayleyTransform", (DL_FUNC) &_sphm_inverseCayleyTransform, 1},
+    {"_sphm_vectorizeLowerTriangle", (DL_FUNC) &_sphm_vectorizeLowerTriangle, 1},
+    {"_sphm_inverseVectorizeLowerTriangle", (DL_FUNC) &_sphm_inverseVectorizeLowerTriangle, 2},
     {"_sphm_ull_S2S_constV_forR", (DL_FUNC) &_sphm_ull_S2S_constV_forR, 7},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},

@@ -30,6 +30,22 @@ alignedGcpp <- function(m, P) {
     .Call(`_sphm_alignedGcpp`, m, P)
 }
 
+cayleyTransform <- function(A) {
+    .Call(`_sphm_cayleyTransform`, A)
+}
+
+inverseCayleyTransform <- function(M) {
+    .Call(`_sphm_inverseCayleyTransform`, M)
+}
+
+vectorizeLowerTriangle <- function(A) {
+    .Call(`_sphm_vectorizeLowerTriangle`, A)
+}
+
+inverseVectorizeLowerTriangle <- function(vec, n) {
+    .Call(`_sphm_inverseVectorizeLowerTriangle`, vec, n)
+}
+
 ull_S2S_constV_forR <- function(y, x, omvec, k, a1, aremaining, Gstar) {
     .Call(`_sphm_ull_S2S_constV_forR`, y, x, omvec, k, a1, aremaining, Gstar)
 }

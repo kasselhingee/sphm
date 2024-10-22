@@ -11,7 +11,7 @@ mata1 JuppRmat(const veca1 & y1, const veca1 & y2){
 }
 
 
-veca1 ull_S2S_constV(mata1 y, mata1 x, OmegaS2Scpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Gstar){
+veca1 ull_S2S_constV(mata1 y, mata1 x, OmegaS2Scpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
   int p = om.p1.size();
   //check that ncol(y) == p
   if (y.cols() != p){Rcpp::stop("width of y does not equal length of p1");}
@@ -26,6 +26,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 x, OmegaS2Scpp<a1type> om, a1type k, a1type 
 
   //evaluate SvMF density of each observation
   veca1 ld(y.rows());
+  mata1 Gstar = getHstar(om_projected.p1) * Kstar;
   mata1 G(p, p);
   veca1 a(p);
   a(0) = a1;
@@ -40,9 +41,9 @@ veca1 ull_S2S_constV(mata1 y, mata1 x, OmegaS2Scpp<a1type> om, a1type k, a1type 
 
 
 
-veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Gstar){
+veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
    OmegaS2Scpp<a1type> om = OmegaS2Scpp_unvec(omvec, y.cols());
-   veca1 ld = ull_S2S_constV(y, x, om, k, a1, aremaining, Gstar);
+   veca1 ld = ull_S2S_constV(y, x, om, k, a1, aremaining, Kstar);
    return ld;
 }
 
@@ -128,12 +129,17 @@ mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
 }
 
 
-//veca1 nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 Gstar, vecd & p_in){
-//  
-//  veca1 result(omvec.size() + k.size() + aremaining.size());
-//}
+veca1 nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 Kstar){
+  veca1 vecCayaxes = vectorizeLowerTriangle(inverseCayleyTransform(Kstar)); 
+  veca1 result(omvec.size() + 1 + aremaining.size() + vecCayaxes.size());
+  result.segment(0, omvec.size()) = omvec;
+  result(omvec.size()) = k;
+  result.segment(omvec.size() + 1, aremaining.size()) = aremaining;
+  result.segment(omvec.size() + 1 + aremaining.size(), vecCayaxes.size()) = vecCayaxes;
+  return result;
+}
 
-//pADFun tape_ull_S2S_constV_nota1(veca1 & omvec, a1type k, a1type a1, veca1 aremaining, mata1 Gstar, vecd & p_in, matd & yx){
+//pADFun tape_ull_S2S_constV_nota1(veca1 & omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, matd & yx){
 //
 //}
 

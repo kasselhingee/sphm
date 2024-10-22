@@ -6,13 +6,13 @@
 #include "OmegaS2S.h"
 
 // function that accepts all the major arguments in usual (non-vector) format
-// for a single observation y with covariates x and return the ull for that observation, parallel transporting axes Gstar to the mean using Jupp's method from base being the first column of P.
+// for a single observation y with covariates x and return the ull for that observation, parallel transporting axes H*(p1)*Kstar to the mean using Jupp's method from base being the first column of P.
 // will include projection of om
-veca1 ull_S2S_constV(mata1 y, mata1 x, OmegaS2Scpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Gstar);
+veca1 ull_S2S_constV(mata1 y, mata1 x, OmegaS2Scpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar);
 
 // for checking ull_S2S_constV via unit testing
 // [[Rcpp::export]]
-veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Gstar);
+veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar);
 
 //tape for mean wrt mean with the base point P[,1] fixed for calculating the axes. Returned tape should have dynamic parameters of: k, a1, aremaining, as.vector(Gstar).
 pADFun tape_ull_S2S_constV_mean(veca1 & omvec, a1type k, a1type a1, veca1 aremaining, mata1 Gstar, vecd & p_in, matd & yx);

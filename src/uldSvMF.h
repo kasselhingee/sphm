@@ -14,5 +14,8 @@ veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
 // [[Rcpp::export]]
 veca1 uldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
 
+// a helper
+mata1 getHstar(veca1 m);
+
 #endif
 

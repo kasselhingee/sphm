@@ -46,8 +46,8 @@ inverseVectorizeLowerTriangle <- function(vec) {
     .Call(`_sphm_inverseVectorizeLowerTriangle`, vec)
 }
 
-ull_S2S_constV_forR <- function(y, x, omvec, k, a1, aremaining, Gstar) {
-    .Call(`_sphm_ull_S2S_constV_forR`, y, x, omvec, k, a1, aremaining, Gstar)
+ull_S2S_constV_forR <- function(y, x, omvec, k, a1, aremaining, Kstar) {
+    .Call(`_sphm_ull_S2S_constV_forR`, y, x, omvec, k, a1, aremaining, Kstar)
 }
 
 meanlinkS2Scpp <- function(x, vec, p) {

@@ -32,7 +32,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 x, OmegaS2Scpp<a1type> om, a1type k, a1type 
   a(0) = a1;
   a.segment(1, p-1) = aremaining;
   for (int i = 0; i < y.rows(); ++i){
-    G.block(0, 1, p, p-1) = JuppRmat(om_projected.p1, y.row(i)) * Gstar;
+    G.block(0, 1, p, p-1) = JuppRmat(om_projected.p1, ypred.row(i)) * Gstar;
     ld(i) = uldSvMF_cann(y.row(i), k, a, G)(0);
   }
   return ld;

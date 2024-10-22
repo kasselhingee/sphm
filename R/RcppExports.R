@@ -42,8 +42,8 @@ vectorizeLowerTriangle <- function(A) {
     .Call(`_sphm_vectorizeLowerTriangle`, A)
 }
 
-inverseVectorizeLowerTriangle <- function(vec, n) {
-    .Call(`_sphm_inverseVectorizeLowerTriangle`, vec, n)
+inverseVectorizeLowerTriangle <- function(vec) {
+    .Call(`_sphm_inverseVectorizeLowerTriangle`, vec)
 }
 
 ull_S2S_constV_forR <- function(y, x, omvec, k, a1, aremaining, Gstar) {

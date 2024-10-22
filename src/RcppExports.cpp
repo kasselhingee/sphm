@@ -103,14 +103,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // inverseVectorizeLowerTriangle
-mata1 inverseVectorizeLowerTriangle(const veca1& vec, int n);
-RcppExport SEXP _sphm_inverseVectorizeLowerTriangle(SEXP vecSEXP, SEXP nSEXP) {
+mata1 inverseVectorizeLowerTriangle(const veca1& vec);
+RcppExport SEXP _sphm_inverseVectorizeLowerTriangle(SEXP vecSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const veca1& >::type vec(vecSEXP);
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    rcpp_result_gen = Rcpp::wrap(inverseVectorizeLowerTriangle(vec, n));
+    rcpp_result_gen = Rcpp::wrap(inverseVectorizeLowerTriangle(vec));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -237,7 +236,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_cayleyTransform", (DL_FUNC) &_sphm_cayleyTransform, 1},
     {"_sphm_inverseCayleyTransform", (DL_FUNC) &_sphm_inverseCayleyTransform, 1},
     {"_sphm_vectorizeLowerTriangle", (DL_FUNC) &_sphm_vectorizeLowerTriangle, 1},
-    {"_sphm_inverseVectorizeLowerTriangle", (DL_FUNC) &_sphm_inverseVectorizeLowerTriangle, 2},
+    {"_sphm_inverseVectorizeLowerTriangle", (DL_FUNC) &_sphm_inverseVectorizeLowerTriangle, 1},
     {"_sphm_ull_S2S_constV_forR", (DL_FUNC) &_sphm_ull_S2S_constV_forR, 7},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},

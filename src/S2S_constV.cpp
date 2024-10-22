@@ -108,8 +108,9 @@ veca1 vectorizeLowerTriangle(const mata1 &A) {
 }
 
 // [[Rcpp::export]]
-mata1 inverseVectorizeLowerTriangle(const veca1 &vec, int n) {
+mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
   // n is the size of the skew-symmetric matrix to reconstruct
+  int n = (1 + std::sqrt(8*vec.size() + 1))/2;
   mata1 A = mata1::Zero(n, n);  // Initialize an n x n matrix with zeros
 
   int idx = 0;  // Index to keep track of the vector position

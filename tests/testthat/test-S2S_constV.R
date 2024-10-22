@@ -42,3 +42,17 @@ test_that("maximum likelihood for parallel axes per Jupp's path", {
   expect_equal(ldCpp, y_ld[, 4])
                       
 })
+
+
+test_that("Cayley transform and vectorisation works", {
+  p <- 3
+  set.seed(100)
+  M <- mclust::randomOrthogonalMatrix(p, p)
+  A <- inverseCayleyTransform(M)
+  expect_equal(A[upper.tri(A)], -A[lower.tri(A)])
+  expect_equal(diag(A), rep(0, p))
+  expect_equal(cayleyTransform(A), M)
+  
+  expect_equal(vectorizeLowerTriangle(A), A[lower.tri(A)])
+  expect_equal(inverseVectorizeLowerTriangle(vectorizeLowerTriangle(A)), A)
+})

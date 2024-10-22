@@ -69,6 +69,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ull_S2S_constV_forR
+veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Gstar);
+RcppExport SEXP _sphm_ull_S2S_constV_forR(SEXP ySEXP, SEXP xSEXP, SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP GstarSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< mata1 >::type y(ySEXP);
+    Rcpp::traits::input_parameter< mata1 >::type x(xSEXP);
+    Rcpp::traits::input_parameter< veca1 >::type omvec(omvecSEXP);
+    Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
+    Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
+    Rcpp::traits::input_parameter< veca1 >::type aremaining(aremainingSEXP);
+    Rcpp::traits::input_parameter< mata1 >::type Gstar(GstarSEXP);
+    rcpp_result_gen = Rcpp::wrap(ull_S2S_constV_forR(y, x, omvec, k, a1, aremaining, Gstar));
+    return rcpp_result_gen;
+END_RCPP
+}
 // meanlinkS2Scpp
 mata1 meanlinkS2Scpp(const mata1& x, const veca1& vec, const int p);
 RcppExport SEXP _sphm_meanlinkS2Scpp(SEXP xSEXP, SEXP vecSEXP, SEXP pSEXP) {
@@ -172,6 +189,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_ull_S2S_alignedG_a", (DL_FUNC) &_sphm_ull_S2S_alignedG_a, 4},
     {"_sphm_ull_S2S_alignedG_k", (DL_FUNC) &_sphm_ull_S2S_alignedG_k, 4},
     {"_sphm_alignedGcpp", (DL_FUNC) &_sphm_alignedGcpp, 2},
+    {"_sphm_ull_S2S_constV_forR", (DL_FUNC) &_sphm_ull_S2S_constV_forR, 7},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
     {"_sphm_OmegaS2S_constraints", (DL_FUNC) &_sphm_OmegaS2S_constraints, 2},

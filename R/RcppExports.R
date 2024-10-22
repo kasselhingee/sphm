@@ -8,30 +8,34 @@
 #' @param p_in The dimension p
 #' @param yx The observations and covariates cbind together as row vectors
 ull_S2S_alignedG_mean <- function(vec, dyn, p_in, yx) {
-    .Call('_sphm_ull_S2S_alignedG_mean', PACKAGE = 'sphm', vec, dyn, p_in, yx)
+    .Call(`_sphm_ull_S2S_alignedG_mean`, vec, dyn, p_in, yx)
 }
 
 #' @param vec For `_alignedG_a`: A p-2 vector of log(a3), log(a4), log(a5), ... log(a2) will be calculated as the negative sum of the others to satisfy the prod=1 constraint on a2,...
 #' @param dyn For `_alignedG_a`: A vector of kappa then a1
 #' @param pOmegavec For `_alignedG_a`: A vector of p then the Omega vectorisation, then `as.vector(P)`. Due to an SVD to extract P from Omega vec, taping the dependence on Omega would be unreliable. Furthermore R's SVD routine seems more reliable than Eigen's.
 ull_S2S_alignedG_a <- function(vec, dyn, pOmegavecP, yx) {
-    .Call('_sphm_ull_S2S_alignedG_a', PACKAGE = 'sphm', vec, dyn, pOmegavecP, yx)
+    .Call(`_sphm_ull_S2S_alignedG_a`, vec, dyn, pOmegavecP, yx)
 }
 
 #' @param k For `_alignedG_k`: A parameter vector specifying the concentration k
 #' @param dyn For `_alignedG_k`: A p*q + p + p*p length vector of Omegavec, then a1, a2, ..., then P as a vector of stacked columns.
 #' The P and Omega are provided seperately because of the non-smooth nature of SVD.
 ull_S2S_alignedG_k <- function(k, dyn, p_in, yx) {
-    .Call('_sphm_ull_S2S_alignedG_k', PACKAGE = 'sphm', k, dyn, p_in, yx)
+    .Call(`_sphm_ull_S2S_alignedG_k`, k, dyn, p_in, yx)
 }
 
 #' @describeIn ull_S2S_alignedG_mean Aligns the columns of the Mobius-link rotation matrix `P` for the mean to the columns of G. Note that the first column of the returned G is the given mean. Returns the matrix G.
 alignedGcpp <- function(m, P) {
-    .Call('_sphm_alignedGcpp', PACKAGE = 'sphm', m, P)
+    .Call(`_sphm_alignedGcpp`, m, P)
+}
+
+ull_S2S_constV_forR <- function(y, x, omvec, k, a1, aremaining, Gstar) {
+    .Call(`_sphm_ull_S2S_constV_forR`, y, x, omvec, k, a1, aremaining, Gstar)
 }
 
 meanlinkS2Scpp <- function(x, vec, p) {
-    .Call('_sphm_meanlinkS2Scpp', PACKAGE = 'sphm', x, vec, p)
+    .Call(`_sphm_meanlinkS2Scpp`, x, vec, p)
 }
 
 #' Preliminary Objective in the style of the `generalfunction` class:
@@ -40,11 +44,11 @@ meanlinkS2Scpp <- function(x, vec, p) {
 #' @param p is required to separate yx and omvec. It is passed as a double for compatiblility witn generalfunction, so will have to be rounded to a integer within the function
 #' @param dyn ignored
 pobjS2Scpp <- function(omvec, dyn, p_in, yx) {
-    .Call('_sphm_pobjS2Scpp', PACKAGE = 'sphm', omvec, dyn, p_in, yx)
+    .Call(`_sphm_pobjS2Scpp`, omvec, dyn, p_in, yx)
 }
 
 OmegaS2S_constraints <- function(vec, p) {
-    .Call('_sphm_OmegaS2S_constraints', PACKAGE = 'sphm', vec, p)
+    .Call(`_sphm_OmegaS2S_constraints`, vec, p)
 }
 
 #' Function for taping a general function. The function must have signature
@@ -63,21 +67,21 @@ NULL
 #' Tape using a function name in function_map 
 #' @param func_name Name of function to tape. Name must be in the internal `function_map` object.
 tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for_nan) {
-    .Call('_sphm_tape_namedfun', PACKAGE = 'sphm', func_name, ind_t, dyn_t, constvec, constmat, check_for_nan)
+    .Call(`_sphm_tape_namedfun`, func_name, ind_t, dyn_t, constvec, constmat, check_for_nan)
 }
 
 uldSvMF_cann <- function(y, k, a, G) {
-    .Call('_sphm_uldSvMF_cann', PACKAGE = 'sphm', y, k, a, G)
+    .Call(`_sphm_uldSvMF_cann`, y, k, a, G)
 }
 
 uldSvMF_muV <- function(y, k, m, a1, V) {
-    .Call('_sphm_uldSvMF_muV', PACKAGE = 'sphm', y, k, m, a1, V)
+    .Call(`_sphm_uldSvMF_muV`, y, k, m, a1, V)
 }
 
 #' @param Vvec Vectorised form of matrix V ala vech
 #' @param yk vector of y values, then the k. Will be dynamic parameters because the 'y' may be residuals and be updated frequently
 #' @param a1m The tuning parameter a1 and the mean, which will often be the northpole
 ull_SvMF_V <- function(Vvec, yk, a1m) {
-    .Call('_sphm_ull_SvMF_V', PACKAGE = 'sphm', Vvec, yk, a1m)
+    .Call(`_sphm_ull_SvMF_V`, Vvec, yk, a1m)
 }
 

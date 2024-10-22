@@ -40,3 +40,8 @@ veca1 ull_S2S_constV(mata1 y, mata1 x, OmegaS2Scpp<a1type> om, a1type k, a1type 
 
 
 
+veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Gstar){
+   OmegaS2Scpp<a1type> om = OmegaS2Scpp_unvec(omvec, y.cols());
+   veca1 ld = ull_S2S_constV(y, x, om, k, a1, aremaining, Gstar);
+   return ld;
+}

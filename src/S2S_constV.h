@@ -10,6 +10,10 @@
 // will include projection of om
 veca1 ull_S2S_constV(mata1 y, mata1 x, OmegaS2Scpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Gstar);
 
+// for checking ull_S2S_constV via unit testing
+// [[Rcpp::export]]
+veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Gstar);
+
 //tape for mean wrt mean with the base point P[,1] fixed for calculating the axes. Returned tape should have dynamic parameters of: k, a1, aremaining, as.vector(Gstar).
 pADFun tape_ull_S2S_constV_mean(veca1 & omvec, a1type k, a1type a1, veca1 aremaining, mata1 Gstar, vecd & p_in, matd & yx);
 

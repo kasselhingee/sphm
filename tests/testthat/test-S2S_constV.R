@@ -39,6 +39,6 @@ test_that("maximum likelihood for parallel axes per Jupp's path", {
   # check ull_S2S_constV in C++
   ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:3], x = x, omvec = OmegaS2S_vec(omegapar), k = k,
                       a1 = a[1], aremaining = a[-1], Gstar = Gstar)
-  expect_equal(y_ld[, 4], ldCpp)
+  expect_equal(ldCpp, y_ld[, 4])
                       
 })

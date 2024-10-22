@@ -130,6 +130,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// tape_ull_S2S_constV_nota1
+pADFun tape_ull_S2S_constV_nota1(veca1& omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd& p_in, matd& yx);
+RcppExport SEXP _sphm_tape_ull_S2S_constV_nota1(SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP KstarSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< veca1& >::type omvec(omvecSEXP);
+    Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
+    Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
+    Rcpp::traits::input_parameter< veca1 >::type aremaining(aremainingSEXP);
+    Rcpp::traits::input_parameter< mata1 >::type Kstar(KstarSEXP);
+    Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
+    Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
+    rcpp_result_gen = Rcpp::wrap(tape_ull_S2S_constV_nota1(omvec, k, a1, aremaining, Kstar, p_in, yx));
+    return rcpp_result_gen;
+END_RCPP
+}
 // meanlinkS2Scpp
 mata1 meanlinkS2Scpp(const mata1& x, const veca1& vec, const int p);
 RcppExport SEXP _sphm_meanlinkS2Scpp(SEXP xSEXP, SEXP vecSEXP, SEXP pSEXP) {
@@ -238,6 +255,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_vectorizeLowerTriangle", (DL_FUNC) &_sphm_vectorizeLowerTriangle, 1},
     {"_sphm_inverseVectorizeLowerTriangle", (DL_FUNC) &_sphm_inverseVectorizeLowerTriangle, 1},
     {"_sphm_ull_S2S_constV_forR", (DL_FUNC) &_sphm_ull_S2S_constV_forR, 7},
+    {"_sphm_tape_ull_S2S_constV_nota1", (DL_FUNC) &_sphm_tape_ull_S2S_constV_nota1, 7},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
     {"_sphm_OmegaS2S_constraints", (DL_FUNC) &_sphm_OmegaS2S_constraints, 2},

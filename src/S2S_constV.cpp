@@ -139,8 +139,34 @@ veca1 nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 Kstar){
   return result;
 }
 
-//pADFun tape_ull_S2S_constV_nota1(veca1 & omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, matd & yx){
-//
-//}
+pADFun tape_ull_S2S_constV_nota1(veca1 & omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, matd & yx){
+  int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
+  // separate the response the covariates
+  mata1 y = yx.leftCols(p);
+  mata1 x = yx.rightCols(yx.cols() - p);
+
+
+// get everything except a1 into a vector
+  veca1 mainvec = nota1_tovecparams(omvec, k, aremaining, Kstar);
+
+// tape with main vector and a1 as a dynamic
+  CppAD::Independent(mainvec, a1);
+// split mainvec into parts, overwriting passed arguments
+  omvec = mainvec.segment(0, omvec.size());
+  OmegaS2Scpp<a1type> om = OmegaS2Scpp_unvec(omvec, p);
+  a1type k = mainvec(omvec.size());
+  aremaining = mainvec.segment(omvec.size() + 1, aremaining.size());
+  veca1 vecCayaxes = mainvec.(omvec.size() + 1 + aremaining.size(), p * (p-1)/2);
+  mata1 Kstar = inverseCayleyTransform(inverseVectorizeLowerTriangle(vecCayaxes));
+
+  veca1 ld = ull_S2S_constV(y, x, om, k, a1, aremaining, Kstar);
+
+  CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
+  tape.Dependent(mainvec, ld);
+  tape.check_for_nan(check_for_nan);
+
+  pADFun out(tape, mainvec, a1, "ull_S2S_constV_nota1");
+  return(out);
+}
 
 

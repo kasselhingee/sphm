@@ -27,12 +27,18 @@ test_that("maximum likelihood for parallel axes per Jupp's path", {
   a <- c(1, seq(5, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
   #step 3: for each location define G as mean, Jupp transport of Gstar columns
-  # then simulate from a SvMF
+  # then simulate from a SvMF, and evaluate density at the noise
   set.seed(6)
-  y <- t(apply(ymean, 1, function(mn){
+  y_ld <- t(apply(ymean, 1, function(mn){
     G <- cbind(mn, JuppRmat(P[,1], mn) %*% Gstar)
-    rSvMF(1, SvMFcann(k, a, G))
+    obs <- rSvMF(1, SvMFcann(k, a, G))
+    ld <- uldSvMF_cann(obs, k = k, a = a, G = G)
+    return(c(obs, ld))
   }))
   
-  
+  # check ull_S2S_constV in C++
+  ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:3], x = x, omvec = OmegaS2S_vec(omegapar), k = k,
+                      a1 = a[1], aremaining = a[-1], Gstar = Gstar)
+  expect_equal(y_ld[, 4], ldCpp)
+                      
 })

@@ -131,12 +131,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // tape_ull_S2S_constV_nota1
-pADFun tape_ull_S2S_constV_nota1(veca1& omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd& p_in, matd& yx);
+pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd& p_in, matd& yx);
 RcppExport SEXP _sphm_tape_ull_S2S_constV_nota1(SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP KstarSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< veca1& >::type omvec(omvecSEXP);
+    Rcpp::traits::input_parameter< veca1 >::type omvec(omvecSEXP);
     Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
     Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
     Rcpp::traits::input_parameter< veca1 >::type aremaining(aremainingSEXP);

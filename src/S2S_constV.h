@@ -33,6 +33,6 @@ pADFun tape_ull_S2S_constV_k(veca1 k, OmegaS2Scpp<a1type> om, a1type a1, veca1 &
 // experimental: tape for everything all together except a1
 // make the independent values omvec, k, aremaining and vecCayaxes,
 // [[Rcpp::export]]
-pADFun tape_ull_S2S_constV_nota1(veca1 & omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, matd & yx);
+pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, matd & yx);
 #endif
 

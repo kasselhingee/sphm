@@ -60,6 +60,22 @@ test_that("maximum likelihood for parallel axes per Jupp's path", {
   expect_lt(badll, exactll)
   
   # now try optimisation!
+  omvec <- OmegaS2S_vec(omegapar)
+  ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", omvec, vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  est <- nloptr::nloptr(
+    x0 = S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = Kstar),
+    eval_f = function(theta){-sum(ulltape$eval(theta, a[1]))},
+    eval_grad_f = function(theta){-colSums(matrix(ulltape$Jac(theta, a[1]), byrow = TRUE, ncol = length(theta)))},
+    eval_g_eq =  function(theta){ll_mean_constraint$eval(theta[1:length(omvec)], vector(mode = "numeric"))},
+    eval_jac_g_eq =  function(theta){
+      cbind(matrix(ll_mean_constraint$Jac(theta[1:length(omvec)], vector(mode = "numeric")), byrow = TRUE, ncol = length(omvec)),
+      matrix(0, nrow = 2, ncol = length(ulltape$xtape) - length(ll_mean_constraint$xtape)))
+      },
+    opts = list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2), xtol_rel = 1E-4, maxeval = 200, check_derivatives = TRUE, check_derivatives_print = "errors", print_level = 3)
+  )
+  expect_equal(est$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = Kstar),
+               tolerance = 1E-1)
+  
 })
 
 

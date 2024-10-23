@@ -147,6 +147,7 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
 
 pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
+  if (p != 3){Rcpp::warning("p != 3. This tape records operations on k, but optimising k only possible with p = 3");}
   // separate the response the covariates
   mata1 y = yx.leftCols(p);
   mata1 x = yx.rightCols(yx.cols() - p);

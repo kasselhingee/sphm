@@ -21,6 +21,7 @@ test_that("maximum likelihood for parallel axes per Jupp's path", {
   # step 1: axes defined at P[, 1], orthogonal to P[, 1]
   set.seed(5)
   Kstar <- mclust::randomOrthogonalMatrix(p-1, p-1)
+  Kstar[, 1] <- det(Kstar) * Kstar[,1]
   Gstar <- getHstar(P[ ,1]) %*% Kstar
   # step 2: assume concentration and scales are constant
   k <- 30
@@ -38,9 +39,27 @@ test_that("maximum likelihood for parallel axes per Jupp's path", {
   
   # check ull_S2S_constV in C++
   ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:3], x = x, omvec = OmegaS2S_vec(omegapar), k = k,
-                      a1 = a[1], aremaining = a[-1], Gstar = Gstar)
+                      a1 = a[1], aremaining = a[-1], Kstar = Kstar)
   expect_equal(ldCpp, y_ld[, 4])
-                      
+  
+  #check tape:
+  S2S_constV_nota1_tovecparams(omvec = OmegaS2S_vec(omegapar), k = k,
+                               aremaining = a[-1], Kstar = Kstar)
+  ulltape <- tape_ull_S2S_constV_nota1(omvec = OmegaS2S_vec(omegapar), k = k,
+                            a1 = a[1], aremaining = a[-1], Kstar = Kstar,
+                            p, cbind(y_ld[, 1:3], x))
+  expect_equal(ulltape$forward(0, ulltape$xtape), y_ld[, 4])
+  
+  exactll <- sum(ulltape$forward(0, ulltape$xtape))
+  
+  set.seed(7)
+  Kstardifferent <- mclust::randomOrthogonalMatrix(p-1, p-1)
+  Kstardifferent[, 1] <- det(Kstardifferent) * Kstardifferent[,1]
+  badll <- sum(ulltape$forward(0, S2S_constV_nota1_tovecparams(omvec = OmegaS2S_vec(omegapar), k = k,
+                               aremaining = a[-1], Kstar = Kstardifferent)))
+  expect_lt(badll, exactll)
+  
+  # now try optimisation!
 })
 
 

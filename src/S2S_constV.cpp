@@ -128,8 +128,12 @@ mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
   return A;  // Return the reconstructed skew-symmetric matrix
 }
 
-
-veca1 nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 Kstar){
+// [[Rcpp::export]]
+veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 Kstar){
+  int p = aremaining.size() + 1;
+  if (Kstar.cols() != Kstar.rows()){Rcpp::stop("Kstar should be square");}
+  if (Kstar.cols() != p-1){Rcpp::stop("Kstar should have dimension p-1");}
+  
   veca1 vecCayaxes = vectorizeLowerTriangle(inverseCayleyTransform(Kstar)); 
   veca1 result(omvec.size() + 1 + aremaining.size() + vecCayaxes.size());
   result.segment(0, omvec.size()) = omvec;
@@ -147,7 +151,7 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
 
 
 // get everything except a1 into a vector
-  veca1 mainvec = nota1_tovecparams(omvec, k, aremaining, Kstar);
+  veca1 mainvec = S2S_constV_nota1_tovecparams(omvec, k, aremaining, Kstar);
   veca1 a1vec(1);
   a1vec(0) = a1;
 
@@ -158,10 +162,10 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   OmegaS2Scpp<a1type> om = OmegaS2Scpp_unvec(omvec, p);
   k = mainvec(omvec.size());
   aremaining = mainvec.segment(omvec.size() + 1, aremaining.size());
-  veca1 vecCayaxes = mainvec.segment(omvec.size() + 1 + aremaining.size(), p * (p-1)/2);
-  Kstar = inverseCayleyTransform(inverseVectorizeLowerTriangle(vecCayaxes));
+  veca1 vecCayaxes = mainvec.segment(omvec.size() + 1 + aremaining.size(), (p-1) * (p-2)/2);
+  Kstar = cayleyTransform(inverseVectorizeLowerTriangle(vecCayaxes));
 
-  veca1 ld = ull_S2S_constV(y, x, om, k, a1, aremaining, Kstar);
+  veca1 ld = ull_S2S_constV(y, x, om, k, a1vec(0), aremaining, Kstar);
 
   CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
   tape.Dependent(mainvec, ld);

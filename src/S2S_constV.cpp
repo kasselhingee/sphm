@@ -133,6 +133,8 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
   int p = aremaining.size() + 1;
   if (Kstar.cols() != Kstar.rows()){Rcpp::stop("Kstar should be square");}
   if (Kstar.cols() != p-1){Rcpp::stop("Kstar should have dimension p-1");}
+  a1type detKstar = Kstar.determinant();
+  if (std::abs(CppAD::Value(detKstar) + 1.0) < 1e-8) {Rcpp::stop("Kstar has a determinant very close to -1, please change the sign of one of Kstar's columns");}
   
   veca1 vecCayaxes = vectorizeLowerTriangle(inverseCayleyTransform(Kstar)); 
   veca1 result(omvec.size() + 1 + aremaining.size() + vecCayaxes.size());

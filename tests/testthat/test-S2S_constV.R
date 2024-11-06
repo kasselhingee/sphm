@@ -23,7 +23,7 @@ test_that("rotatedresiduals() rotates residuals to the northpole along a geodesi
   expect_equal(rresid2, -rresid)
 })
 
-test_that("maximum likelihood for parallel axes per Jupp's path", {
+test_that("maximum likelihood for parallel axes per geodesic path", {
   p <- 3
   q <- 5
   # data generating parameters:
@@ -52,11 +52,11 @@ test_that("maximum likelihood for parallel axes per Jupp's path", {
   k <- 30
   a <- c(1, seq(5, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
-  #step 3: for each location define G as mean, Jupp transport of Gstar columns
+  #step 3: for each location define G as mean and geodesic transport of Gstar columns
   # then simulate from a SvMF, and evaluate density at the noise
   set.seed(6)
   y_ld <- t(apply(ymean, 1, function(mn){
-    G <- cbind(mn, JuppRmat(P[,1], mn) %*% Gstar)
+    G <- cbind(mn, rotationmat_amaral(P[,1], mn) %*% Gstar)
     obs <- rSvMF(1, SvMFcann(k, a, G))
     ld <- uldSvMF_cann(obs, k = k, a = a, G = G)
     return(c(obs, ld))

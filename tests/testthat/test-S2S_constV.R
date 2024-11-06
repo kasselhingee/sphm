@@ -63,16 +63,16 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   }))
   
   # check ull_S2S_constV in C++
-  ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:3], x = x, omvec = OmegaS2S_vec(omegapar), k = k,
+  ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], x = x, omvec = OmegaS2S_vec(omegapar), k = k,
                       a1 = a[1], aremaining = a[-1], Kstar = Kstar)
-  expect_equal(ldCpp, y_ld[, 4])
+  expect_equal(ldCpp, y_ld[, p+1])
   
   #check tape:
   S2S_constV_nota1_tovecparams(omvec = OmegaS2S_vec(omegapar), k = k,
                                aremaining = a[-1], Kstar = Kstar)
   ulltape <- tape_ull_S2S_constV_nota1(omvec = OmegaS2S_vec(omegapar), k = k,
                             a1 = a[1], aremaining = a[-1], Kstar = Kstar,
-                            p, cbind(y_ld[, 1:3], x))
+                            p, cbind(y_ld[, 1:p], x))
   expect_equal(ulltape$forward(0, ulltape$xtape), y_ld[, 4])
   
   exactll <- sum(ulltape$forward(0, ulltape$xtape))
@@ -84,11 +84,25 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
                                aremaining = a[-1], Kstar = Kstardifferent)))
   expect_lt(badll, exactll)
   
-  # now try optimisation!
-  omvec <- OmegaS2S_vec(omegapar)
+  ## now try optimisation starting at true values ##
+  # first standardise data
+  stdmat <- standardise_mat(y_ld[, 1:p])
+  ystd <- y_ld[, 1:p] %*% stdmat
+  # apply same operation to true parameters
+  stdomegapar <- as_OmegaS2S(cannS2S(t(stdmat) %*% P,Q,B))
+  stdGstar <- t(stdmat) %*% Gstar #is this really the appropriate standardisation for vectors in the tangent space?
+  stdKstar <- t(getHstar(stdomegapar$p1)) %*% stdGstar
+  stdKstar[, 1] <- det(stdKstar) * stdKstar[,1]
+  
+  omvec <- OmegaS2S_vec(stdomegapar)
+  # retape using ystd
+  ulltape <- tape_ull_S2S_constV_nota1(omvec = omvec, k = k,
+                                       a1 = a[1], aremaining = a[-1], Kstar = Kstar,
+                                       p, cbind(ystd, x))
+  
   ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", omvec, vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   est <- nloptr::nloptr(
-    x0 = S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = Kstardifferent),
+    x0 = S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar),
     eval_f = function(theta){-sum(ulltape$eval(theta, a[1]))},
     eval_grad_f = function(theta){-colSums(matrix(ulltape$Jac(theta, a[1]), byrow = TRUE, ncol = length(theta)))},
     eval_g_eq =  function(theta){ll_mean_constraint$eval(theta[1:length(omvec)], vector(mode = "numeric"))},
@@ -98,9 +112,32 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
       },
     opts = list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2), xtol_rel = 1E-4, maxeval = 200, check_derivatives = TRUE, check_derivatives_print = "errors", print_level = 3)
   )
-  cbind(est$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = Kstar))
-  expect_equal(est$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = Kstar),
+  # cbind(est$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar))
+  expect_equal(est$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar),
                tolerance = 1E-1)
+  # fails because concentration and size of elements of B get too big
+  
+  ## now try elsewhere ##
+  set.seed(14)
+  start <- as_OmegaS2S(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
+                               Q = mclust::randomOrthogonalMatrix(q, p),
+                               B = diag(sort(runif(p-1), decreasing = TRUE))))
+  est2 <- nloptr::nloptr(
+    x0 = S2S_constV_nota1_tovecparams(omvec = OmegaS2S_vec(start), k = k, aremaining = a[-1], Kstar = Kstardifferent),
+    eval_f = function(theta){-sum(ulltape$eval(theta, a[1]))},
+    eval_grad_f = function(theta){-colSums(matrix(ulltape$Jac(theta, a[1]), byrow = TRUE, ncol = length(theta)))},
+    eval_g_eq =  function(theta){ll_mean_constraint$eval(theta[1:length(omvec)], vector(mode = "numeric"))},
+    eval_jac_g_eq =  function(theta){
+      cbind(matrix(ll_mean_constraint$Jac(theta[1:length(omvec)], vector(mode = "numeric")), byrow = TRUE, ncol = length(omvec)),
+            matrix(0, nrow = 2, ncol = length(ulltape$xtape) - length(ll_mean_constraint$xtape)))
+    },
+    opts = list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2), xtol_rel = 1E-4, maxeval = 200, check_derivatives = TRUE, check_derivatives_print = "errors", print_level = 3)
+  )
+  # cbind(est2$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar))
+  expect_equal(est2$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar),
+               tolerance = 1E-1)
+  # startting mean link parameters haven't changed at all - the search isn't finding good answers! I suspect none of the iterations have found a better set of parameters than the start
+  
   
 })
 

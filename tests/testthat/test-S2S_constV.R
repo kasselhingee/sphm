@@ -17,6 +17,10 @@ test_that("rotatedresiduals() rotates residuals to the northpole along a geodesi
   expect_equal(rresid[2, ] %*% rresid[3, ], eps^2 * c(1/sqrt(2), 0, 1/sqrt(2)) %*% c(0, 0, 1))
   expect_equal(rresid[4, ], eps * c(0, 0, -1))
   expect_equal(rresid[5, ], eps * c(0, -1, -1)/sqrt(2))
+  
+  #and actually Jupp's transport seems to give the reflected residual of geodesic transport
+  rresid2 <- rotatedresid(y = y, ypred = ypred, base = c(1, 0, 0), path = "Jupp")
+  expect_equal(rresid2, -rresid)
 })
 
 test_that("maximum likelihood for parallel axes per Jupp's path", {

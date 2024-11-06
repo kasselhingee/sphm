@@ -25,12 +25,12 @@ JuppRmat <- function(y, base){
 }
 
 # Rotation of tangent vectors from base to y
-rotationmat_amaral  <- function(base, a){ #assumes a and b are unit vectors
-  ab <- (a %*% base)[[1]]
+rotationmat_amaral  <- function(start, end){ #assumes a and b are unit vectors
+  ab <- (end %*% start)[[1]]
   alpha <- acos(ab)
-  c <- base - a*ab
+  c <- start - end*ab
   c <- c/sqrt(c %*% c)[[1]]
-  A <- a%o%c - c%o%a
-  Q = diag(length(a)) + sin(alpha)*A + (cos(alpha) - 1)*(a%o%a + c%o%c)
+  A <- end%o%c - c%o%end
+  Q = diag(length(end)) + sin(alpha)*A + (cos(alpha) - 1)*(end%o%end + c%o%c)
   return(Q)
 }

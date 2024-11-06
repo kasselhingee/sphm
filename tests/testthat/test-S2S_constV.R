@@ -1,3 +1,24 @@
+test_that("rotatedresiduals() rotates residuals to the northpole along a geodesic correctly", {
+  eps <- 0.1
+  ypred <- rbind(c(0, 1, 0),
+             c(0, 1, 0),
+             c(0, 1, 0),
+             c(0, 0, 1),
+             c(0, 1/sqrt(2), 1/sqrt(2)))
+  y <- rbind(c(0, 1, 0) + eps * c(1, 0, 0), #tangent to geodesic
+                 c(0, 1, 0) + eps * c(0, 0, 1), #orthogonal to geodesic
+                 c(0, 1, 0) + eps * c(1/sqrt(2), 0, 1/sqrt(2)), #pi/4 off from geodesic
+                 c(0, 0, 1) + eps * c(1, 0, 0), #tangent to geodesic
+                 c(0, 1/sqrt(2), 1/sqrt(2)) + eps * c(1, 0, 0)) #tangent to geodesic
+  rresid <- rotatedresid(y = y, ypred = ypred, base = c(1, 0, 0))
+  expect_equal(rresid[1, ], eps * c(0, -1, 0))
+  expect_equal(rresid[2, ], eps * c(0, 0, 1))
+  c(1/sqrt(2), 0, 1/sqrt(2)) %*% c(0, 0, 1)
+  expect_equal(rresid[2, ] %*% rresid[3, ], eps^2 * c(1/sqrt(2), 0, 1/sqrt(2)) %*% c(0, 0, 1))
+  expect_equal(rresid[4, ], eps * c(0, 0, -1))
+  expect_equal(rresid[5, ], eps * c(0, -1, -1)/sqrt(2))
+})
+
 test_that("maximum likelihood for parallel axes per Jupp's path", {
   p <- 3
   q <- 5

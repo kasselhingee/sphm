@@ -146,6 +146,25 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
   return result;
 }
 
+// reverse function
+std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const veca1 & mainvec, int p, int q) {
+  if (mainvec.size() != p + q + p*q + 1 + (p-2) + ((p-2) * (p-1) / 2)  ) {
+    Rcpp::stop("Input vector size does not match expected dimensions.");
+  }
+  
+  veca1 omvec = mainvec.segment(0,  p + q + p*q);
+  a1type k = mainvec(omvec.size());
+  veca1 laremaining_m1(p - 2); //convert log remaining to full aremaining
+  laremaining_m1 = mainvec.segment(omvec.size() + 1, p - 2);
+  veca1 aremaining(p-1);
+  aremaining[0] = CppAD::exp(-laremaining_m1.sum());
+  aremaining.tail(aremaining.size() - 1) = laremaining_m1.array().exp();
+  veca1 vecCayaxes = mainvec.segment(omvec.size() + 1 + aremaining.size() - 1, (p-1) * (p-2)/2);
+  mata1 Kstar = cayleyTransform(inverseVectorizeLowerTriangle(vecCayaxes));
+  
+  return std::make_tuple(omvec, k, aremaining, Kstar);
+}
+
 pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   if (p != 3){Rcpp::warning("p != 3. This tape records operations on k, but optimising k only possible with p = 3");}

@@ -128,6 +128,7 @@ mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
   return A;  // Return the reconstructed skew-symmetric matrix
 }
 
+// aremaining becomes log a with the first element dropped
 // [[Rcpp::export]]
 veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 Kstar){
   int p = aremaining.size() + 1;
@@ -140,8 +141,8 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
   veca1 result(omvec.size() + 1 + aremaining.size() + vecCayaxes.size());
   result.segment(0, omvec.size()) = omvec;
   result(omvec.size()) = k;
-  result.segment(omvec.size() + 1, aremaining.size()) = aremaining;
-  result.segment(omvec.size() + 1 + aremaining.size(), vecCayaxes.size()) = vecCayaxes;
+  result.segment(omvec.size() + 1, aremaining.size() - 1) = aremaining.tail(aremaining.size() - 1).array().log();
+  result.segment(omvec.size() + 1 + aremaining.size() - 1, vecCayaxes.size()) = vecCayaxes;
   return result;
 }
 
@@ -164,8 +165,11 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   omvec = mainvec.segment(0, omvec.size());
   OmegaS2Scpp<a1type> om = OmegaS2Scpp_unvec(omvec, p);
   k = mainvec(omvec.size());
-  aremaining = mainvec.segment(omvec.size() + 1, aremaining.size());
-  veca1 vecCayaxes = mainvec.segment(omvec.size() + 1 + aremaining.size(), (p-1) * (p-2)/2);
+  veca1 laremaining_m1(p - 2); //convert log remaining to full aremaining
+  laremaining_m1 = mainvec.segment(omvec.size() + 1, aremaining.size() - 1);
+  aremaining[0] = CppAD::exp(-laremaining_m1.sum());
+  aremaining.tail(aremaining.size() - 1) = laremaining_m1.array().exp();
+  veca1 vecCayaxes = mainvec.segment(omvec.size() + 1 + aremaining.size() - 1, (p-1) * (p-2)/2);
   Kstar = cayleyTransform(inverseVectorizeLowerTriangle(vecCayaxes));
 
   veca1 ld = ull_S2S_constV(y, x, om, k, a1vec(0), aremaining, Kstar);

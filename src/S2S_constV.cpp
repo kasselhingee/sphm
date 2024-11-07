@@ -138,7 +138,7 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
   if (std::abs(CppAD::Value(detKstar) + 1.0) < 1e-8) {Rcpp::stop("Kstar has a determinant very close to -1, please change the sign of one of Kstar's columns");}
   
   veca1 vecCayaxes = vectorizeLowerTriangle(inverseCayleyTransform(Kstar)); 
-  veca1 result(omvec.size() + 1 + aremaining.size() + vecCayaxes.size());
+  veca1 result(omvec.size() + 1 + aremaining.size() - 1 + vecCayaxes.size());
   result.segment(0, omvec.size()) = omvec;
   result(omvec.size()) = k;
   result.segment(omvec.size() + 1, aremaining.size() - 1) = aremaining.tail(aremaining.size() - 1).array().log();

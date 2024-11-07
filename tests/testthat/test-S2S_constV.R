@@ -126,7 +126,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
                                Q = mclust::randomOrthogonalMatrix(q, p),
                                B = diag(sort(runif(p-1), decreasing = TRUE))))
   est2 <- nloptr::nloptr(
-    x0 = S2S_constV_nota1_tovecparams(omvec = OmegaS2S_vec(start), k = k, aremaining = a[-1], Kstar = Kstardifferent),
+    x0 = S2S_constV_nota1_tovecparams(omvec = OmegaS2S_vec(optim_pobjS2S_parttape(ystd, x, start)$solution), k = k, aremaining = a[-1], Kstar = Kstardifferent),
     eval_f = function(theta){-sum(ulltape$eval(theta, a[1]))},
     eval_grad_f = function(theta){-colSums(matrix(ulltape$Jac(theta, a[1]), byrow = TRUE, ncol = length(theta)))},
     eval_g_eq =  function(theta){ll_mean_constraint$eval(theta[1:length(omvec)], vector(mode = "numeric"))},
@@ -139,6 +139,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   est2$solution[1:length(omvec)] <- OmegaS2S_vec(OmegaS2S_proj(OmegaS2S_unvec(est2$solution[1:length(omvec)], p = p, check = FALSE)))
   
   # cbind(est2$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar))
+  inverseCayleyTransform(matrix(c(0, est2$solution, -est2$solution, 0), ncol = 2))
   expect_equal(est2$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar),
                tolerance = 1E-1)
   # startting mean link parameters haven't changed at all - the search isn't finding good answers! I suspect none of the iterations have found a better set of parameters than the start

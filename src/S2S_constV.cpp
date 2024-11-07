@@ -181,15 +181,13 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
 // tape with main vector and a1 as a dynamic
   CppAD::Independent(mainvec, a1vec);
 // split mainvec into parts, overwriting passed arguments
-  omvec = mainvec.segment(0, omvec.size());
+  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, x.cols());
+  omvec = std::get<0>(result);
+  k = std::get<1>(result);
+  aremaining = std::get<2>(result);
+  Kstar = std::get<3>(result);
+  
   OmegaS2Scpp<a1type> om = OmegaS2Scpp_unvec(omvec, p);
-  k = mainvec(omvec.size());
-  veca1 laremaining_m1(p - 2); //convert log remaining to full aremaining
-  laremaining_m1 = mainvec.segment(omvec.size() + 1, aremaining.size() - 1);
-  aremaining[0] = CppAD::exp(-laremaining_m1.sum());
-  aremaining.tail(aremaining.size() - 1) = laremaining_m1.array().exp();
-  veca1 vecCayaxes = mainvec.segment(omvec.size() + 1 + aremaining.size() - 1, (p-1) * (p-2)/2);
-  Kstar = cayleyTransform(inverseVectorizeLowerTriangle(vecCayaxes));
 
   veca1 ld = ull_S2S_constV(y, x, om, k, a1vec(0), aremaining, Kstar);
 

@@ -112,10 +112,15 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
       },
     opts = list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2), xtol_rel = 1E-4, maxeval = 200, check_derivatives = TRUE, check_derivatives_print = "errors", print_level = 3)
   )
-  # cbind(est$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar))
+  est$solution[1:length(omvec)] <- OmegaS2S_vec(OmegaS2S_proj(OmegaS2S_unvec(est$solution[1:length(omvec)], p = 3, check = FALSE)))
+  as_cannS2S(OmegaS2S_unvec(est$solution[1:length(omvec)], p = 3, check = TRUE))
+  
+  cbind(est$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar))
+  
+  
   expect_equal(est$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar),
                tolerance = 1E-1)
-  # fails because concentration and size of elements of B get too big
+  # concentration and scales get too big - do I have the prod of aremaining = 1 constraint like in optim_alignedG?
   
   ## now try elsewhere ##
   set.seed(14)

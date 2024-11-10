@@ -92,13 +92,10 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  est <- optim_constV(y = y_ld[, 1:p], 
-               x = x,
-               param_mean = omegapar, 
-               k = k, 
-               a = a,
-               Gstar = Gstar,
-               xtol_rel = 1E-5, verbose = 0)
+  est1 <- optim_constV(y_ld[, 1:p], x, omegapar, k, a, Gstar, xtol_rel = 1E-4, maxeval = 200, check_derivatives = TRUE, check_derivatives_print = "errors", print_level = 3)
+  expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1) #need to undo standardisation!!
+  
+  #####
   # first standardise data
   stdmat <- standardise_mat(y_ld[, 1:p])
   ystd <- y_ld[, 1:p] %*% stdmat
@@ -131,6 +128,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   # as_cannS2S(OmegaS2S_unvec(est$solution[1:length(omvec)], p = 3, check = TRUE))
   
   # cbind(est$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar))
+  cbind(est1$nlopt_final$solution, est$solution)
   expect_equal(est$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar),
                tolerance = 1E-1)
   

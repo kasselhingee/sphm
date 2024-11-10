@@ -12,7 +12,6 @@
 #' @param verbose `0` means no extra output. `1` means objective is printed each time `aremaining`, `k` and `param_mean` have all been updated. `2` further prints values of the parameters. (this roughly mirrors the behaviour of `print_level` for `nloptr()`).
 #' @export
 optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, ...){
-  browser()
   p <- ncol(y)
   # checks
   om0 <- as_OmegaS2S(param_mean)
@@ -30,18 +29,24 @@ optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose
   # apply same operation to initial parameters
   cann0 <- as_cannS2S(om0)
   om0std <- as_OmegaS2S(cannS2S(t(stdmat) %*% cann0$P, cann0$Q, cann0$B))
-  Gstarstd <- t(stdmat) %*% Gstar #Because stdmat performs a rigid transformation, it is really just a change in basis for the whole problem, so I think this is what we want for the axes too.
+  stdGstar <- t(stdmat) %*% Gstar #Because stdmat performs a rigid transformation, it is really just a change in basis for the whole problem, so I think this is what we want for the axes too.
   stdKstar <- t(getHstar(om0std$p1)) %*% stdGstar
-  stdKstar[, 1] <- det(stdKstar) * stdKstar[,1]
+  stdKstar[, 1] <- det(stdKstar) * stdKstar[,1] #because Cayley transform only works on det of +1
   
   # preliminary estimate of mean link
   estprelim <- optim_pobjS2S_parttape(ystd, x, om0std)
+  if (!(estprelim$loc_nloptr$status %in% c(0, 1, 2, 3, 4))){warning("Preliminary optimistation did not finish properly.")}
   om0prelim <- estprelim$solution
   
   # estimation any p
   omvec0 <- OmegaS2S_vec(om0prelim)
   ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", omvec0, vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  
+  # prepare nloptr options
+  default_opts <- list(xtol_rel = xtol_rel, #1E-04,
+                       maxeval = 1E4,
+                       check_derivatives = FALSE)
+  ellipsis_args <- list(...)
+  combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
   #estimation for p=3
   ulltape <- tape_ull_S2S_constV_nota1(omvec = omvec0, k = k,
@@ -50,20 +55,20 @@ optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose
   
   # estimation for p!=3 (alternating between k and others)
   est <- nloptr::nloptr(
-    x0 = S2S_constV_nota1_tovecparams(omvec = omvec0, k = k, aremaining = a1, Kstar = stdKstar),
+    x0 = S2S_constV_nota1_tovecparams(omvec = omvec0, k = k, aremaining = aremaining, Kstar = stdKstar),
     eval_f = function(theta){-sum(ulltape$eval(theta, a[1]))},
     eval_grad_f = function(theta){-colSums(matrix(ulltape$Jac(theta, a[1]), byrow = TRUE, ncol = length(theta)))},
     eval_g_eq =  function(theta){ll_mean_constraint$eval(theta[1:length(omvec0)], vector(mode = "numeric"))},
     eval_jac_g_eq =  function(theta){
-      cbind(matrix(ll_mean_constraint$Jac(theta[1:length(omvec0)], vector(mode = "numeric")), byrow = TRUE, ncol = length(omvec)),
+      cbind(matrix(ll_mean_constraint$Jac(theta[1:length(omvec0)], vector(mode = "numeric")), byrow = TRUE, ncol = length(omvec0)),
             matrix(0, nrow = 2, ncol = length(ulltape$xtape) - length(ll_mean_constraint$xtape)))
     },
-    opts = list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2), xtol_rel = 1E-4, maxeval = 200, check_derivatives = TRUE, check_derivatives_print = "errors", print_level = 3)
+    opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2)), combined_opts)
   )
   estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, ncol(ystd), ncol(x))
   
   # project Omega to satisfy orthogonality constraint
-  estparamlist[["om"]] <- OmegaS2S_proj(OmegaS2S_unvec(estparamlist$omvec, check = FALSE))
+  estparamlist[["om"]] <- OmegaS2S_proj(OmegaS2S_unvec(estparamlist$omvec, p, check = FALSE))
   
   outsolution <- list(
     mean = estparamlist[["om"]],

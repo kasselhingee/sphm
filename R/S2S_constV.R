@@ -3,6 +3,7 @@
 #' The mean is assumed to follow the usual mean link.
 #' The concentration and scaling in the SvMF is assumed constant across observations.
 #' The scaling axes of the SvMF at location \eqn{\mu} are assumed to be the parallel transport along the geodesic of axes at the first column of the matrix `P` from the mean link. These axes specified at first column of the matrix `P` are to be estimated and constant with respect to covariates (and \eqn{\mu})
+#' __Warning: C++ function still uses Jupp's transport rather than Amaral matrix and p !=3 not handled yet__
 #' @param y Response data on a sphere
 #' @param x Covariate data on a sphere
 #' @param a1 The first element of the vector a, which is tuning parameter.
@@ -19,6 +20,7 @@ optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose
   if (!isTRUE(all.equal(cbind(om0$p1, Gstar) %*% t(cbind(om0$p1, Gstar)), diag(1, p), check.attributes = FALSE))){ # p1 orthogonal to Vstar
     stop("Gstar is not orthogonal to p1.")
   }
+  stopifnot(length(a) == p)
   a1 = a[1]
   aremaining = a[-1]
   stopifnot(isTRUE(all.equal(prod(aremaining), 1)))
@@ -65,22 +67,31 @@ optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose
     },
     opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2)), combined_opts)
   )
+  if (!(est$status %in% c(0, 1, 2, 3, 4))){warning("Optimistation did not finish properly.")}
   estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, ncol(ystd), ncol(x))
   
   # project Omega to satisfy orthogonality constraint
-  estparamlist[["om"]] <- OmegaS2S_proj(OmegaS2S_unvec(estparamlist$omvec, p, check = FALSE))
+  est_om <- OmegaS2S_proj(OmegaS2S_unvec(estparamlist$omvec, p, check = FALSE))
+  
+  # calculate Gstar now (because getHstar is sensitive to changes of basis A * H(p1) != H(A*p1))
+  Gstar <- getHstar(est_om$p1) %*% estparamlist$Kstar
+  
+  # undo standardisation coordinate change
+  est_cann <- as_cannS2S(est_om)
+  est_om <- as_OmegaS2S(cannS2S(stdmat %*% est_cann$P, est_cann$Q, est_cann$B))
+  Gstar <- stdmat %*% Gstar
+  
   
   outsolution <- list(
-    mean = estparamlist[["om"]],
+    mean = est_om,
     k = estparamlist$k,
     a = c(a1, estparamlist$aremaining),
-    Kstar = estparamlist$Kstar,
-    Gstar = getHstar(estparamlist[["om"]]$p1) %*% estparamlist$Kstar,
-    Kstar_iCayley = inverseCayleyTransform(estparamlist$Kstar)
+    Gstar = Gstar
   )
   
   return(list(
     solution = outsolution,
+    stdmat = stdmat,
     nlopt_prelim = estprelim,
     nlopt_final = est
   ))

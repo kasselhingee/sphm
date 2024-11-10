@@ -92,69 +92,29 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  est1 <- optim_constV(y_ld[, 1:p], x, omegapar, k, a, Gstar, xtol_rel = 1E-4, maxeval = 200, check_derivatives = TRUE, check_derivatives_print = "errors", print_level = 3)
-  expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1) #need to undo standardisation!!
+  est1 <- optim_constV(y_ld[, 1:p], x, omegapar, k, a, Gstar, xtol_rel = 1E-4)
+  expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
+  expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1, ignore_attr = TRUE)
+  # check angle between estimated and true axes
+    axis_distance <- function(angle1, angle2 = 0){
+    diff <- abs(angle1 - angle2)
+    pmin(diff, pi - diff)
+  }
+  expect_equal(axis_distance(acos(colSums(est1$solution$Gstar * Gstar))), rep(0, ncol(Gstar)), tolerance = 1E-5, ignore_attr = TRUE)
   
-  #####
-  # first standardise data
-  stdmat <- standardise_mat(y_ld[, 1:p])
-  ystd <- y_ld[, 1:p] %*% stdmat
-  # apply same operation to true parameters
-  stdomegapar <- as_OmegaS2S(cannS2S(t(stdmat) %*% P,Q,B))
-  stdGstar <- t(stdmat) %*% Gstar #is this really the appropriate standardisation for vectors in the tangent space? I think so because stdmat should really be just a change in basis for everything.
-  stdKstar <- t(getHstar(stdomegapar$p1)) %*% stdGstar
-  stdKstar[, 1] <- det(stdKstar) * stdKstar[,1]
-  
-  omvec <- OmegaS2S_vec(stdomegapar)
-  # retape using ystd
-  ulltape <- tape_ull_S2S_constV_nota1(omvec = omvec, k = k,
-                                       a1 = a[1], aremaining = a[-1], Kstar = Kstar,
-                                       p, cbind(ystd, x))
-  
-  ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", omvec, vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  est <- nloptr::nloptr(
-    x0 = S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar),
-    eval_f = function(theta){-sum(ulltape$eval(theta, a[1]))},
-    eval_grad_f = function(theta){-colSums(matrix(ulltape$Jac(theta, a[1]), byrow = TRUE, ncol = length(theta)))},
-    eval_g_eq =  function(theta){ll_mean_constraint$eval(theta[1:length(omvec)], vector(mode = "numeric"))},
-    eval_jac_g_eq =  function(theta){
-      cbind(matrix(ll_mean_constraint$Jac(theta[1:length(omvec)], vector(mode = "numeric")), byrow = TRUE, ncol = length(omvec)),
-      matrix(0, nrow = 2, ncol = length(ulltape$xtape) - length(ll_mean_constraint$xtape)))
-      },
-    opts = list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2), xtol_rel = 1E-4, maxeval = 200, check_derivatives = TRUE, check_derivatives_print = "errors", print_level = 3)
-  )
-  # project Omega to satisfy orthogonality constraint
-  est$solution[1:length(omvec)] <- OmegaS2S_vec(OmegaS2S_proj(OmegaS2S_unvec(est$solution[1:length(omvec)], p = p, check = FALSE)))
-  # as_cannS2S(OmegaS2S_unvec(est$solution[1:length(omvec)], p = 3, check = TRUE))
-  
-  # cbind(est$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar))
-  cbind(est1$nlopt_final$solution, est$solution)
-  expect_equal(est$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar),
-               tolerance = 1E-1)
-  
-  ## now try elsewhere ##
+  ## now starting optimisation elsewhere ##
   set.seed(14)
   start <- as_OmegaS2S(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
                                Q = mclust::randomOrthogonalMatrix(q, p),
                                B = diag(sort(runif(p-1), decreasing = TRUE))))
-  est2 <- nloptr::nloptr(
-    x0 = S2S_constV_nota1_tovecparams(omvec = OmegaS2S_vec(optim_pobjS2S_parttape(ystd, x, start)$solution), k = k, aremaining = a[-1], Kstar = Kstardifferent),
-    eval_f = function(theta){-sum(ulltape$eval(theta, a[1]))},
-    eval_grad_f = function(theta){-colSums(matrix(ulltape$Jac(theta, a[1]), byrow = TRUE, ncol = length(theta)))},
-    eval_g_eq =  function(theta){ll_mean_constraint$eval(theta[1:length(omvec)], vector(mode = "numeric"))},
-    eval_jac_g_eq =  function(theta){
-      cbind(matrix(ll_mean_constraint$Jac(theta[1:length(omvec)], vector(mode = "numeric")), byrow = TRUE, ncol = length(omvec)),
-            matrix(0, nrow = 2, ncol = length(ulltape$xtape) - length(ll_mean_constraint$xtape)))
-    },
-    opts = list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2), xtol_rel = 1E-4, maxeval = 1000, check_derivatives = TRUE, check_derivatives_print = "errors", print_level = 3)
-  )
-  est2$solution[1:length(omvec)] <- OmegaS2S_vec(OmegaS2S_proj(OmegaS2S_unvec(est2$solution[1:length(omvec)], p = p, check = FALSE)))
-  
-  # cbind(est2$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar))
-  inverseCayleyTransform(matrix(c(0, est2$solution, -est2$solution, 0), ncol = 2))
-  expect_equal(est2$solution, S2S_constV_nota1_tovecparams(omvec = omvec, k = k, aremaining = a[-1], Kstar = stdKstar),
-               tolerance = 1E-1)
-  # startting mean link parameters haven't changed at all - the search isn't finding good answers! I suspect none of the iterations have found a better set of parameters than the start
+  set.seed(14)
+  badGstar <- getHstar(start$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
+  est2 <- optim_constV(y_ld[, 1:p], x, start, k = 30, a = rep(1, 3), badGstar, xtol_rel = 1E-4)
+  expect_equal(as_cannS2S(est2$solution$mean), as_cannS2S(omegapar), tolerance = 1E-1)
+  #estimation of the concentration is quite bad!
+  expect_equal(est2$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1, ignore_attr = TRUE)
+  # check angle between estimated and true axes
+  expect_equal(axis_distance(acos(colSums(est2$solution$Gstar * Gstar))), rep(0, ncol(Gstar)), tolerance = pi/10, ignore_attr = TRUE)
   
   
 })

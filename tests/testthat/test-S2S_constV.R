@@ -67,9 +67,16 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
                       a1 = a[1], aremaining = a[-1], Kstar = Kstar)
   expect_equal(ldCpp, y_ld[, p+1])
   
-  #check tape:
-  S2S_constV_nota1_tovecparams(omvec = OmegaS2S_vec(omegapar), k = k,
+  # check vectorisation and reverse
+  vecparams <- S2S_constV_nota1_tovecparams(omvec = OmegaS2S_vec(omegapar), k = k,
                                aremaining = a[-1], Kstar = Kstar)
+  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, q),
+               list(omvec = OmegaS2S_vec(omegapar),
+                    k = k,
+                    aremaining = a[-1],
+                    Kstar = Kstar), ignore_attr = TRUE)
+  
+  #check tape:
   ulltape <- tape_ull_S2S_constV_nota1(omvec = OmegaS2S_vec(omegapar), k = k,
                             a1 = a[1], aremaining = a[-1], Kstar = Kstar,
                             p, cbind(y_ld[, 1:p], x))
@@ -85,12 +92,19 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
+  est <- optim_constV(y = y_ld[, 1:p], 
+               x = x,
+               param_mean = omegapar, 
+               k = k, 
+               a = a,
+               Gstar = Gstar,
+               xtol_rel = 1E-5, verbose = 0)
   # first standardise data
   stdmat <- standardise_mat(y_ld[, 1:p])
   ystd <- y_ld[, 1:p] %*% stdmat
   # apply same operation to true parameters
   stdomegapar <- as_OmegaS2S(cannS2S(t(stdmat) %*% P,Q,B))
-  stdGstar <- t(stdmat) %*% Gstar #is this really the appropriate standardisation for vectors in the tangent space?
+  stdGstar <- t(stdmat) %*% Gstar #is this really the appropriate standardisation for vectors in the tangent space? I think so because stdmat should really be just a change in basis for everything.
   stdKstar <- t(getHstar(stdomegapar$p1)) %*% stdGstar
   stdKstar[, 1] <- det(stdKstar) * stdKstar[,1]
   

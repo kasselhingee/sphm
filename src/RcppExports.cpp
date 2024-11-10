@@ -127,6 +127,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// S2S_constV_nota1_fromvecparamsR
+Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1& mainvec, int p, int q);
+RcppExport SEXP _sphm_S2S_constV_nota1_fromvecparamsR(SEXP mainvecSEXP, SEXP pSEXP, SEXP qSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const veca1& >::type mainvec(mainvecSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type q(qSEXP);
+    rcpp_result_gen = Rcpp::wrap(S2S_constV_nota1_fromvecparamsR(mainvec, p, q));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ull_S2S_constV_forR
 veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar);
 RcppExport SEXP _sphm_ull_S2S_constV_forR(SEXP ySEXP, SEXP xSEXP, SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP KstarSEXP) {
@@ -269,6 +282,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_vectorizeLowerTriangle", (DL_FUNC) &_sphm_vectorizeLowerTriangle, 1},
     {"_sphm_inverseVectorizeLowerTriangle", (DL_FUNC) &_sphm_inverseVectorizeLowerTriangle, 1},
     {"_sphm_S2S_constV_nota1_tovecparams", (DL_FUNC) &_sphm_S2S_constV_nota1_tovecparams, 4},
+    {"_sphm_S2S_constV_nota1_fromvecparamsR", (DL_FUNC) &_sphm_S2S_constV_nota1_fromvecparamsR, 3},
     {"_sphm_ull_S2S_constV_forR", (DL_FUNC) &_sphm_ull_S2S_constV_forR, 7},
     {"_sphm_tape_ull_S2S_constV_nota1", (DL_FUNC) &_sphm_tape_ull_S2S_constV_nota1, 7},
     {"_sphm_meanlinkS2Scpp", (DL_FUNC) &_sphm_meanlinkS2Scpp, 3},

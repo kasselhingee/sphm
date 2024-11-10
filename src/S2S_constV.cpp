@@ -165,6 +165,25 @@ std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const vec
   return std::make_tuple(omvec, k, aremaining, Kstar);
 }
 
+//export the reverse function
+// [[Rcpp::export]]
+Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int q) {
+  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, q);
+  veca1 omvec = std::get<0>(result);
+  a1type k = std::get<1>(result);
+  veca1 aremaining = std::get<2>(result);
+  mata1 Kstar = std::get<3>(result);
+  
+  // Return as a list
+  return Rcpp::List::create(
+    Rcpp::Named("omvec") = omvec,
+    Rcpp::Named("k") = k,
+    Rcpp::Named("aremaining") = aremaining,
+    Rcpp::Named("Kstar") = Kstar
+  );
+}
+
+
 pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   if (p != 3){Rcpp::warning("p != 3. This tape records operations on k, but optimising k only possible with p = 3");}

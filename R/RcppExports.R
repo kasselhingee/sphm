@@ -50,6 +50,10 @@ S2S_constV_nota1_tovecparams <- function(omvec, k, aremaining, Kstar) {
     .Call(`_sphm_S2S_constV_nota1_tovecparams`, omvec, k, aremaining, Kstar)
 }
 
+S2S_constV_nota1_fromvecparamsR <- function(mainvec, p, q) {
+    .Call(`_sphm_S2S_constV_nota1_fromvecparamsR`, mainvec, p, q)
+}
+
 ull_S2S_constV_forR <- function(y, x, omvec, k, a1, aremaining, Kstar) {
     .Call(`_sphm_ull_S2S_constV_forR`, y, x, omvec, k, a1, aremaining, Kstar)
 }

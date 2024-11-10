@@ -1,8 +1,84 @@
 #' Homosckedastic SvMF Regression
 #' @details
 #' The mean is assumed to follow the usual mean link.
-#' The concentration and scaling in the SvMF is assumed constant across observations. By constant 'axes' we mean that parallel transport of the axes to some base point according to Jupp's rotated residuals method yields the same set of axes regardless of the location of the mean. The base point will be the first column of the matrix `P` from the mean link so that the base point is not antipodal to any mean location.
-#' 
-#' KLH: I haven't yet nailed down whether Jupp's parallel transport is parallel transport along the geodesic. I would have thought parallel transport along the geodesic would look more like the matrix `Q` in Amaral et al 2007.
+#' The concentration and scaling in the SvMF is assumed constant across observations.
+#' The scaling axes of the SvMF at location \eqn{\mu} are assumed to be the parallel transport along the geodesic of axes at the first column of the matrix `P` from the mean link. These axes specified at first column of the matrix `P` are to be estimated and constant with respect to covariates (and \eqn{\mu})
+#' @param y Response data on a sphere
+#' @param x Covariate data on a sphere
+#' @param a1 The first element of the vector a, which is tuning parameter.
+#' @param aremaining The remaining vector a, used as a starting guess.
+#' @param param_mean Parameters for the mean link, used as a starting guess.
+#' @param Vstar starting guess of the axes at `p1`.
+#' @param verbose `0` means no extra output. `1` means objective is printed each time `aremaining`, `k` and `param_mean` have all been updated. `2` further prints values of the parameters. (this roughly mirrors the behaviour of `print_level` for `nloptr()`).
+#' @export
+optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, ...){
+  browser()
+  p <- ncol(y)
+  # checks
+  om0 <- as_OmegaS2S(param_mean)
+  OmegaS2S_check(om0)
+  if (!isTRUE(all.equal(cbind(om0$p1, Gstar) %*% t(cbind(om0$p1, Gstar)), diag(1, p), check.attributes = FALSE))){ # p1 orthogonal to Vstar
+    stop("Gstar is not orthogonal to p1.")
+  }
+  a1 = a[1]
+  aremaining = a[-1]
+  stopifnot(isTRUE(all.equal(prod(aremaining), 1)))
+  
+  # standardisation of data
+  stdmat <- standardise_mat(y)
+  ystd <- y %*% stdmat
+  # apply same operation to initial parameters
+  cann0 <- as_cannS2S(om0)
+  om0std <- as_OmegaS2S(cannS2S(t(stdmat) %*% cann0$P, cann0$Q, cann0$B))
+  Gstarstd <- t(stdmat) %*% Gstar #Because stdmat performs a rigid transformation, it is really just a change in basis for the whole problem, so I think this is what we want for the axes too.
+  stdKstar <- t(getHstar(om0std$p1)) %*% stdGstar
+  stdKstar[, 1] <- det(stdKstar) * stdKstar[,1]
+  
+  # preliminary estimate of mean link
+  estprelim <- optim_pobjS2S_parttape(ystd, x, om0std)
+  om0prelim <- estprelim$solution
+  
+  # estimation any p
+  omvec0 <- OmegaS2S_vec(om0prelim)
+  ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", omvec0, vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  
+  
+  #estimation for p=3
+  ulltape <- tape_ull_S2S_constV_nota1(omvec = omvec0, k = k,
+                                       a1 = a1, aremaining = aremaining, Kstar = stdKstar,
+                                       p = p, cbind(ystd, x))
+  
+  # estimation for p!=3 (alternating between k and others)
+  est <- nloptr::nloptr(
+    x0 = S2S_constV_nota1_tovecparams(omvec = omvec0, k = k, aremaining = a1, Kstar = stdKstar),
+    eval_f = function(theta){-sum(ulltape$eval(theta, a[1]))},
+    eval_grad_f = function(theta){-colSums(matrix(ulltape$Jac(theta, a[1]), byrow = TRUE, ncol = length(theta)))},
+    eval_g_eq =  function(theta){ll_mean_constraint$eval(theta[1:length(omvec0)], vector(mode = "numeric"))},
+    eval_jac_g_eq =  function(theta){
+      cbind(matrix(ll_mean_constraint$Jac(theta[1:length(omvec0)], vector(mode = "numeric")), byrow = TRUE, ncol = length(omvec)),
+            matrix(0, nrow = 2, ncol = length(ulltape$xtape) - length(ll_mean_constraint$xtape)))
+    },
+    opts = list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2), xtol_rel = 1E-4, maxeval = 200, check_derivatives = TRUE, check_derivatives_print = "errors", print_level = 3)
+  )
+  estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, ncol(ystd), ncol(x))
+  
+  # project Omega to satisfy orthogonality constraint
+  estparamlist[["om"]] <- OmegaS2S_proj(OmegaS2S_unvec(estparamlist$omvec, check = FALSE))
+  
+  outsolution <- list(
+    mean = estparamlist[["om"]],
+    k = estparamlist$k,
+    a = c(a1, estparamlist$aremaining),
+    Kstar = estparamlist$Kstar,
+    Gstar = getHstar(estparamlist[["om"]]$p1) %*% estparamlist$Kstar,
+    Kstar_iCayley = inverseCayleyTransform(estparamlist$Kstar)
+  )
+  
+  return(list(
+    solution = outsolution,
+    nlopt_prelim = estprelim,
+    nlopt_final = est
+  ))
+}
 
 

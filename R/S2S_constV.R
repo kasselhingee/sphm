@@ -4,14 +4,23 @@
 #' The concentration and scaling in the SvMF is assumed constant across observations.
 #' The scaling axes of the SvMF at location \eqn{\mu} are assumed to be the parallel transport along the geodesic of axes at the first column of the matrix `P` from the mean link. These axes specified at first column of the matrix `P` are to be estimated and constant with respect to covariates (and \eqn{\mu})
 #' __Warning: C++ function still uses Jupp's transport rather than Amaral matrix and p !=3 not handled yet__
+#' __Warning: resulting relevant matrices are only very close to orthogonal - something do with with p1 not being precisely orthogonal to singular vectors despite the projection of Omega (I could do a projection again!?)__
+#' __Warning: estimation could be improved by using moment estimators for Gstar and a etc if possible to start the optimisation__
 #' @param y Response data on a sphere
 #' @param x Covariate data on a sphere
 #' @param a1 The first element of the vector a, which is tuning parameter.
 #' @param aremaining The remaining vector a, used as a starting guess.
 #' @param mean Parameters for the mean link, used as a starting guess.
 #' @param Gstar starting guess of the axes at `p1`.
+#' @param k Starting concentration. I suspect lower means less chance of finding a local minimum.
 #' @export
 optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, ...){
+  initial <-  list(
+      mean = mean,
+      k = k, 
+      a = a, 
+      Gstar = Gstar
+    )
   p <- ncol(y)
   q <- ncol(x)
   # checks
@@ -86,7 +95,7 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   
   # undo standardisation coordinate change
   est_cann <- as_cannS2S(est_om)
-  est_om <- as_OmegaS2S(cannS2S(stdmat %*% est_cann$P, est_cann$Q, est_cann$B))
+  est_om <- as_OmegaS2S(cannS2S(stdmat %*% est_cann$P, est_cann$Q, est_cann$B, check = FALSE))
   Gstar <- stdmat %*% Gstar
   
   
@@ -102,12 +111,7 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
     stdmat = stdmat,
     nlopt_prelim = estprelim,
     nlopt_final = est,
-    initial = list(
-      mean = mean,
-      k = k, 
-      a = a, 
-      Gstar = Gstar
-    )
+    initial = initial
   ))
 }
 

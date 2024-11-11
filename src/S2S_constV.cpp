@@ -140,7 +140,7 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
   veca1 vecCayaxes = vectorizeLowerTriangle(inverseCayleyTransform(Kstar)); 
   veca1 result(omvec.size() + 1 + aremaining.size() - 1 + vecCayaxes.size());
   result.segment(0, omvec.size()) = omvec;
-  result(omvec.size()) = CppAD::log(k);
+  result(omvec.size()) = k;
   result.segment(omvec.size() + 1, aremaining.size() - 1) = aremaining.tail(aremaining.size() - 1).array().log();
   result.segment(omvec.size() + 1 + aremaining.size() - 1, vecCayaxes.size()) = vecCayaxes;
   return result;
@@ -153,7 +153,7 @@ std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const vec
   }
   
   veca1 omvec = mainvec.segment(0,  p + q + p*q);
-  a1type k = CppAD::exp(mainvec(omvec.size()));
+  a1type k = mainvec(omvec.size());
   veca1 laremaining_m1(p - 2); //convert log remaining to full aremaining
   laremaining_m1 = mainvec.segment(omvec.size() + 1, p - 2);
   veca1 aremaining(p-1);

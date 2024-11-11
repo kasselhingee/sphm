@@ -102,21 +102,25 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   }
   expect_equal(axis_distance(acos(colSums(est1$solution$Gstar * Gstar))), rep(0, ncol(Gstar)), tolerance = 1E-5, ignore_attr = TRUE)
   
-  ## now starting optimisation elsewhere ##
+  ## now starting optimisation with bad Kstar ##
   set.seed(14)
   start <- as_OmegaS2S(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
                                Q = mclust::randomOrthogonalMatrix(q, p),
                                B = diag(sort(runif(p-1), decreasing = TRUE))))
   set.seed(14)
-  badGstar <- getHstar(start$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
-  est2 <- optim_constV(y_ld[, 1:p], x, start, k = 30, a = rep(1, 3), badGstar, xtol_rel = 1E-4)
+  badGstar <- getHstar(omegapar$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
+  est2 <- optim_constV(y_ld[, 1:p], x, omegapar, k = k, a = a, badGstar, xtol_rel = 1E-4, print_level = 1)
   expect_equal(as_cannS2S(est2$solution$mean), as_cannS2S(omegapar), tolerance = 1E-1)
-  #estimation of the concentration is quite bad!
+  #estimation of the concentration and scaling is quite bad! 
   expect_equal(est2$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1, ignore_attr = TRUE)
   # check angle between estimated and true axes
   expect_equal(axis_distance(acos(colSums(est2$solution$Gstar * Gstar))), rep(0, ncol(Gstar)), tolerance = pi/10, ignore_attr = TRUE)
+  # These must be a very close local minimum because at the correct mean parameters the scale and concentration is spot on. But at the slightly incorrect mean parameters or Gstar, we get the wrong scaling and concentration.
   
-  
+  restart <- est2$solution
+  restart$k <- 30
+  restart$a <- a
+  est2b <- do.call(optim_constV, c(list(y_ld[, 1:p], x), restart, list(xtol_rel = 1E-7, print_level = 1) ))
 })
 
 

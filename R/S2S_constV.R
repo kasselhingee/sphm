@@ -58,7 +58,10 @@ optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose
   # estimation for p!=3 (alternating between k and others)
   est <- nloptr::nloptr(
     x0 = S2S_constV_nota1_tovecparams(omvec = omvec0, k = k, aremaining = aremaining, Kstar = stdKstar),
-    eval_f = function(theta){-sum(ulltape$eval(theta, a[1]))},
+    eval_f = function(theta){
+      print(S2S_constV_nota1_fromvecparamsR(theta, p, ncol(x))$k)
+      -sum(ulltape$eval(theta, a[1]))
+      },
     eval_grad_f = function(theta){-colSums(matrix(ulltape$Jac(theta, a[1]), byrow = TRUE, ncol = length(theta)))},
     eval_g_eq =  function(theta){ll_mean_constraint$eval(theta[1:length(omvec0)], vector(mode = "numeric"))},
     eval_jac_g_eq =  function(theta){

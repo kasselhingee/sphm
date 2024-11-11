@@ -109,7 +109,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
                                B = diag(sort(runif(p-1), decreasing = TRUE))))
   set.seed(14)
   badGstar <- getHstar(start$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
-  est2 <- optim_constV(y_ld[, 1:p], x, start, k = 30, a = rep(1, 3), badGstar, xtol_rel = 1E-4)
+  est2 <- optim_constV(y_ld[, 1:p], x, start, k = 30, a = rep(1, 3), badGstar, xtol_rel = 1E-4, print_level = 1)
   expect_equal(as_cannS2S(est2$solution$mean), as_cannS2S(omegapar), tolerance = 1E-1)
   #estimation of the concentration is quite bad!
   expect_equal(est2$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1, ignore_attr = TRUE)

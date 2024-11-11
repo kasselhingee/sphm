@@ -6,6 +6,8 @@
 #' __Warning: C++ function still uses Jupp's transport rather than Amaral matrix and p !=3 not handled yet__
 #' __Warning: resulting relevant matrices are only very close to orthogonal - something do with with p1 not being precisely orthogonal to singular vectors despite the projection of Omega (I could do a projection again!?)__
 #' __Warning: estimation could be improved by using moment estimators for Gstar and a etc if possible to start the optimisation__
+#' 
+#' The first element of each column of Gstar will have positive value.
 #' @param y Response data on a sphere
 #' @param x Covariate data on a sphere
 #' @param a1 The first element of the vector a, which is tuning parameter.
@@ -97,6 +99,14 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   est_cann <- as_cannS2S(est_om)
   est_om <- as_OmegaS2S(cannS2S(stdmat %*% est_cann$P, est_cann$Q, est_cann$B, check = FALSE))
   Gstar <- stdmat %*% Gstar
+  
+  #make first element of each vector positive
+  Gstar <- t(t(Gstar) * sign(Gstar[1, ]))
+  
+  # make sure aremaining is in decreasing order
+  aord <- order(estparamlist$aremaining, decreasing = TRUE)
+  estparamlist$aremaining <- estparamlist$aremaining[aord]
+  Gstar <- Gstar[, aord]
   
   
   outsolution <- list(

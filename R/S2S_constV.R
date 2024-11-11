@@ -93,7 +93,13 @@ optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose
     solution = outsolution,
     stdmat = stdmat,
     nlopt_prelim = estprelim,
-    nlopt_final = est
+    nlopt_final = est,
+    initial = list(
+      mean = param_mean,
+      k = k, 
+      a = a, 
+      Gstar = Gstar
+    )
   ))
 }
 

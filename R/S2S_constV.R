@@ -8,14 +8,14 @@
 #' @param x Covariate data on a sphere
 #' @param a1 The first element of the vector a, which is tuning parameter.
 #' @param aremaining The remaining vector a, used as a starting guess.
-#' @param param_mean Parameters for the mean link, used as a starting guess.
-#' @param Vstar starting guess of the axes at `p1`.
-#' @param verbose `0` means no extra output. `1` means objective is printed each time `aremaining`, `k` and `param_mean` have all been updated. `2` further prints values of the parameters. (this roughly mirrors the behaviour of `print_level` for `nloptr()`).
+#' @param mean Parameters for the mean link, used as a starting guess.
+#' @param Gstar starting guess of the axes at `p1`.
 #' @export
-optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, ...){
+optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, ...){
   p <- ncol(y)
+  q <- ncol(x)
   # checks
-  om0 <- as_OmegaS2S(param_mean)
+  om0 <- as_OmegaS2S(mean)
   OmegaS2S_check(om0)
   if (!isTRUE(all.equal(cbind(om0$p1, Gstar) %*% t(cbind(om0$p1, Gstar)), diag(1, p), check.attributes = FALSE))){ # p1 orthogonal to Vstar
     stop("Gstar is not orthogonal to p1.")
@@ -40,7 +40,7 @@ optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose
   if (!(estprelim$loc_nloptr$status %in% c(0, 1, 2, 3, 4))){warning("Preliminary optimistation did not finish properly.")}
   om0prelim <- estprelim$solution
   
-  # estimation any p
+  # estimation any p prep
   omvec0 <- OmegaS2S_vec(om0prelim)
   ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", omvec0, vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   # prepare nloptr options
@@ -50,16 +50,21 @@ optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose
   ellipsis_args <- list(...)
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
-  #estimation for p=3
+  #estimation for p=3 specific
   ulltape <- tape_ull_S2S_constV_nota1(omvec = omvec0, k = k,
                                        a1 = a1, aremaining = aremaining, Kstar = stdKstar,
                                        p = p, cbind(ystd, x))
-  
-  # estimation for p!=3 (alternating between k and others)
+  # lower bound for concentration k
+  lb <- rep(-Inf, ulltape$domain)
+  lb[p + q + p*q + 1] <- 0
   est <- nloptr::nloptr(
     x0 = S2S_constV_nota1_tovecparams(omvec = omvec0, k = k, aremaining = aremaining, Kstar = stdKstar),
-    eval_f = function(theta){-sum(ulltape$eval(theta, a[1]))},
+    eval_f = function(theta){
+      # print(unlist(S2S_constV_nota1_fromvecparamsR(theta, p, q)[c("k", "aremaining")]))
+      -sum(ulltape$eval(theta, a[1]))
+      },
     eval_grad_f = function(theta){-colSums(matrix(ulltape$Jac(theta, a[1]), byrow = TRUE, ncol = length(theta)))},
+    lb = lb,
     eval_g_eq =  function(theta){ll_mean_constraint$eval(theta[1:length(omvec0)], vector(mode = "numeric"))},
     eval_jac_g_eq =  function(theta){
       cbind(matrix(ll_mean_constraint$Jac(theta[1:length(omvec0)], vector(mode = "numeric")), byrow = TRUE, ncol = length(omvec0)),
@@ -67,8 +72,11 @@ optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose
     },
     opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2)), combined_opts)
   )
+  
+  # estimation for p!=3 (alternating between k and others) ## NOT COMPLETE
+  
   if (!(est$status %in% c(0, 1, 2, 3, 4))){warning("Optimistation did not finish properly.")}
-  estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, ncol(ystd), ncol(x))
+  estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, p, q)
   
   # project Omega to satisfy orthogonality constraint
   est_om <- OmegaS2S_proj(OmegaS2S_unvec(estparamlist$omvec, p, check = FALSE))
@@ -95,7 +103,7 @@ optim_constV <- function(y, x, param_mean, k, a, Gstar, xtol_rel = 1E-5, verbose
     nlopt_prelim = estprelim,
     nlopt_final = est,
     initial = list(
-      mean = param_mean,
+      mean = mean,
       k = k, 
       a = a, 
       Gstar = Gstar

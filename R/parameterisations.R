@@ -149,6 +149,7 @@ OmegaS2S_proj <- function(obj, method = "Omega"){
     # first project orthogonal to p1 (needs p1 unit vector)
     p1 <- p1/vnorm(p1)
     Omegaperpp1 <- Omega -  (p1 %*% t(p1)) %*% Omega
+    # now t(p1) %*% Omegaperpp1 = 0
     # similarly to q1
     q1 <- q1/vnorm(q1)
     Omegaperpq1 <- Omegaperpp1 - Omegaperpp1 %*% q1 %*% t(q1)

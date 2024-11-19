@@ -17,12 +17,7 @@
 #' @param k Starting concentration. I suspect lower means less chance of finding a local minimum.
 #' @export
 optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, ...){
-  initial <-  list(
-      mean = mean,
-      k = k, 
-      a = a, 
-      Gstar = Gstar
-    )
+
   p <- ncol(y)
   q <- ncol(x)
   # checks
@@ -35,6 +30,13 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   a1 = a[1]
   aremaining = a[-1]
   stopifnot(isTRUE(all.equal(prod(aremaining), 1)))
+  
+    initial <-  list(
+      mean = om0,
+      k = k, 
+      a = a, 
+      Gstar = Gstar
+    )
   
   # standardisation of data
   stdmat <- standardise_mat(y)

@@ -10,6 +10,15 @@
 //' where  mu = 4*a^2  *and*  |arg(z)| < pi/2
 // [[Rcpp::export]]
 a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool log_result = true) {
+  // Constants
+  a1type pi = CppAD::atan(1.0) * 4.0;
+  a1type pi2 = 2.0 * pi;
+  
+  if (x <= pi/2.0) {
+    Rcpp::stop("x must be larger than pi/2")
+    a1type::abort_recording();
+  }
+  
   
   // Precompute 8*x for efficiency
   a1type x8 = 8.0 * x;
@@ -25,11 +34,6 @@ a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool log_result
       d = (1.0 - d) * mu / (k * x8);
     }
   }
-  
-  // Constants
-  a1type pi = CppAD::atan(1.0) * 4.0;
-  a1type pi2 = 2.0 * pi;
-  
   
   // Compute the result
   if (log_result) {

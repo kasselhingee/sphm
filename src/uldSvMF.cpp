@@ -1,6 +1,46 @@
 #include "uldSvMF.h"
 #include <Rcpp.h>
 
+//Helper function Bessel I approximation from BesselI::besselIasym()
+// [[Rcpp::export]]
+a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool expon_scaled = false, bool log_result = false) {
+  // Constants
+  a1type pi = CppAD::atan(1.0) * 4.0;
+  a1type pi2 = 2.0 * pi;
+  
+  // Precompute 8*x for efficiency
+  a1type x8 = 8.0 * x;
+  
+  // Compute the asymptotic series for f(x, nu) up to order k_max
+  a1type d = 0.0; // Initialize d
+  if (k_max >= 1) {
+    for (int k = k_max; k >= 1; --k) {
+      // mu = (2*(nu-k)+1)*(2*(nu+k)-1)
+      a1type term1 = 2.0 * (nu - k) + 1.0;
+      a1type term2 = 2.0 * (nu + k) - 1.0;
+      a1type mu = term1 * term2;
+      d = (1.0 - d) * mu / (k * x8);
+    }
+  }
+  
+  // Compute the scaled x if needed
+  a1type sx = x;
+  if (expon_scaled) {
+    sx = x - CppAD::fabs(x); // Assume x is real for simplicity
+  }
+  
+  // Compute the result
+  if (log_result) {
+    // log(f) = log1p(-d)
+    a1type log_f = CppAD::log1p(-d);
+    return (expon_scaled ? sx : x) + log_f - 0.5 * CppAD::log(pi2 * x);
+  } else {
+    a1type f = 1.0 - d;
+    a1type scaling_factor = expon_scaled ? CppAD::exp(sx) : CppAD::exp(x);
+    return scaling_factor * f / CppAD::sqrt(pi2 * x);
+  }
+}
+
 // Helper function lvMFnormconst
 a1type lvMFnormconst(a1type kappa, int p) {
   if (p == 3) {

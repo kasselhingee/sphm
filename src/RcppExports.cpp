@@ -229,6 +229,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// besselIasym
+a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool log_result);
+RcppExport SEXP _sphm_besselIasym(SEXP xSEXP, SEXP nuSEXP, SEXP k_maxSEXP, SEXP log_resultSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const a1type& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const a1type& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< int >::type k_max(k_maxSEXP);
+    Rcpp::traits::input_parameter< bool >::type log_result(log_resultSEXP);
+    rcpp_result_gen = Rcpp::wrap(besselIasym(x, nu, k_max, log_result));
+    return rcpp_result_gen;
+END_RCPP
+}
 // uldSvMF_cann
 veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
 RcppExport SEXP _sphm_uldSvMF_cann(SEXP ySEXP, SEXP kSEXP, SEXP aSEXP, SEXP GSEXP) {
@@ -289,6 +303,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
     {"_sphm_OmegaS2S_constraints", (DL_FUNC) &_sphm_OmegaS2S_constraints, 2},
     {"_sphm_tape_namedfun", (DL_FUNC) &_sphm_tape_namedfun, 6},
+    {"_sphm_besselIasym", (DL_FUNC) &_sphm_besselIasym, 4},
     {"_sphm_uldSvMF_cann", (DL_FUNC) &_sphm_uldSvMF_cann, 4},
     {"_sphm_uldSvMF_muV", (DL_FUNC) &_sphm_uldSvMF_muV, 5},
     {"_sphm_ull_SvMF_V", (DL_FUNC) &_sphm_ull_SvMF_V, 3},

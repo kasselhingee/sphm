@@ -1,12 +1,15 @@
 #include "uldSvMF.h"
 #include <Rcpp.h>
 
-//Helper function Bessel I approximation from BesselI::besselIasym()
+//' Helper function Bessel I approximation from BesselI::besselIasym()
+//' which should be from Asymptotic expansion of Bessel I_nu(x) function   x -> oo
+//'       by Abramowitz & Stegun (9.7.1), p.377 
+//' I_a(z) = exp(z) / sqrt(2*pi*z) * f(z,..)  where
+//'   f(z,..) = 1 - (mu-1)/ (8*z) + (mu-1)(mu-9)/(2! (8z)^2) - ...
+//'           = 1- (mu-1)/(8z)*(1- (mu-9)/(2(8z))*(1-(mu-25)/(3(8z))*..))
+//' where  mu = 4*a^2  *and*  |arg(z)| < pi/2
 // [[Rcpp::export]]
-a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool expon_scaled = false, bool log_result = false) {
-  // Constants
-  a1type pi = CppAD::atan(1.0) * 4.0;
-  a1type pi2 = 2.0 * pi;
+a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool log_result = false) {
   
   // Precompute 8*x for efficiency
   a1type x8 = 8.0 * x;
@@ -23,20 +26,19 @@ a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool expon_scal
     }
   }
   
-  // Compute the scaled x if needed
-  a1type sx = x;
-  if (expon_scaled) {
-    sx = x - CppAD::fabs(x); // Assume x is real for simplicity
-  }
+  // Constants
+  a1type pi = CppAD::atan(1.0) * 4.0;
+  a1type pi2 = 2.0 * pi;
+  
   
   // Compute the result
   if (log_result) {
     // log(f) = log1p(-d)
     a1type log_f = CppAD::log1p(-d);
-    return (expon_scaled ? sx : x) + log_f - 0.5 * CppAD::log(pi2 * x);
+    return x + log_f - 0.5 * CppAD::log(pi2 * x);
   } else {
     a1type f = 1.0 - d;
-    a1type scaling_factor = expon_scaled ? CppAD::exp(sx) : CppAD::exp(x);
+    a1type scaling_factor = CppAD::exp(x);
     return scaling_factor * f / CppAD::sqrt(pi2 * x);
   }
 }

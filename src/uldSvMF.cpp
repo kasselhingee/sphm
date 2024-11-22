@@ -9,7 +9,7 @@
 //'           = 1- (mu-1)/(8z)*(1- (mu-9)/(2(8z))*(1-(mu-25)/(3(8z))*..))
 //' where  mu = 4*a^2  *and*  |arg(z)| < pi/2
 // [[Rcpp::export]]
-a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool log_result = false) {
+a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool log_result = true) {
   
   // Precompute 8*x for efficiency
   a1type x8 = 8.0 * x;

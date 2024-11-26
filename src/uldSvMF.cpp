@@ -15,7 +15,7 @@ a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool log_result
   a1type pi2 = 2.0 * pi;
   
   if (x <= pi/2.0) {
-    Rcpp::stop("x must be larger than pi/2")
+    Rcpp::stop("x must be larger than pi/2");
     a1type::abort_recording();
   }
   

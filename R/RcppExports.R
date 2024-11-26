@@ -105,7 +105,7 @@ tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for
 #'   f(z,..) = 1 - (mu-1)/ (8*z) + (mu-1)(mu-9)/(2! (8z)^2) - ...
 #'           = 1- (mu-1)/(8z)*(1- (mu-9)/(2(8z))*(1-(mu-25)/(3(8z))*..))
 #' where  mu = 4*a^2  *and*  |arg(z)| < pi/2
-besselIasym <- function(x, nu, k_max, log_result = FALSE) {
+besselIasym <- function(x, nu, k_max, log_result = TRUE) {
     .Call(`_sphm_besselIasym`, x, nu, k_max, log_result)
 }
 

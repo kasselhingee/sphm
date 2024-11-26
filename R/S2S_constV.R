@@ -103,7 +103,7 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   Gstar <- stdmat %*% Gstar
   
   #make first element of each vector positive
-  Gstar <- t(t(Gstar) * sign(Gstar[1, ]))
+  Gstar <- topos1strow(Gstar)
   
   # make sure aremaining is in decreasing order
   aord <- order(estparamlist$aremaining, decreasing = TRUE)

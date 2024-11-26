@@ -46,3 +46,9 @@ standardise_mat <- function(y){
 }
 
 nthpole <- function(p){c(1, rep(0, p-1))}
+
+#' Standardise sign of columns of a matrix to have positive first element
+topos1strow <- function(mat){
+  mat <- t(t(mat) * sign(mat[1, ]))
+  return(mat)
+}

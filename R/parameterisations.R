@@ -4,7 +4,10 @@
 #' @param B B matrix: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size.
 #' @param Q The rotation-like matrix `Q` for rotating the covariate vector `x`.
 cannS2S <- function(P, Q, B, check = TRUE){
-  obj <- list(P = P, Q = Q, B = B)
+  mnlink_cann(P, Bs = B, Qs = Q)
+}
+mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, check = TRUE){
+  obj <- list(P = P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe)
   class(obj) <- c("mnlink_cann", class(obj))
   if (check){cannS2S_check(obj)}
   return(obj)
@@ -13,8 +16,8 @@ as_mnlink_cann <- function(obj){
   if (inherits(obj, "mnlink_cann")){return(obj)}
   if (inherits(obj, "OmegaS2S")){return(Omega2cann(obj, check = FALSE))}
   if (!inherits(obj, "list")){stop("obj isn't a cannS2S, OmegaS2S or a list.")}
-  spotifnot(all(c("P", "Q", "B") %in% names(obj)))
-  class(obj) <- c("mnlink_cann", class(obj))
+  if ("P" %in% names(obj)){return(mnlink_cann(obj, check = FALSE))}
+  if ("p1" %in% names(obj)){return(mnlink_Omega(obj, check = FALSE))}
   return(obj)
 }
 

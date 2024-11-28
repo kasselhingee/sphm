@@ -5,16 +5,16 @@
 #' @param Q The rotation-like matrix `Q` for rotating the covariate vector `x`.
 cannS2S <- function(P, Q, B, check = TRUE){
   obj <- list(P = P, Q = Q, B = B)
-  class(obj) <- c("cannS2S", class(obj))
+  class(obj) <- c("mnlink_cann", class(obj))
   if (check){cannS2S_check(obj)}
   return(obj)
 }
 as_cannS2S <- function(obj){
-  if (inherits(obj, "cannS2S")){return(obj)}
+  if (inherits(obj, "mnlink_cann")){return(obj)}
   if (inherits(obj, "OmegaS2S")){return(Omega2cann(obj, check = FALSE))}
   if (!inherits(obj, "list")){stop("obj isn't a cannS2S, OmegaS2S or a list.")}
   spotifnot(all(c("P", "Q", "B") %in% names(obj)))
-  class(obj) <- c("cannS2S", class(obj))
+  class(obj) <- c("mnlink_cann", class(obj))
   return(obj)
 }
 
@@ -32,7 +32,7 @@ OmegaS2S <- function(p1, q1, Omega, check = TRUE){
   return(obj)
 }
 as_OmegaS2S <- function(obj){
-  if (inherits(obj, "cannS2S")){return(cann2Omega(obj, check = FALSE))}
+  if (inherits(obj, "mnlink_cann")){return(cann2Omega(obj, check = FALSE))}
   if (inherits(obj, "OmegaS2S")){return(obj)}
   if (!inherits(obj, "list")){stop("obj must be either a cannS2S, OmegaS2S or list.")}
   stopifnot(all(c("p1", "q1", "Omega") %in% names(obj)))
@@ -105,7 +105,7 @@ Omega2cann <- function(obj, check = TRUE){
 }
 
 cannS2S_check <- function(obj){
-  stopifnot(inherits(obj, "cannS2S"))
+  stopifnot(inherits(obj, "mnlink_cann"))
   list2env(obj, envir = environment())
   stopifnot(max(abs(B-diag(diag(B)))) < sqrt(.Machine$double.eps))
   stopifnot(max(abs(P %*% t(P) - diag(1, ncol(P)))) < sqrt(.Machine$double.eps))

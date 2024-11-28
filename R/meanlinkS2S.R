@@ -40,7 +40,7 @@ meanlinkS2S <- function(x,P = NULL,Q = NULL,B = NULL, paramobj = NULL, check = T
 }
 
 meanlinkS2S_cann <- function(x, paramobj){
-  stopifnot(inherits(paramobj, "cannS2S"))
+  stopifnot(inherits(paramobj, "mnlink_cann"))
   list2env(paramobj, envir = environment())
   stopifnot(abs(sum(x^2) - 1) < sqrt(.Machine$double.eps))
   return(drop(P%*%iSp(B%*%Sp(t(Q)%*%x))))

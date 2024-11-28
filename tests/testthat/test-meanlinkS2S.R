@@ -34,7 +34,7 @@ test_that("Omega and cannonical versions give same result", {
   # via reparameterisation
   mnB <- meanlinkS2S_Omega(x, as_OmegaS2S(paramobj))
   # back - remember many signs get ignored, only the result of the mean link matters
-  newcann <- as_cannS2S(as_OmegaS2S(paramobj))
+  newcann <- as_mnlink_cann(as_OmegaS2S(paramobj))
   mnC <- meanlinkS2S_cann(x[1, ], newcann)
   
   expect_equal(mnA, mnC)

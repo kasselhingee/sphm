@@ -42,7 +42,7 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   stdmat <- standardise_mat(y)
   ystd <- y %*% stdmat
   # apply same operation to initial parameters
-  cann0 <- as_cannS2S(om0)
+  cann0 <- as_mnlink_cann(om0)
   om0std <- as_OmegaS2S(cannS2S(t(stdmat) %*% cann0$P, cann0$Q, cann0$B))
   stdGstar <- t(stdmat) %*% Gstar #Because stdmat performs a rigid transformation, it is really just a change in basis for the whole problem, so I think this is what we want for the axes too.
   stdKstar <- t(getHstar(om0std$p1)) %*% stdGstar
@@ -98,7 +98,7 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   Gstar <- getHstar(est_om$p1) %*% estparamlist$Kstar
   
   # undo standardisation coordinate change
-  est_cann <- as_cannS2S(est_om)
+  est_cann <- as_mnlink_cann(est_om)
   est_om <- as_OmegaS2S(cannS2S(stdmat %*% est_cann$P, est_cann$Q, est_cann$B, check = FALSE))
   Gstar <- stdmat %*% Gstar
   

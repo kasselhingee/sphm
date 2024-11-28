@@ -9,7 +9,7 @@ cannS2S <- function(P, Q, B, check = TRUE){
   if (check){cannS2S_check(obj)}
   return(obj)
 }
-as_cannS2S <- function(obj){
+as_mnlink_cann <- function(obj){
   if (inherits(obj, "mnlink_cann")){return(obj)}
   if (inherits(obj, "OmegaS2S")){return(Omega2cann(obj, check = FALSE))}
   if (!inherits(obj, "list")){stop("obj isn't a cannS2S, OmegaS2S or a list.")}

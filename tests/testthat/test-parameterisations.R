@@ -23,7 +23,7 @@ test_that("OmegaS2S works and conversions", {
   cann <- cannS2S(P, Q, B)
   om <- as_OmegaS2S(cann)  
   expect_silent(OmegaS2S_check(om))
-  expect_equal(as_OmegaS2S(as_cannS2S(om)), om)
+  expect_equal(as_OmegaS2S(as_mnlink_cann(om)), om)
   expect_equal(OmegaS2S(om$p1, om$q1, om$Omega), om)
   
   #vec and unvec

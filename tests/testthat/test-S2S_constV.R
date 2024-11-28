@@ -110,7 +110,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   set.seed(14)
   badGstar <- getHstar(omegapar$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)[, c(2, 1)]
   est2 <- optim_constV(y_ld[, 1:p], x, omegapar, k = k, a = a, badGstar, xtol_rel = 1E-4)
-  expect_equal(as_cannS2S(est2$solution$mean), as_cannS2S(omegapar), tolerance = 1E-1)
+  expect_equal(as_mnlink_cann(est2$solution$mean), as_mnlink_cann(omegapar), tolerance = 1E-1)
   #estimation of the concentration and scaling is quite bad without the flip of [, c(2,1)] for creating badGstar! 
   expect_equal(est2$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1, ignore_attr = TRUE)
   # check angle between estimated and true axes

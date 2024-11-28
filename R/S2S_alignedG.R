@@ -117,7 +117,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
     # Update P and check params
     Omegapar <- OmegaS2S_unvec(est$mean, p, check = FALSE)
     cannpar <- Omega2cann(Omegapar, check = FALSE)
-    tryCatch({cannS2S_check(cannpar)}, error = function(e){warning(conditionMessage(e)); return(NULL)})
+    tryCatch({mnlink_cann_check(cannpar)}, error = function(e){warning(conditionMessage(e)); return(NULL)})
     P <- cannpar$P
 
     # get likelihood from newmean computations

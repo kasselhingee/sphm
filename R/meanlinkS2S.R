@@ -34,7 +34,7 @@ meanlinkS2S <- function(x,P = NULL,Q = NULL,B = NULL, paramobj = NULL, check = T
   } else {
     if (is.null(P) & is.null(Q) & is.null(B)){paramobj <- as_mnlink_cann(paramobj)}
     else {paramobj <- cannS2S(P, Q, B)}
-    if (check){cannS2S_check(paramobj)}
+    if (check){mnlink_cann_check(paramobj)}
     return(meanlinkS2S_cann(x, paramobj))
   }
 }

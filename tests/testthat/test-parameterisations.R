@@ -8,7 +8,7 @@ test_that("cannS2S() creates objects that pass check", {
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
   obj <- cannS2S(P, Q, B)
-  expect_silent(cannS2S_check(obj))
+  expect_silent(mnlink_cann_check(obj))
 })
 
 test_that("OmegaS2S works and conversions", {

@@ -9,7 +9,7 @@ cannS2S <- function(P, Q, B, check = TRUE){
 mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, check = TRUE){
   obj <- list(P = P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe)
   class(obj) <- c("mnlink_cann", class(obj))
-  if (check){cannS2S_check(obj)}
+  if (check){mnlink_cann_check(obj)}
   return(obj)
 }
 as_mnlink_cann <- function(obj){
@@ -86,7 +86,7 @@ OmegaS2S_unvec <- function(vec, p, check = TRUE){
 #' Sign of columns of P and Q are lost by this transformation.
 #' @export
 cann2Omega <- function(obj, check = TRUE){
-  if (check){cannS2S_check(obj)}
+  if (check){mnlink_cann_check(obj)}
   list2env(obj, envir = environment())
   p1 <- P[, 1]
   q1 <- Q[, 1]
@@ -107,7 +107,7 @@ Omega2cann <- function(obj, check = TRUE){
   return(cannS2S(P, Q, B, check = check))
 }
 
-cannS2S_check <- function(obj){
+mnlink_cann_check <- function(obj){
   stopifnot(inherits(obj, "mnlink_cann"))
   list2env(obj, envir = environment())
   stopifnot(max(abs(B-diag(diag(B)))) < sqrt(.Machine$double.eps))

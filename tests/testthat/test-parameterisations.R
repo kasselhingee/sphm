@@ -11,6 +11,21 @@ test_that("cannS2S() creates objects that pass check", {
   expect_silent(mnlink_cann_check(obj))
 })
 
+test_that("mnlink_cann() creates objects that pass check", {
+  set.seed(1)
+  p <- 3
+  q <- 5
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  set.seed(2)
+  Qs <- mclust::randomOrthogonalMatrix(q, p)
+  Qe <- mclust::randomOrthogonalMatrix(q+2, p)[,-1]
+  set.seed(3)
+  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  obj <- mnlink_cann(P = P, Qs = Qs, Bs = Bs, Be = Be, Qe = Qe)
+  expect_silent(mnlink_cann_check(obj))
+})
+
 test_that("OmegaS2S works and conversions", {
   set.seed(1)
   p <- 3

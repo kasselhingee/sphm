@@ -15,7 +15,7 @@ mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL
 }
 as_mnlink_cann <- function(obj){
   if (inherits(obj, "mnlink_cann")){return(obj)}
-  if (inherits(obj, "OmegaS2S")){return(Omega2cann(obj, check = FALSE))}
+  if (inherits(obj, "mnlink_Omega")){return(Omega2cann(obj, check = FALSE))}
   if (!inherits(obj, "list")){stop("obj isn't a cannS2S, OmegaS2S or a list.")}
   if ("P" %in% names(obj)){return(mnlink_cann(obj, check = FALSE))}
   if ("p1" %in% names(obj)){return(mnlink_Omega(obj, check = FALSE))}
@@ -36,24 +36,24 @@ mnlink_Omega <- function(p1, qs1 = NULL, Omega, ce = NULL, check = TRUE){
     Omega = Omega,
     ce = ce
   )
-  class(obj) <- c("OmegaS2S", class(obj))
+  class(obj) <- c("mnlink_Omega", class(obj))
   if (check) {OmegaS2S_check(obj)}
   return(obj)
 }
 
 as_mnlink_Omega <- function(obj){
   if (inherits(obj, "mnlink_cann")){return(cann2Omega(obj, check = FALSE))}
-  if (inherits(obj, "OmegaS2S")){return(obj)}
+  if (inherits(obj, "mnlink_Omega")){return(obj)}
   if (!inherits(obj, "list")){stop("obj must be either a cannS2S, OmegaS2S or list.")}
   stopifnot(all(c("p1", "q1", "Omega") %in% names(obj)))
-  class(obj) <- c("OmegaS2S", class(obj))
+  class(obj) <- c("mnlink_Omega", class(obj))
   return(obj)
 }
 #' @noRd
 #' Vectorsises and inverse of this vectorisation for the OmegaS2S parameterisation.
 #' @param obj An OmegaS2S parameter object.
 OmegaS2S_vec <- function(obj){
-  stopifnot(inherits(obj, "OmegaS2S"))
+  stopifnot(inherits(obj, "mnlink_Omega"))
   list2env(obj, envir = environment())
   names(p1) <- paste0("p1_", 1:length(p1))
   names(q1) <- paste0("q1_", 1:length(q1))
@@ -171,7 +171,7 @@ OmegaS2S_check <- function(obj){
   return(NULL)
 }
 OmegaS2S_check_internal <- function(obj){ #uses squared values for smoothness
-  stopifnot(inherits(obj, "OmegaS2S"))
+  stopifnot(inherits(obj, "mnlink_Omega"))
   list2env(obj, envir = environment())
   return(c(
     p1sizediff = (vnorm(p1) - 1)^2,
@@ -183,7 +183,7 @@ OmegaS2S_check_internal <- function(obj){ #uses squared values for smoothness
 # if the values are close to satisfying the constraints, it might make sense to project and scale p1 and q1 to satisfy the constraints
 # will use canonical parameterisation to do this because orthogonality of the columns will make for easier projections
 OmegaS2S_proj <- function(obj, method = "Omega"){
-  stopifnot(inherits(obj, "OmegaS2S"))
+  stopifnot(inherits(obj, "mnlink_Omega"))
   stopifnot(method %in% c("Omega", "p1q1"))
   if (method == "Omega") {
     list2env(obj, envir = environment())

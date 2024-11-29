@@ -53,7 +53,7 @@ meanlinkS2S_cann <- function(x, paramobj){
 #' @param x a vector of covariate values or tidy-style array of covariate values (each row a vector of covariates)
 #' @noRd
 meanlinkS2S_Omega <- function(x, paramobj, check = TRUE){
-  stopifnot(inherits(paramobj, "OmegaS2S"))
+  stopifnot(inherits(paramobj, "mnlink_Omega"))
   if (check){OmegaS2S_check(paramobj)}
   list2env(paramobj, envir = environment())
   if (inherits(x, "array")){x <- t(x)} #so rows of x become column vectors

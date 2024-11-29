@@ -3,15 +3,15 @@ test_that("Concatenating Omegas behaves as my maths suggests", {
   qs <- 5
   qe <- 7
   # data generating parameters:
-  set.seed(1)
-  P <- mclust::randomOrthogonalMatrix(p, p)
   set.seed(2)
-  Qs <- mclust::randomOrthogonalMatrix(qs, p)
+  P <- mclust::randomOrthogonalMatrix(p, p)
   set.seed(3)
-  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+  Qs <- mclust::randomOrthogonalMatrix(qs, p)
   set.seed(4)
-  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
   set.seed(5)
+  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  set.seed(6)
   Qe <- mclust::randomOrthogonalMatrix(qe, p -1)
   
   Pstar <- P[, -1]
@@ -37,29 +37,26 @@ test_that("Concatenating Omegas behaves as my maths suggests", {
   expect_equal(Omega %*% enlargee %*% xe,
                Omegae %*% xe)
   
-  # SVD recovers Pstar
-  Omega_svd <- svd(Omega)#, nu = nrow(Omega) - 1, nv = nrow(Omega) - 1)
-  expect_equal(topos1strow(Omega_svd$u[, -p]), topos1strow(Pstar))
+  # check manual SVD returns Omega
+  manSV <- sqrt(diag(Bs)^2 + diag(Be)^2)
+  manrvecs <- rbind(Qsstar %*% Bs, Qe %*% Be)
+  manrvecs <- t(t(manrvecs)/manSV)
+  expect_equal(Pstar %*% diag(manSV) %*% t(manrvecs), Omega)
+  expect_equal(apply(manrvecs, 2, vnorm), rep(1, p-1))
   
-  # partial SVD gets back action on covariates
-  Omega_part <- diag(Omega_svd$d) %*% t(Omega_svd$v)
-  expect_equal(topos1strow(Omega_part %*% enlarges %*% xs)[-p, , drop = FALSE],
-               topos1strow(Bs %*% t(Qsstar) %*% xs))
-  expect_equal(topos1strow(Omega_part %*% enlargee %*% xe)[-p, , drop = FALSE],
-               topos1strow(Be %*% t(Qe) %*% xe))
+  # check SVD matches manual SVD
+  Omega_svd <- svd(Omega, nu = nrow(Omega) - 1, nv = nrow(Omega) - 1)
+  expect_equal(topos1strow(Omega_svd$u), topos1strow(Pstar))
+  expect_equal(Omega_svd$d[1:(p-1)], manSV)
+  expect_equal(topos1strow(Omega_svd$v), topos1strow(manrvecs)) 
   
-  # trying to get back Be Bs, Qe and Qs
-  BQs <- (diag(Omega_svd$d) %*% t(Omega_svd$v))[-p, ] %*% enlarges
-  expect_equal(topos1strow(t(BQs)),
-               topos1strow(t(Bs %*% t(Qsstar))))
-  BQe <- (diag(Omega_svd$d) %*% t(Omega_svd$v))[-p, ] %*% enlargee
-  expect_equal(topos1strow(t(BQe)),
-               topos1strow(t(Be %*% t(Qe))))
+  # recovering Qs and Qe
+  expect_equal(topos1strow(apply(Omega_svd$v[1:qs, ], 2, function(v){v/vnorm(v)})),
+               topos1strow(Qsstar))
+  expect_equal(topos1strow(apply(Omega_svd$v[qs + (1:qe), ], 2, function(v){v/vnorm(v)})),
+               topos1strow(Qe))
   
-  normss <- apply(BQs, 1, vnorm)
-  normse <- apply(BQe, 1, vnorm)
-  expect_equal(diag(normss), Bs)
-  expect_equal(diag(normse), Be)
-  expect_equal(topos1strow(t(diag(1/normss) %*% BQs)), topos1strow(Qsstar))
-  expect_equal(topos1strow(t(diag(1/normse) %*% BQe)), topos1strow(Qe))
+  #recovering Bs and Be
+  expect_equal(apply(Omega_svd$v[1:qs, ], 2, vnorm) * Omega_svd$d[1:(p-1)], diag(Bs))
+  expect_equal(apply(Omega_svd$v[qs + (1:qe), ], 2, vnorm) * Omega_svd$d[1:(p-1)], diag(Be))
 })

@@ -22,7 +22,7 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   q <- ncol(x)
   # checks
   om0 <- as_mnlink_Omega(mean)
-  OmegaS2S_check(om0)
+  mnlink_Omega_check(om0)
   if (!isTRUE(all.equal(cbind(om0$p1, Gstar) %*% t(cbind(om0$p1, Gstar)), diag(1, p), check.attributes = FALSE))){ # p1 orthogonal to Vstar
     stop("Gstar is not orthogonal to p1.")
   }

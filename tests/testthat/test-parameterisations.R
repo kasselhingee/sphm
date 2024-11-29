@@ -37,7 +37,7 @@ test_that("OmegaS2S works and conversions", {
   B <- diag(sort(runif(p-1), decreasing = TRUE))
   cann <- cannS2S(P, Q, B)
   om <- as_mnlink_Omega(cann)  
-  expect_silent(OmegaS2S_check(om))
+  expect_silent(mnlink_Omega_check(om))
   expect_equal(as_mnlink_Omega(as_mnlink_cann(om)), om)
   expect_equal(OmegaS2S(om$p1, om$q1, om$Omega), om)
   
@@ -49,7 +49,7 @@ test_that("OmegaS2S works and conversions", {
   ommod <- om
   ommod$p1 <- om$p1 * (1 + 1E-2 * runif(length(om$p1), -1, 1))
   ommod$q1 <- om$q1 * (1 + 1E-2 * runif(length(om$q1), -1, 1))
-  expect_error(OmegaS2S_check(ommod), "checks failed")
+  expect_error(mnlink_Omega_check(ommod), "checks failed")
   expect_equal(OmegaS2S_proj(ommod, method = "p1q1"), om, tolerance = 1E-2)
   expect_equal(OmegaS2S_proj(ommod, method = "p1q1")$Omega, om$Omega)
   
@@ -57,7 +57,7 @@ test_that("OmegaS2S works and conversions", {
   expect_equal(OmegaS2S_proj(om, method = "Omega"), om)
   ommod <- om
   ommod$Omega <- om$Omega * (1 + 1E-2 * matrix(runif(length(om$Omega), -1, 1), p, q))
-  expect_error(OmegaS2S_check(ommod), "checks failed")
+  expect_error(mnlink_Omega_check(ommod), "checks failed")
   expect_equal(OmegaS2S_proj(ommod, method = "Omega"), om, tolerance = 1E-2)
   expect_equal(OmegaS2S_proj(ommod, method = "Omega")[c("q1", "p1")], om[c("q1", "p1")])
 })

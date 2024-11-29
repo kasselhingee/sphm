@@ -54,7 +54,7 @@ meanlinkS2S_cann <- function(x, paramobj){
 #' @noRd
 meanlinkS2S_Omega <- function(x, paramobj, check = TRUE){
   stopifnot(inherits(paramobj, "mnlink_Omega"))
-  if (check){OmegaS2S_check(paramobj)}
+  if (check){mnlink_Omega_check(paramobj)}
   list2env(paramobj, envir = environment())
   if (inherits(x, "array")){x <- t(x)} #so rows of x become column vectors
   

@@ -37,7 +37,7 @@ mnlink_Omega <- function(p1, qs1 = NULL, Omega, ce = NULL, check = TRUE){
     ce = ce
   )
   class(obj) <- c("mnlink_Omega", class(obj))
-  if (check) {OmegaS2S_check(obj)}
+  if (check) {mnlink_Omega_check(obj)}
   return(obj)
 }
 
@@ -104,7 +104,7 @@ cann2Omega <- function(obj, check = TRUE){
 #' # Warning
 #' Apart from p1 and q1, sign of columns of P and Q cannot be recovered from Omega.
 Omega2cann <- function(obj, check = TRUE){
-  if (check){OmegaS2S_check(obj)}
+  if (check){mnlink_Omega_check(obj)}
   list2env(obj, envir = environment())
   svdres <- svd(Omega, nu = nrow(Omega) - 1, nv = nrow(Omega) - 1)
 
@@ -158,8 +158,8 @@ mnlink_cann_check <- function(obj){
   return(NULL)
 }
 
-OmegaS2S_check <- function(obj){
-  vals <- OmegaS2S_check_internal(obj)
+mnlink_Omega_check <- function(obj){
+  vals <- mnlink_Omega_check_internal(obj)
   good <- (vals < sqrt(.Machine$double.eps))
   if (!all(good)){
     stop(paste("The following checks failed.", 
@@ -170,7 +170,7 @@ OmegaS2S_check <- function(obj){
   if (singularvalssumsquared > nrow(obj$Omega) - 1){warning(sprintf("The sum of squared singular values of Omega is %0.2f, which is greater than p - 1, which means that there are singular values of Omega with size greater than 1.", singularvalssumsquared))}
   return(NULL)
 }
-OmegaS2S_check_internal <- function(obj){ #uses squared values for smoothness
+mnlink_Omega_check_internal <- function(obj){ #uses squared values for smoothness
   stopifnot(inherits(obj, "mnlink_Omega"))
   list2env(obj, envir = environment())
   return(c(

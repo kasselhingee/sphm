@@ -23,7 +23,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
   
-  # objective function in C++ and R should match when omegapar passes OmegaS2S_check()
+  # objective function in C++ and R should match when omegapar passes mnlink_Omega_check()
   objval <- pobjS2S(y, x, omegapar)
   objvalcpp <-  pobjS2Scpp(OmegaS2S_vec(omegapar), vector(), p, cbind(y,x))
   expect_equal(objvalcpp, objval)

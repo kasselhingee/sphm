@@ -26,15 +26,21 @@ as_mnlink_cann <- function(obj){
 #' @param q1 First column of the Q matrix (vector of length `q`)
 #' @param Omega A `p` by `q` matrix representing `P* B t(Q*)`.
 OmegaS2S <- function(p1, q1, Omega, check = TRUE){
+  mnlink_Omega(p1 = p1, qs1 = q1, Omega = Omega, check = check)
+}
+
+mnlink_Omega <- function(p1, qs1 = NULL, Omega, ce = NULL, check = TRUE){
   obj <- list(
     p1 = p1,
-    q1 = q1,
-    Omega = Omega
+    qs1 = qs1,
+    Omega = Omega,
+    ce = ce
   )
   class(obj) <- c("OmegaS2S", class(obj))
   if (check) {OmegaS2S_check(obj)}
   return(obj)
 }
+
 as_mnlink_Omega <- function(obj){
   if (inherits(obj, "mnlink_cann")){return(cann2Omega(obj, check = FALSE))}
   if (inherits(obj, "OmegaS2S")){return(obj)}
@@ -141,10 +147,13 @@ mnlink_cann_check <- function(obj){
     
     stopifnot(max(abs(obj$Be-diag(diag(obj$Be)))) < sqrt(.Machine$double.eps))
     stopifnot(max(abs(t(obj$Qe) %*% obj$Qe - diag(1, ncol(obj$Qe)))) < sqrt(.Machine$double.eps))
+    stopifnot(is.vector(obj$ce))
+    stopifnot(length(obj$ce) == p-1)
     if (any(diag(obj$Be) > 1)){warning("Elements of Be are larger than 1")}
     if (any(diag(obj$Be) < 0)){warning("Elements of Be are negative")}
   } else {
     stopifnot(is.null(obj$Be))
+    stopifnot(is.null(obj$ce))
   }
   return(NULL)
 }

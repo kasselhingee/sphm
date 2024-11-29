@@ -6,7 +6,8 @@
 cannS2S <- function(P, Q, B, check = TRUE){
   mnlink_cann(P, Bs = B, Qs = Q)
 }
-mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, check = TRUE){
+mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL, check = TRUE){
+  stopifnot(is.matrix(P))
   obj <- list(P = P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe)
   class(obj) <- c("mnlink_cann", class(obj))
   if (check){mnlink_cann_check(obj)}
@@ -109,14 +110,42 @@ Omega2cann <- function(obj, check = TRUE){
 
 mnlink_cann_check <- function(obj){
   stopifnot(inherits(obj, "mnlink_cann"))
-  list2env(obj, envir = environment())
-  stopifnot(max(abs(B-diag(diag(B)))) < sqrt(.Machine$double.eps))
+  
+  #check P matrix
+  p <- nrow(obj$P)
+  stopifnot(p == ncol(obj$P))
   stopifnot(max(abs(P %*% t(P) - diag(1, ncol(P)))) < sqrt(.Machine$double.eps))
-  stopifnot(max(abs(t(Q) %*% Q - diag(1, ncol(Q)))) < sqrt(.Machine$double.eps))
-  stopifnot(ncol(P) == ncol(Q))
-  stopifnot(ncol(B) == ncol(P) - 1)
-  if (any(diag(B) > 1)){warning("Elements of B are larger than 1")}
-  if (any(diag(B) < 0)){warning("Elements of B are negative")}
+  
+  #check spherical covariate parameters
+  if (!is.null(obj$Qs)){
+    stopifnot(!is.null(obj$Bs))
+    stopifnot(ncol(obj$Bs) == p - 1)
+    stopifnot(nrow(obj$Bs) == p - 1)
+    stopifnot(ncol(obj$Qs) == p)
+    
+    stopifnot(max(abs(obj$Bs-diag(diag(obj$Bs)))) < sqrt(.Machine$double.eps))
+    stopifnot(max(abs(t(obj$Qs) %*% obj$Qs - diag(1, ncol(obj$Qs)))) < sqrt(.Machine$double.eps))
+    if (any(diag(obj$Bs) > 1)){warning("Elements of Bs are larger than 1")}
+    if (any(diag(obj$Bs) < 0)){warning("Elements of Bs are negative")}
+  } else {
+    stopifnot(is.null(obj$Bs))
+    stopifnot(is.null(obj$ce))
+  }
+  
+  #check Euc covariate parameters
+  if (!is.null(obj$Qe)){
+    stopifnot(!is.null(obj$Be))
+    stopifnot(ncol(obj$Be) == p - 1)
+    stopifnot(nrow(obj$Be) == p - 1)
+    stopifnot(ncol(obj$Qe) == p - 1)
+    
+    stopifnot(max(abs(obj$Be-diag(diag(obj$Be)))) < sqrt(.Machine$double.eps))
+    stopifnot(max(abs(t(obj$Qe) %*% obj$Qe - diag(1, ncol(obj$Qe)))) < sqrt(.Machine$double.eps))
+    if (any(diag(obj$Be) > 1)){warning("Elements of Be are larger than 1")}
+    if (any(diag(obj$Be) < 0)){warning("Elements of Be are negative")}
+  } else {
+    stopifnot(is.null(obj$Be))
+  }
   return(NULL)
 }
 

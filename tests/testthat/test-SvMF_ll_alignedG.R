@@ -8,7 +8,7 @@ test_that("ll using alignedG_mean link in C++ matches R", {
   Q <- mclust::randomOrthogonalMatrix(q, p)
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
-  omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
+  omegapar <- as_mnlink_Omega(cannS2S(P,Q,B))
   
   #generate covariates uniformly on the sphere
   set.seed(4)
@@ -55,7 +55,7 @@ test_that("maximum likelihood for alignedG link", {
   Q <- mclust::randomOrthogonalMatrix(q, p)
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
-  omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
+  omegapar <- as_mnlink_Omega(cannS2S(P,Q,B))
   
   #generate covariates uniformly on the sphere
   set.seed(4)
@@ -91,7 +91,7 @@ test_that("maximum likelihood for alignedG link p = 4", {
   Q <- mclust::randomOrthogonalMatrix(q, p)
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
-  omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
+  omegapar <- as_mnlink_Omega(cannS2S(P,Q,B))
   
   #generate covariates uniformly on the sphere
   set.seed(4)

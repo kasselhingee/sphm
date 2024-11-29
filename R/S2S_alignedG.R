@@ -10,7 +10,7 @@
 #' @export
 optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5, verbose = 0, ...){ #all the parameters are used as starting guesses, except a[1] that is a tuning parameter
   p <- ncol(y)
-  om0 <- as_OmegaS2S(param_mean)
+  om0 <- as_mnlink_Omega(param_mean)
   OmegaS2S_check(om0)
   P <- Omega2cann(om0)$P
   

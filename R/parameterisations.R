@@ -35,7 +35,7 @@ OmegaS2S <- function(p1, q1, Omega, check = TRUE){
   if (check) {OmegaS2S_check(obj)}
   return(obj)
 }
-as_OmegaS2S <- function(obj){
+as_mnlink_Omega <- function(obj){
   if (inherits(obj, "mnlink_cann")){return(cann2Omega(obj, check = FALSE))}
   if (inherits(obj, "OmegaS2S")){return(obj)}
   if (!inherits(obj, "list")){stop("obj must be either a cannS2S, OmegaS2S or list.")}
@@ -196,6 +196,6 @@ OmegaS2S_proj <- function(obj, method = "Omega"){
     newq1 <- cann$Q[,1] - cann$Q[, -1] %*% t(cann$Q[, -1]) %*% cann$Q[,1]
     newq1 <- newq1 / vnorm(newq1)
     cann$Q[,1] <- newq1
-    return(as_OmegaS2S(cann))
+    return(as_mnlink_Omega(cann))
   }
 }

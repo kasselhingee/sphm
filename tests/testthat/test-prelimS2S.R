@@ -9,7 +9,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   Q <- mclust::randomOrthogonalMatrix(q, p)
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
-  omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
+  omegapar <- as_mnlink_Omega(cannS2S(P,Q,B))
   
   #generate covariates uniformly on the sphere
   set.seed(4)
@@ -40,7 +40,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   
   # starting away from optimum, but still within constraints
   set.seed(14)
-  start <- as_OmegaS2S(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
+  start <- as_mnlink_Omega(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
           Q = mclust::randomOrthogonalMatrix(q, p),
           B = diag(sort(runif(p-1), decreasing = TRUE))))
   opt2 <- optim_pobjS2S_parttape(y, x, start)
@@ -57,7 +57,7 @@ test_that("OmegaS2S_constraints() is zero correctly", {
   Q <- mclust::randomOrthogonalMatrix(q, p)
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
-  omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
+  omegapar <- as_mnlink_Omega(cannS2S(P,Q,B))
   expect_equal(OmegaS2S_constraints(OmegaS2S_vec(omegapar), p), rep(0, 1 + 1))
 })
 
@@ -96,7 +96,7 @@ test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   Q <- mclust::randomOrthogonalMatrix(q, p)
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
-  omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
+  omegapar <- as_mnlink_Omega(cannS2S(P,Q,B))
 
   
   #generate covariates uniformly on the sphere

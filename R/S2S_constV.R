@@ -21,7 +21,7 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   p <- ncol(y)
   q <- ncol(x)
   # checks
-  om0 <- as_OmegaS2S(mean)
+  om0 <- as_mnlink_Omega(mean)
   OmegaS2S_check(om0)
   if (!isTRUE(all.equal(cbind(om0$p1, Gstar) %*% t(cbind(om0$p1, Gstar)), diag(1, p), check.attributes = FALSE))){ # p1 orthogonal to Vstar
     stop("Gstar is not orthogonal to p1.")
@@ -43,7 +43,7 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   ystd <- y %*% stdmat
   # apply same operation to initial parameters
   cann0 <- as_mnlink_cann(om0)
-  om0std <- as_OmegaS2S(cannS2S(t(stdmat) %*% cann0$P, cann0$Q, cann0$B))
+  om0std <- as_mnlink_Omega(cannS2S(t(stdmat) %*% cann0$P, cann0$Q, cann0$B))
   stdGstar <- t(stdmat) %*% Gstar #Because stdmat performs a rigid transformation, it is really just a change in basis for the whole problem, so I think this is what we want for the axes too.
   stdKstar <- t(getHstar(om0std$p1)) %*% stdGstar
   stdKstar[, 1] <- det(stdKstar) * stdKstar[,1] #because Cayley transform only works on det of +1
@@ -99,7 +99,7 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   
   # undo standardisation coordinate change
   est_cann <- as_mnlink_cann(est_om)
-  est_om <- as_OmegaS2S(cannS2S(stdmat %*% est_cann$P, est_cann$Q, est_cann$B, check = FALSE))
+  est_om <- as_mnlink_Omega(cannS2S(stdmat %*% est_cann$P, est_cann$Q, est_cann$B, check = FALSE))
   Gstar <- stdmat %*% Gstar
   
   #make first element of each vector positive

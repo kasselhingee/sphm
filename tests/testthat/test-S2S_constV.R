@@ -33,7 +33,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   Q <- mclust::randomOrthogonalMatrix(q, p)
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
-  omegapar <- as_OmegaS2S(cannS2S(P,Q,B))
+  omegapar <- as_mnlink_Omega(cannS2S(P,Q,B))
   
   #generate covariates uniformly on the sphere
   set.seed(4)
@@ -104,7 +104,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   
   ## now starting optimisation with bad Kstar ##
   set.seed(14)
-  start <- as_OmegaS2S(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
+  start <- as_mnlink_Omega(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
                                Q = mclust::randomOrthogonalMatrix(q, p),
                                B = diag(sort(runif(p-1), decreasing = TRUE))))
   set.seed(14)

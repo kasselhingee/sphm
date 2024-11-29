@@ -29,7 +29,7 @@ optim_pobjS2S_g_eq <- function(theta, y, x){
 #' @param local If `TRUE` will do a local search
 optim_pobjS2S_pureR <- function(y, x, paramobj0, global = TRUE, local = TRUE){ #paramobj0 is the starting parameter object
   p <- ncol(y)
-  om0 <- as_OmegaS2S(paramobj0)
+  om0 <- as_mnlink_Omega(paramobj0)
   om0_local <- om0
   globopt <- locopt <- NULL
   if (global){
@@ -80,7 +80,7 @@ optim_pobjS2S_pureR <- function(y, x, paramobj0, global = TRUE, local = TRUE){ #
 
 optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the starting parameter object
   p <- ncol(y)
-  om0 <- as_OmegaS2S(paramobj0)
+  om0 <- as_mnlink_Omega(paramobj0)
 
   obj_tape <- tape_namedfun("pobjS2Scpp", OmegaS2S_vec(om0), vector(mode = "numeric"), p, cbind(y,x), check_for_nan = FALSE)
   constraint_tape <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)

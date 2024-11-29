@@ -28,8 +28,8 @@ iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y)
 #' @export
 meanlinkS2S <- function(x,P = NULL,Q = NULL,B = NULL, paramobj = NULL, check = TRUE){
   if (is.array(x)){
-    if (is.null(P) & is.null(Q) & is.null(B)){paramobj <- as_OmegaS2S(paramobj)}
-    else {paramobj <- as_OmegaS2S(cannS2S(P, Q, B))}
+    if (is.null(P) & is.null(Q) & is.null(B)){paramobj <- as_mnlink_Omega(paramobj)}
+    else {paramobj <- as_mnlink_Omega(cannS2S(P, Q, B))}
     return(meanlinkS2S_Omega(x, paramobj, check = check))
   } else {
     if (is.null(P) & is.null(Q) & is.null(B)){paramobj <- as_mnlink_cann(paramobj)}

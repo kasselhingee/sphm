@@ -36,9 +36,9 @@ test_that("OmegaS2S works and conversions", {
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
   cann <- cannS2S(P, Q, B)
-  om <- as_OmegaS2S(cann)  
+  om <- as_mnlink_Omega(cann)  
   expect_silent(OmegaS2S_check(om))
-  expect_equal(as_OmegaS2S(as_mnlink_cann(om)), om)
+  expect_equal(as_mnlink_Omega(as_mnlink_cann(om)), om)
   expect_equal(OmegaS2S(om$p1, om$q1, om$Omega), om)
   
   #vec and unvec

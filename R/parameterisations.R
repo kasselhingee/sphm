@@ -4,7 +4,7 @@
 #' @param B B matrix: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size.
 #' @param Q The rotation-like matrix `Q` for rotating the covariate vector `x`.
 cannS2S <- function(P, Q, B, check = TRUE){
-  mnlink_cann(P, Bs = B, Qs = Q)
+  mnlink_cann(P = P, Bs = B, Qs = Q)
 }
 mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL, check = TRUE){
   stopifnot(is.matrix(P))
@@ -114,7 +114,7 @@ mnlink_cann_check <- function(obj){
   #check P matrix
   p <- nrow(obj$P)
   stopifnot(p == ncol(obj$P))
-  stopifnot(max(abs(P %*% t(P) - diag(1, ncol(P)))) < sqrt(.Machine$double.eps))
+  stopifnot(max(abs(obj$P %*% t(obj$P) - diag(1, ncol(obj$P)))) < sqrt(.Machine$double.eps))
   
   #check spherical covariate parameters
   if (!is.null(obj$Qs)){

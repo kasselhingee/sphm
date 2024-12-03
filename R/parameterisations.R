@@ -167,8 +167,10 @@ mnlink_Omega_check <- function(obj){
                paste0(names(vals)[!good], ": ", format(sqrt(vals[!good]), digits = 2), collapse = ", ") #sqrt here converts squared sizes to actual sizes
     ))
   }
+  # squared singular values are the square of the scales in B summed
+  # if there are both Spherical and Euclidean covariates than this sum should be less than (p-1) * 2
   singularvalssumsquared <- sum(diag(t(obj$Omega) %*% obj$Omega))
-  if (singularvalssumsquared > nrow(obj$Omega) - 1){warning(sprintf("The sum of squared singular values of Omega is %0.2f, which is greater than p - 1, which means that there are singular values of Omega with size greater than 1.", singularvalssumsquared))}
+  if (singularvalssumsquared > (!is.null(obj$qe1) + !is.null(obj$qs1)) * (nrow(obj$Omega) - 1)){warning(sprintf("The sum of squared singular values of Omega is %0.2f, which means that there are scales in either Be or Bs that are greater than 1.", singularvalssumsquared))}
   return(NULL)
 }
 mnlink_Omega_check_internal <- function(obj){ #uses squared values for smoothness

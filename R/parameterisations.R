@@ -173,13 +173,27 @@ mnlink_Omega_check <- function(obj){
 }
 mnlink_Omega_check_internal <- function(obj){ #uses squared values for smoothness
   stopifnot(inherits(obj, "mnlink_Omega"))
-  list2env(obj, envir = environment())
-  return(c(
-    p1sizediff = (vnorm(p1) - 1)^2,
-    q1sizediff = (vnorm(q1) - 1)^2,
-    p1Omega = (t(p1) %*% Omega)^2,
-    Omegaq1 = (Omega %*% q1)^2
-  ))
+  # list2env(obj, envir = environment())
+  qs <- switch(is.null(obj$qs1), 0, length(obj$qs1))
+  qe <- switch(is.null(obj$qe1), 0, length(obj$qe1))
+  checkvals <- c(
+    p1sizediff = (vnorm(obj$p1) - 1)^2,
+    p1Omega = (t(obj$p1) %*% obj$Omega)^2
+  )
+  if (qs > 0){
+    checkvals <- c(
+      checkvals,
+      qs1sizediff = (vnorm(obj$qs1) - 1)^2,
+      Omegaqs1 = (obj$Omega %*% obj$qs1)^2
+    )
+  }
+  if (qe > 0){
+    checkvals <- c(
+      qe1sizediff = (vnorm(obj$qe1) - 1)^2,
+      Omegaqe1 = (obj$Omega %*% obj$qe1)^2
+    )
+  }
+  return(checkvals)
 }
 # if the values are close to satisfying the constraints, it might make sense to project and scale p1 and q1 to satisfy the constraints
 # will use canonical parameterisation to do this because orthogonality of the columns will make for easier projections

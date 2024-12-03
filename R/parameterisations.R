@@ -29,10 +29,11 @@ OmegaS2S <- function(p1, q1, Omega, check = TRUE){
   mnlink_Omega(p1 = p1, qs1 = q1, Omega = Omega, check = check)
 }
 
-mnlink_Omega <- function(p1, qs1 = NULL, Omega, ce = NULL, check = TRUE){
+mnlink_Omega <- function(p1, qs1 = NULL, Omega, qe1 = NULL, ce = NULL, check = TRUE){
   obj <- list(
     p1 = p1,
     qs1 = qs1,
+    qe1 = qe1,
     Omega = Omega,
     ce = ce
   )
@@ -143,7 +144,7 @@ mnlink_cann_check <- function(obj){
     stopifnot(!is.null(obj$Be))
     stopifnot(ncol(obj$Be) == p - 1)
     stopifnot(nrow(obj$Be) == p - 1)
-    stopifnot(ncol(obj$Qe) == p - 1)
+    stopifnot(ncol(obj$Qe) == p)
     
     stopifnot(max(abs(obj$Be-diag(diag(obj$Be)))) < sqrt(.Machine$double.eps))
     stopifnot(max(abs(t(obj$Qe) %*% obj$Qe - diag(1, ncol(obj$Qe)))) < sqrt(.Machine$double.eps))

@@ -18,7 +18,7 @@ as_mnlink_cann <- function(obj){
   if (inherits(obj, "mnlink_Omega")){return(Omega2cann(obj, check = FALSE))}
   if (!inherits(obj, "list")){stop("obj isn't a cannS2S, OmegaS2S or a list.")}
   if ("P" %in% names(obj)){return(mnlink_cann(obj, check = FALSE))}
-  if ("p1" %in% names(obj)){return(mnlink_Omega(obj, check = FALSE))}
+  if ("p1" %in% names(obj)){return(Omega2cann(mnlink_Omega(obj, check = FALSE), check = FALSE))}
   return(obj)
 }
 
@@ -46,8 +46,8 @@ as_mnlink_Omega <- function(obj){
   if (inherits(obj, "mnlink_cann")){return(cann2Omega(obj, check = FALSE))}
   if (inherits(obj, "mnlink_Omega")){return(obj)}
   if (!inherits(obj, "list")){stop("obj must be either a cannS2S, OmegaS2S or list.")}
-  stopifnot(all(c("p1", "q1", "Omega") %in% names(obj)))
-  class(obj) <- c("mnlink_Omega", class(obj))
+  if ("P" %in% names(obj)){return(cann2Omega(mnlink_cann(obj, check = FALSE)))}
+  if ("p1" %in% names(obj)){return(mnlink_Omega(obj, check = FALSE))}
   return(obj)
 }
 #' @noRd

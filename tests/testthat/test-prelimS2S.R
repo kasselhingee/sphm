@@ -129,7 +129,7 @@ test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   jac <- anADFun$Jac(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(jac, jac_numeric, tolerance = 1E-3)
 
-  jactape <- scorematchingad:::tapeJacobian(anADFun)
+  jactape <- scorematchingad:::tape_Jacobian(anADFun)
   jactapeeval <- jactape$eval(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(jactapeeval, jac)
 
@@ -142,7 +142,7 @@ test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   jac_numeric <- attr(numericDeriv(quote(bADFun$eval(unclass(omparovec), vector(mode = "numeric"))), c("omparovec")), "gradient")
   jac <- bADFun$Jac(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(matrix(jac, nrow = length(tapeeval), byrow = TRUE), jac_numeric, tolerance = 1E-3)
-  jactape <- scorematchingad:::tapeJacobian(bADFun)
+  jactape <- scorematchingad:::tape_Jacobian(bADFun)
   jactapeeval <- jactape$eval(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(jactapeeval, jac)
 
@@ -155,7 +155,7 @@ test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   jac_numeric <- attr(numericDeriv(quote(cADFun$eval(unclass(omparovec), vector(mode = "numeric"))), c("omparovec")), "gradient")
   jac <- cADFun$Jac(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(matrix(jac, nrow = length(tapeeval), byrow = TRUE), jac_numeric, tolerance = 1E-3)
-  jactape <- scorematchingad:::tapeJacobian(cADFun)
+  jactape <- scorematchingad:::tape_Jacobian(cADFun)
   jactapeeval <- jactape$eval(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(jactapeeval, jac)
 

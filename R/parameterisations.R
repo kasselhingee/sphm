@@ -139,7 +139,7 @@ Omega2cann <- function(obj, check = TRUE){
   if (check){mnlink_Omega_check(obj)}
   svdres <- svd(obj$Omega, nu = nrow(obj$Omega) - 1, nv = nrow(obj$Omega) - 1)
 
-  P <- cbind(p1, svdres$u)
+  P <- cbind(obj$p1, svdres$u)
   
   # the rest uses the SVD of Omega as written in the Euclidean link document
   # get columns of Qe and Qs
@@ -149,12 +149,12 @@ Omega2cann <- function(obj, check = TRUE){
   Qe_norms <- sqrt(colSums(Qe_unnorm^2))
   Qsstar <- t(t(Qs_unnorm)/ Qs_norms)
   Qestar <- t(t(Qe_unnorm)/ Qe_norms)
-  Qs <- cbind(qs1, Qsstar)
-  Qe <- cbind(qe1, Qestar)
+  Qs <- cbind(obj$qs1, Qsstar)
+  Qe <- cbind(obj$qe1, Qestar)
   
   # get scaling Bs and Be
-  Bs <- diag(Qs_norms * Omega_svd$d)
-  Be <- diag(Qe_norms * Omega_svd$d)
+  Bs <- diag(Qs_norms * svdres$d[-nrow(obj$Omega)])
+  Be <- diag(Qe_norms * svdres$d[-nrow(obj$Omega)])
   
   mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = obj$ce, check = check)
 }
@@ -206,8 +206,8 @@ mnlink_Omega_check <- function(obj){
   # Check dimensions and nullness of elements
   stopifnot(length(obj$p1) == nrow(obj$Omega))
   stopifnot(length(obj$qs1) + length(obj$qe1) == ncol(obj$Omega))
-  stopifnot(is.null(obj$qe1) + is.null(obj$ce) %in% c(0, 2))
-  stopifnot(length(obj$ce) == length(obj$qe1))
+  stopifnot( (is.null(obj$qe1) + is.null(obj$ce)) %in% c(0, 2))
+  stopifnot(length(obj$ce) == length(obj$p1))
   
   vals <- mnlink_Omega_check_numerical(obj)
   good <- (vals < sqrt(.Machine$double.eps))
@@ -216,18 +216,19 @@ mnlink_Omega_check <- function(obj){
                paste0(names(vals)[!good], ": ", format(sqrt(vals[!good]), digits = 2), collapse = ", ") #sqrt here converts squared sizes to actual sizes
     ))
   }
+  
   # sum of squared singular values is sum(Bs^2 + Be^2).
   # If all of Bs and Be are less than or equal to 1 then sum of squared singular values is less than 2*(p-1) if there are both Spherical and Euclidean covariates 
   singularvalssumsquared <- sum(diag(t(obj$Omega) %*% obj$Omega))
-  if (singularvalssumsquared > (!is.null(obj$qe1) + !is.null(obj$qs1)) * (nrow(obj$Omega) - 1)){warning(sprintf("The sum of squared singular values of Omega is %0.2f, which means that there are scales in either Be or Bs that are greater than 1.", singularvalssumsquared))}
+  if (singularvalssumsquared > ((!is.null(obj$qe1)) + (!is.null(obj$qs1))) * (nrow(obj$Omega) - 1)){warning(sprintf("The sum of squared singular values of Omega is %0.2f, which means that there are scales in either Be or Bs that are greater than 1.", singularvalssumsquared))}
   
   return(NULL)
 }
 mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothness
   stopifnot(inherits(obj, "mnlink_Omega"))
   # list2env(obj, envir = environment())
-  qs <- switch(is.null(obj$qs1), 0, length(obj$qs1))
-  qe <- switch(is.null(obj$qe1), 0, length(obj$qe1))
+  qs <- ifelse(is.null(obj$qs1), 0, length(obj$qs1))
+  qe <- ifelse(is.null(obj$qe1), 0, length(obj$qe1))
   checkvals <- c(
     p1sizediff = (vnorm(obj$p1) - 1)^2,
     p1Omega = (t(obj$p1) %*% obj$Omega)^2

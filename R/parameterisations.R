@@ -137,13 +137,26 @@ cann2Omega <- function(obj, check = TRUE){
 #' Apart from p1 and q1, sign of columns of P and Q cannot be recovered from Omega.
 Omega2cann <- function(obj, check = TRUE){
   if (check){mnlink_Omega_check(obj)}
-  list2env(obj, envir = environment())
-  svdres <- svd(Omega, nu = nrow(Omega) - 1, nv = nrow(Omega) - 1)
+  svdres <- svd(obj$Omega, nu = nrow(obj$Omega) - 1, nv = nrow(obj$Omega) - 1)
 
-  Q <- cbind(q1, svdres$v)
   P <- cbind(p1, svdres$u)
-  B <- diag(svdres$d[-length(svdres$d)])
-  return(cannS2S(P, Q, B, check = check))
+  
+  # the rest uses the SVD of Omega as written in the Euclidean link document
+  # get columns of Qe and Qs
+  Qs_unnorm <- svdres$v[seq.int(1, length.out = length(obj$qs1)), , drop = FALSE]
+  Qe_unnorm <- svdres$v[length(obj$qs1) + seq.int(1, length.out = length(obj$qe1)), , drop = FALSE]
+  Qs_norms <- sqrt(colSums(Qs_unnorm^2))
+  Qe_norms <- sqrt(colSums(Qe_unnorm^2))
+  Qsstar <- t(t(Qs_unnorm)/ Qs_norms)
+  Qestar <- t(t(Qe_unnorm)/ Qe_norms)
+  Qs <- cbind(qs1, Qsstar)
+  Qe <- cbind(qe1, Qestar)
+  
+  # get scaling Bs and Be
+  Bs <- diag(Qs_norms * Omega_svd$d)
+  Be <- diag(Qe_norms * Omega_svd$d)
+  
+  mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = obj$ce, check = check)
 }
 
 mnlink_cann_check <- function(obj){

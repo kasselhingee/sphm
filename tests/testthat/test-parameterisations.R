@@ -69,7 +69,7 @@ test_that("mnlink_cann(): common mistakes", {
   expect_error(mnlink_cann(P, Be = Be, Qs = Qe, check = TRUE))
 })
 
-test_that("Conversions work", {
+test_that("Conversions work: Sph + Euc", {
   set.seed(1)
   p <- 3
   P <- mclust::randomOrthogonalMatrix(p, p)
@@ -106,11 +106,91 @@ test_that("Conversions work", {
   expect_equal(cann2$Bs,cann$Bs)
   expect_equal(cann2$Be,cann$Be)
   expect_equal(cann2$ce,cann$ce)
+})
+
+test_that("Conversions work: Sph only", {
+  set.seed(1)
+  p <- 3
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  qs <- 5
+  set.seed(2)
+  Qs <- mclust::randomOrthogonalMatrix(qs, p)
+  set.seed(3)
+  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+  cann <- mnlink_cann(P, Bs = Bs, Qs = Qs)
   
+  Om <- cann2Omega(cann, check = FALSE)
+  
+  # check properties of Om
+  expect_equal(sum(diag(t(Om$Omega) %*% Om$Omega)), sum(Bs^2))
+  expect_silent(mnlink_Omega_check(Om))
+  
+  # check that convert back matches
+  cann2 <- Omega2cann(Om, check = FALSE)
+  expect_silent(mnlink_cann_check(cann2))
+  expect_equal(topos1strow(cann2$P), topos1strow(cann$P))
+  # Qs
+  expect_equal(topos1strow(cann2$Qs),topos1strow(cann$Qs))
+  #recovering Bs and Be
+  expect_equal(cann2$Bs,cann$Bs)
+})
+
+test_that("Conversions work: Euc only", {
+  set.seed(1)
+  p <- 3
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  qe <- 5
+  set.seed(2)
+  Qe <- mclust::randomOrthogonalMatrix(qe, p)
+  set.seed(3)
+  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  set.seed(4)
+  ce <- runif(p)
+  cann <- mnlink_cann(P, Be = Be, Qe = Qe, ce = ce)
+  
+  Om <- cann2Omega(cann, check = FALSE)
+  
+  # check properties of Om
+  expect_equal(sum(diag(t(Om$Omega) %*% Om$Omega)), sum(Be^2))
+  expect_silent(mnlink_Omega_check(Om))
+  
+  # check that convert back matches
+  cann2 <- Omega2cann(Om, check = FALSE)
+  expect_silent(mnlink_cann_check(cann2))
+  expect_equal(topos1strow(cann2$P), topos1strow(cann$P))
+  # Qe
+  expect_equal(topos1strow(cann2$Qe),topos1strow(cann$Qe))
+  #recovering Bs and Be
+  expect_equal(cann2$Be,cann$Be)
+  expect_equal(cann2$ce,cann$ce)
 })
 
 
-test_that("OmegaS2S works and conversions", {
+test_that("mnlink_Omega works directly", {
+  set.seed(1)
+  p <- 3
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  qs <- 5
+  set.seed(2)
+  Qs <- mclust::randomOrthogonalMatrix(qs, p)
+  set.seed(3)
+  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+  qe <- 4
+  set.seed(12)
+  Qe <- mclust::randomOrthogonalMatrix(qe, p)
+  set.seed(13)
+  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  set.seed(14)
+  ce <- runif(p)
+  cann <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
+  Om <- cann2Omega(cann)
+  
+  Om2 <- mnlink_Omega(p1 = Om$p1, qs1 = Om$qs1, qe1 = Om$qe1, Omega = Om$Omega, ce = Om$ce, check = TRUE)
+  expect_equal(Om2, Om)
+})
+  
+test_that("projections", {
+  
   set.seed(1)
   p <- 3
   q <- 5

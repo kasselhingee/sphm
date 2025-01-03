@@ -142,19 +142,21 @@ Omega2cann <- function(obj, check = TRUE){
   P <- cbind(obj$p1, svdres$u)
   
   # the rest uses the SVD of Omega as written in the Euclidean link document
-  # get columns of Qe and Qs
-  Qs_unnorm <- svdres$v[seq.int(1, length.out = length(obj$qs1)), , drop = FALSE]
-  Qe_unnorm <- svdres$v[length(obj$qs1) + seq.int(1, length.out = length(obj$qe1)), , drop = FALSE]
-  Qs_norms <- sqrt(colSums(Qs_unnorm^2))
-  Qe_norms <- sqrt(colSums(Qe_unnorm^2))
-  Qsstar <- t(t(Qs_unnorm)/ Qs_norms)
-  Qestar <- t(t(Qe_unnorm)/ Qe_norms)
-  Qs <- cbind(obj$qs1, Qsstar)
-  Qe <- cbind(obj$qe1, Qestar)
-  
-  # get scaling Bs and Be
-  Bs <- diag(Qs_norms * svdres$d[-nrow(obj$Omega)])
-  Be <- diag(Qe_norms * svdres$d[-nrow(obj$Omega)])
+  Qs <- Qe <- Bs <- Be <- NULL
+  if (!is.null(obj$qs1)){
+    Qs_unnorm <- svdres$v[seq.int(1, length.out = length(obj$qs1)), , drop = FALSE]
+    Qs_norms <- sqrt(colSums(Qs_unnorm^2))
+    Qsstar <- t(t(Qs_unnorm)/ Qs_norms)
+    Qs <- cbind(obj$qs1, Qsstar)
+    Bs <- diag(Qs_norms * svdres$d[-nrow(obj$Omega)])
+  }
+  if (!is.null(obj$qe1)){
+    Qe_unnorm <- svdres$v[length(obj$qs1) + seq.int(1, length.out = length(obj$qe1)), , drop = FALSE]
+    Qe_norms <- sqrt(colSums(Qe_unnorm^2))
+    Qestar <- t(t(Qe_unnorm)/ Qe_norms)
+    Qe <- cbind(obj$qe1, Qestar)
+    Be <- diag(Qe_norms * svdres$d[-nrow(obj$Omega)])
+  }
   
   mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = obj$ce, check = check)
 }
@@ -207,7 +209,7 @@ mnlink_Omega_check <- function(obj){
   stopifnot(length(obj$p1) == nrow(obj$Omega))
   stopifnot(length(obj$qs1) + length(obj$qe1) == ncol(obj$Omega))
   stopifnot( (is.null(obj$qe1) + is.null(obj$ce)) %in% c(0, 2))
-  stopifnot(length(obj$ce) == length(obj$p1))
+  if(!is.null(obj$qe1)){stopifnot(length(obj$ce) == length(obj$p1))}
   
   vals <- mnlink_Omega_check_numerical(obj)
   good <- (vals < sqrt(.Machine$double.eps))

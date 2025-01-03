@@ -15,7 +15,7 @@ pobjS2S <- function(y, x, paramobj){
 
 
 optim_pobjS2S_f <- function(theta, y, x){
-  pobjS2S(y, x, Omega_proj(OmegaS2S_unvec(theta, ncol(y), check = FALSE), method = "Omega"))
+  pobjS2S(y, x, Omega_proj(OmegaS2S_unvec(theta, ncol(y), check = FALSE)))
 }
 optim_pobjS2S_g_eq <- function(theta, y, x){
   om <- OmegaS2S_unvec(theta, ncol(y), check = FALSE)
@@ -72,7 +72,7 @@ optim_pobjS2S_pureR <- function(y, x, paramobj0, global = TRUE, local = TRUE){ #
                         )
   
   return(list(
-    solution = Omega_proj(OmegaS2S_unvec(solutionvec, p, check = FALSE), method = "Omega"),
+    solution = Omega_proj(OmegaS2S_unvec(solutionvec, p, check = FALSE)),
     glob_nloptr = globopt,
     loc_nloptr = locopt
   ))
@@ -106,7 +106,7 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the star
   )
   
   return(list(
-    solution = Omega_proj(OmegaS2S_unvec(locopt$solution, p, check = FALSE), method = "Omega"),
+    solution = Omega_proj(OmegaS2S_unvec(locopt$solution, p, check = FALSE)),
     loc_nloptr = locopt
   ))
 }

@@ -252,39 +252,24 @@ mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothne
 }
 # if the values are close to satisfying the constraints, it might make sense to project and scale p1 and q1 to satisfy the constraints
 # will use canonical parameterisation to do this because orthogonality of the columns will make for easier projections
-Omega_proj <- function(obj, method = "Omega"){
+Omega_proj <- function(obj){
   stopifnot(inherits(obj, "mnlink_Omega"))
-  stopifnot(method %in% c("Omega", "p1q1"))
-  if (method == "Omega") {
-    # first project orthogonal to p1 (needs p1 unit vector)
-    p1 <- obj$p1/vnorm(obj$p1)
-    newOmega <- obj$Omega -  (p1 %*% t(p1)) %*% obj$Omega
-    # now t(p1) %*% newOmega = 0
-    
-    Omega_s <- Omega_e <- NULL
-    if (!is.null(obj$qs1)){# project Omega_s perpendicular to qs1
-      obj$qs1 <- obj$qs1/vnorm(obj$qs1)
-      Omega_s <- newOmega[, seq.int(1, length.out = length(obj$qs1)), drop = FALSE]
-      Omega_s <- Omega_s - Omega_s %*% obj$qs1 %*% t(obj$qs1)
-    }
-    if (!is.null(obj$qs1)){# project Omega_e perpendicular to qe1
-      obj$qe1 <- obj$qe1/vnorm(obj$qe1)
-      Omega_e <- newOmega[, length(obj$qs1) + seq.int(1, length.out = length(obj$qe1)), drop = FALSE]
-      Omega_e <- Omega_e - Omega_e %*% obj$qe1 %*% t(obj$qe1)
-    }
-    obj$Omega <- cbind(Omega_s, Omega_e)
-    return(obj)
-  }
-  if (method == "p1q1") {
-    stop("Not implemented for Euc covariates yet")
-    cann <- Omega2cann(obj, check = FALSE)
-    newp1 <- cann$P[,1] - cann$P[, -1] %*% t(cann$P[, -1]) %*% cann$P[,1]
-    newp1 <- newp1 / vnorm(newp1)
-    cann$P[,1] <- newp1
+  # first project orthogonal to p1 (needs p1 unit vector)
+  p1 <- obj$p1/vnorm(obj$p1)
+  newOmega <- obj$Omega -  (p1 %*% t(p1)) %*% obj$Omega
+  # now t(p1) %*% newOmega = 0
   
-    newq1 <- cann$Q[,1] - cann$Q[, -1] %*% t(cann$Q[, -1]) %*% cann$Q[,1]
-    newq1 <- newq1 / vnorm(newq1)
-    cann$Q[,1] <- newq1
-    return(as_mnlink_Omega(cann))
+  Omega_s <- Omega_e <- NULL
+  if (!is.null(obj$qs1)){# project Omega_s perpendicular to qs1
+    obj$qs1 <- obj$qs1/vnorm(obj$qs1)
+    Omega_s <- newOmega[, seq.int(1, length.out = length(obj$qs1)), drop = FALSE]
+    Omega_s <- Omega_s - Omega_s %*% obj$qs1 %*% t(obj$qs1)
   }
+  if (!is.null(obj$qs1)){# project Omega_e perpendicular to qe1
+    obj$qe1 <- obj$qe1/vnorm(obj$qe1)
+    Omega_e <- newOmega[, length(obj$qs1) + seq.int(1, length.out = length(obj$qe1)), drop = FALSE]
+    Omega_e <- Omega_e - Omega_e %*% obj$qe1 %*% t(obj$qe1)
+  }
+  obj$Omega <- cbind(Omega_s, Omega_e)
+  return(obj)
 }

@@ -209,12 +209,12 @@ test_that("projections - to do", {
   Om <- cann2Omega(cann)
   
   # project Omega perpendicular to p1 and q1
-  expect_equal(Omega_proj(Om, method = "Omega"), Om)
+  expect_equal(Omega_proj(Om), Om)
   Ommod <- Om
   Ommod$Omega <- Om$Omega * (1 + 1E-2 * matrix(runif(length(Om$Omega), -1, 1), p, qs + qe))
   expect_error(mnlink_Omega_check(Ommod), "checks failed")
-  expect_equal(Omega_proj(Ommod, method = "Omega"), Om, tolerance = 1E-2)
-  expect_equal(Omega_proj(Ommod, method = "Omega")[c("qs1", "qe1", "p1")], Om[c("qs1", "qe1", "p1")])
+  expect_equal(Omega_proj(Ommod), Om, tolerance = 1E-2)
+  expect_equal(Omega_proj(Ommod)[c("qs1", "qe1", "p1")], Om[c("qs1", "qe1", "p1")])
   
   
   
@@ -236,23 +236,6 @@ test_that("projections - to do", {
   
   #vec and unvec
   expect_equal(OmegaS2S_unvec(OmegaS2S_vec(om), p), om)
-  
-  # project p1 and q1 perpendicular to Omega
-  expect_equal(Omega_proj(om), om)
-  ommod <- om
-  ommod$p1 <- om$p1 * (1 + 1E-2 * runif(length(om$p1), -1, 1))
-  ommod$q1 <- om$q1 * (1 + 1E-2 * runif(length(om$q1), -1, 1))
-  expect_error(mnlink_Omega_check(ommod), "checks failed")
-  expect_equal(Omega_proj(ommod, method = "p1q1"), om, tolerance = 1E-2)
-  expect_equal(Omega_proj(ommod, method = "p1q1")$Omega, om$Omega)
-  
-  # project Omega perpendicular to p1 and q1
-  expect_equal(Omega_proj(om, method = "Omega"), om)
-  ommod <- om
-  ommod$Omega <- om$Omega * (1 + 1E-2 * matrix(runif(length(om$Omega), -1, 1), p, q))
-  expect_error(mnlink_Omega_check(ommod), "checks failed")
-  expect_equal(Omega_proj(ommod, method = "Omega"), om, tolerance = 1E-2)
-  expect_equal(Omega_proj(ommod, method = "Omega")[c("q1", "p1")], om[c("q1", "p1")])
 })
 
 

@@ -4,11 +4,11 @@
 #' These methods check and convert between parameterisations.
 #' Actual mean link calculations are performed by other functions.
 #' @param P Final rotation matrix on the response sphere: a p x p orthonormal matrix with positive determinant.
-#' @param Bs Scaling matrix for spherical covariates: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size.
-#' @param Be Scaling matrix for Euclidean covariates: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size.
-#' @param Qs The qs x p rotation-like matrix `R_s` for rotating the spherical covariate vector.
-#' @param Qe The qe x p rotation-like matrix `R_e` for rotating the Euclidean covariate vector.
-#' @param ce The additive offset \eqn{c_e} for Euclidean covariates only. Vector of length qe.
+#' @param Bs Scaling matrix for spherical covariates: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size. `NULL` if no Sph covariates.
+#' @param Be Scaling matrix for Euclidean covariates: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size. `NULL` if no Euc covariates.
+#' @param Qs The qs x p rotation-like matrix `R_s` for rotating the spherical covariate vector. `NULL` if no Sph covariates.
+#' @param Qe The qe x p rotation-like matrix `R_e` for rotating the Euclidean covariate vector. `NULL` if no Euc covariates.
+#' @param ce The additive offset \eqn{c_e} for Euclidean covariates only. Vector of length qe. `NULL` if no Euc covariates.
 #' @details
 #' # Cannonical Parameterisation
 #' The `P`, `Bs`, `Be`, `Qs`, `Qe` and `ce` is slightly more flexible than Shogo's link function with both Euclidean covariates and a spherical covariate that matches Remark 2 of Manuscript (Nov 29, 2024).
@@ -43,8 +43,8 @@ as_mnlink_cann <- function(obj){
 
 #' @name mnlink_params
 #' @param p1 First column of the P matrix (vector of length `p`)
-#' @param qe1 First column of the Qe matrix (vector of length `qe`)
-#' @param qs1 First column of the Qs matrix (vector of length `qs`)
+#' @param qe1 First column of the Qe matrix (vector of length `qe`). `NULL` if no Euc covariates.
+#' @param qs1 First column of the Qs matrix (vector of length `qs`). `NULL` if no Sph covariates.
 #' @param Omega A `p` by `qe + qs` matrix representing 
 #' \deqn{\Omega = [\Omega_s \Omega_e] = [P^* B_s {Q_s^*}^T \,   P^* B_e {Q_e^*}^T]}
 NULL
@@ -191,8 +191,8 @@ mnlink_Omega_check <- function(obj){
                paste0(names(vals)[!good], ": ", format(sqrt(vals[!good]), digits = 2), collapse = ", ") #sqrt here converts squared sizes to actual sizes
     ))
   }
-  # squared singular values are the square of the scales in B summed
-  # if there are both Spherical and Euclidean covariates than this sum should be less than (p-1) * 2
+  # sum of squared singular values is sum(Bs^2 + Be^2).
+  # If all of Bs and Be are less than or equal to 1 then sum of squared singular values is less than 2*(p-1) if there are both Spherical and Euclidean covariates 
   singularvalssumsquared <- sum(diag(t(obj$Omega) %*% obj$Omega))
   if (singularvalssumsquared > (!is.null(obj$qe1) + !is.null(obj$qs1)) * (nrow(obj$Omega) - 1)){warning(sprintf("The sum of squared singular values of Omega is %0.2f, which means that there are scales in either Be or Bs that are greater than 1.", singularvalssumsquared))}
   return(NULL)
@@ -210,13 +210,13 @@ mnlink_Omega_check_internal <- function(obj){ #uses squared values for smoothnes
     checkvals <- c(
       checkvals,
       qs1sizediff = (vnorm(obj$qs1) - 1)^2,
-      Omegaqs1 = (obj$Omega %*% obj$qs1)^2
+      Omegaqs1 = (obj$Omega[, seq.int(1, qs)] %*% obj$qs1)^2
     )
   }
   if (qe > 0){
     checkvals <- c(
       qe1sizediff = (vnorm(obj$qe1) - 1)^2,
-      Omegaqe1 = (obj$Omega %*% obj$qe1)^2
+      Omegaqe1 = (obj$Omega[, qs + seq.int(1, qe)] %*% obj$qe1)^2
     )
   }
   return(checkvals)

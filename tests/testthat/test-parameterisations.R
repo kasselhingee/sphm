@@ -40,6 +40,7 @@ test_that("OmegaS2S works and conversions", {
   expect_silent(mnlink_Omega_check(om))
   expect_equal(as_mnlink_Omega(as_mnlink_cann(om)), om)
   expect_equal(OmegaS2S(om$p1, om$q1, om$Omega), om)
+  expect_equal(sum(diag(t(obj$Omega) %*% obj$Omega)), sum(Be^2 + Bs^2))
   
   #vec and unvec
   expect_equal(OmegaS2S_unvec(OmegaS2S_vec(om), p), om)

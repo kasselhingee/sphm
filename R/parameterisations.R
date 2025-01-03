@@ -184,6 +184,12 @@ mnlink_cann_check <- function(obj){
 }
 
 mnlink_Omega_check <- function(obj){
+  # Check dimensions and nullness of elements
+  stopifnot(length(obj$p1) == nrow(obj$Omega))
+  stopifnot(length(obj$qs1) + length(obj$qe1) == ncol(obj$Omega))
+  stopifnot(is.null(obj$qe1) + is.null(obj$ce) %in% c(0, 2))
+  stopifnot(length(obj$ce) == length(obj$qe1))
+  
   vals <- mnlink_Omega_check_internal(obj)
   good <- (vals < sqrt(.Machine$double.eps))
   if (!all(good)){
@@ -195,6 +201,7 @@ mnlink_Omega_check <- function(obj){
   # If all of Bs and Be are less than or equal to 1 then sum of squared singular values is less than 2*(p-1) if there are both Spherical and Euclidean covariates 
   singularvalssumsquared <- sum(diag(t(obj$Omega) %*% obj$Omega))
   if (singularvalssumsquared > (!is.null(obj$qe1) + !is.null(obj$qs1)) * (nrow(obj$Omega) - 1)){warning(sprintf("The sum of squared singular values of Omega is %0.2f, which means that there are scales in either Be or Bs that are greater than 1.", singularvalssumsquared))}
+  
   return(NULL)
 }
 mnlink_Omega_check_internal <- function(obj){ #uses squared values for smoothness

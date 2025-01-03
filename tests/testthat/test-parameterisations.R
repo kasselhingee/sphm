@@ -190,6 +190,34 @@ test_that("mnlink_Omega works directly", {
 })
   
 test_that("projections - to do", {
+  set.seed(1)
+  p <- 3
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  qs <- 5
+  set.seed(2)
+  Qs <- mclust::randomOrthogonalMatrix(qs, p)
+  set.seed(3)
+  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+  qe <- 4
+  set.seed(12)
+  Qe <- mclust::randomOrthogonalMatrix(qe, p)
+  set.seed(13)
+  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  set.seed(14)
+  ce <- runif(p)
+  cann <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
+  Om <- cann2Omega(cann)
+  
+  # project Omega perpendicular to p1 and q1
+  expect_equal(Omega_proj(Om, method = "Omega"), Om)
+  Ommod <- Om
+  Ommod$Omega <- Om$Omega * (1 + 1E-2 * matrix(runif(length(Om$Omega), -1, 1), p, qs + qe))
+  expect_error(mnlink_Omega_check(Ommod), "checks failed")
+  expect_equal(Omega_proj(Ommod, method = "Omega"), Om, tolerance = 1E-2)
+  expect_equal(Omega_proj(Ommod, method = "Omega")[c("qs1", "qe1", "p1")], Om[c("qs1", "qe1", "p1")])
+  
+  
+  
   
   set.seed(1)
   p <- 3

@@ -256,17 +256,27 @@ Omega_proj <- function(obj, method = "Omega"){
   stopifnot(inherits(obj, "mnlink_Omega"))
   stopifnot(method %in% c("Omega", "p1q1"))
   if (method == "Omega") {
-    list2env(obj, envir = environment())
     # first project orthogonal to p1 (needs p1 unit vector)
-    p1 <- p1/vnorm(p1)
-    Omegaperpp1 <- Omega -  (p1 %*% t(p1)) %*% Omega
-    # now t(p1) %*% Omegaperpp1 = 0
-    # similarly to q1
-    q1 <- q1/vnorm(q1)
-    Omegaperpq1 <- Omegaperpp1 - Omegaperpp1 %*% q1 %*% t(q1)
-    return(OmegaS2S(p1, q1, Omegaperpq1, check = FALSE))
+    p1 <- obj$p1/vnorm(obj$p1)
+    newOmega <- obj$Omega -  (p1 %*% t(p1)) %*% obj$Omega
+    # now t(p1) %*% newOmega = 0
+    
+    Omega_s <- Omega_e <- NULL
+    if (!is.null(obj$qs1)){# project Omega_s perpendicular to qs1
+      obj$qs1 <- obj$qs1/vnorm(obj$qs1)
+      Omega_s <- newOmega[, seq.int(1, length.out = length(obj$qs1)), drop = FALSE]
+      Omega_s <- Omega_s - Omega_s %*% obj$qs1 %*% t(obj$qs1)
+    }
+    if (!is.null(obj$qs1)){# project Omega_e perpendicular to qe1
+      obj$qe1 <- obj$qe1/vnorm(obj$qe1)
+      Omega_e <- newOmega[, length(obj$qs1) + seq.int(1, length.out = length(obj$qe1)), drop = FALSE]
+      Omega_e <- Omega_e - Omega_e %*% obj$qe1 %*% t(obj$qe1)
+    }
+    obj$Omega <- cbind(Omega_s, Omega_e)
+    return(obj)
   }
   if (method == "p1q1") {
+    stop("Not implemented for Euc covariates yet")
     cann <- Omega2cann(obj, check = FALSE)
     newp1 <- cann$P[,1] - cann$P[, -1] %*% t(cann$P[, -1]) %*% cann$P[,1]
     newp1 <- newp1 / vnorm(newp1)

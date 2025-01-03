@@ -265,7 +265,7 @@ Omega_proj <- function(obj){
     Omega_s <- newOmega[, seq.int(1, length.out = length(obj$qs1)), drop = FALSE]
     Omega_s <- Omega_s - Omega_s %*% obj$qs1 %*% t(obj$qs1)
   }
-  if (!is.null(obj$qs1)){# project Omega_e perpendicular to qe1
+  if (!is.null(obj$qe1)){# project Omega_e perpendicular to qe1
     obj$qe1 <- obj$qe1/vnorm(obj$qe1)
     Omega_e <- newOmega[, length(obj$qs1) + seq.int(1, length.out = length(obj$qe1)), drop = FALSE]
     Omega_e <- Omega_e - Omega_e %*% obj$qe1 %*% t(obj$qe1)

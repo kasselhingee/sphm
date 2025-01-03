@@ -189,7 +189,7 @@ test_that("mnlink_Omega works directly", {
   expect_equal(Om2, Om)
 })
   
-test_that("projections - to do", {
+test_that("projections orthogonal to p1 and qe1, qs1", {
   set.seed(1)
   p <- 3
   P <- mclust::randomOrthogonalMatrix(p, p)
@@ -213,10 +213,48 @@ test_that("projections - to do", {
   Ommod <- Om
   Ommod$Omega <- Om$Omega * (1 + 1E-2 * matrix(runif(length(Om$Omega), -1, 1), p, qs + qe))
   expect_error(mnlink_Omega_check(Ommod), "checks failed")
-  expect_equal(Omega_proj(Ommod), Om, tolerance = 1E-2)
+  expect_equal(Omega_proj(Ommod)$Omega, Om$Omega, tolerance = 1E-2)
   expect_equal(Omega_proj(Ommod)[c("qs1", "qe1", "p1")], Om[c("qs1", "qe1", "p1")])
   
+  # just Sph
+  cann <- mnlink_cann(P, Bs = Bs, Qs = Qs)
+  Om <- cann2Omega(cann)
+  expect_equal(Omega_proj(Om), Om)
+  Ommod <- Om
+  Ommod$Omega <- Om$Omega * (1 + 1E-2 * matrix(runif(length(Om$Omega), -1, 1), p, qs))
+  expect_error(mnlink_Omega_check(Ommod), "checks failed")
+  expect_equal(Omega_proj(Ommod)$Omega, Om$Omega, tolerance = 1E-2)
+  expect_equal(Omega_proj(Ommod)[c("qs1", "qe1", "p1")], Om[c("qs1", "qe1", "p1")])
   
+  # just Euc
+  cann <- mnlink_cann(P, Be = Be, Qe = Qe, ce = ce)
+  Om <- cann2Omega(cann)
+  expect_equal(Omega_proj(Om), Om)
+  Ommod <- Om
+  Ommod$Omega <- Om$Omega * (1 + 1E-2 * matrix(runif(length(Om$Omega), -1, 1), p, qe))
+  expect_error(mnlink_Omega_check(Ommod), "checks failed")
+  expect_equal(Omega_proj(Ommod)$Omega, Om$Omega, tolerance = 1E-2)
+  expect_equal(Omega_proj(Ommod)[c("qs1", "qe1", "p1")], Om[c("qs1", "qe1", "p1")])
+}) 
+  
+test_that("vec and unvec - to finish", {
+  set.seed(1)
+  p <- 3
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  qs <- 5
+  set.seed(2)
+  Qs <- mclust::randomOrthogonalMatrix(qs, p)
+  set.seed(3)
+  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+  qe <- 4
+  set.seed(12)
+  Qe <- mclust::randomOrthogonalMatrix(qe, p)
+  set.seed(13)
+  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  set.seed(14)
+  ce <- runif(p)
+  cann <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
+  Om <- cann2Omega(cann)
   
   
   set.seed(1)

@@ -8,7 +8,7 @@
 #' @param Be Scaling matrix for Euclidean covariates: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size. `NULL` if no Euc covariates.
 #' @param Qs The qs x p rotation-like matrix `R_s` for rotating the spherical covariate vector. `NULL` if no Sph covariates.
 #' @param Qe The qe x p rotation-like matrix `R_e` for rotating the Euclidean covariate vector. `NULL` if no Euc covariates.
-#' @param ce The additive offset \eqn{c_e} for Euclidean covariates only. Vector of length qe. `NULL` if no Euc covariates.
+#' @param ce The additive offset \eqn{c_e} for Euclidean covariates only. Vector of length p. `NULL` if no Euc covariates.
 #' @details
 #' # Cannonical Parameterisation
 #' The `P`, `Bs`, `Be`, `Qs`, `Qe` and `ce` is slightly more flexible than Shogo's link function with both Euclidean covariates and a spherical covariate that matches Remark 2 of Manuscript (Nov 29, 2024).
@@ -27,7 +27,7 @@ cannS2S <- function(P, Q, B, check = TRUE){
 }
 mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL, check = TRUE){
   stopifnot(is.matrix(P))
-  obj <- list(P = P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe)
+  obj <- list(P = P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
   class(obj) <- c("mnlink_cann", class(obj))
   if (check){mnlink_cann_check(obj)}
   return(obj)
@@ -180,7 +180,6 @@ mnlink_cann_check <- function(obj){
     if (any(diag(obj$Bs) < 0)){warning("Elements of Bs are negative")}
   } else {
     stopifnot(is.null(obj$Bs))
-    stopifnot(is.null(obj$ce))
   }
   
   #check Euc covariate parameters
@@ -193,7 +192,7 @@ mnlink_cann_check <- function(obj){
     stopifnot(max(abs(obj$Be-diag(diag(obj$Be)))) < sqrt(.Machine$double.eps))
     stopifnot(max(abs(t(obj$Qe) %*% obj$Qe - diag(1, ncol(obj$Qe)))) < sqrt(.Machine$double.eps))
     stopifnot(is.vector(obj$ce))
-    stopifnot(length(obj$ce) == p-1)
+    stopifnot(length(obj$ce) == p)
     if (any(diag(obj$Be) > 1)){warning("Elements of Be are larger than 1")}
     if (any(diag(obj$Be) < 0)){warning("Elements of Be are negative")}
   } else {

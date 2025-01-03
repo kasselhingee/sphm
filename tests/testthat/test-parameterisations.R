@@ -1,15 +1,74 @@
-test_that("cannS2S() creates objects that pass check", {
+test_that("mnlink_cann() objects pass check: Sph only", {
   set.seed(1)
   p <- 3
-  q <- 5
+  qs <- 5
   P <- mclust::randomOrthogonalMatrix(p, p)
   set.seed(2)
-  Q <- mclust::randomOrthogonalMatrix(q, p)
+  Qs <- mclust::randomOrthogonalMatrix(qs, p)
   set.seed(3)
-  B <- diag(sort(runif(p-1), decreasing = TRUE))
-  obj <- cannS2S(P, Q, B)
+  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+  obj <- mnlink_cann(P, Bs = Bs, Qs = Qs, check = FALSE)
   expect_silent(mnlink_cann_check(obj))
 })
+
+test_that("mnlink_cann() objects pass check: Euc only", {
+  set.seed(1)
+  p <- 3
+  qe <- 5
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  set.seed(2)
+  Qe <- mclust::randomOrthogonalMatrix(qe, p)
+  set.seed(3)
+  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  set.seed(4)
+  ce <- runif(p)
+  obj <- mnlink_cann(P, Be = Be, Qe = Qe, ce = ce, check = FALSE)
+  expect_silent(mnlink_cann_check(obj))
+})
+
+test_that("mnlink_cann() objects pass check: Sph + Euc only", {
+  set.seed(1)
+  p <- 3
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  qs <- 5
+  set.seed(2)
+  Qs <- mclust::randomOrthogonalMatrix(qs, p)
+  set.seed(3)
+  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+  qe <- 4
+  set.seed(12)
+  Qe <- mclust::randomOrthogonalMatrix(qe, p)
+  set.seed(13)
+  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  set.seed(14)
+  ce <- runif(p)
+  obj <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = FALSE)
+  expect_silent(mnlink_cann_check(obj))
+})
+
+test_that("mnlink_cann(): common mistakes", {
+  set.seed(1)
+  p <- 3
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  qs <- 5
+  set.seed(2)
+  Qs <- mclust::randomOrthogonalMatrix(qs, p)
+  set.seed(3)
+  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+  qe <- 4
+  set.seed(12)
+  Qe <- mclust::randomOrthogonalMatrix(qe, p)
+  set.seed(13)
+  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  set.seed(14)
+  ce <- runif(p)
+  
+  expect_error(mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = NULL, check = TRUE))
+  expect_error(mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce[-1], check = TRUE))
+  expect_error(mnlink_cann(P, Bs = Bs, Qe = Qs, check = TRUE))
+  expect_error(mnlink_cann(P, Be = Be, Qs = Qe, check = TRUE))
+})
+
 
 test_that("mnlink_cann() creates objects that pass check", {
   set.seed(1)

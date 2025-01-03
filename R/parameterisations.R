@@ -119,11 +119,18 @@ OmegaS2S_unvec <- function(vec, p, check = TRUE){
 #' @export
 cann2Omega <- function(obj, check = TRUE){
   if (check){mnlink_cann_check(obj)}
-  list2env(obj, envir = environment())
-  p1 <- P[, 1]
-  q1 <- Q[, 1]
-  Omega <- P[,-1] %*% B %*% t(Q[, -1])
-  return(OmegaS2S(p1, q1, Omega, check = FALSE))
+  p1 <- obj$P[, 1]
+  qs1 <- obj$Qs[, 1]
+  qe1 <- obj$Qe[, 1]
+  Omega_s <- Omega_e <- NULL
+  if (!is.null(qs1)){
+    Omega_s <- obj$P[,-1] %*% obj$Bs %*% t(obj$Qs[, -1])
+  }
+  if (!is.null(qe1)){
+    Omega_e <- obj$P[,-1] %*% obj$Be %*% t(obj$Qe[, -1])
+  }
+  Omega <- cbind(Omega_s, Omega_e)
+  return(mnlink_Omega(p1, qs1 = qs1, Omega = Omega, qe1 = qe1, ce = obj$ce, check = FALSE))
 }
 
 #' # Warning

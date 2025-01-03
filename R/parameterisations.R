@@ -17,7 +17,7 @@
 #' Andy's link function for Euclidean covariates needs an additional scaling \eqn{b_{im}} parameter for the imaginary component Andy's link function to be parameterised. It will also need `ce = 0` and `Bs` and `Qs` will be ignored since spherical covariates not incorporated yet.
 #' 
 #' # Omega Parameterisation
-#' The link functions are simplified by writing \eqn{\Omega_s = P^* B_s {Q_s^*}^T} and \eqn{\Omega_e = P^* B_e {Q_e^*}^T}.
+#' The link functions are simplified by writing \eqn{\Omega_s = P^* B_s {Q_s^*}^T} and \eqn{\Omega_e = P^* B_e {Q_e^*}^T}, and finally \eqn{\Omega = [\Omega_s \,\, \Omega_e]}.
 #' This parameterisation helps optimisation as optimisation in Stiefel manifolds is harder than other spaces, and also reflects the sign ambiguity of columns of P with the matching columns of `Qe` and `Qs`.
 #' 
 NULL
@@ -41,9 +41,14 @@ as_mnlink_cann <- function(obj){
   return(obj)
 }
 
+#' @name mnlink_params
 #' @param p1 First column of the P matrix (vector of length `p`)
-#' @param q1 First column of the Q matrix (vector of length `q`)
-#' @param Omega A `p` by `q` matrix representing `P* B t(Q*)`.
+#' @param qe1 First column of the Qe matrix (vector of length `qe`)
+#' @param qs1 First column of the Qs matrix (vector of length `qs`)
+#' @param Omega A `p` by `qe + qs` matrix representing 
+#' \deqn{\Omega = [\Omega_s \Omega_e] = [P^* B_s {Q_s^*}^T \,   P^* B_e {Q_e^*}^T]}
+NULL
+
 OmegaS2S <- function(p1, q1, Omega, check = TRUE){
   mnlink_Omega(p1 = p1, qs1 = q1, Omega = Omega, check = check)
 }

@@ -1,8 +1,27 @@
-#' Parameterisation Classes
-#' @description Parameterisations of the link functions are stored as lists.
-#' @param P P matrix: a p x p (?orthonormal) matrix
-#' @param B B matrix: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size.
-#' @param Q The rotation-like matrix `Q` for rotating the covariate vector `x`.
+#' @name mnlink_params
+#' @title Parameterisation Classes
+#' @description Parameterisations of the link functions.
+#' These methods check and convert between parameterisations.
+#' Actual mean link calculations are performed by other functions.
+#' @param P Final rotation matrix on the response sphere: a p x p orthonormal matrix with positive determinant.
+#' @param Bs Scaling matrix for spherical covariates: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size.
+#' @param Be Scaling matrix for Euclidean covariates: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size.
+#' @param Qs The qs x p rotation-like matrix `R_s` for rotating the spherical covariate vector.
+#' @param Qe The qe x p rotation-like matrix `R_e` for rotating the Euclidean covariate vector.
+#' @param ce The additive offset \eqn{c_e} for Euclidean covariates only. Vector of length qe.
+#' @details
+#' # Cannonical Parameterisation
+#' The `P`, `Bs`, `Be`, `Qs`, `Qe` and `ce` is slightly more flexible than Shogo's link function with both Euclidean covariates and a spherical covariate that matches Remark 2 of Manuscript (Nov 29, 2024).
+#' The link (1) from that manuscript can be obtained by including an extra zero-valued Euclidean covariate as the first covariate and forcing \eqn{q_{1e}} to be `(1, 0, ...)` to match the index of the constant covariate and setting `ce[1]` to be zero. I think these changes will not affect the estimation method as both \eqn{q_{1e}} and `ce[1]` separate out of the "Omega" parameterisation.
+#' 
+#' Andy's link function for Euclidean covariates needs an additional scaling \eqn{b_{im}} parameter for the imaginary component Andy's link function to be parameterised. It will also need `ce = 0` and `Bs` and `Qs` will be ignored since spherical covariates not incorporated yet.
+#' 
+#' # Omega Parameterisation
+#' The link functions are simplified by writing \eqn{\Omega_s = P^* B_s {Q_s^*}^T} and \eqn{\Omega_e = P^* B_e {Q_e^*}^T}.
+#' This parameterisation helps optimisation as optimisation in Stiefel manifolds is harder than other spaces, and also reflects the sign ambiguity of columns of P with the matching columns of `Qe` and `Qs`.
+#' 
+NULL
+
 cannS2S <- function(P, Q, B, check = TRUE){
   mnlink_cann(P = P, Bs = B, Qs = Q)
 }

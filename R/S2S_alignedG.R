@@ -109,7 +109,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
       eval_jac_g_eq =  function(theta){matrix(ll_mean_constraint$Jac(theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
       opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2)), combined_opts)
     )
-    est$mean <- OmegaS2S_vec(OmegaS2S_proj(OmegaS2S_unvec(newmean$solution, p, check = FALSE), method = "Omega"))
+    est$mean <- OmegaS2S_vec(Omega_proj(OmegaS2S_unvec(newmean$solution, p, check = FALSE), method = "Omega"))
     mntime <- proc.time() - mntime_start
     times[iter, "mean"] <- sum(mntime[c("user.self", "user.child")])
     estinfo_mn[iter,] <- newmean[c("status", "message", "iterations", "objective")]

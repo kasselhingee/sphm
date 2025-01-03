@@ -189,7 +189,7 @@ test_that("mnlink_Omega works directly", {
   expect_equal(Om2, Om)
 })
   
-test_that("projections", {
+test_that("projections - to do", {
   
   set.seed(1)
   p <- 3
@@ -210,21 +210,21 @@ test_that("projections", {
   expect_equal(OmegaS2S_unvec(OmegaS2S_vec(om), p), om)
   
   # project p1 and q1 perpendicular to Omega
-  expect_equal(OmegaS2S_proj(om), om)
+  expect_equal(Omega_proj(om), om)
   ommod <- om
   ommod$p1 <- om$p1 * (1 + 1E-2 * runif(length(om$p1), -1, 1))
   ommod$q1 <- om$q1 * (1 + 1E-2 * runif(length(om$q1), -1, 1))
   expect_error(mnlink_Omega_check(ommod), "checks failed")
-  expect_equal(OmegaS2S_proj(ommod, method = "p1q1"), om, tolerance = 1E-2)
-  expect_equal(OmegaS2S_proj(ommod, method = "p1q1")$Omega, om$Omega)
+  expect_equal(Omega_proj(ommod, method = "p1q1"), om, tolerance = 1E-2)
+  expect_equal(Omega_proj(ommod, method = "p1q1")$Omega, om$Omega)
   
   # project Omega perpendicular to p1 and q1
-  expect_equal(OmegaS2S_proj(om, method = "Omega"), om)
+  expect_equal(Omega_proj(om, method = "Omega"), om)
   ommod <- om
   ommod$Omega <- om$Omega * (1 + 1E-2 * matrix(runif(length(om$Omega), -1, 1), p, q))
   expect_error(mnlink_Omega_check(ommod), "checks failed")
-  expect_equal(OmegaS2S_proj(ommod, method = "Omega"), om, tolerance = 1E-2)
-  expect_equal(OmegaS2S_proj(ommod, method = "Omega")[c("q1", "p1")], om[c("q1", "p1")])
+  expect_equal(Omega_proj(ommod, method = "Omega"), om, tolerance = 1E-2)
+  expect_equal(Omega_proj(ommod, method = "Omega")[c("q1", "p1")], om[c("q1", "p1")])
 })
 
 

@@ -252,7 +252,7 @@ mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothne
 }
 # if the values are close to satisfying the constraints, it might make sense to project and scale p1 and q1 to satisfy the constraints
 # will use canonical parameterisation to do this because orthogonality of the columns will make for easier projections
-OmegaS2S_proj <- function(obj, method = "Omega"){
+Omega_proj <- function(obj, method = "Omega"){
   stopifnot(inherits(obj, "mnlink_Omega"))
   stopifnot(method %in% c("Omega", "p1q1"))
   if (method == "Omega") {

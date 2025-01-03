@@ -30,7 +30,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
 
   # optimise using pure R
   opt <- optim_pobjS2S_pureR(y, x, omegapar, global = TRUE, local = TRUE)
-  expect_equal(OmegaS2S_proj(opt$solution, method = "Omega"), opt$solution, tolerance = 1E-3)
+  expect_equal(Omega_proj(opt$solution, method = "Omega"), opt$solution, tolerance = 1E-3)
   expect_equal(opt$solution, omegapar, tolerance = 0.05)
   
   # optimise locally using derivative information

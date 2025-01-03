@@ -92,7 +92,7 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, p, q)
   
   # project Omega to satisfy orthogonality constraint
-  est_om <- OmegaS2S_proj(OmegaS2S_unvec(estparamlist$omvec, p, check = FALSE))
+  est_om <- Omega_proj(OmegaS2S_unvec(estparamlist$omvec, p, check = FALSE))
   
   # calculate Gstar now (because getHstar is sensitive to changes of basis A * H(p1) != H(A*p1))
   Gstar <- getHstar(est_om$p1) %*% estparamlist$Kstar

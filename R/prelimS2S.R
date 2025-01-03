@@ -19,7 +19,7 @@ optim_pobjS2S_f <- function(theta, y, x){
 }
 optim_pobjS2S_g_eq <- function(theta, y, x){
   om <- OmegaS2S_unvec(theta, ncol(y), check = FALSE)
-  mnlink_Omega_check_internal(om)
+  mnlink_Omega_check_numerical(om)
 }
 
 #' Optimisation of the Preliminary Objectivf Function for S2S Link

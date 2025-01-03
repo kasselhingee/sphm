@@ -190,7 +190,7 @@ mnlink_Omega_check <- function(obj){
   stopifnot(is.null(obj$qe1) + is.null(obj$ce) %in% c(0, 2))
   stopifnot(length(obj$ce) == length(obj$qe1))
   
-  vals <- mnlink_Omega_check_internal(obj)
+  vals <- mnlink_Omega_check_numerical(obj)
   good <- (vals < sqrt(.Machine$double.eps))
   if (!all(good)){
     stop(paste("The following checks failed.", 
@@ -204,7 +204,7 @@ mnlink_Omega_check <- function(obj){
   
   return(NULL)
 }
-mnlink_Omega_check_internal <- function(obj){ #uses squared values for smoothness
+mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothness
   stopifnot(inherits(obj, "mnlink_Omega"))
   # list2env(obj, envir = environment())
   qs <- switch(is.null(obj$qs1), 0, length(obj$qs1))

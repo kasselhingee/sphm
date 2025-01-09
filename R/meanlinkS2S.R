@@ -41,7 +41,9 @@ meanlinkS2S <- function(x,P = NULL,Q = NULL,B = NULL, paramobj = NULL, check = T
 
 meanlinkS2S_cann <- function(x, paramobj){
   stopifnot(inherits(paramobj, "mnlink_cann"))
-  list2env(paramobj, envir = environment())
+  P <- paramobj$P
+  B <- paramobj$Bs
+  Q <- paramobj$Qs
   stopifnot(abs(sum(x^2) - 1) < sqrt(.Machine$double.eps))
   return(drop(P%*%iSp(B%*%Sp(t(Q)%*%x))))
 }
@@ -56,6 +58,9 @@ meanlinkS2S_Omega <- function(x, paramobj, check = TRUE){
   stopifnot(inherits(paramobj, "mnlink_Omega"))
   if (check){mnlink_Omega_check(paramobj)}
   list2env(paramobj, envir = environment())
+  p1 <- paramobj$p1
+  q1 <- paramobj$qs1
+  Omega <- paramobj$Omega
   if (inherits(x, "array")){x <- t(x)} #so rows of x become column vectors
   
   BQx2 <- rowSums(t(x) * t(t(Omega) %*% Omega %*% x))

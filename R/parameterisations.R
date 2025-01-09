@@ -79,7 +79,9 @@ as_mnlink_Omega <- function(obj){
 #' @param obj An OmegaS2S parameter object.
 OmegaS2S_vec <- function(obj){
   stopifnot(inherits(obj, "mnlink_Omega"))
-  list2env(obj, envir = environment())
+  p1 <- obj$p1
+  q1 <- obj$qs1
+  Omega <- obj$Omega
   names(p1) <- paste0("p1_", 1:length(p1))
   names(q1) <- paste0("q1_", 1:length(q1))
   out <- c(p1, q1, as.vector(Omega))

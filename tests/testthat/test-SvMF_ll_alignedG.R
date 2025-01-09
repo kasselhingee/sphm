@@ -32,15 +32,15 @@ test_that("ll using alignedG_mean link in C++ matches R", {
     ld[i] <- uldSvMF_cann(y[i, , drop = FALSE], k, a, G)
   }
   
-  ldcpp <- ull_S2S_alignedG_mean(OmegaS2S_vec(omegapar), dyn = c(k, a, as.vector(P)), p, cbind(y, x))
+  ldcpp <- ull_S2S_alignedG_mean(mnlink_Omega_vec(omegapar), dyn = c(k, a, as.vector(P)), p, cbind(y, x))
   expect_equal(ld, ldcpp)
   
   # compute likelihood when a2, ... is the independent vector and P, k is fixed
-  ldcpp <- ull_S2S_alignedG_a(log(a[-c(1,2)]), c(k, a[1]), c(p, OmegaS2S_vec(omegapar), as.vector(P)), cbind(y, x))
+  ldcpp <- ull_S2S_alignedG_a(log(a[-c(1,2)]), c(k, a[1]), c(p, mnlink_Omega_vec(omegapar), as.vector(P)), cbind(y, x))
   expect_equal(ld, ldcpp)
 
   # compute likelihood when k is the only independent vector
-  ldcpp <- ull_S2S_alignedG_k(k, c(OmegaS2S_vec(omegapar), a, as.vector(P)), p, cbind(y, x))
+  ldcpp <- ull_S2S_alignedG_k(k, c(mnlink_Omega_vec(omegapar), a, as.vector(P)), p, cbind(y, x))
   expect_equal(ld, ldcpp)
 })
 
@@ -76,7 +76,7 @@ test_that("maximum likelihood for alignedG link", {
   # when at the starting guess, expect it to work well
   out <- optim_alignedG(y, x, a[1], omegapar, k, a[-1], xtol_rel = 1E-4)
   
-  expect_equal(out$solution, list(mean = OmegaS2S_vec(omegapar), k = k, aremaining = a[-1]),
+  expect_equal(out$solution, list(mean = mnlink_Omega_vec(omegapar), k = k, aremaining = a[-1]),
                tolerance = 2E-2)
 
 })
@@ -113,7 +113,7 @@ test_that("maximum likelihood for alignedG link p = 4", {
   # when at the starting guess, expect it to work well
   out <- optim_alignedG(y, x, a[1], omegapar, k, a[-1], xtol_rel = 1E-4)
   
-  expect_equal(out$solution, list(mean = OmegaS2S_vec(omegapar), k = k, aremaining = a[-1]),
+  expect_equal(out$solution, list(mean = mnlink_Omega_vec(omegapar), k = k, aremaining = a[-1]),
                tolerance = 2E-2)
 
 })

@@ -16,16 +16,16 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
   
   # generate tapes of ll that can be reused
   ll_mean <- tape_namedfun("ull_S2S_alignedG_mean", 
-                           OmegaS2S_vec(om0),
+                           mnlink_Omega_vec(om0),
                            c(k, a1, aremaining, as.vector(P)),
                            p,
                            cbind(y, x),
                            check_for_nan = FALSE)
-  ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", mnlink_Omega_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   withCallingHandlers({
   ll_k <- tape_namedfun("ull_S2S_alignedG_k",
                         k,
-                        c(OmegaS2S_vec(om0), a1, aremaining, as.vector(P)),
+                        c(mnlink_Omega_vec(om0), a1, aremaining, as.vector(P)),
                         p,
                         cbind(y, x),
                         check_for_nan = FALSE)
@@ -44,7 +44,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
   
   # optimise iteratively. Start with k, then do a, then mean and repeat
   est0 <- list(
-    mean = OmegaS2S_vec(om0),
+    mean = mnlink_Omega_vec(om0),
     k = k,
     aremaining = aremaining
   )
@@ -109,13 +109,13 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
       eval_jac_g_eq =  function(theta){matrix(ll_mean_constraint$Jac(theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta))},
       opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2)), combined_opts)
     )
-    est$mean <- OmegaS2S_vec(Omega_proj(OmegaS2S_unvec(newmean$solution, p, check = FALSE)))
+    est$mean <- mnlink_Omega_vec(Omega_proj(mnlink_Omega_unvec(newmean$solution, p, check = FALSE)))
     mntime <- proc.time() - mntime_start
     times[iter, "mean"] <- sum(mntime[c("user.self", "user.child")])
     estinfo_mn[iter,] <- newmean[c("status", "message", "iterations", "objective")]
     
     # Update P and check params
-    Omegapar <- OmegaS2S_unvec(est$mean, p, check = FALSE)
+    Omegapar <- mnlink_Omega_unvec(est$mean, p, check = FALSE)
     cannpar <- Omega2cann(Omegapar, check = FALSE)
     tryCatch({mnlink_cann_check(cannpar)}, error = function(e){warning(conditionMessage(e)); return(NULL)})
     P <- cannpar$P

@@ -77,7 +77,7 @@ as_mnlink_Omega <- function(obj){
 #' @noRd
 #' Vectorsises and inverse of this vectorisation for the OmegaS2S parameterisation.
 #' @param obj An OmegaS2S parameter object.
-OmegaS2S_vec <- function(obj){
+mnlink_Omega_vec <- function(obj){
   stopifnot(inherits(obj, "mnlink_Omega"))
   p1 <- obj$p1
   q1 <- obj$qs1
@@ -87,14 +87,14 @@ OmegaS2S_vec <- function(obj){
   out <- c(p1, q1, as.vector(Omega))
   names(out)[(1 + length(p1) + length(q1)):length(out)] <- 
     paste0("Omega_", as.vector(outer(1:nrow(Omega), 1:ncol(Omega), function(x,y){paste0(x, ",", y)})))
-  class(out) <- "OmegaS2S_vec"
+  class(out) <- "mnlink_Omega_vec"
   return(out)
 }
 
 #' @noRd
-#' @param vec is a vector like `OmegaS2S_vec()`
+#' @param vec is a vector like `mnlink_Omega_vec()`
 #' @param p The dimension of the response (The dimension of covariates will be infered from `p`).
-OmegaS2S_unvec <- function(vec, p, check = TRUE){
+mnlink_Omega_unvec <- function(vec, p, check = TRUE){
   # length of vec = p + q + p*q
   # (l - p)/(1+p) = q
   q <- (length(vec) - p)/(1+p)

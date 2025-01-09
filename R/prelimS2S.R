@@ -15,10 +15,10 @@ pobjS2S <- function(y, x, paramobj){
 
 
 optim_pobjS2S_f <- function(theta, y, x){
-  pobjS2S(y, x, Omega_proj(OmegaS2S_unvec(theta, ncol(y), check = FALSE)))
+  pobjS2S(y, x, Omega_proj(mnlink_Omega_unvec(theta, ncol(y), check = FALSE)))
 }
 optim_pobjS2S_g_eq <- function(theta, y, x){
-  om <- OmegaS2S_unvec(theta, ncol(y), check = FALSE)
+  om <- mnlink_Omega_unvec(theta, ncol(y), check = FALSE)
   mnlink_Omega_check_numerical(om)
 }
 
@@ -34,28 +34,28 @@ optim_pobjS2S_pureR <- function(y, x, paramobj0, global = TRUE, local = TRUE){ #
   globopt <- locopt <- NULL
   if (global){
     globopt <- nloptr::nloptr(
-      x0 = OmegaS2S_vec(om0),
+      x0 = mnlink_Omega_vec(om0),
       eval_f = optim_pobjS2S_f,
       eval_g_eq = optim_pobjS2S_g_eq,
-      lb = OmegaS2S_vec(om0) *0 - 10, #10 is just a guess here. Since everything is related to spheres, I suspect most values are well below 1.
-      ub = OmegaS2S_vec(om0) *0 + 10,
+      lb = mnlink_Omega_vec(om0) *0 - 10, #10 is just a guess here. Since everything is related to spheres, I suspect most values are well below 1.
+      ub = mnlink_Omega_vec(om0) *0 + 10,
       opts = list(algorithm = "NLOPT_GN_ISRES",
                   xtol_rel = 1E-04,
                   maxeval = 1E4), #the only algorthim that natively handles non-linear equality constraints - all the others have to use augmented Lagrangian ideas.
       y = y,
       x = x
     )
-    om0_local <- OmegaS2S_unvec(globopt$solution, p, check = FALSE)
+    om0_local <- mnlink_Omega_unvec(globopt$solution, p, check = FALSE)
   }
  
   if (local){
     # re do with a local optimisation to polish (NLopt docs suggest this)
     locopt <- nloptr::nloptr(
-      x0 = OmegaS2S_vec(om0_local),
+      x0 = mnlink_Omega_vec(om0_local),
       eval_f = optim_pobjS2S_f,
       eval_g_eq = optim_pobjS2S_g_eq,
-      lb = OmegaS2S_vec(om0) *0 - 10, #10 is just a guess here. Since everything is related to spheres, I suspect most values are well below 1.
-      ub = OmegaS2S_vec(om0) *0 + 10,
+      lb = mnlink_Omega_vec(om0) *0 - 10, #10 is just a guess here. Since everything is related to spheres, I suspect most values are well below 1.
+      ub = mnlink_Omega_vec(om0) *0 + 10,
       opts = list(algorithm = "NLOPT_LN_COBYLA",
                   xtol_rel = 1E-04,
                   maxeval = 1E3),
@@ -72,7 +72,7 @@ optim_pobjS2S_pureR <- function(y, x, paramobj0, global = TRUE, local = TRUE){ #
                         )
   
   return(list(
-    solution = Omega_proj(OmegaS2S_unvec(solutionvec, p, check = FALSE)),
+    solution = Omega_proj(mnlink_Omega_unvec(solutionvec, p, check = FALSE)),
     glob_nloptr = globopt,
     loc_nloptr = locopt
   ))
@@ -82,9 +82,9 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the star
   p <- ncol(y)
   om0 <- as_mnlink_Omega(paramobj0)
 
-  obj_tape <- tape_namedfun("pobjS2Scpp", OmegaS2S_vec(om0), vector(mode = "numeric"), p, cbind(y,x), check_for_nan = FALSE)
-  constraint_tape <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  ineqconstraint_tape <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  obj_tape <- tape_namedfun("pobjS2Scpp", mnlink_Omega_vec(om0), vector(mode = "numeric"), p, cbind(y,x), check_for_nan = FALSE)
+  constraint_tape <- tape_namedfun("wrap_OmegaS2S_constraints", mnlink_Omega_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  ineqconstraint_tape <- tape_namedfun("wrap_OmegaS2S_constraints", mnlink_Omega_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
 
   # prepare nloptr options
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",
@@ -95,7 +95,7 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the star
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
   locopt <- nloptr::nloptr(
-    x0 = OmegaS2S_vec(om0),
+    x0 = mnlink_Omega_vec(om0),
     eval_f = function(theta){obj_tape$eval(theta, vector(mode = "numeric"))},
     eval_grad_f = function(theta){obj_tape$Jac(theta, vector(mode = "numeric"))},
     eval_g_eq =  function(theta){constraint_tape$eval(theta, vector(mode = "numeric"))[1:2]},
@@ -106,7 +106,7 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the star
   )
   
   return(list(
-    solution = Omega_proj(OmegaS2S_unvec(locopt$solution, p, check = FALSE)),
+    solution = Omega_proj(mnlink_Omega_unvec(locopt$solution, p, check = FALSE)),
     loc_nloptr = locopt
   ))
 }

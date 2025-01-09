@@ -25,7 +25,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   
   # objective function in C++ and R should match when omegapar passes mnlink_Omega_check()
   objval <- pobjS2S(y, x, omegapar)
-  objvalcpp <-  pobjS2Scpp(OmegaS2S_vec(omegapar), vector(), p, cbind(y,x))
+  objvalcpp <-  pobjS2Scpp(mnlink_Omega_vec(omegapar), vector(), p, cbind(y,x))
   expect_equal(objvalcpp, objval)
 
   # optimise using pure R
@@ -58,7 +58,7 @@ test_that("OmegaS2S_constraints() is zero correctly", {
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
   omegapar <- as_mnlink_Omega(cannS2S(P,Q,B))
-  expect_equal(OmegaS2S_constraints(OmegaS2S_vec(omegapar), p), rep(0, 1 + 1))
+  expect_equal(OmegaS2S_constraints(mnlink_Omega_vec(omegapar), p), rep(0, 1 + 1))
 })
 
 test_that("pre_est3_mod optimisation works", {
@@ -111,15 +111,15 @@ test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 10*mn)}))
 
-  anADFun <- tape_namedfun("pobjS2Scpp", OmegaS2S_vec(omegapar), vector(mode = "numeric"), p, cbind(y,x), check_for_nan = FALSE)
-  directeval <- pobjS2Scpp(OmegaS2S_vec(omegapar), vector(), p, cbind(y,x))
-  tapeeval <- anADFun$eval(unclass(OmegaS2S_vec(omegapar)), vector(mode = "numeric"))
+  anADFun <- tape_namedfun("pobjS2Scpp", mnlink_Omega_vec(omegapar), vector(mode = "numeric"), p, cbind(y,x), check_for_nan = FALSE)
+  directeval <- pobjS2Scpp(mnlink_Omega_vec(omegapar), vector(), p, cbind(y,x))
+  tapeeval <- anADFun$eval(unclass(mnlink_Omega_vec(omegapar)), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)
 
   # if taping worked the results should match for a different value of the parameters
   omparo <- omegapar
   omparo$Omega <- omparo$Omega + 1
-  omparovec <- OmegaS2S_vec(omparo)
+  omparovec <- mnlink_Omega_vec(omparo)
   directeval <- pobjS2Scpp(omparovec, vector(), p, cbind(y,x))
   tapeeval <- anADFun$eval(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)
@@ -134,7 +134,7 @@ test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   expect_equal(jactapeeval, jac)
 
   # check constraints
-  bADFun <- tape_namedfun("wrap_OmegaS2S_constraints", OmegaS2S_vec(omegapar), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  bADFun <- tape_namedfun("wrap_OmegaS2S_constraints", mnlink_Omega_vec(omegapar), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   directeval <- OmegaS2S_constraints(omparovec, p)
   tapeeval <- bADFun$eval(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)
@@ -147,8 +147,8 @@ test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   expect_equal(jactapeeval, jac)
 
   ## check inequality constraints
-  cADFun <- tape_namedfun("OmegaS2S_ineqconstaints", OmegaS2S_vec(omegapar), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  directeval <- sum(diag(t(OmegaS2S_unvec(omparovec, p, check = FALSE)$Omega) %*% OmegaS2S_unvec(omparovec, p, check = FALSE)$Omega)) - (p-1)
+  cADFun <- tape_namedfun("OmegaS2S_ineqconstaints", mnlink_Omega_vec(omegapar), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  directeval <- sum(diag(t(mnlink_Omega_unvec(omparovec, p, check = FALSE)$Omega) %*% mnlink_Omega_unvec(omparovec, p, check = FALSE)$Omega)) - (p-1)
   tapeeval <- cADFun$eval(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)
 

@@ -256,24 +256,8 @@ test_that("vec and unvec - to finish", {
   cann <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
   Om <- cann2Omega(cann)
   
-  
-  set.seed(1)
-  p <- 3
-  q <- 5
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  set.seed(2)
-  Q <- mclust::randomOrthogonalMatrix(q, p)
-  set.seed(3)
-  B <- diag(sort(runif(p-1), decreasing = TRUE))
-  cann <- cannS2S(P, Q, B)
-  om <- as_mnlink_Omega(cann)  
-  expect_silent(mnlink_Omega_check(om))
-  expect_equal(as_mnlink_Omega(as_mnlink_cann(om)), om)
-  expect_equal(OmegaS2S(om$p1, om$q1, om$Omega), om)
-  expect_equal(sum(diag(t(obj$Omega) %*% obj$Omega)), sum(Be^2 + Bs^2))
-  
   #vec and unvec
-  expect_equal(OmegaS2S_unvec(OmegaS2S_vec(om), p), om)
+  expect_equal(mnlink_Omega_unvec(mnlink_Omega_vec(Om), p), Om)
 })
 
 

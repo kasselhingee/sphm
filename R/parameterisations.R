@@ -61,6 +61,9 @@ mnlink_Omega <- function(p1, qs1 = NULL, Omega, qe1 = NULL, ce = NULL, check = T
     Omega = Omega,
     ce = ce
   )
+  if (length(qs1) == 0){obj$qs1 <- NULL}
+  if (length(qe1) == 0){obj$qe1 <- NULL}
+  if (length(ce) == 0){obj$ce <- NULL}
   class(obj) <- c("mnlink_Omega", class(obj))
   if (check) {mnlink_Omega_check(obj)}
   return(obj)
@@ -80,13 +83,22 @@ as_mnlink_Omega <- function(obj){
 mnlink_Omega_vec <- function(obj){
   stopifnot(inherits(obj, "mnlink_Omega"))
   p1 <- obj$p1
-  q1 <- obj$qs1
+  qs1 <- obj$qs1
+  qe1 <- obj$qe1
   Omega <- obj$Omega
-  names(p1) <- paste0("p1_", 1:length(p1))
-  names(q1) <- paste0("q1_", 1:length(q1))
-  out <- c(p1, q1, as.vector(Omega))
-  names(out)[(1 + length(p1) + length(q1)):length(out)] <- 
-    paste0("Omega_", as.vector(outer(1:nrow(Omega), 1:ncol(Omega), function(x,y){paste0(x, ",", y)})))
+  ce <- obj$ce
+  Omegavec <- as.vector(Omega)
+  names(Omegavec) <- as.vector(
+      outer(seq.int(1, length.out = length(p1)), 
+        c( paste0("s", seq.int(1, length.out = length(qs1)), recycle0 = TRUE),
+           paste0("e", seq.int(1, length.out = length(qe1)), recycle0 = TRUE)),
+        FUN = paste, sep = ","))
+  names(Omegavec) <- paste0("Omega_", names(Omegavec))
+  names(p1) <- paste0("p1_", seq.int(1, length.out = length(p1)), recycle0 = TRUE)
+  if (!is.null(qs1)){names(qs1) <- paste0("qs1_", seq.int(1, length.out = length(qs1)), recycle0 = TRUE)}
+  if (!is.null(qe1)){names(qe1) <- paste0("qe1_", seq.int(1, length.out = length(qe1)), recycle0 = TRUE)}
+  if (!is.null(ce)){names(ce) <- paste0("ce_", seq.int(1, length.out = length(ce)), recycle0 = TRUE)}
+  out <- c(p1, qs1, qe1, Omegavec, ce)
   class(out) <- "mnlink_Omega_vec"
   return(out)
 }
@@ -94,17 +106,20 @@ mnlink_Omega_vec <- function(obj){
 #' @noRd
 #' @param vec is a vector like `mnlink_Omega_vec()`
 #' @param p The dimension of the response (The dimension of covariates will be infered from `p`).
-mnlink_Omega_unvec <- function(vec, p, check = TRUE){
-  # length of vec = p + q + p*q
-  # (l - p)/(1+p) = q
-  q <- (length(vec) - p)/(1+p)
-  stopifnot(q == as.integer(q))
-  stopifnot(q > p -1)
+#' @param qe Number of Euclidean covariates
+mnlink_Omega_unvec <- function(vec, p, qe = 0, check = TRUE){
+  # length of vec = p + qs + qe + p*(qs + qe) + p*(qe>0)
+  # l - p*(qe>0) - qe - p*qe = qs + p*qs
+  # (l - p*(qe>0) - qe - p*qe)/(1+p) = qs
+  qs <- (length(vec) - p - p*(qe>0) - qe - p*qe)/(1+p)
+  stopifnot(qs == as.integer(qs))
   names(vec) <- NULL
   
-  OmegaS2S(p1 = vec[1:p],
-           q1 = vec[p + 1:q],
-           Omega = matrix(vec[p+q+1:(p*q)], nrow = p, ncol = q, byrow = FALSE),
+  mnlink_Omega(p1 = vec[1:p],
+           qs1 = vec[p + seq.int(1, length.out = qs)],
+           qe1 = vec[p + qs + seq.int(1, length.out = qe)],
+           Omega = matrix(vec[p + qs + qe + seq.int(1, length.out = p*(qe + qs))], nrow = p, ncol = qs + qe, byrow = FALSE),
+           ce = vec[p + qs + qe + p*(qs + qe) + seq.int(1, length.out = p * (qe > 0))],
            check = check)
 }
 

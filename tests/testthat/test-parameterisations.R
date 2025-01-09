@@ -257,7 +257,15 @@ test_that("vec and unvec - to finish", {
   Om <- cann2Omega(cann)
   
   #vec and unvec
-  expect_equal(mnlink_Omega_unvec(mnlink_Omega_vec(Om), p), Om)
+  expect_equal(mnlink_Omega_unvec(mnlink_Omega_vec(Om), p, qe = qe), Om)
+  
+  #sph only
+  Om <- cann2Omega(mnlink_cann(P, Bs = Bs, Qs = Qs))
+  expect_equal(mnlink_Omega_unvec(mnlink_Omega_vec(Om), p, qe = 0), Om)
+  
+  #Euc only
+  Om <- cann2Omega(mnlink_cann(P, Be = Be, Qe = Qe, ce = ce))
+  expect_equal(mnlink_Omega_unvec(mnlink_Omega_vec(Om), p, qe = qe), Om)
 })
 
 

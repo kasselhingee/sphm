@@ -2,20 +2,36 @@
 #include "meanlinkS2S.h"
 #include "OmegaS2S.h"
 
-mata1 meanlinkS2Scpp(const mata1 &x, const veca1 &vec, const int p) {
+mata1 meanlinkS2Scpp(const mata1 &xs, const mata1 &xe, const veca1 &vec, const int p, const int qe = 0) {
   // Convert vector to a mnlink_Omega_cpp object
-  mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p);
+  mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p, qe);
 
-  mata1 x_t = x.transpose();
+  mata1 xs_t = xs.transpose();
+  mata1 xe_t = xe.transpose();
 
   // Extract p1, q1, and Omega
   veca1 p1 = ompar.p1;
-  veca1 q1 = ompar.q1;
-  mata1 Omega = ompar.Omega;
+  veca1 qs1 = ompar.qs1;
+  veca1 qe1 = ompar.qe1;
+  veca1 ce = ompar.ce;
+  mata1 Omega_s = ompar.Omega.leftCols(ompar.qs);
+  mata1 Omega_e = ompar.Omega.rightCols(ompar.qe);
 
-  // Compute the amount of p1 and Omegax corresponding to each column of x
-  veca1 BQx2 = (Omega.transpose() * Omega * x_t).cwiseProduct(x_t).colwise().sum();
-  veca1 q1x = q1.transpose() * x_t;
+  //following proposition 2, but with extension for denominator below Omega_e with offset given by first element of ce.
+  veca1 ytilde(xe_t.rows());
+  ytilde.setZero();
+
+  //ytilde contribution from spherical covar
+  if (ompar.qs > 0){
+    veca1 numerator = (Omega_s * xs_t);
+    veca1 denominator = (q1.transpose() * xs_t).array() + 1.0;
+    ytilde = ytilde + (numerator.array()/denominator.array()).matrix().transpose();
+  }
+  if (ompar.qe > 0){
+    veca1 numerator = (Omega_e * xe_t).colwise() + ce; //this is something called broadcasting in Eigen
+    veca1 denominator = (q1.transpose() * xs_t).array() + 1.0;
+    ytilde = ytilde + (numerator.array()/denominator.array()).matrix().transpose();
+  }
   veca1 p1_mult = ((q1x.array() + 1).square() - BQx2.array()) / ((q1x.array() + 1).square() + BQx2.array());
   veca1 Omegax_mult = (2 * (1 + q1x.array())) / ((q1x.array() + 1).square() + BQx2.array());
 

@@ -28,6 +28,7 @@ cannS2S <- function(P, Q, B, check = TRUE){
 mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL, check = TRUE){
   stopifnot(is.matrix(P))
   obj <- list(P = P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
+  if (length(obj$ce) == 0){obj$ce <- NULL}
   class(obj) <- c("mnlink_cann", class(obj))
   if (check){mnlink_cann_check(obj)}
   return(obj)
@@ -53,7 +54,10 @@ OmegaS2S <- function(p1, q1, Omega, check = TRUE){
   mnlink_Omega(p1 = p1, qs1 = q1, Omega = Omega, check = check)
 }
 
-mnlink_Omega <- function(p1, qs1 = NULL, Omega, qe1 = NULL, ce = NULL, check = TRUE){
+mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("numeric", 0), ce = vector("numeric", 0), check = TRUE){
+  if (is.null(qs1)){obj$qs1 <- vector("numeric", 0)}
+  if (is.null(qe1)){obj$qe1 <- vector("numeric", 0)}
+  if (is.null(ce)){obj$ce <- vector("numeric", 0)}
   obj <- list(
     p1 = p1,
     qs1 = qs1,
@@ -61,9 +65,6 @@ mnlink_Omega <- function(p1, qs1 = NULL, Omega, qe1 = NULL, ce = NULL, check = T
     Omega = Omega,
     ce = ce
   )
-  if (length(qs1) == 0){obj$qs1 <- NULL}
-  if (length(qe1) == 0){obj$qe1 <- NULL}
-  if (length(ce) == 0){obj$ce <- NULL}
   class(obj) <- c("mnlink_Omega", class(obj))
   if (check) {mnlink_Omega_check(obj)}
   return(obj)
@@ -95,9 +96,9 @@ mnlink_Omega_vec <- function(obj){
         FUN = paste, sep = ","))
   names(Omegavec) <- paste0("Omega_", names(Omegavec))
   names(p1) <- paste0("p1_", seq.int(1, length.out = length(p1)), recycle0 = TRUE)
-  if (!is.null(qs1)){names(qs1) <- paste0("qs1_", seq.int(1, length.out = length(qs1)), recycle0 = TRUE)}
-  if (!is.null(qe1)){names(qe1) <- paste0("qe1_", seq.int(1, length.out = length(qe1)), recycle0 = TRUE)}
-  if (!is.null(ce)){names(ce) <- paste0("ce_", seq.int(1, length.out = length(ce)), recycle0 = TRUE)}
+  names(qs1) <- paste0("qs1_", seq.int(1, length.out = length(qs1)), recycle0 = TRUE)
+  names(qe1) <- paste0("qe1_", seq.int(1, length.out = length(qe1)), recycle0 = TRUE)
+  names(ce) <- paste0("ce_", seq.int(1, length.out = length(ce)), recycle0 = TRUE)
   out <- c(p1, qs1, qe1, Omegavec, ce)
   class(out) <- "mnlink_Omega_vec"
   return(out)
@@ -160,14 +161,14 @@ Omega2cann <- function(obj, check = TRUE){
   
   # the rest uses the SVD of Omega as written in the Euclidean link document
   Qs <- Qe <- Bs <- Be <- NULL
-  if (!is.null(obj$qs1)){
+  if (length(obj$qs1) > 0){
     Qs_unnorm <- svdres$v[seq.int(1, length.out = length(obj$qs1)), , drop = FALSE]
     Qs_norms <- sqrt(colSums(Qs_unnorm^2))
     Qsstar <- t(t(Qs_unnorm)/ Qs_norms)
     Qs <- cbind(obj$qs1, Qsstar)
     Bs <- diag(Qs_norms * svdres$d[-nrow(obj$Omega)])
   }
-  if (!is.null(obj$qe1)){
+  if (length(obj$qe1) > 0){
     Qe_unnorm <- svdres$v[length(obj$qs1) + seq.int(1, length.out = length(obj$qe1)), , drop = FALSE]
     Qe_norms <- sqrt(colSums(Qe_unnorm^2))
     Qestar <- t(t(Qe_unnorm)/ Qe_norms)
@@ -223,10 +224,15 @@ mnlink_cann_check <- function(obj){
 
 mnlink_Omega_check <- function(obj){
   # Check dimensions and nullness of elements
+  if (is.null(obj$p1)){stop("p1 should be non-null")}
+  if (is.null(obj$qs1)){stop("qs1 should be non-null")}
+  if (is.null(obj$qe1)){stop("qe1 should be non-null")}
+  if (is.null(obj$ce)){stop("ce should be non-null")}
+
   stopifnot(length(obj$p1) == nrow(obj$Omega))
   stopifnot(length(obj$qs1) + length(obj$qe1) == ncol(obj$Omega))
-  stopifnot( (is.null(obj$qe1) + is.null(obj$ce)) %in% c(0, 2))
-  if(!is.null(obj$qe1)){stopifnot(length(obj$ce) == length(obj$p1))}
+  stopifnot( ( (length(obj$qe1) > 0) + (length(obj$ce) > 0)) %in% c(0, 2))
+  if(length(obj$qe1) > 0){stopifnot(length(obj$ce) == length(obj$p1))}
   
   vals <- mnlink_Omega_check_numerical(obj)
   good <- (vals < sqrt(.Machine$double.eps))
@@ -239,15 +245,15 @@ mnlink_Omega_check <- function(obj){
   # sum of squared singular values is sum(Bs^2 + Be^2).
   # If all of Bs and Be are less than or equal to 1 then sum of squared singular values is less than 2*(p-1) if there are both Spherical and Euclidean covariates 
   singularvalssumsquared <- sum(diag(t(obj$Omega) %*% obj$Omega))
-  if (singularvalssumsquared > ((!is.null(obj$qe1)) + (!is.null(obj$qs1))) * (nrow(obj$Omega) - 1)){warning(sprintf("The sum of squared singular values of Omega is %0.2f, which means that there are scales in either Be or Bs that are greater than 1.", singularvalssumsquared))}
+  if (singularvalssumsquared > ((length(obj$qe1) > 0) + (length(obj$qs1)>0)) * (nrow(obj$Omega) - 1)){warning(sprintf("The sum of squared singular values of Omega is %0.2f, which means that there are scales in either Be or Bs that are greater than 1.", singularvalssumsquared))}
   
   return(NULL)
 }
 mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothness
   stopifnot(inherits(obj, "mnlink_Omega"))
   # list2env(obj, envir = environment())
-  qs <- ifelse(is.null(obj$qs1), 0, length(obj$qs1))
-  qe <- ifelse(is.null(obj$qe1), 0, length(obj$qe1))
+  qs <- length(obj$qs1)
+  qe <- length(obj$qe1)
   checkvals <- c(
     p1sizediff = (vnorm(obj$p1) - 1)^2,
     p1Omega = (t(obj$p1) %*% obj$Omega)^2

@@ -17,7 +17,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 x, mnlink_Omega_cpp<a1type> om, a1type k, a1
   if (y.cols() != p){Rcpp::stop("width of y does not equal length of p1");}
 
   // project Omega matrix to satisfy orthogonality to p1 and q1
-  mnlink_Omega_cpp<a1type> om_projected = OmegaS2Sproj(om);
+  mnlink_Omega_cpp<a1type> om_projected = Omega_proj_cpp(om);
   veca1 omvec_projected = mnlink_Omega_cpp_vec(om_projected);
 
   //get mean

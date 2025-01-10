@@ -9,7 +9,7 @@ veca1 pobjS2Scpp(veca1 & omvec, veca1 & dyn, vecd & p_in, matd & yx){
   mata1 x = yx.block(0, p, yx.rows(), yx.cols() - p);
  
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p);
-  mnlink_Omega_cpp<a1type> om_projected = OmegaS2Sproj(om);
+  mnlink_Omega_cpp<a1type> om_projected = Omega_proj_cpp(om);
   veca1 omvec_projected;
   omvec_projected = mnlink_Omega_cpp_vec(om_projected);  
 

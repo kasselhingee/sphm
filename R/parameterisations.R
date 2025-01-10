@@ -66,7 +66,7 @@ mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("nu
     qs1 = qs1,
     qe1 = qe1,
     Omega = Omega,
-    ce1 = ce1
+    ce1 = ce1,
     PBce = PBce
   )
   class(obj) <- c("mnlink_Omega", class(obj))

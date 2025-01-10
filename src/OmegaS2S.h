@@ -11,19 +11,19 @@
 
 // Define the templated C++ struct for the OmegaS2S parametetrisation
 template <typename T>
-struct OmegaS2Scpp {
+struct mnlink_Omega_cpp {
     Eigen::Matrix<T, Eigen::Dynamic, 1> p1;
     Eigen::Matrix<T, Eigen::Dynamic, 1> q1;
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega;
 
-    OmegaS2Scpp(Eigen::Matrix<T, Eigen::Dynamic, 1> p1_, Eigen::Matrix<T, Eigen::Dynamic, 1> q1_, Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega_) 
+    mnlink_Omega_cpp(Eigen::Matrix<T, Eigen::Dynamic, 1> p1_, Eigen::Matrix<T, Eigen::Dynamic, 1> q1_, Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega_) 
         : p1(p1_), q1(q1_), Omega(Omega_) {}
 };
 
 
-// Function to vectorize an OmegaS2Scpp object
+// Function to vectorize an mnlink_Omega_cpp object
 template <typename T>
-Eigen::Matrix<T, Eigen::Dynamic, 1> OmegaS2Scpp_vec(const OmegaS2Scpp<T>& obj) {
+Eigen::Matrix<T, Eigen::Dynamic, 1> mnlink_Omega_cpp_vec(const mnlink_Omega_cpp<T>& obj) {
     int p1_size = obj.p1.size();
     int q1_size = obj.q1.size();
     int Omega_size = obj.Omega.size();
@@ -41,9 +41,9 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> OmegaS2Scpp_vec(const OmegaS2Scpp<T>& obj) {
     return out;
 }
 
-// Function to unvectorize into an OmegaS2Scpp object
+// Function to unvectorize into an mnlink_Omega_cpp object
 template <typename T>
-OmegaS2Scpp<T> OmegaS2Scpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vec, const int p) {
+mnlink_Omega_cpp<T> mnlink_Omega_cpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vec, const int p) {
     int total_length = vec.size();
     int q = (total_length - p) / (1 + p);
     
@@ -55,23 +55,23 @@ OmegaS2Scpp<T> OmegaS2Scpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vec,
     Eigen::Matrix<T, Eigen::Dynamic, 1> q1 = vec.segment(p, q);
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega = Eigen::Map<const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> >(vec.segment(p + q, p * q).data(), p, q);
 
-    return OmegaS2Scpp<T>(p1, q1, Omega);
+    return mnlink_Omega_cpp<T>(p1, q1, Omega);
 }
 
 // Function to project the Omega in an OmegaS2S object to be perpendicular to p1 and q1
 template <typename T>
-OmegaS2Scpp<T> OmegaS2Sproj(const OmegaS2Scpp<T>& obj) {
+mnlink_Omega_cpp<T> OmegaS2Sproj(const mnlink_Omega_cpp<T>& obj) {
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omegaperpp1;
     Omegaperpp1 = obj.Omega - obj.p1 * (obj.p1.transpose()) * obj.Omega; //remove p1 component
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omegaperpq1;
     Omegaperpq1 = Omegaperpp1 - Omegaperpp1 * obj.q1 * (obj.q1.transpose()); //remove q1 component
-    return OmegaS2Scpp<T>(obj.p1, obj.q1, Omegaperpq1);
+    return mnlink_Omega_cpp<T>(obj.p1, obj.q1, Omegaperpq1);
 }
 
-// Convert an R list to an OmegaS2Scpp struct
-OmegaS2Scpp<double> R2OmegaS2Scpp_double(Rcpp::List obj);
+// Convert an R list to an mnlink_Omega_cpp struct
+mnlink_Omega_cpp<double> R2mnlink_Omega_cpp_double(Rcpp::List obj);
 
-OmegaS2Scpp<a1type> R2OmegaS2Scpp_a1type(Rcpp::List obj);
+mnlink_Omega_cpp<a1type> R2mnlink_Omega_cpp_a1type(Rcpp::List obj);
 
 
 #endif

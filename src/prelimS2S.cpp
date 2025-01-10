@@ -8,10 +8,10 @@ veca1 pobjS2Scpp(veca1 & omvec, veca1 & dyn, vecd & p_in, matd & yx){
   mata1 y = yx.leftCols(p);
   mata1 x = yx.block(0, p, yx.rows(), yx.cols() - p);
  
-  OmegaS2Scpp<a1type> om = OmegaS2Scpp_unvec(omvec, p);
-  OmegaS2Scpp<a1type> om_projected = OmegaS2Sproj(om);
+  mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p);
+  mnlink_Omega_cpp<a1type> om_projected = OmegaS2Sproj(om);
   veca1 omvec_projected;
-  omvec_projected = OmegaS2Scpp_vec(om_projected);  
+  omvec_projected = mnlink_Omega_cpp_vec(om_projected);  
 
   mata1 ypred;
   ypred = meanlinkS2Scpp(x, omvec_projected, p);
@@ -21,8 +21,8 @@ veca1 pobjS2Scpp(veca1 & omvec, veca1 & dyn, vecd & p_in, matd & yx){
 }
 
 veca1 OmegaS2S_constraints(veca1 & vec, int p) {
-  // Convert vector to a OmegaS2Scpp object
-  OmegaS2Scpp<a1type> ompar = OmegaS2Scpp_unvec(vec, p);
+  // Convert vector to a mnlink_Omega_cpp object
+  mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p);
 
   // design so that function returns zero vector when constraints satisfied
   veca1 out(1 + 1);
@@ -42,8 +42,8 @@ veca1 wrap_OmegaS2S_constraints(veca1 & vec, veca1 & ignore1, vecd & p_in, matd 
 //Constraints on the singular values of Omega - not exact unfortunately, just on total sum
 veca1 OmegaS2S_ineqconstaints(veca1 & vec, veca1 & ignore1, vecd & p_in, matd & ignore2){
   int p = int(p_in(0) + 0.1);
-  // Convert vector to a OmegaS2Scpp object
-  OmegaS2Scpp<a1type> ompar = OmegaS2Scpp_unvec(vec, p);
+  // Convert vector to a mnlink_Omega_cpp object
+  mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p);
   a1type ssq_sv = (ompar.Omega.transpose() * ompar.Omega).diagonal().sum();
   veca1 out(1);
   out(0) = ssq_sv - (p-1.);

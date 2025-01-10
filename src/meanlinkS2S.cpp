@@ -3,8 +3,8 @@
 #include "OmegaS2S.h"
 
 mata1 meanlinkS2Scpp(const mata1 &x, const veca1 &vec, const int p) {
-  // Convert vector to a OmegaS2Scpp object
-  OmegaS2Scpp<a1type> ompar = OmegaS2Scpp_unvec(vec, p);
+  // Convert vector to a mnlink_Omega_cpp object
+  mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p);
 
   mata1 x_t = x.transpose();
 

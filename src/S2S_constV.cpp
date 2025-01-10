@@ -11,14 +11,14 @@ mata1 JuppRmat(const veca1 & y1, const veca1 & y2){
 }
 
 
-veca1 ull_S2S_constV(mata1 y, mata1 x, OmegaS2Scpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
+veca1 ull_S2S_constV(mata1 y, mata1 x, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
   int p = om.p1.size();
   //check that ncol(y) == p
   if (y.cols() != p){Rcpp::stop("width of y does not equal length of p1");}
 
   // project Omega matrix to satisfy orthogonality to p1 and q1
-  OmegaS2Scpp<a1type> om_projected = OmegaS2Sproj(om);
-  veca1 omvec_projected = OmegaS2Scpp_vec(om_projected);
+  mnlink_Omega_cpp<a1type> om_projected = OmegaS2Sproj(om);
+  veca1 omvec_projected = mnlink_Omega_cpp_vec(om_projected);
 
   //get mean
   mata1 ypred;
@@ -42,7 +42,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 x, OmegaS2Scpp<a1type> om, a1type k, a1type 
 
 
 veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
-   OmegaS2Scpp<a1type> om = OmegaS2Scpp_unvec(omvec, y.cols());
+   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, y.cols());
    veca1 ld = ull_S2S_constV(y, x, om, k, a1, aremaining, Kstar);
    return ld;
 }
@@ -206,7 +206,7 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   aremaining = std::get<2>(result);
   Kstar = std::get<3>(result);
   
-  OmegaS2Scpp<a1type> om = OmegaS2Scpp_unvec(omvec, p);
+  mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p);
 
   veca1 ld = ull_S2S_constV(y, x, om, k, a1vec(0), aremaining, Kstar);
 

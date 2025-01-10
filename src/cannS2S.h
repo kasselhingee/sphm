@@ -17,9 +17,9 @@ struct cannS2Scpp {
 };
 
 // convert from OmegaS2S object to cannS2S object
-// Convert OmegaS2Scpp to cannS2Scpp
+// Convert mnlink_Omega_cpp to cannS2Scpp
 template <typename T>
-cannS2Scpp<T> Omega2cann(const OmegaS2Scpp<T>& obj) {
+cannS2Scpp<T> Omega2cann(const mnlink_Omega_cpp<T>& obj) {
     int p = obj.p1.size();
 
     // Perform SVD on the Omega matrix

@@ -24,12 +24,12 @@ mata1 meanlinkS2Scpp(const mata1 &xs, const mata1 &xe, const veca1 &vec, const i
   //ytilde contribution from spherical covar
   if (ompar.qs > 0){
     veca1 numerator = (Omega_s * xs_t);
-    veca1 denominator = (q1.transpose() * xs_t).array() + 1.0;
+    veca1 denominator = (qs1.transpose() * xs_t).array() + 1.0;
     ytilde = ytilde + (numerator.array()/denominator.array()).matrix().transpose();
   }
   if (ompar.qe > 0){
-    veca1 numerator = (Omega_e * xe_t).colwise() + ce; //this is something called broadcasting in Eigen
-    veca1 denominator = (q1.transpose() * xs_t).array() + 1.0;
+    veca1 numerator = (Omega_e * xe_t).colwise() + cstar; //this is something called broadcasting in Eigen
+    veca1 denominator = (qe1.transpose() * xs_t).array() + c1[0];
     ytilde = ytilde + (numerator.array()/denominator.array()).matrix().transpose();
   }
   veca1 p1_mult = ((q1x.array() + 1).square() - BQx2.array()) / ((q1x.array() + 1).square() + BQx2.array());

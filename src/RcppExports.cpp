@@ -37,6 +37,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// R2mnlink_Omega_cpp_double
+mnlink_Omega_cpp<double> R2mnlink_Omega_cpp_double(Rcpp::List obj);
+RcppExport SEXP _sphm_R2mnlink_Omega_cpp_double(SEXP objSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type obj(objSEXP);
+    rcpp_result_gen = Rcpp::wrap(R2mnlink_Omega_cpp_double(obj));
+    return rcpp_result_gen;
+END_RCPP
+}
+// R2mnlink_Omega_cpp_a1type
+mnlink_Omega_cpp<a1type> R2mnlink_Omega_cpp_a1type(Rcpp::List obj);
+RcppExport SEXP _sphm_R2mnlink_Omega_cpp_a1type(SEXP objSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type obj(objSEXP);
+    rcpp_result_gen = Rcpp::wrap(R2mnlink_Omega_cpp_a1type(obj));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ull_S2S_alignedG_mean
 veca1 ull_S2S_alignedG_mean(veca1& vec, veca1& dyn, vecd& p_in, matd& yx);
 RcppExport SEXP _sphm_ull_S2S_alignedG_mean(SEXP vecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
@@ -309,6 +331,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_sphm_R2mnlink_Omega_cpp_double", (DL_FUNC) &_sphm_R2mnlink_Omega_cpp_double, 1},
+    {"_sphm_R2mnlink_Omega_cpp_a1type", (DL_FUNC) &_sphm_R2mnlink_Omega_cpp_a1type, 1},
     {"_sphm_R2mnlink_Omega_cpp_double", (DL_FUNC) &_sphm_R2mnlink_Omega_cpp_double, 1},
     {"_sphm_R2mnlink_Omega_cpp_a1type", (DL_FUNC) &_sphm_R2mnlink_Omega_cpp_a1type, 1},
     {"_sphm_ull_S2S_alignedG_mean", (DL_FUNC) &_sphm_ull_S2S_alignedG_mean, 4},

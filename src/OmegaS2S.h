@@ -112,12 +112,5 @@ mnlink_Omega_cpp<T> Omega_proj_cpp(const mnlink_Omega_cpp<T>& inobj) {
     return obj;
 }
 
-// Convert an R list to an mnlink_Omega_cpp struct
-// [[Rcpp::export]]
-mnlink_Omega_cpp<double> R2mnlink_Omega_cpp_double(Rcpp::List obj);
-
-// [[Rcpp::export]]
-mnlink_Omega_cpp<a1type> R2mnlink_Omega_cpp_a1type(Rcpp::List obj);
-
 
 #endif

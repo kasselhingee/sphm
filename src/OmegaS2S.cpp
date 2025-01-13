@@ -1,5 +1,6 @@
 # include "OmegaS2S.h"
 
+// [[Rcpp::export]]
 mnlink_Omega_cpp<double> R2mnlink_Omega_cpp_double(Rcpp::List obj) {
     Eigen::Matrix<double, Eigen::Dynamic, 1> p1 = Rcpp::as<Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, 1>>>(obj["p1"]);
     Eigen::Matrix<double, Eigen::Dynamic, 1> qs1 = Rcpp::as<Eigen::Matrix<double, Eigen::Dynamic, 1>>(obj["qs1"]);
@@ -11,6 +12,7 @@ mnlink_Omega_cpp<double> R2mnlink_Omega_cpp_double(Rcpp::List obj) {
 }
 
 
+// [[Rcpp::export]]
 mnlink_Omega_cpp<a1type> R2mnlink_Omega_cpp_a1type(Rcpp::List obj) {
     Rcpp::CharacterVector names = obj.names();
     veca1 p1 = Rcpp::as<veca1>(obj["p1"]);

@@ -62,8 +62,8 @@ tape_ull_S2S_constV_nota1 <- function(omvec, k, a1, aremaining, Kstar, p_in, yx)
     .Call(`_sphm_tape_ull_S2S_constV_nota1`, omvec, k, a1, aremaining, Kstar, p_in, yx)
 }
 
-meanlinkS2Scpp <- function(x, vec, p) {
-    .Call(`_sphm_meanlinkS2Scpp`, x, vec, p)
+meanlinkS2Scpp <- function(x, vec, p, qe) {
+    .Call(`_sphm_meanlinkS2Scpp`, x, vec, p, qe)
 }
 
 #' Preliminary Objective in the style of the `generalfunction` class:

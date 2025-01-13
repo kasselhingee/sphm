@@ -53,7 +53,7 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> mnlink_Omega_cpp_vec(const mnlink_Omega_cpp<
 
     //vectorise
     Eigen::Matrix<T, Eigen::Dynamic, 1> out(obj.p + obj.qs + obj.qe + obj.p * (obj.qs + obj.qe) + obj.ce1.size() + obj.PBce.size());
-    out << obj.p1, obj.qs1, obj.qe1, Eigen::Map< Eigen::Matrix<T, Eigen::Dynamic, 1> >(Omega.data(), obj.Omega.size()), obj.ce1, obj.PBce;
+    out << obj.p1, obj.qs1, obj.qe1, Eigen::Map< Eigen::Matrix<T, Eigen::Dynamic, 1> >(obj.Omega.data(), obj.Omega.size()), obj.ce1, obj.PBce;
 
     return out;
 }
@@ -63,12 +63,12 @@ template <typename T>
 mnlink_Omega_cpp<T> mnlink_Omega_cpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vec, const int p, const int qe = 0) {
     int qs = (vec.size() - p - (p + 1) * (qe > 0) - qe - p * qe) / (1 + p);
    
-    return mnlink_Omega_cpp<T>(p1 = vec.segment(0, p),
-                        qs1 = vec.segment(p, qs),
-                        qe1 = vec.segment(p + qs, qe),
-                        Omega = Eigen::Map<const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> >(vec.segment(p + qs + qe, p * (qs + qe)).data(), p, qs + qe),
-                        ce1 = vec.segment(p + qs + p * (qs + qe), (qe>0)),
-                        PBce = vec.segment(p + qs + p * (qs + qe) + (qe>0), p * (qe>0))
+    return mnlink_Omega_cpp<T>(vec.segment(0, p),
+                        vec.segment(p, qs),
+                        vec.segment(p + qs, qe),
+                        Eigen::Map<const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> >(vec.segment(p + qs + qe, p * (qs + qe)).data(), p, qs + qe),
+                        vec.segment(p + qs + p * (qs + qe), (qe>0)),
+                        vec.segment(p + qs + p * (qs + qe) + (qe>0), p * (qe>0))
                         );
 }
 
@@ -79,8 +79,7 @@ mnlink_Omega_cpp<T> Omega_proj_cpp(const mnlink_Omega_cpp<T>& obj) {
 
     // First project orthogonal to p1 (needs p1 as a unit vector)
     obj.p1 = obj.p1 / obj.p1.norm();
-    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> newOmega = 
-        obj.Omega - (obj.p1 * obj.p1.transpose()) * obj.Omega;
+    newOmega = obj.Omega - (obj.p1 * obj.p1.transpose()) * obj.Omega;
 
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega_s, Omega_e;
 

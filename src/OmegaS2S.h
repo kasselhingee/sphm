@@ -48,12 +48,12 @@ struct mnlink_Omega_cpp {
 template <typename T>
 Eigen::Matrix<T, Eigen::Dynamic, 1> mnlink_Omega_cpp_vec(const mnlink_Omega_cpp<T>& obj) {
     int p1_size = obj.p1.size();
-    int q1_size = obj.q1.size();
     int Omega_size = obj.Omega.size();
+    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega = obj.Omega;
 
     //vectorise
     Eigen::Matrix<T, Eigen::Dynamic, 1> out(obj.p + obj.qs + obj.qe + obj.p * (obj.qs + obj.qe) + obj.ce1.size() + obj.PBce.size());
-    out << obj.p1, obj.qs1, obj.qe1, Eigen::Map< Eigen::Matrix<T, Eigen::Dynamic, 1> >(obj.Omega.data(), obj.Omega.size()), obj.ce1, obj.PBce;
+    out << obj.p1, obj.qs1, obj.qe1, Eigen::Map< Eigen::Matrix<T, Eigen::Dynamic, 1> >(Omega.data(), Omega.size()), obj.ce1, obj.PBce;
 
     return out;
 }
@@ -74,7 +74,8 @@ mnlink_Omega_cpp<T> mnlink_Omega_cpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic
 
 // Function to project the Omega in an OmegaS2S object to be perpendicular to p1 and q1
 template <typename T>
-mnlink_Omega_cpp<T> Omega_proj_cpp(const mnlink_Omega_cpp<T>& obj) {
+mnlink_Omega_cpp<T> Omega_proj_cpp(const mnlink_Omega_cpp<T>& inobj) {
+    mnlink_Omega_cpp<T> obj = inobj;
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> newOmega;
 
     // First project orthogonal to p1 (needs p1 as a unit vector)

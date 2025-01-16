@@ -5,9 +5,17 @@ test_that("iSp inverses Sp", {
   x <- x / vnorm(x)
   expect_equal(iSp(Sp(x)), x)
   
+  #-e1
+  expect_equal(Sp(c(1, rep(0, 3))), rep(1E9, 3))
+  
   # for a vector inside the disk, iSp is not an inverse
   x2 <- x/1.5
+  expect_equal(Sp(x2), x2[-1]/(1 + x2[1]))
   expect_false(any(iSp(Sp(x2)) == x2))
+  
+  #a matrix
+  expect_equal(Sp(rbind(x, x2)), rbind(Sp(x), Sp(x2)), ignore_attr = "dimnames")
+  expect_equal(iSp(Sp(rbind(x, x2))), rbind(x, iSp(Sp(x2))), ignore_attr = "dimnames")
 })
 
 

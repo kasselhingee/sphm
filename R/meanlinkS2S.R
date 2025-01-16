@@ -1,13 +1,25 @@
 # The link function for sphere to sphere.
 # stereographic projection
-
-Sp=function(x, e1 = c(1,rep(0,length(x)-1))) {
-  if (all(x==-e1)){rep(1e+9,length(x)-1)}
-  else{1/(1+x[1])*x[2:length(x)]}
+# x is a a set of row vectors
+Sp=function(x) {
+  if (is.vector(x)){x <- matrix(x, nrow = 1)}
+  # detect -e1 vectors, remembering the x may be in a disc
+  is_me1 <- colSums(t(x) != c(1, rep(0, ncol(x) - 1))) == 0
+  out <- x[, -1, drop = FALSE]
+  out[is_me1, ] <- 1e+9
+  out[!is_me1, ] <- out[!is_me1, , drop = FALSE]/(1+x[!is_me1, 1, drop = TRUE])
+  if (nrow(out) == 1){return(as.vector(out))}
+  else {return(out)}
 }
 
 # inverse stereographic projection
-iSp=function(y) 1/(1+vnorm(y)^2)*c(1-vnorm(y)^2,2*y)
+iSp=function(y){
+  if (is.vector(y)){y <- matrix(y, nrow = 1)}
+  norms2 <- rowSums(y^2)
+  out <- cbind(1-norms2, 2*y)/(1+norms2)
+  if (nrow(out) == 1){return(as.vector(out))}
+  else {return(out)}
+}
 
 #' The mean link for spherical covariates
 #' @param x a vector of covariate values or tidy-style array of covariate values (each row a vector of covariates)

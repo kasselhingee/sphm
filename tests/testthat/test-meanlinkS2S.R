@@ -18,28 +18,41 @@ test_that("iSp inverses Sp", {
   expect_equal(iSp(Sp(rbind(x, x2))), rbind(x, iSp(Sp(x2))), ignore_attr = "dimnames")
 })
 
-
 test_that("Omega and cannonical versions give same result", {
   set.seed(1)
   p <- 3
-  q <- 5
   P <- mclust::randomOrthogonalMatrix(p, p)
+  qs <- 5
   set.seed(2)
-  Q <- mclust::randomOrthogonalMatrix(q, p)
+  Qs <- mclust::randomOrthogonalMatrix(qs, p)
   set.seed(3)
-  B <- diag(sort(runif(p-1), decreasing = TRUE))
-  paramobj <- cannS2S(P, Q, B)
-
+  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+  qe <- 4
+  set.seed(12)
+  Qe <- mclust::randomOrthogonalMatrix(qe, p)
+  set.seed(13)
+  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  set.seed(14)
+  ce <- runif(p)
+  paramobj <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = TRUE)
   
   set.seed(4)
-  x <- matrix(rnorm(2*q), nrow = 2)
-  x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
-  x <- rbind(x, x[1, ])
+  xs <- matrix(rnorm(2*qs), nrow = 2)
+  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
+  xs <- rbind(xs, xs[1, ])
+  
+  set.seed(5)
+  xe <- matrix(rnorm(2*qe), nrow = 2)
+  xe <- rbind(xe, xe[1, ])
   
   # direct canonical 
-  mnA <- meanlinkS2S_cann(x[1, ], paramobj)
+  mnA <- mnlink_pred_cann(xs, xe, paramobj)
   
   # via reparameterisation
+  Om <- as_mnlink_Omega(paramobj)
+  mnB <- meanlinkS2Scpp(xs, xe, mnlink_Omega_vec(Om), p)
+  
+  
   mnB <- meanlinkS2S_Omega(x, as_mnlink_Omega(paramobj))
   # back - remember many signs get ignored, only the result of the mean link matters
   newcann <- as_mnlink_cann(as_mnlink_Omega(paramobj))

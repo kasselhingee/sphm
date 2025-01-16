@@ -27,7 +27,7 @@ veca1 OmegaS2S_constraints(veca1 & vec, int p) {
   // design so that function returns zero vector when constraints satisfied
   veca1 out(1 + 1);
   out(0) = ompar.p1.squaredNorm() - 1.;
-  out(1) = ompar.q1.squaredNorm() - 1.;
+  out(1) = ompar.qs1.squaredNorm() - 1.;
   return(out);
 }
 

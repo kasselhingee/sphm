@@ -15,14 +15,14 @@ veca1 ull_S2S_alignedG_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
 
   // extract the Omega vector for the mean link, and project it to satisfy p1, q1 orthogonality constraints
   veca1 omvec = vec.block(0,0, p + x.cols() + p*x.cols(), 1);
-  mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p);
+  mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, 0); //the zero here sets no Euclidean covariates
   mnlink_Omega_cpp<a1type> om_projected = Omega_proj_cpp(om);
   veca1 omvec_projected;
   omvec_projected = mnlink_Omega_cpp_vec(om_projected);
 
   //get mean
   mata1 ypred;
-  ypred = meanlinkS2Scpp(x, omvec_projected, p);
+  ypred = meanlinkS2Scpp(x, omvec_projected, p, 0);  //the zero here sets no Euclidean covariates
 
   //evaluate SvMF density using uldSvMF_cann for each row.
   //first get G without its first column and other constant parameters

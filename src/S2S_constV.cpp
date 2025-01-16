@@ -22,7 +22,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 x, mnlink_Omega_cpp<a1type> om, a1type k, a1
 
   //get mean
   mata1 ypred;
-  ypred = meanlinkS2Scpp(x, omvec_projected, p);
+  ypred = meanlinkS2Scpp(x, omvec_projected, p, 0); //0 specified no Euc covars
 
   //evaluate SvMF density of each observation
   veca1 ld(y.rows());
@@ -42,7 +42,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 x, mnlink_Omega_cpp<a1type> om, a1type k, a1
 
 
 veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
-   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, y.cols());
+   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, y.cols(), 0); //0 specifies no Euc covars
    veca1 ld = ull_S2S_constV(y, x, om, k, a1, aremaining, Kstar);
    return ld;
 }
@@ -206,7 +206,7 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   aremaining = std::get<2>(result);
   Kstar = std::get<3>(result);
   
-  mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p);
+  mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, 0);
 
   veca1 ld = ull_S2S_constV(y, x, om, k, a1vec(0), aremaining, Kstar);
 

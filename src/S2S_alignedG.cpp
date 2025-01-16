@@ -22,7 +22,7 @@ veca1 ull_S2S_alignedG_mean(veca1 & vec, veca1 & dyn, vecd & p_in, matd & yx){
 
   //get mean
   mata1 ypred;
-  ypred = meanlinkS2Scpp(x, omvec_projected, p, 0);  //the zero here sets no Euclidean covariates
+  ypred = meanlinkS2Scpp(x, mata1(x.rows(), 0), omvec_projected, p, 0);  //the zero here sets no Euclidean covariates
 
   //evaluate SvMF density using uldSvMF_cann for each row.
   //first get G without its first column and other constant parameters

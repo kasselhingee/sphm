@@ -18,7 +18,7 @@ test_that("iSp inverses Sp", {
   expect_equal(iSp(Sp(rbind(x, x2))), rbind(x, iSp(Sp(x2))), ignore_attr = "dimnames")
 })
 
-test_that("Omega and cannonical versions give same result", {
+test_that("Omega and cannonical versions match manual version, and give same result to each other", {
   set.seed(1)
   p <- 3
   P <- mclust::randomOrthogonalMatrix(p, p)
@@ -47,10 +47,11 @@ test_that("Omega and cannonical versions give same result", {
   
   # direct canonical 
   mnA <- mnlink_pred_cann(xs, xe, paramobj)
-  
   # via reparameterisation
   Om <- as_mnlink_Omega(paramobj)
   mnB <- meanlinkS2Scpp(xs, xe, mnlink_Omega_vec(Om), p)
+  expect_equal(mnA, mnB)
+  expect_equal(mnA[1, ], mnA[3, ]) #a good way to check that row vectors are being treated as such.
   
   # Sph only
   pSph <- do.call(mnlink_cann, paramobj[c("P", "Bs", "Qs")])
@@ -62,19 +63,11 @@ test_that("Omega and cannonical versions give same result", {
 
   # Euc only
   pEuc <- do.call(mnlink_cann, paramobj[c("P", "Be", "Qe", "ce")])
-  mnA <- mnlink_pred_cann(xs, xe, paramobj)
+  mnA <- mnlink_pred_cann(xs, xe, pEuc)
   mnB <- meanlinkS2Scpp(xs = matrix(ncol = 0, nrow = nrow(xe)), xe, mnlink_Omega_vec(as_mnlink_Omega(pEuc)), p = p)
+  expect_equal(mnA, mnB)
+  expect_equal(mnA[1, ], drop(P %*% iSp(drop( Be %*% (t(Qe[,-1]) %*% xe[1, ] + ce[-1]) / drop(Qe[, 1] %*% xe[1, ]  + ce[1]) ) )))
 
-
-  mnB <- meanlinkS2S_Omega(x, as_mnlink_Omega(paramobj))
-  # back - remember many signs get ignored, only the result of the mean link matters
-  newcann <- as_mnlink_cann(as_mnlink_Omega(paramobj))
-  mnC <- meanlinkS2S_cann(x[1, ], newcann)
-  
-  expect_equal(mnA, mnC)
-  expect_equal(drop(mnA), mnB[1, ])
-  expect_equal(mnB[1,], mnB[3, ])
-  expect_equal(meanlinkS2S_Omega(x[2, ], as_mnlink_Omega(paramobj)), mnB[2, ])
 })
 
 test_that("meanlinkS2S() works with a variety of inputs", {

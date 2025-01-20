@@ -67,8 +67,8 @@ mnlink_Omega_cpp<T> mnlink_Omega_cpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic
                         vec.segment(p, qs),
                         vec.segment(p + qs, qe),
                         Eigen::Map<const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> >(vec.segment(p + qs + qe, p * (qs + qe)).data(), p, qs + qe),
-                        vec.segment(p + qs + p * (qs + qe), (qe>0)),
-                        vec.segment(p + qs + p * (qs + qe) + (qe>0), p * (qe>0))
+                        vec.segment(p + qs + qe + p * (qs + qe), (qe>0)),
+                        vec.segment(p + qs + qe + p * (qs + qe) + (qe>0), p * (qe>0))
                         );
 }
 

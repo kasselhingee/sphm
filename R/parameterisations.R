@@ -57,10 +57,10 @@ OmegaS2S <- function(p1, q1, Omega, check = TRUE){
 }
 
 mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("numeric", 0), ce1 = vector("numeric", 0), PBce = vector("numeric", 0), check = TRUE){
-  if (is.null(qs1)){obj$qs1 <- vector("numeric", 0)}
-  if (is.null(qe1)){obj$qe1 <- vector("numeric", 0)}
-  if (is.null(ce1)){obj$ce1 <- vector("numeric", 0)}
-  if (is.null(PBce)){obj$PBce <- vector("numeric", 0)}
+  if (is.null(qs1)){qs1 <- vector("numeric", 0)}
+  if (is.null(qe1)){qe1 <- vector("numeric", 0)}
+  if (is.null(ce1)){ce1 <- vector("numeric", 0)}
+  if (is.null(PBce)){PBce <- vector("numeric", 0)}
   obj <- list(
     p1 = p1,
     qs1 = qs1,

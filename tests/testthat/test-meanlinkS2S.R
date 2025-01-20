@@ -55,8 +55,10 @@ test_that("Omega and cannonical versions give same result", {
   # Sph only
   pSph <- do.call(mnlink_cann, paramobj[c("P", "Bs", "Qs")])
   Sph_Om <- as_mnlink_Omega(pSph)
-  mnA <- mnlink_pred_cann(xs, xe, paramobj)
+  mnA <- mnlink_pred_cann(xs, xe, pSph)
   mnB <- meanlinkS2Scpp(xs, xe = matrix(ncol = 0, nrow = nrow(xs)), mnlink_Omega_vec(Sph_Om), p = p)
+  expect_equal(mnA, mnB)
+  expect_equal(mnB[1, ], drop(P %*% iSp(drop(Bs %*% Sp(drop(t(Qs) %*% xs[1, ]))))))
 
   # Euc only
   pEuc <- do.call(mnlink_cann, paramobj[c("P", "Be", "Qe", "ce")])

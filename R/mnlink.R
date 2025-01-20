@@ -27,6 +27,6 @@ mnlink_pred_cann <- function(xs = NULL, xe = NULL, paramobj){
     denominator <- xetilde[,1]
     y <- y + (numerator/denominator)
   }
-  out <- iSp(y) %*% paramobj$P
+  out <- iSp(y) %*% t(paramobj$P)
   return(out)
 }

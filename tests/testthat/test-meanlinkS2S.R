@@ -52,7 +52,18 @@ test_that("Omega and cannonical versions give same result", {
   Om <- as_mnlink_Omega(paramobj)
   mnB <- meanlinkS2Scpp(xs, xe, mnlink_Omega_vec(Om), p)
   
-  
+  # Sph only
+  pSph <- do.call(mnlink_cann, paramobj[c("P", "Bs", "Qs")])
+  Sph_Om <- as_mnlink_Omega(pSph)
+  mnA <- mnlink_pred_cann(xs, xe, paramobj)
+  mnB <- meanlinkS2Scpp(xs, xe = matrix(ncol = 0, nrow = nrow(xs)), mnlink_Omega_vec(Sph_Om), p = p)
+
+  # Euc only
+  pEuc <- do.call(mnlink_cann, paramobj[c("P", "Be", "Qe", "ce")])
+  mnA <- mnlink_pred_cann(xs, xe, paramobj)
+  mnB <- meanlinkS2Scpp(xs = matrix(ncol = 0, nrow = nrow(xe)), xe, mnlink_Omega_vec(as_mnlink_Omega(pEuc)), p = p)
+
+
   mnB <- meanlinkS2S_Omega(x, as_mnlink_Omega(paramobj))
   # back - remember many signs get ignored, only the result of the mean link matters
   newcann <- as_mnlink_cann(as_mnlink_Omega(paramobj))

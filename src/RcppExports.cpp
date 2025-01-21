@@ -202,16 +202,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // prelimobj_cpp
-veca1 prelimobj_cpp(veca1& omvec, veca1& dyn, vecd& p_in, matd& yx);
-RcppExport SEXP _sphm_prelimobj_cpp(SEXP omvecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
+veca1 prelimobj_cpp(veca1& omvec, veca1& dyn, vecd& dims_in, matd& yx);
+RcppExport SEXP _sphm_prelimobj_cpp(SEXP omvecSEXP, SEXP dynSEXP, SEXP dims_inSEXP, SEXP yxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< veca1& >::type omvec(omvecSEXP);
     Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
-    Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
+    Rcpp::traits::input_parameter< vecd& >::type dims_in(dims_inSEXP);
     Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
-    rcpp_result_gen = Rcpp::wrap(prelimobj_cpp(omvec, dyn, p_in, yx));
+    rcpp_result_gen = Rcpp::wrap(prelimobj_cpp(omvec, dyn, dims_in, yx));
     return rcpp_result_gen;
 END_RCPP
 }

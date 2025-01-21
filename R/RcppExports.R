@@ -71,12 +71,11 @@ mnlink_cpp <- function(xs, xe, vec, p) {
 }
 
 #' Preliminary Objective in the style of the `generalfunction` class:
-#' @param yx is the response and covariates *cbind* together. Each row an observation.
-#' @param dyn is a zero length vector
-#' @param p is required to separate yx and omvec. It is passed as a double for compatiblility witn generalfunction, so will have to be rounded to a integer within the function
-#' @param dyn ignored
-prelimobj_cpp <- function(omvec, dyn, p_in, yx) {
-    .Call(`_sphm_prelimobj_cpp`, omvec, dyn, p_in, yx)
+#' @param yx is the response the spherical covariates, and the Euclidean covariates *cbind* together. Each row an observation.
+#' @param dyn is a zero length vector that is ignored
+#' @param dims_in A vector of `c(p, qe)`. `p` and `qe` are required to separate yx and omvec into their constituents.
+prelimobj_cpp <- function(omvec, dyn, dims_in, yx) {
+    .Call(`_sphm_prelimobj_cpp`, omvec, dyn, dims_in, yx)
 }
 
 #' Function for taping a general function. The function must have signature

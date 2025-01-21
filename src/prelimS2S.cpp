@@ -6,7 +6,7 @@
 veca1 prelimobj_cpp(veca1 & omvec, veca1 & dyn, vecd & dims_in, matd & yx){
   int p = int(dims_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qe = int(dims_in(1) + 0.1); //0.1 to make sure p_in is above the integer it represents
-  mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, 0);
+  mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
 
   mata1 y = yx.leftCols(p);
   mata1 xs = yx.rightCols(om.qs + om.qe).leftCols(om.qs);

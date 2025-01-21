@@ -1,5 +1,5 @@
 #include "S2S_constV.h"
-#include "meanlinkS2S.h"
+#include "mnlink_cpp.h"
 #include "uldSvMF.h"
 
 mata1 JuppRmat(const veca1 & y1, const veca1 & y2){

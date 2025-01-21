@@ -1,6 +1,6 @@
 #include "prelimS2S.h"
 #include "OmegaS2S.h"
-#include "meanlinkS2S.h"
+#include "mnlink_cpp.h"
 #include "tapegeneral.h"
 
 veca1 pobjS2Scpp(veca1 & omvec, veca1 & dyn, vecd & p_in, matd & yx){

@@ -1,7 +1,7 @@
 #include "S2S_alignedG.h"
 #include <Rcpp.h>
 #include "OmegaS2S.h"
-#include "meanlinkS2S.h"
+#include "mnlink_cpp.h"
 #include "uldSvMF.h"
 #include "cannS2S.h"
 

@@ -17,7 +17,7 @@ veca1 prelimobj_cpp(veca1 & omvec, veca1 & dyn, vecd & dims_in, matd & yx){
   omvec_projected = mnlink_Omega_cpp_vec(om_projected);  
 
   mata1 ypred;
-  ypred = mnlink_cpp(xs, xe, omvec_projected, p, qe);
+  ypred = mnlink_cpp(xs, xe, omvec_projected, p);
   veca1 obj(1);
   obj(0) = -1 * (ypred.array() * y.array()).sum()/y.rows();
   return(obj);

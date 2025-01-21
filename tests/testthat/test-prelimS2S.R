@@ -132,7 +132,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
                                        ce = rep(0, p)))
   opt2 <- optim_pobjS2S_parttape(y, xs = xs, xe = xe, paramobj0 = start)
-  expect_equal(opt2$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(Omega_Euc_signswitch(opt2$solution), as_mnlink_Omega(paramobj), tolerance = 0.05)
 })
 
 

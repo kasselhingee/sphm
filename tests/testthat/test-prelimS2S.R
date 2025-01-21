@@ -1,3 +1,43 @@
+test_that("prelim optimisation works with Euc covars", {
+  set.seed(1)
+  p <- 3
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  qs <- 0
+  qe <- 4
+  set.seed(12)
+  Qe <- mclust::randomOrthogonalMatrix(qe, p)
+  set.seed(13)
+  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  set.seed(14)
+  ce <- runif(p)
+  paramobj <- mnlink_cann(P, Be = Be, Qe = Qe, ce = ce, check = TRUE)
+  
+  #generate covariates Gaussianly
+  set.seed(4)
+  x <- matrix(rnorm(1000*qe), nrow = 1000)
+  ymean <- mnlink(xe = x, param = paramobj)
+  
+  # generate noise
+  if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
+  set.seed(5)
+  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
+  
+  # optimise locally using derivative information
+  # starting at the optimum
+  tmp <- optim_pobjS2S_parttape(y, xe = x, paramobj0 = as_mnlink_Omega(paramobj))
+  expect_equal(tmp$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  
+  # starting away from optimum, but still within constraints
+  set.seed(14)
+  start <- as_mnlink_Omega(mnlink_cann(P = mclust::randomOrthogonalMatrix(p, p),
+                                       Qe = mclust::randomOrthogonalMatrix(qe, p),
+                                       Be = diag(sort(runif(p-1), decreasing = TRUE)),
+                                       ce = rep(0, p)))
+  opt2 <- optim_pobjS2S_parttape(y, xe = x, paramobj0 = start)
+  expect_equal(opt2$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  
+})
+
 
 test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   p <- 4
@@ -35,7 +75,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- optim_pobjS2S_parttape(y, x, omegapar)
+  tmp <- optim_pobjS2S_parttape(y, xs = x, paramobj0 = omegapar)
   expect_equal(tmp$solution, omegapar, tolerance = 0.05)
   
   # starting away from optimum, but still within constraints
@@ -43,7 +83,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   start <- as_mnlink_Omega(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
           Q = mclust::randomOrthogonalMatrix(q, p),
           B = diag(sort(runif(p-1), decreasing = TRUE))))
-  opt2 <- optim_pobjS2S_parttape(y, x, start)
+  opt2 <- optim_pobjS2S_parttape(y, xs = x, paramobj0 = start)
   expect_equal(opt2$solution, omegapar, tolerance = 0.05)
 })
 

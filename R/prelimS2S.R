@@ -78,12 +78,12 @@ optim_pobjS2S_pureR <- function(y, x, paramobj0, global = TRUE, local = TRUE){ #
   ))
 }
 
-optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the starting parameter object
+optim_pobjS2S_parttape <- function(y, xs = NULL, xe = NULL, paramobj0, ...){ #paramobj0 is the starting parameter object
   p <- ncol(y)
   om0 <- as_mnlink_Omega(paramobj0)
 
   dims_in <- c(p, length(om0$qe1))
-  obj_tape <- tape_namedfun("prelimobj_cpp", mnlink_Omega_vec(om0), vector(mode = "numeric"), dims_in, cbind(y,x), check_for_nan = FALSE)
+  obj_tape <- tape_namedfun("prelimobj_cpp", mnlink_Omega_vec(om0), vector(mode = "numeric"), dims_in, cbind(y,xs,xe), check_for_nan = FALSE)
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", mnlink_Omega_vec(om0), vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   ineqconstraint_tape <- tape_namedfun("Omega_constraints_wrap", mnlink_Omega_vec(om0), vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
 

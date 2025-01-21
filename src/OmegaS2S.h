@@ -117,10 +117,10 @@ mnlink_Omega_cpp<T> Omega_proj_cpp(const mnlink_Omega_cpp<T>& inobj) {
 veca1 Omega_constraints(veca1 & vec, int p, int qe=0);
 
 //a wrap around Omega_constraints for use with tapegeneral
-veca1 Omega_constraints_wrap(veca1 & vec, veca1 & ignore1, vecd & p_in, matd & ignore2);
+veca1 Omega_constraints_wrap(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd & ignore2);
 
 //Constraints on the singular values of Omega - not exact unfortunately, just on total sum
-veca1 Omega_ineqconstraints(veca1 & vec, veca1 & ignore1, vecd & p_in, matd & ignore2);
+veca1 Omega_ineqconstraints(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd & ignore2);
 
 
 #endif

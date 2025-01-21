@@ -1,6 +1,6 @@
 #include "OmegaS2S.h"
 
-veca1 Omega_constraints(veca1 & vec, int p, int qe=0) {
+veca1 Omega_constraints(veca1 & vec, int p, int qe) {
   // Convert vector to a mnlink_Omega_cpp object
   mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p, qe);
 
@@ -19,6 +19,7 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe=0) {
 //a wrap around Omega_constraints for use with tapegeneral
 veca1 Omega_constraints_wrap(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd & ignore2) {
   veca1 out;
+  if (dims_in.size() != 2){Rcpp::stop("dims_in must have two entries");}
   int p = int(dims_in(0) + 0.1);
   int qe = int(dims_in(1) + 0.1);
   out = Omega_constraints(vec,p,qe);
@@ -26,7 +27,9 @@ veca1 Omega_constraints_wrap(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd 
 }
 
 //Constraints on the singular values of Omega - not exact unfortunately, just on total sum
+//mirrors singularvalssumsquared check in `parameterisations.R`
 veca1 Omega_ineqconstraints(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd & ignore2){
+  if (dims_in.size() != 2){Rcpp::stop("dims_in must have two entries");}
   int p = int(dims_in(0) + 0.1);
   int qe = int(dims_in(1) + 0.1);
   // Convert vector to a mnlink_Omega_cpp object

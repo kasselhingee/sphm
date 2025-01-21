@@ -16,7 +16,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   x <- matrix(rnorm(1000*q), nrow = 1000)
   x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
   
-  ymean <- meanlinkS2S(x = x, paramobj = omegapar)
+  ymean <- mnlink(xs = x, param = omegapar)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
@@ -25,7 +25,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   
   # objective function in C++ and R should match when omegapar passes mnlink_Omega_check()
   objval <- pobjS2S(y, x, omegapar)
-  objvalcpp <-  prelimobj_cpp(mnlink_Omega_vec(omegapar), vector(), p, cbind(y,x))
+  objvalcpp <-  prelimobj_cpp(mnlink_Omega_vec(omegapar), vector(), c(p, 0), cbind(y,x))
   expect_equal(objvalcpp, objval)
 
   # optimise using pure R

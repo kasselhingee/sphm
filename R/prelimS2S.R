@@ -82,9 +82,10 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the star
   p <- ncol(y)
   om0 <- as_mnlink_Omega(paramobj0)
 
-  obj_tape <- tape_namedfun("prelimobj_cpp", mnlink_Omega_vec(om0), vector(mode = "numeric"), p, cbind(y,x), check_for_nan = FALSE)
-  constraint_tape <- tape_namedfun("Omega_constraints_wrap", mnlink_Omega_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  ineqconstraint_tape <- tape_namedfun("Omega_constraints_wrap", mnlink_Omega_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  dims_in <- c(p, length(om0$qe1))
+  obj_tape <- tape_namedfun("prelimobj_cpp", mnlink_Omega_vec(om0), vector(mode = "numeric"), dims_in, cbind(y,x), check_for_nan = FALSE)
+  constraint_tape <- tape_namedfun("Omega_constraints_wrap", mnlink_Omega_vec(om0), vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  ineqconstraint_tape <- tape_namedfun("Omega_constraints_wrap", mnlink_Omega_vec(om0), vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
 
   # prepare nloptr options
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",
@@ -106,7 +107,7 @@ optim_pobjS2S_parttape <- function(y, x, paramobj0, ...){ #paramobj0 is the star
   )
   
   return(list(
-    solution = Omega_proj(mnlink_Omega_unvec(locopt$solution, p, check = FALSE)),
+    solution = Omega_proj(mnlink_Omega_unvec(locopt$solution, p, length(om0$qe1), check = FALSE)),
     loc_nloptr = locopt
   ))
 }

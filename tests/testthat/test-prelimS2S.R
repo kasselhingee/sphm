@@ -47,7 +47,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   expect_equal(opt2$solution, omegapar, tolerance = 0.05)
 })
 
-test_that("OmegaS2S_constraints() is zero correctly", {
+test_that("Omega_constraints() is zero correctly", {
   p <- 3
   q <- 5
   # data generating parameters:
@@ -58,7 +58,7 @@ test_that("OmegaS2S_constraints() is zero correctly", {
   set.seed(3)
   B <- diag(sort(runif(p-1), decreasing = TRUE))
   omegapar <- as_mnlink_Omega(cannS2S(P,Q,B))
-  expect_equal(OmegaS2S_constraints(mnlink_Omega_vec(omegapar), p), rep(0, 1 + 1))
+  expect_equal(Omega_constraints(mnlink_Omega_vec(omegapar), p), rep(0, 1 + 1))
 })
 
 test_that("pre_est3_mod optimisation works", {
@@ -86,7 +86,7 @@ expect_equal(result$par[7], B[1,1], tolerance = 1E-3)
 expect_equal(result$par[8] * result$par[7], B[2,2], tolerance = 1E-3)
 })
 
-test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
+test_that("taping of pobjS2S and Omega_constraints runs and evaluates", {
   p <- 3
   q <- 5
   # data generating parameters:
@@ -134,8 +134,8 @@ test_that("taping of pobjS2S and OmegaS2S_constraints runs and evaluates", {
   expect_equal(jactapeeval, jac)
 
   # check constraints
-  bADFun <- tape_namedfun("wrap_OmegaS2S_constraints", mnlink_Omega_vec(omegapar), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  directeval <- OmegaS2S_constraints(omparovec, p)
+  bADFun <- tape_namedfun("Omega_constraints_wrap", mnlink_Omega_vec(omegapar), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  directeval <- Omega_constraints(omparovec, p)
   tapeeval <- bADFun$eval(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)
 

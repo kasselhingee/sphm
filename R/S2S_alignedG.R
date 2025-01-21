@@ -21,7 +21,7 @@ optim_alignedG <- function(y, x, a1, param_mean, k, aremaining, xtol_rel = 1E-5,
                            p,
                            cbind(y, x),
                            check_for_nan = FALSE)
-  ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", mnlink_Omega_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  ll_mean_constraint <- tape_namedfun("Omega_constraints_wrap", mnlink_Omega_vec(om0), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   withCallingHandlers({
   ll_k <- tape_namedfun("ull_S2S_alignedG_k",
                         k,

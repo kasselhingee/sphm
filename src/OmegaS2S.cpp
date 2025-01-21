@@ -1,6 +1,6 @@
 #include "OmegaS2S.h"
 
-veca1 OmegaS2S_constraints(veca1 & vec, int p, int qe=0) {
+veca1 Omega_constraints(veca1 & vec, int p, int qe=0) {
   // Convert vector to a mnlink_Omega_cpp object
   mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p, qe);
 
@@ -16,12 +16,12 @@ veca1 OmegaS2S_constraints(veca1 & vec, int p, int qe=0) {
   return(out);
 }
 
-//a wrap around OmegaS2S_constraints for use with tapegeneral
-veca1 wrap_OmegaS2S_constraints(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd & ignore2) {
+//a wrap around Omega_constraints for use with tapegeneral
+veca1 Omega_constraints_wrap(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd & ignore2) {
   veca1 out;
   int p = int(dims_in(0) + 0.1);
   int qe = int(dims_in(1) + 0.1);
-  out = OmegaS2S_constraints(vec,p,qe);
+  out = Omega_constraints(vec,p,qe);
   return(out);
 }
 

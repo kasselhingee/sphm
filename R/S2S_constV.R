@@ -55,7 +55,7 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   
   # estimation any p prep
   omvec0 <- mnlink_Omega_vec(om0prelim)
-  ll_mean_constraint <- tape_namedfun("wrap_OmegaS2S_constraints", omvec0, vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  ll_mean_constraint <- tape_namedfun("Omega_constraints_wrap", omvec0, vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   # prepare nloptr options
   default_opts <- list(xtol_rel = xtol_rel, #1E-04,
                        maxeval = 1E4,

@@ -75,8 +75,8 @@ pobjS2Scpp <- function(omvec, dyn, p_in, yx) {
     .Call(`_sphm_pobjS2Scpp`, omvec, dyn, p_in, yx)
 }
 
-OmegaS2S_constraints <- function(vec, p) {
-    .Call(`_sphm_OmegaS2S_constraints`, vec, p)
+Omega_constraints <- function(vec, p) {
+    .Call(`_sphm_Omega_constraints`, vec, p)
 }
 
 #' Function for taping a general function. The function must have signature

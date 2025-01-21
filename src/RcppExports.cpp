@@ -202,15 +202,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// OmegaS2S_constraints
-veca1 OmegaS2S_constraints(veca1& vec, int p);
-RcppExport SEXP _sphm_OmegaS2S_constraints(SEXP vecSEXP, SEXP pSEXP) {
+// Omega_constraints
+veca1 Omega_constraints(veca1& vec, int p);
+RcppExport SEXP _sphm_Omega_constraints(SEXP vecSEXP, SEXP pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< veca1& >::type vec(vecSEXP);
     Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    rcpp_result_gen = Rcpp::wrap(OmegaS2S_constraints(vec, p));
+    rcpp_result_gen = Rcpp::wrap(Omega_constraints(vec, p));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -302,7 +302,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_tape_ull_S2S_constV_nota1", (DL_FUNC) &_sphm_tape_ull_S2S_constV_nota1, 7},
     {"_sphm_mnlink_cpp", (DL_FUNC) &_sphm_mnlink_cpp, 4},
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
-    {"_sphm_OmegaS2S_constraints", (DL_FUNC) &_sphm_OmegaS2S_constraints, 2},
+    {"_sphm_Omega_constraints", (DL_FUNC) &_sphm_Omega_constraints, 2},
     {"_sphm_tape_namedfun", (DL_FUNC) &_sphm_tape_namedfun, 6},
     {"_sphm_besselIasym", (DL_FUNC) &_sphm_besselIasym, 4},
     {"_sphm_uldSvMF_cann", (DL_FUNC) &_sphm_uldSvMF_cann, 4},

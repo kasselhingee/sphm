@@ -26,7 +26,7 @@ veca1 Omega_constraints_wrap(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd 
 }
 
 //Constraints on the singular values of Omega - not exact unfortunately, just on total sum
-veca1 OmegaS2S_ineqconstaints(veca1 & vec, veca1 & ignore1, vecd & p_in, matd & ignore2){
+veca1 Omega_ineqconstraints(veca1 & vec, veca1 & ignore1, vecd & p_in, matd & ignore2){
   int p = int(p_in(0) + 0.1);
   // Convert vector to a mnlink_Omega_cpp object
   mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p, 0);

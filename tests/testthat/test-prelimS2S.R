@@ -147,7 +147,7 @@ test_that("taping of pobjS2S and Omega_constraints runs and evaluates", {
   expect_equal(jactapeeval, jac)
 
   ## check inequality constraints
-  cADFun <- tape_namedfun("OmegaS2S_ineqconstaints", mnlink_Omega_vec(omegapar), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  cADFun <- tape_namedfun("Omega_ineqconstraints", mnlink_Omega_vec(omegapar), vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   directeval <- sum(diag(t(mnlink_Omega_unvec(omparovec, p, check = FALSE)$Omega) %*% mnlink_Omega_unvec(omparovec, p, check = FALSE)$Omega)) - (p-1)
   tapeeval <- cADFun$eval(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)

@@ -15,6 +15,19 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// Omega_constraints
+veca1 Omega_constraints(veca1& vec, int p, int qe);
+RcppExport SEXP _sphm_Omega_constraints(SEXP vecSEXP, SEXP pSEXP, SEXP qeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< veca1& >::type vec(vecSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type qe(qeSEXP);
+    rcpp_result_gen = Rcpp::wrap(Omega_constraints(vec, p, qe));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ull_S2S_alignedG_mean
 veca1 ull_S2S_alignedG_mean(veca1& vec, veca1& dyn, vecd& p_in, matd& yx);
 RcppExport SEXP _sphm_ull_S2S_alignedG_mean(SEXP vecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
@@ -202,18 +215,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// Omega_constraints
-veca1 Omega_constraints(veca1& vec, int p);
-RcppExport SEXP _sphm_Omega_constraints(SEXP vecSEXP, SEXP pSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< veca1& >::type vec(vecSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    rcpp_result_gen = Rcpp::wrap(Omega_constraints(vec, p));
-    return rcpp_result_gen;
-END_RCPP
-}
 // tape_namedfun
 pADFun tape_namedfun(std::string func_name, veca1& ind_t, veca1& dyn_t, vecd& constvec, matd& constmat, bool check_for_nan);
 RcppExport SEXP _sphm_tape_namedfun(SEXP func_nameSEXP, SEXP ind_tSEXP, SEXP dyn_tSEXP, SEXP constvecSEXP, SEXP constmatSEXP, SEXP check_for_nanSEXP) {
@@ -288,6 +289,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_sphm_Omega_constraints", (DL_FUNC) &_sphm_Omega_constraints, 3},
     {"_sphm_ull_S2S_alignedG_mean", (DL_FUNC) &_sphm_ull_S2S_alignedG_mean, 4},
     {"_sphm_ull_S2S_alignedG_a", (DL_FUNC) &_sphm_ull_S2S_alignedG_a, 4},
     {"_sphm_ull_S2S_alignedG_k", (DL_FUNC) &_sphm_ull_S2S_alignedG_k, 4},
@@ -302,7 +304,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_tape_ull_S2S_constV_nota1", (DL_FUNC) &_sphm_tape_ull_S2S_constV_nota1, 7},
     {"_sphm_mnlink_cpp", (DL_FUNC) &_sphm_mnlink_cpp, 4},
     {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
-    {"_sphm_Omega_constraints", (DL_FUNC) &_sphm_Omega_constraints, 2},
     {"_sphm_tape_namedfun", (DL_FUNC) &_sphm_tape_namedfun, 6},
     {"_sphm_besselIasym", (DL_FUNC) &_sphm_besselIasym, 4},
     {"_sphm_uldSvMF_cann", (DL_FUNC) &_sphm_uldSvMF_cann, 4},

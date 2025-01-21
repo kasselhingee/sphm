@@ -3,6 +3,7 @@
 
 #include <sphm_forward.h>
 #include "prelimS2S.h"
+#include "Omega.h"
 #include "S2S_alignedG.h"
 
 // defining a function map that will convert string names to a pointer to the function

@@ -22,7 +22,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 x, mnlink_Omega_cpp<a1type> om, a1type k, a1
 
   //get mean
   mata1 ypred;
-  ypred = meanlinkS2Scpp(x, mata1(x.rows(), 0), omvec_projected, p); //0 specified no Euc covars
+  ypred = mnlink_cpp(x, mata1(x.rows(), 0), omvec_projected, p); //0 specified no Euc covars
 
   //evaluate SvMF density of each observation
   veca1 ld(y.rows());

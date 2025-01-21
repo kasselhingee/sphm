@@ -14,7 +14,7 @@ veca1 pobjS2Scpp(veca1 & omvec, veca1 & dyn, vecd & p_in, matd & yx){
   omvec_projected = mnlink_Omega_cpp_vec(om_projected);  
 
   mata1 ypred;
-  ypred = meanlinkS2Scpp(x, mata1(x.rows(), 0), omvec_projected, p);
+  ypred = mnlink_cpp(x, mata1(x.rows(), 0), omvec_projected, p);
   veca1 obj(1);
   obj(0) = -1 * (ypred.array() * y.array()).sum()/y.rows();
   return(obj);

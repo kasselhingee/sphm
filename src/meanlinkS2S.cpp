@@ -2,7 +2,7 @@
 #include "meanlinkS2S.h"
 #include "OmegaS2S.h"
 
-mata1 meanlinkS2Scpp(const mata1 &xs, const mata1 &xe, const veca1 &vec, const int p) {
+mata1 mnlink_cpp(const mata1 &xs, const mata1 &xe, const veca1 &vec, const int p) {
   int qe = xe.cols();
   // Convert vector to a mnlink_Omega_cpp object
   mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p, qe);

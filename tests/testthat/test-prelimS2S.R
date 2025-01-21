@@ -35,11 +35,9 @@ test_that("prelim optimisation works with Euc covars", {
                                        ce = rep(0, p)))
   opt2 <- optim_pobjS2S_parttape(y, xe = x, paramobj0 = start)
   expect_equal(opt2$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
-  
 })
 
-
-test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
+test_that("prelim optimisation works with Sph covars",{
   p <- 4
   q <- 5
   # data generating parameters:
@@ -86,6 +84,58 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   opt2 <- optim_pobjS2S_parttape(y, xs = x, paramobj0 = start)
   expect_equal(opt2$solution, omegapar, tolerance = 0.05)
 })
+
+test_that("prelim optimisation works with Sph+Euc covars", {
+  set.seed(1)
+  p <- 3
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  qs <- 5
+  set.seed(2)
+  Qs <- mclust::randomOrthogonalMatrix(qs, p)
+  set.seed(3)
+  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+  qe <- 4
+  set.seed(12)
+  Qe <- mclust::randomOrthogonalMatrix(qe, p)
+  set.seed(13)
+  Be <- diag(sort(runif(p-1), decreasing = TRUE))
+  set.seed(14)
+  ce <- runif(p)
+  paramobj <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = TRUE)
+  
+  #generate covariates Gaussianly
+  set.seed(4)
+  xe <- matrix(rnorm(1000*qe), nrow = 1000)
+  #generate covariates on the sphere
+  set.seed(4)
+  xs <- matrix(rnorm(1000*qs), nrow = 1000)
+  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
+  
+  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
+  
+  # generate noise
+  if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
+  set.seed(5)
+  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
+  
+  # optimise locally using derivative information
+  # starting at the optimum
+  tmp <- optim_pobjS2S_parttape(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
+  expect_equal(tmp$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  
+  # starting away from optimum, but still within constraints
+  set.seed(14)
+  start <- as_mnlink_Omega(mnlink_cann(P = mclust::randomOrthogonalMatrix(p, p),
+                                       Qs = mclust::randomOrthogonalMatrix(qs, p),
+                                       Bs = diag(sort(runif(p-1), decreasing = TRUE)),
+                                       Qe = mclust::randomOrthogonalMatrix(qe, p),
+                                       Be = diag(sort(runif(p-1), decreasing = TRUE)),
+                                       ce = rep(0, p)))
+  opt2 <- optim_pobjS2S_parttape(y, xs = xs, xe = xe, paramobj0 = start)
+  expect_equal(opt2$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+})
+
+
 
 test_that("Omega_constraints() is zero correctly", {
   p <- 3

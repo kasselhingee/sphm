@@ -45,65 +45,28 @@ test_that("Omega and cannonical versions match manual version, and give same res
   xe <- matrix(rnorm(2*qe), nrow = 2)
   xe <- rbind(xe, xe[1, ])
   
-  # direct canonical 
-  mnA <- mnlink_pred_cann(xs, xe, paramobj)
-  # via reparameterisation
-  Om <- as_mnlink_Omega(paramobj)
-  mnB <- meanlinkS2Scpp(xs, xe, mnlink_Omega_vec(Om), p)
-  expect_equal(mnA, mnB)
+  mnA <- mnlink(xs, xe, paramobj)
+  mnB <- mnlink(xs, xe, as_mnlink_Omega(paramobj))
   expect_equal(mnA[1, ], mnA[3, ]) #a good way to check that row vectors are being treated as such.
   
   # Sph only
   pSph <- do.call(mnlink_cann, paramobj[c("P", "Bs", "Qs")])
-  Sph_Om <- as_mnlink_Omega(pSph)
-  mnA <- mnlink_pred_cann(xs, xe, pSph)
-  mnB <- meanlinkS2Scpp(xs, xe = matrix(ncol = 0, nrow = nrow(xs)), mnlink_Omega_vec(Sph_Om), p = p)
+  mnA <- mnlink(xs, param = pSph)
+  mnB <- mnlink(xs, param = as_mnlink_Omega(pSph))
   expect_equal(mnA, mnB)
   expect_equal(mnB[1, ], drop(P %*% iSp(drop(Bs %*% Sp(drop(t(Qs) %*% xs[1, ]))))))
 
   # Euc only
   pEuc <- do.call(mnlink_cann, paramobj[c("P", "Be", "Qe", "ce")])
-  mnA <- mnlink_pred_cann(xs, xe, pEuc)
-  mnB <- meanlinkS2Scpp(xs = matrix(ncol = 0, nrow = nrow(xe)), xe, mnlink_Omega_vec(as_mnlink_Omega(pEuc)), p = p)
+  mnA <- mnlink(xe = xe, param = pEuc)
+  mnB <- mnlink(xe = xe, param = as_mnlink_Omega(pEuc))
   expect_equal(mnA, mnB)
   expect_equal(mnA[1, ], drop(P %*% iSp(drop( Be %*% (t(Qe[,-1]) %*% xe[1, ] + ce[-1]) / drop(Qe[, 1] %*% xe[1, ]  + ce[1]) ) )))
 
+  # errors
+  expect_error(mnlink(xs, as_mnlink_Omega(pSph)), "parameter object")
+  expect_error(mnlink(xe = xe, pEuc), "parameter object")
+  expect_error(mnlink(xe = xe, param = list(P, Be, Qs)), "class")
 })
 
-test_that("meanlinkS2S() works with a variety of inputs", {
-  set.seed(1)
-  p <- 3
-  q <- 5
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  set.seed(2)
-  Q <- mclust::randomOrthogonalMatrix(q, p)
-  set.seed(3)
-  B <- diag(sort(runif(p-1), decreasing = TRUE))
-  paramobj <- cannS2S(P, Q, B)
-  set.seed(4)
-  x <- matrix(rnorm(4*q), nrow = 4)
-  x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
-  expect_equal(meanlinkS2S(x[1, ], P = P, Q = Q, B = B), meanlinkS2S(x[1, ], paramobj = paramobj))
-  expect_equal(meanlinkS2S(x[1, ], paramobj = as_mnlink_Omega(paramobj)), meanlinkS2S(x[1, ], paramobj = paramobj))
-  expect_equal(meanlinkS2S(x, P = P, Q = Q, B = B), meanlinkS2S(x, paramobj = as_mnlink_Omega(paramobj)))
-  expect_equal(meanlinkS2S(x, paramobj = paramobj), meanlinkS2S(x, paramobj = as_mnlink_Omega(paramobj)))
-})
-
-test_that("meanlinkS2Scpp() works and matches R version", {
-  set.seed(1)
-  p <- 3
-  q <- 5
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  set.seed(2)
-  Q <- mclust::randomOrthogonalMatrix(q, p)
-  set.seed(3)
-  B <- diag(sort(runif(p-1), decreasing = TRUE))
-  paramobj <- cannS2S(P, Q, B)
-  set.seed(4)
-  x <- matrix(rnorm(4*q), nrow = 4)
-  x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
-  ymeanR <- meanlinkS2S(x, paramobj = as_mnlink_Omega(paramobj))
-  ymeanCpp <- meanlinkS2Scpp(x, vec = mnlink_Omega_vec(as_mnlink_Omega(paramobj)), p)
-  expect_equal(ymeanCpp, ymeanR)
-})
   

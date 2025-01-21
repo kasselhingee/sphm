@@ -103,7 +103,7 @@ optim_pobjS2S_parttape <- function(y, xs = NULL, xe = NULL, paramobj0, ...){ #pa
   # prepare nloptr options
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",
                 xtol_rel = 1E-10, #1E-04,
-                tol_constraints_eq = rep(1E-1, 1 + (length(om0$qs1) > 0) + (length(om0$qs1) > 0)),
+                tol_constraints_eq = rep(1E-1, 1 + (length(om0$qs1) > 0) + (length(om0$qe1) > 0)),
                 maxeval = 1E4)
   ellipsis_args <- list(...)
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)

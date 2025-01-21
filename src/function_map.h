@@ -8,7 +8,7 @@
 
 // defining a function map that will convert string names to a pointer to the function
 std::map<std::string, generalfunction> function_map = {
-   {"pobjS2Scpp", &pobjS2Scpp},
+   {"prelimobj_cpp", &prelimobj_cpp},
    {"Omega_constraints_wrap", &Omega_constraints_wrap},
    {"Omega_ineqconstraints", &Omega_ineqconstraints},
    {"ull_S2S_alignedG_mean", &ull_S2S_alignedG_mean},

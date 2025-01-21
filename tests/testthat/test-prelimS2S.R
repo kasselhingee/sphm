@@ -25,7 +25,7 @@ test_that("optim_pobjS2S, pobjS2S() and pobjS2SCpp() works",{
   
   # objective function in C++ and R should match when omegapar passes mnlink_Omega_check()
   objval <- pobjS2S(y, x, omegapar)
-  objvalcpp <-  pobjS2Scpp(mnlink_Omega_vec(omegapar), vector(), p, cbind(y,x))
+  objvalcpp <-  prelimobj_cpp(mnlink_Omega_vec(omegapar), vector(), p, cbind(y,x))
   expect_equal(objvalcpp, objval)
 
   # optimise using pure R
@@ -111,8 +111,8 @@ test_that("taping of pobjS2S and Omega_constraints runs and evaluates", {
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 10*mn)}))
 
-  anADFun <- tape_namedfun("pobjS2Scpp", mnlink_Omega_vec(omegapar), vector(mode = "numeric"), p, cbind(y,x), check_for_nan = FALSE)
-  directeval <- pobjS2Scpp(mnlink_Omega_vec(omegapar), vector(), p, cbind(y,x))
+  anADFun <- tape_namedfun("prelimobj_cpp", mnlink_Omega_vec(omegapar), vector(mode = "numeric"), p, cbind(y,x), check_for_nan = FALSE)
+  directeval <- prelimobj_cpp(mnlink_Omega_vec(omegapar), vector(), p, cbind(y,x))
   tapeeval <- anADFun$eval(unclass(mnlink_Omega_vec(omegapar)), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)
 
@@ -120,12 +120,12 @@ test_that("taping of pobjS2S and Omega_constraints runs and evaluates", {
   omparo <- omegapar
   omparo$Omega <- omparo$Omega + 1
   omparovec <- mnlink_Omega_vec(omparo)
-  directeval <- pobjS2Scpp(omparovec, vector(), p, cbind(y,x))
+  directeval <- prelimobj_cpp(omparovec, vector(), p, cbind(y,x))
   tapeeval <- anADFun$eval(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(tapeeval, directeval)
 
   # check derivatives: pForward, via taping, and numerically
-  jac_numeric <- drop(attr(numericDeriv(quote(pobjS2Scpp(omparovec, vector(), p, cbind(y,x))), c("omparovec")), "gradient"))
+  jac_numeric <- drop(attr(numericDeriv(quote(prelimobj_cpp(omparovec, vector(), p, cbind(y,x))), c("omparovec")), "gradient"))
   jac <- anADFun$Jac(unclass(omparovec), vector(mode = "numeric"))
   expect_equal(jac, jac_numeric, tolerance = 1E-3)
 

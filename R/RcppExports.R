@@ -75,8 +75,8 @@ mnlink_cpp <- function(xs, xe, vec, p) {
 #' @param dyn is a zero length vector
 #' @param p is required to separate yx and omvec. It is passed as a double for compatiblility witn generalfunction, so will have to be rounded to a integer within the function
 #' @param dyn ignored
-pobjS2Scpp <- function(omvec, dyn, p_in, yx) {
-    .Call(`_sphm_pobjS2Scpp`, omvec, dyn, p_in, yx)
+prelimobj_cpp <- function(omvec, dyn, p_in, yx) {
+    .Call(`_sphm_prelimobj_cpp`, omvec, dyn, p_in, yx)
 }
 
 #' Function for taping a general function. The function must have signature

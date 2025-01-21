@@ -201,9 +201,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// pobjS2Scpp
-veca1 pobjS2Scpp(veca1& omvec, veca1& dyn, vecd& p_in, matd& yx);
-RcppExport SEXP _sphm_pobjS2Scpp(SEXP omvecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
+// prelimobj_cpp
+veca1 prelimobj_cpp(veca1& omvec, veca1& dyn, vecd& p_in, matd& yx);
+RcppExport SEXP _sphm_prelimobj_cpp(SEXP omvecSEXP, SEXP dynSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -211,7 +211,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< veca1& >::type dyn(dynSEXP);
     Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
     Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
-    rcpp_result_gen = Rcpp::wrap(pobjS2Scpp(omvec, dyn, p_in, yx));
+    rcpp_result_gen = Rcpp::wrap(prelimobj_cpp(omvec, dyn, p_in, yx));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -303,7 +303,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_ull_S2S_constV_forR", (DL_FUNC) &_sphm_ull_S2S_constV_forR, 7},
     {"_sphm_tape_ull_S2S_constV_nota1", (DL_FUNC) &_sphm_tape_ull_S2S_constV_nota1, 7},
     {"_sphm_mnlink_cpp", (DL_FUNC) &_sphm_mnlink_cpp, 4},
-    {"_sphm_pobjS2Scpp", (DL_FUNC) &_sphm_pobjS2Scpp, 4},
+    {"_sphm_prelimobj_cpp", (DL_FUNC) &_sphm_prelimobj_cpp, 4},
     {"_sphm_tape_namedfun", (DL_FUNC) &_sphm_tape_namedfun, 6},
     {"_sphm_besselIasym", (DL_FUNC) &_sphm_besselIasym, 4},
     {"_sphm_uldSvMF_cann", (DL_FUNC) &_sphm_uldSvMF_cann, 4},

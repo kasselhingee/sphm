@@ -1,5 +1,5 @@
-#ifndef OMEGAS2S_H
-#define OMEGAS2S_H
+#ifndef OMEGA_H
+#define OMEGA_H
 
 # include <sphm_forward.h>
 # include <scorematchingad_forward.h> // includes <RcppEigenForward.h>

@@ -1,5 +1,5 @@
 #include "prelimS2S.h"
-#include "OmegaS2S.h"
+#include "Omega.h"
 #include "mnlink_cpp.h"
 #include "tapegeneral.h"
 

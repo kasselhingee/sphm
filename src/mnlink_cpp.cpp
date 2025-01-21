@@ -1,6 +1,6 @@
 
 #include "mnlink_cpp.h"
-#include "OmegaS2S.h"
+#include "Omega.h"
 
 mata1 mnlink_cpp(const mata1 &xs, const mata1 &xe, const veca1 &vec, const int p) {
   int qe = xe.cols();

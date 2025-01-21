@@ -3,7 +3,7 @@
 
 #include <scorematchingad_forward.h> //includes RcppEigenForward
 #include <utils/pADFun.h>
-#include "OmegaS2S.h"
+#include "Omega.h"
 
 // function that accepts all the major arguments in usual (non-vector) format
 // for a single observation y with covariates x and return the ull for that observation, parallel transporting axes H*(p1)*Kstar to the mean using Jupp's method from base being the first column of P.

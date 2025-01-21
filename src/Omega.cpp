@@ -1,4 +1,4 @@
-#include "OmegaS2S.h"
+#include "Omega.h"
 
 veca1 Omega_constraints(veca1 & vec, int p, int qe) {
   // Convert vector to a mnlink_Omega_cpp object

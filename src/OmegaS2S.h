@@ -114,7 +114,7 @@ mnlink_Omega_cpp<T> Omega_proj_cpp(const mnlink_Omega_cpp<T>& inobj) {
 
 // For a parameter set return quadratic distance to constraints matching
 // [[Rcpp::export]]
-veca1 OmegaS2S_constraints(veca1 & vec, int p);
+veca1 OmegaS2S_constraints(veca1 & vec, int p, int qe=0);
 
 //a wrap around OmegaS2S_constraints for use with tapegeneral
 veca1 wrap_OmegaS2S_constraints(veca1 & vec, veca1 & ignore1, vecd & p_in, matd & ignore2);

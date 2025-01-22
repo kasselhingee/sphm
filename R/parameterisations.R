@@ -154,7 +154,7 @@ cann2Omega <- function(obj, check = TRUE){
   if (!is.null(qe1)){
     Omega_e <- obj$P[,-1] %*% obj$Be %*% t(obj$Qe[, -1])
     ce1 <- obj$ce[1]
-    PBce <- obj$P[,-1] %*% obj$Be %*% obj$ce[-1]
+    PBce <- as.vector(obj$P[,-1] %*% obj$Be %*% obj$ce[-1])
   }
   Omega <- cbind(Omega_s, Omega_e)
   return(mnlink_Omega(p1, qs1 = qs1, Omega = Omega, qe1 = qe1, ce1 = ce1, PBce = PBce, check = FALSE))
@@ -240,6 +240,13 @@ mnlink_Omega_check <- function(obj){
   if (is.null(obj$qe1)){stop("qe1 should be non-null")}
   if (is.null(obj$ce1)){stop("ce1 should be non-null")}
   if (is.null(obj$PBce)){stop("PBce should be non-null")}
+  
+  elementnames <- c("p1", "qs1", "qe1", "ce1", "PBce", "Omega")
+  nullelements <- vapply(obj[elementnames], is.null, FUN.VALUE = FALSE) 
+  names(nullelements) <- elementnames #needed in case an element is completely missing
+  if (any(nullelements)){stop("The following elements are null: ", paste(names(which(nullelements)), collapse = ", "))}
+  isvecs <- vapply(obj[names(obj)!="Omega"], is.vector, FUN.VALUE = FALSE)
+  if (any(!isvecs)){stop("The following elements should be vectors: ", paste(names(which(!isvecs)), collapse = ", "))}
 
   stopifnot(length(obj$p1) == nrow(obj$Omega))
   stopifnot(length(obj$qs1) + length(obj$qe1) == ncol(obj$Omega))
@@ -308,18 +315,37 @@ Omega_proj <- function(obj){
     obj$qe1 <- obj$qe1/vnorm(obj$qe1)
     Omega_e <- newOmega[, length(obj$qs1) + seq.int(1, length.out = length(obj$qe1)), drop = FALSE]
     Omega_e <- Omega_e - Omega_e %*% obj$qe1 %*% t(obj$qe1)
-    obj$PBce <- obj$PBce -  (obj$p1 %*% t(obj$p1)) %*% obj$PBce
+    obj$PBce <- as.vector(obj$PBce -  (obj$p1 %*% t(obj$p1)) %*% obj$PBce)
   }
   obj$Omega <- cbind(Omega_s, Omega_e)
   return(obj)
 }
 
 # The Euc part of the Omega parameterisations is invariant to sign because ce1 can be anything (if it was fixed to +1 then there would be no invariance). This function switches the sign
-Omega_Euc_signswitch <- function(obj){
-  obj$qe1 <- -1 * obj$qe1
-  obj$ce1 <- -1 * obj$ce1
-  obj$PBce <- -1 * obj$PBce
-  obj$Omega[, length(obj$qs1) + (1:length(obj$qe1))] <- -1 * obj$Omega[, length(obj$qs1) + (1:length(obj$qe1))]
+Euc_signswitch <- function(obj){
+  if (inherits(obj, "mnlink_Omega")){
+    obj$qe1 <- -1 * obj$qe1
+    obj$ce1 <- -1 * obj$ce1
+    obj$PBce <- -1 * obj$PBce
+    obj$Omega[, length(obj$qs1) + (1:length(obj$qe1))] <- -1 * obj$Omega[, length(obj$qs1) + (1:length(obj$qe1))]
+    return(obj)
+  }
+  if (inherits(obj, "mnlink_cann")){
+    obj$ce <- -1 * obj$ce
+    obj$Qe <- -1 * obj$Qe
+    return(obj)
+  }
+}
+P_signswitch <- function(obj, cols){
+  stopifnot(inherits(obj, "mnlink_cann"))
+  if (is.logical(cols)){cols <- which(cols)}
+  if (1 %in% cols){stop("Sign of first column of P cannot be easily swapped")}
+  obj$P[, cols] <- -1 * obj$P[,cols]
+  if (!is.null(obj$Qs)){obj$Qs[,cols] <- -1 * obj$Qs[,cols]}
+  if (!is.null(obj$Qe)){
+    obj$Qe[,cols] <- -1 * obj$Qe[,cols]
+    obj$ce[cols] <- -1 * obj$ce[cols]
+  }
   return(obj)
 }
 

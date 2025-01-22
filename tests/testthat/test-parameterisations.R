@@ -82,15 +82,8 @@ test_that("Conversions work: Sph + Euc", {
   # check that convert back matches
   cann2 <- Omega2cann(Om, check = FALSE)
   expect_silent(mnlink_cann_check(cann2))
-  expect_equal(topos1strow(cann2$P), topos1strow(cann$P))
-  # Qs and Qe
-  expect_equal(topos1strow(cann2$Qs),topos1strow(cann$Qs))
-  expect_equal(topos1strow(cann2$Qe),topos1strow(cann$Qe))
-  
-  #recovering Bs and Be
-  expect_equal(cann2$Bs,cann$Bs)
-  expect_equal(cann2$Be,cann$Be)
-  expect_equal(cann2$ce,cann$ce)
+  cann2 <- P_signswitch(cann2, sign(cann2$P[1, ]) != sign(cann$P[1, ]))
+  expect_equal(cann2, cann)
 })
 
 test_that("Conversions work: Sph only", {
@@ -106,11 +99,8 @@ test_that("Conversions work: Sph only", {
   # check that convert back matches
   cann2 <- Omega2cann(Om, check = FALSE)
   expect_silent(mnlink_cann_check(cann2))
-  expect_equal(topos1strow(cann2$P), topos1strow(cann$P))
-  # Qs
-  expect_equal(topos1strow(cann2$Qs),topos1strow(cann$Qs))
-  #recovering Bs and Be
-  expect_equal(cann2$Bs,cann$Bs)
+  cann2 <- P_signswitch(cann2, sign(cann2$P[1, ]) != sign(cann$P[1, ]))
+  expect_equal(cann2, cann)
 })
 
 test_that("Conversions work: Euc only", {
@@ -126,12 +116,8 @@ test_that("Conversions work: Euc only", {
   # check that convert back matches
   cann2 <- Omega2cann(Om, check = FALSE)
   expect_silent(mnlink_cann_check(cann2))
-  expect_equal(topos1strow(cann2$P), topos1strow(cann$P))
-  # Qe
-  expect_equal(topos1strow(cann2$Qe),topos1strow(cann$Qe))
-  #recovering Bs and Be
-  expect_equal(cann2$Be,cann$Be)
-  expect_equal(cann2$ce,cann$ce)
+  cann2 <- P_signswitch(cann2, sign(cann2$P[1, ]) != sign(cann$P[1, ]))
+  expect_equal(cann2, cann)
 })
 
 
@@ -140,7 +126,7 @@ test_that("mnlink_Omega works directly", {
   cann <- paramobj
   Om <- cann2Omega(cann)
   
-  Om2 <- mnlink_Omega(p1 = Om$p1, qs1 = Om$qs1, qe1 = Om$qe1, Omega = Om$Omega, ce = Om$ce, check = TRUE)
+  Om2 <- mnlink_Omega(p1 = Om$p1, qs1 = Om$qs1, qe1 = Om$qe1, Omega = Om$Omega, ce1 = Om$ce1, PBce = Om$PBce, check = TRUE)
   expect_equal(Om2, Om)
 })
   

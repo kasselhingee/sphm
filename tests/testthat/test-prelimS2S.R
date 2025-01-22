@@ -1,16 +1,5 @@
 test_that("prelim optimisation works with Euc covars", {
-  set.seed(1)
-  p <- 3
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  qs <- 0
-  qe <- 4
-  set.seed(12)
-  Qe <- mclust::randomOrthogonalMatrix(qe, p)
-  set.seed(13)
-  Be <- diag(sort(runif(p-1), decreasing = TRUE))
-  set.seed(14)
-  ce <- runif(p)
-  paramobj <- mnlink_cann(P, Be = Be, Qe = Qe, ce = ce, check = TRUE)
+  rmnlink_cann__place_in_env(qs = 0)
   
   #generate covariates Gaussianly
   set.seed(4)
@@ -41,20 +30,12 @@ test_that("prelim optimisation works with Euc covars", {
 })
 
 test_that("prelim optimisation works with Sph covars",{
-  p <- 4
-  q <- 5
-  # data generating parameters:
-  set.seed(1)
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  set.seed(2)
-  Q <- mclust::randomOrthogonalMatrix(q, p)
-  set.seed(3)
-  B <- diag(sort(runif(p-1), decreasing = TRUE))
-  omegapar <- as_mnlink_Omega(cannS2S(P,Q,B))
+  rmnlink_cann__place_in_env(p = 4, qs = 5, qe = 0)
+  omegapar <- as_mnlink_Omega(paramobj)
   
   #generate covariates uniformly on the sphere
   set.seed(4)
-  x <- matrix(rnorm(1000*q), nrow = 1000)
+  x <- matrix(rnorm(1000*qs), nrow = 1000)
   x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
   
   ymean <- mnlink(xs = x, param = omegapar)
@@ -66,7 +47,7 @@ test_that("prelim optimisation works with Sph covars",{
   
   # objective function in C++ and R should match when omegapar passes mnlink_Omega_check()
   objval <- pobjS2S(y, x, omegapar)
-  objvalcpp <-  prelimobj_cpp(mnlink_Omega_vec(omegapar), vector(), c(p, 0), cbind(y,x))
+  objvalcpp <-  prelimobj_cpp(mnlink_Omega_vec(omegapar), vector(), c(p, qe), cbind(y,x))
   expect_equal(objvalcpp, objval)
 
   # optimise using pure R
@@ -82,29 +63,14 @@ test_that("prelim optimisation works with Sph covars",{
   # starting away from optimum, but still within constraints
   set.seed(14)
   start <- as_mnlink_Omega(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
-          Q = mclust::randomOrthogonalMatrix(q, p),
+          Q = mclust::randomOrthogonalMatrix(qs, p),
           B = diag(sort(runif(p-1), decreasing = TRUE))))
   opt2 <- optim_pobjS2S_parttape(y, xs = x, paramobj0 = start)
   expect_equal(opt2$solution, omegapar, tolerance = 0.05)
 })
 
 test_that("prelim optimisation works with Sph+Euc covars", {
-  set.seed(1)
-  p <- 3
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  qs <- 5
-  set.seed(2)
-  Qs <- mclust::randomOrthogonalMatrix(qs, p)
-  set.seed(3)
-  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
-  qe <- 4
-  set.seed(12)
-  Qe <- mclust::randomOrthogonalMatrix(qe, p)
-  set.seed(13)
-  Be <- diag(sort(runif(p-1), decreasing = TRUE))
-  set.seed(14)
-  ce <- runif(p)
-  paramobj <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = TRUE)
+  rmnlink_cann__place_in_env(3, 5, 4)
   
   #generate covariates Gaussianly
   set.seed(4)
@@ -143,7 +109,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
 
 
 
-test_that("Omega_constraints() is zero correctly", {
+test_that("C++ Omega_constraints() is zero correctly", {
   p <- 3
   q <- 5
   # data generating parameters:

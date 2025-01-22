@@ -19,22 +19,7 @@ test_that("iSp inverses Sp", {
 })
 
 test_that("Omega and cannonical versions match manual version, and give same result to each other", {
-  set.seed(1)
-  p <- 3
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  qs <- 5
-  set.seed(2)
-  Qs <- mclust::randomOrthogonalMatrix(qs, p)
-  set.seed(3)
-  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
-  qe <- 4
-  set.seed(12)
-  Qe <- mclust::randomOrthogonalMatrix(qe, p)
-  set.seed(13)
-  Be <- diag(sort(runif(p-1), decreasing = TRUE))
-  set.seed(14)
-  ce <- runif(p)
-  paramobj <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = TRUE)
+  rmnlink_cann__place_in_env()
   
   set.seed(4)
   xs <- matrix(rnorm(2*qs), nrow = 2)

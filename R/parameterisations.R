@@ -28,7 +28,7 @@ cannS2S <- function(P, Q, B, check = TRUE){
 mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL, check = TRUE){
   stopifnot(is.matrix(P))
   obj <- list(P = P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
-  if (length(obj$ce) == 0){obj$ce <- NULL}
+  if ( (!is.null(obj$ce)) & length(obj$ce) == 0){obj$ce <- NULL}
   class(obj) <- c("mnlink_cann", class(obj))
   if (check){mnlink_cann_check(obj)}
   return(obj)
@@ -321,4 +321,39 @@ Omega_Euc_signswitch <- function(obj){
   obj$PBce <- -1 * obj$PBce
   obj$Omega[, length(obj$qs1) + (1:length(obj$qe1))] <- -1 * obj$Omega[, length(obj$qs1) + (1:length(obj$qe1))]
   return(obj)
+}
+
+#' @title Randomly generate mean link parameters
+#' @return A `mnlink_cann` object.
+#' @details
+#' Place all the parameters in the environment by running list2env(obj, envir = environment())
+#' @export
+rmnlink_cann <- function(p = 3, qs = 5, qe = 4, preseed = 0){
+  set.seed(preseed + 1)
+  P <- mclust::randomOrthogonalMatrix(p, p)
+  Qs <- Qe <- Bs <- Be <- ce <- NULL
+  if (qs > 0){
+    set.seed(preseed + 2)
+    Qs <- mclust::randomOrthogonalMatrix(qs, p)
+    set.seed(preseed + 3)
+    Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+    set.seed(preseed + 2 + 10)
+  }
+  if (qe > 0){
+    Qe <- mclust::randomOrthogonalMatrix(qe, p)
+    set.seed(preseed + 3 + 10)
+    Be <- diag(sort(runif(p-1), decreasing = TRUE))
+    set.seed(preseed + 4 + 10)
+    ce <- runif(p)
+  }
+  paramobj <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = TRUE)
+  return(paramobj)
+}
+
+# for testing only, puts all the values in the environment
+rmnlink_cann__place_in_env <- function(p = 3, qs = 5, qe = 4, preseed = 0){
+  paramobj <- rmnlink_cann(p = p, qs = qs, qe = qe, preseed = preseed)
+  target_env <- if (is.null(environment(-1))) .GlobalEnv else environment(-1)
+  list2env(c(paramobj, list(paramobj = paramobj, qs = qs, qe = qe, p = p)), envir = target_env)
+  return(NULL)
 }

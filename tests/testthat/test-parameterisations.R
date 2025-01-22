@@ -70,23 +70,8 @@ test_that("mnlink_cann(): common mistakes", {
 })
 
 test_that("Conversions work: Sph + Euc", {
-  set.seed(1)
-  p <- 3
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  qs <- 5
-  set.seed(2)
-  Qs <- mclust::randomOrthogonalMatrix(qs, p)
-  set.seed(3)
-  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
-  qe <- 4
-  set.seed(12)
-  Qe <- mclust::randomOrthogonalMatrix(qe, p)
-  set.seed(13)
-  Be <- diag(sort(runif(p-1), decreasing = TRUE))
-  set.seed(14)
-  ce <- runif(p)
-  
-  cann <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
+  rmnlink_cann__place_in_env(3, 5, 4)
+  cann <- paramobj
   
   Om <- cann2Omega(cann, check = FALSE)
   
@@ -109,15 +94,8 @@ test_that("Conversions work: Sph + Euc", {
 })
 
 test_that("Conversions work: Sph only", {
-  set.seed(1)
-  p <- 3
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  qs <- 5
-  set.seed(2)
-  Qs <- mclust::randomOrthogonalMatrix(qs, p)
-  set.seed(3)
-  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
-  cann <- mnlink_cann(P, Bs = Bs, Qs = Qs)
+  rmnlink_cann__place_in_env(3, 5, 0)
+  cann <- paramobj
   
   Om <- cann2Omega(cann, check = FALSE)
   
@@ -136,17 +114,8 @@ test_that("Conversions work: Sph only", {
 })
 
 test_that("Conversions work: Euc only", {
-  set.seed(1)
-  p <- 3
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  qe <- 5
-  set.seed(2)
-  Qe <- mclust::randomOrthogonalMatrix(qe, p)
-  set.seed(3)
-  Be <- diag(sort(runif(p-1), decreasing = TRUE))
-  set.seed(4)
-  ce <- runif(p)
-  cann <- mnlink_cann(P, Be = Be, Qe = Qe, ce = ce)
+  rmnlink_cann__place_in_env(3, 0, 4)
+  cann <- paramobj
   
   Om <- cann2Omega(cann, check = FALSE)
   
@@ -167,22 +136,8 @@ test_that("Conversions work: Euc only", {
 
 
 test_that("mnlink_Omega works directly", {
-  set.seed(1)
-  p <- 3
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  qs <- 5
-  set.seed(2)
-  Qs <- mclust::randomOrthogonalMatrix(qs, p)
-  set.seed(3)
-  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
-  qe <- 4
-  set.seed(12)
-  Qe <- mclust::randomOrthogonalMatrix(qe, p)
-  set.seed(13)
-  Be <- diag(sort(runif(p-1), decreasing = TRUE))
-  set.seed(14)
-  ce <- runif(p)
-  cann <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
+  rmnlink_cann__place_in_env(3, 5, 4)
+  cann <- paramobj
   Om <- cann2Omega(cann)
   
   Om2 <- mnlink_Omega(p1 = Om$p1, qs1 = Om$qs1, qe1 = Om$qe1, Omega = Om$Omega, ce = Om$ce, check = TRUE)
@@ -190,22 +145,8 @@ test_that("mnlink_Omega works directly", {
 })
   
 test_that("projections orthogonal to p1 and qe1, qs1", {
-  set.seed(1)
-  p <- 3
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  qs <- 5
-  set.seed(2)
-  Qs <- mclust::randomOrthogonalMatrix(qs, p)
-  set.seed(3)
-  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
-  qe <- 4
-  set.seed(12)
-  Qe <- mclust::randomOrthogonalMatrix(qe, p)
-  set.seed(13)
-  Be <- diag(sort(runif(p-1), decreasing = TRUE))
-  set.seed(14)
-  ce <- runif(p)
-  cann <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
+  rmnlink_cann__place_in_env(3, 5, 4)
+  cann <- paramobj
   Om <- cann2Omega(cann)
   
   # project Omega perpendicular to p1 and q1
@@ -237,23 +178,9 @@ test_that("projections orthogonal to p1 and qe1, qs1", {
   expect_equal(Omega_proj(Ommod)[c("qs1", "qe1", "p1")], Om[c("qs1", "qe1", "p1")])
 }) 
   
-test_that("vec and unvec - to finish", {
-  set.seed(1)
-  p <- 3
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  qs <- 5
-  set.seed(2)
-  Qs <- mclust::randomOrthogonalMatrix(qs, p)
-  set.seed(3)
-  Bs <- diag(sort(runif(p-1), decreasing = TRUE))
-  qe <- 4
-  set.seed(12)
-  Qe <- mclust::randomOrthogonalMatrix(qe, p)
-  set.seed(13)
-  Be <- diag(sort(runif(p-1), decreasing = TRUE))
-  set.seed(14)
-  ce <- runif(p)
-  cann <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
+test_that("vec and unvec", {
+  rmnlink_cann__place_in_env(3, 5, 4)
+  cann <- paramobj
   Om <- cann2Omega(cann)
   
   #vec and unvec

@@ -19,10 +19,10 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' @param paramobj0 is a starting parameter object.
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @export
-prelim <- function(y, xs = NULL, xe = NULL, param = NULL, method = "local", ...){
-  if (is.null(param)){
+prelim <- function(y, xs = NULL, xe = NULL, type = "K", method = "local", start = NULL, ...){
+  if (is.null(start)){
     p <- ncol(Y)
-    param <- mnlink_cann(
+    start <- mnlink_cann(
                 P = diag(p),
                 Bs = if (!is.null(xs)){diag(p-1)},
                 Qs = diag(p, ncol(xs)),
@@ -32,10 +32,10 @@ prelim <- function(y, xs = NULL, xe = NULL, param = NULL, method = "local", ...)
     )
   }
   if (method == "local"){
-    out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = param, ...)
+    out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = start, ...)
   }
   else (method == "global"){
-    out <- prelim_R(y = y, xs = xs, xe = xe, paramobj0 = param, ...)
+    out <- prelim_R(y = y, xs = xs, xe = xe, paramobj0 = start, ...)
   }
   return(out)
 }

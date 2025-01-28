@@ -14,9 +14,28 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
   return(-mean(rowSums(y * predictedmeans)))
 }
 
-#' Optimisation of the Preliminary Objectivf Function for S2S Link
+#' Optimisation of the Preliminary Objective Function
 #' @details Uses `nloptr`. `NLopt` doesn't have any algorithms for global optimisation with non-linear equality constraints that use provided gradients. So `_parttape` only does local optimisation and uses `NLOPT_LD_SLSQP` which is the only algorithm that takes advantage of derivatives and can handle non-linear equality constraints.
 #' @param paramobj0 is a starting parameter object.
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @export
-S2S_prelim <- prelim_ad
+prelim <- function(y, xs = NULL, xe = NULL, param = NULL, method = "local", ...){
+  if (is.null(param)){
+    p <- ncol(Y)
+    param <- mnlink_cann(
+                P = diag(p),
+                Bs = if (!is.null(xs)){diag(p-1)},
+                Qs = diag(p, ncol(xs)),
+                Be = if (!is.null(xe)){diag(p-1)},
+                Qe = diag(p, ncol(xe)),
+                ce = rep(0, ncol(xe))
+    )
+  }
+  if (method == "local"){
+    out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = param, ...)
+  }
+  else (method == "global"){
+    out <- prelim_R(y = y, xs = xs, xe = xe, paramobj0 = param, ...)
+  }
+  return(out)
+}

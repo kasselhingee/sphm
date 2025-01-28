@@ -28,7 +28,7 @@ cannS2S <- function(P, Q, B, check = TRUE){
 mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL, check = TRUE){
   stopifnot(is.matrix(P))
   obj <- list(P = P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
-  if ( (!is.null(obj$ce)) & length(obj$ce) == 0){obj$ce <- NULL}
+  obj <- lapply(obj, function(element){if (length(element) == 0){return(NULL)}else{return(element)}})
   class(obj) <- c("mnlink_cann", class(obj))
   if (check){mnlink_cann_check(obj)}
   return(obj)

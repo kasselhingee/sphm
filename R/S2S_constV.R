@@ -49,7 +49,7 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   stdKstar[, 1] <- det(stdKstar) * stdKstar[,1] #because Cayley transform only works on det of +1
   
   # preliminary estimate of mean link
-  estprelim <- optim_pobjS2S_parttape(ystd, xs = x, paramobj0 = om0std)
+  estprelim <- prelim_ad(ystd, xs = x, paramobj0 = om0std)
   if (!(estprelim$loc_nloptr$status %in% c(0, 1, 2, 3, 4))){warning("Preliminary optimistation did not finish properly.")}
   om0prelim <- estprelim$solution
   

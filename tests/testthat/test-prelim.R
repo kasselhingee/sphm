@@ -13,7 +13,7 @@ test_that("prelim optimisation works with Euc covars", {
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- optim_pobjS2S_parttape(y, xe = x, paramobj0 = as_mnlink_Omega(paramobj))
+  tmp <- prelim_ad(y, xe = x, paramobj0 = as_mnlink_Omega(paramobj))
   expect_equal(tmp$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
   
   # starting away from optimum, but still within constraints
@@ -22,7 +22,7 @@ test_that("prelim optimisation works with Euc covars", {
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
                                        ce = rep(0, p)))
-  opt2 <- optim_pobjS2S_parttape(y, xe = x, paramobj0 = start)
+  opt2 <- prelim_ad(y, xe = x, paramobj0 = start)
   if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$solution <- Omega_Euc_signswitch(opt2$solution)
   }
@@ -51,13 +51,13 @@ test_that("prelim optimisation works with Sph covars",{
   expect_equal(objvalcpp, objval)
 
   # optimise using pure R
-  opt <- optim_pobjS2S_pureR(y, x, omegapar, global = TRUE, local = TRUE)
+  opt <- prelim_R(y, x, omegapar, global = TRUE, local = TRUE)
   expect_equal(Omega_proj(opt$solution), opt$solution, tolerance = 1E-3)
   expect_equal(opt$solution, omegapar, tolerance = 0.05)
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- optim_pobjS2S_parttape(y, xs = x, paramobj0 = omegapar)
+  tmp <- prelim_ad(y, xs = x, paramobj0 = omegapar)
   expect_equal(tmp$solution, omegapar, tolerance = 0.05)
   
   # starting away from optimum, but still within constraints
@@ -65,7 +65,7 @@ test_that("prelim optimisation works with Sph covars",{
   start <- as_mnlink_Omega(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
           Q = mclust::randomOrthogonalMatrix(qs, p),
           B = diag(sort(runif(p-1), decreasing = TRUE))))
-  opt2 <- optim_pobjS2S_parttape(y, xs = x, paramobj0 = start)
+  opt2 <- prelim_ad(y, xs = x, paramobj0 = start)
   expect_equal(opt2$solution, omegapar, tolerance = 0.05)
 })
 
@@ -89,7 +89,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- optim_pobjS2S_parttape(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
+  tmp <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
   expect_equal(tmp$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
   
   # starting away from optimum, but still within constraints
@@ -100,7 +100,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
                                        ce = rep(0, p)))
-  opt2 <- optim_pobjS2S_parttape(y, xs = xs, xe = xe, paramobj0 = start)
+  opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start)
   if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$solution <- Omega_Euc_signswitch(opt2$solution)
   }

@@ -15,7 +15,7 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 }
 
 
-optim_pobjS2S_parttape <- function(y, xs = NULL, xe = NULL, paramobj0, ...){ #paramobj0 is the starting parameter object
+prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, ...){ #paramobj0 is the starting parameter object
   om0 <- as_mnlink_Omega(paramobj0)
   # check inputs:
   mnlink_Omega_check(om0)
@@ -69,4 +69,4 @@ optim_pobjS2S_parttape <- function(y, xs = NULL, xe = NULL, paramobj0, ...){ #pa
 #' @param paramobj0 is a starting parameter object.
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @export
-S2S_prelim <- optim_pobjS2S_parttape
+S2S_prelim <- prelim_ad

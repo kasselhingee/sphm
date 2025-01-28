@@ -46,7 +46,7 @@ test_that("prelim optimisation works with Sph covars",{
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
   
   # objective function in C++ and R should match when omegapar passes mnlink_Omega_check()
-  objval <- pobjS2S(y, x, omegapar)
+  objval <- prelimobj(y, xs = x, param = omegapar)
   objvalcpp <-  prelimobj_cpp(mnlink_Omega_vec(omegapar), vector(), c(p, qe), cbind(y,x))
   expect_equal(objvalcpp, objval)
 

@@ -385,3 +385,20 @@ rmnlink_cann__place_in_env <- function(p = 3, qs = 5, qe = 4, preseed = 0){
   list2env(c(paramobj, list(paramobj = paramobj, qs = qs, qe = qe, p = p)), envir = target_env)
   return(NULL)
 }
+
+is_Shogo <- function(obj, tol = sqrt(.Machine$double.eps)){
+  if (inherits(obj, "mnlink_Omega")){
+    if (length(obj$qe1) > 0){
+      checks <- c((obj$qe1 - c(1, rep(0, length(obj$qe1) - 1)))^2, (obj$ce1 - 1)^2)
+      if (all(checks < tol)){return(TRUE)}else{return(FALSE)}
+    }
+  }
+  if (inherits(obj, "mnlink_cann")){
+    if (!is.null(obj$Qe)){
+      checks <-  c((obj$Qe[,1] - c(1, rep(0, nrow(obj$Qe) - 1)))^2, (obj$ce[1] - 1)^2)
+      if (all(checks < tol)){return(TRUE)}else{return(FALSE)}
+    }
+  }
+  warning("obj doesn't have Euclidean component")
+  return(NULL)
+}

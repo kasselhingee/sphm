@@ -191,6 +191,7 @@ test_that("check Shogo conversion", {
   bigce[1] <- 1
   ce <- ce[-1]
   paramobj <- mnlink_cann(P, Be = Be, Qe = bigQe, ce = bigce)
+  expect_true(is_Shogo(paramobj))
   
   # check manual
   x <- runif(qe)

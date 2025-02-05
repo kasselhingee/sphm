@@ -19,9 +19,10 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' @param paramobj0 is a starting parameter object.
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @export
-prelim <- function(y, xs = NULL, xe = NULL, type = "K", method = "local", start = NULL, ...){
+prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", start = NULL, ...){
   if (is.null(start)){
     p <- ncol(Y)
+    if ((type == "Shogo") && !is.null(xe)){xs <- cbind(0, xe)}}
     start <- mnlink_cann(
                 P = diag(p),
                 Bs = if (!is.null(xs)){diag(p-1)},
@@ -30,11 +31,15 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "K", method = "local", start 
                 Qe = diag(p, ncol(xe)),
                 ce = rep(0, ncol(xe))
     )
+    if ((type == "Shogo") && !is.null(xe)){
+      start$ce[1] <- 1
+      if (!all(abs(nthpole(ncol(xe)) - start$Qe[,1]) < sqrt(.Machine$double.eps))){stop("First column of Qe must be (1, 0, ...) for Shogo's link.")}
+    }
   }
   if (method == "local"){
     out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = start, ...)
   }
-  else (method == "global"){
+  if (method == "global"){
     out <- prelim_R(y = y, xs = xs, xe = xe, paramobj0 = start, ...)
   }
   return(out)

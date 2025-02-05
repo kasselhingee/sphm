@@ -22,7 +22,7 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", start = NULL, ...){
   if (is.null(start)){
     p <- ncol(Y)
-    if ((type == "Shogo") && !is.null(xe)){xs <- cbind(0, xe)}}
+    if ((type == "Shogo") && !is.null(xe)){xe <- cbind(0, xe)}
     start <- mnlink_cann(
                 P = diag(p),
                 Bs = if (!is.null(xs)){diag(p-1)},

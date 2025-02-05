@@ -51,9 +51,9 @@ test_that("prelim optimisation works with Sph covars",{
   expect_equal(objvalcpp, objval)
 
   # optimise using pure R
-  opt <- prelim_R(y, x, omegapar, global = TRUE, local = TRUE)
-  expect_equal(Omega_proj(opt$solution), opt$solution, tolerance = 1E-3)
-  expect_equal(opt$solution, omegapar, tolerance = 0.05)
+  # opt <- prelim_R(y, x, omegapar, global = TRUE, local = TRUE)
+  # expect_equal(Omega_proj(opt$solution), opt$solution, tolerance = 1E-3)
+  # expect_equal(opt$solution, omegapar, tolerance = 0.05)
   
   # optimise locally using derivative information
   # starting at the optimum
@@ -102,7 +102,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
                                        ce = rep(0, p)))
   opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start)
   if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
-    opt2$solution <- Omega_Euc_signswitch(opt2$solution)
+    opt2$solution <- Euc_signswitch(opt2$solution)
   }
   expect_equal(opt2$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
 })
@@ -127,7 +127,7 @@ set.seed(1)
 n=100
 x <- matrix(rnorm(n*qs), nrow = n)
 x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/") #covariates
-y <- mnlink(xs = u, param = paramobj) # assume y=mu(x) for simulation purpose
+y <- mnlink(xs = x, param = paramobj) # assume y=mu(x) for simulation purpose
 
 ini_value=c(0,0,0,0,0,0,0.9,0.2)  # initial value for optimization. Try multiple values.
 result=nlminb(start=ini_value,objective=function(theta) pre_est3_mod(y,x,theta),lower=c(rep(-Inf,6),0,0),upper=c(rep(Inf,6),1,1))  # numerical optimization

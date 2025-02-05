@@ -12,7 +12,9 @@
 #' @details
 #' # Cannonical Parameterisation
 #' The `P`, `Bs`, `Be`, `Qs`, `Qe` and `ce` is slightly more flexible than Shogo's link function with both Euclidean covariates and a spherical covariate that matches Remark 1 of Manuscript (Nov 29, 2024).
-#' Shogo's link (Equation (1) from that manuscript) can be obtained by including an extra zero-valued Euclidean covariate as the first covariate and forcing \eqn{q_{1e}} to be `(1, 0, ...)` to match the index of the constant covariate and setting `ce[1]` to be zero. I think these changes will not affect the estimation method as both \eqn{q_{1e}} and `ce[1]` separate out of the "Omega" parameterisation.
+#' Shogo's link (Equation (1) from that manuscript) 
+#' \deqn{\mu(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  B_e(Q_e[,-1]^\top x_e + c_e[-1]\right)}
+#' can be obtained by including an extra zero-valued Euclidean covariate as the first covariate and forcing \eqn{q_{1e}} to be `(1, 0, ...)` to match the index of the constant covariate and setting `ce[1]` to be 1. I think these changes will not affect the estimation method as both \eqn{q_{1e}} and `ce[1]` separate out of the "Omega" parameterisation.
 #' 
 #' Andy's link function for Euclidean covariates needs an additional scaling \eqn{b_{im}} parameter for the imaginary component Andy's link function to be parameterised. It will also need `ce = 0` and `Bs` and `Qs` will be ignored since spherical covariates not incorporated yet.
 #' 

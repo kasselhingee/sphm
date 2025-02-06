@@ -29,13 +29,15 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
                 Qs = diag(p, ncol(xs)),
                 Be = if (!is.null(xe)){diag(p-1)},
                 Qe = diag(p, ncol(xe)),
-                ce = rep(0, ncol(xe))
+                ce = c(1, rep(0, ncol(xe)-1))
     )
     if ((type == "Shogo") && !is.null(xe)){
       start$ce[1] <- 1
-      if (!all(abs(nthpole(ncol(xe)) - start$Qe[,1]) < sqrt(.Machine$double.eps))){stop("First column of Qe must be (1, 0, ...) for Shogo's link.")}
     }
   }
+  
+  # check inputs:
+  if (type == "Shogo"){stopifnot(is_Shogo(start))}
   if (method == "local"){
     out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = start, ...)
   }

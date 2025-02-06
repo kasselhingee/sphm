@@ -43,7 +43,7 @@ prelim_global <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", .
                 xtol_rel = 1E-04,
                 tol_constraints_eq = rep(1E-1, 1 + (length(om0$qs1) > 0) + (length(om0$qe1) > 0)),
                 print_level = 3,
-                maxeval = 1E1)
+                maxeval = 1E4)
   ellipsis_args <- list(...)
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   

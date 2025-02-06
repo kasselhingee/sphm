@@ -99,8 +99,69 @@ test_that("prelim optimisation works with Sph+Euc covars", {
                                        Bs = diag(sort(runif(p-1), decreasing = TRUE)),
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
-                                       ce = rep(0, p)))
+                                       ce = c(1, rep(0, p-1))))
   opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start)
+  if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
+    opt2$solution <- Euc_signswitch(opt2$solution)
+  }
+  expect_equal(opt2$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  
+  # check global
+  # Global seems to get the constraints wrong instantly!!
+  # (these are the 3 'h(x)' values, and they should be very close to 0)
+  opt3 <- prelim_global(y, xs = xs, xe = xe, paramobj0 = start, type = "Kassel")
+  if (sign(opt3$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
+    opt3$solution <- Euc_signswitch(opt3$solution)
+  }
+  expect_equal(opt3$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+})
+
+test_that("Shogo with Sph+Euc covars", {
+  rmnlink_cann__place_in_env(3, 5, 4)
+  # convert to Shogo form:
+  bigQe <- rbind(0, Qe)
+  bigQe[, 1] <- 0
+  bigQe[1,1] <- 1
+  bigce <- ce
+  bigce[1] <- 1
+  ce <- ce[-1]
+  paramobj <- mnlink_cann(P, Qs = Qs, Bs = Bs, Be = Be, Qe = bigQe, ce = bigce)
+  expect_true(is_Shogo(paramobj))
+  
+  #generate covariates Gaussianly
+  set.seed(4)
+  xe <- cbind(0, matrix(rnorm(1000*qe), nrow = 1000))
+  #generate covariates on the sphere
+  set.seed(4)
+  xs <- matrix(rnorm(1000*qs), nrow = 1000)
+  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
+  
+  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
+  
+  # generate noise
+  if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
+  set.seed(5)
+  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
+  
+  # optimise locally using derivative information
+  # starting at the optimum
+  tmp <- prelim_global(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj), type = "Shogo")
+  tmp <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj), type = "Shogo")
+  expect_equal(tmp$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  
+  # starting away from optimum, but still within constraints
+  set.seed(14)
+  start <- as_mnlink_Omega(mnlink_cann(P = mclust::randomOrthogonalMatrix(p, p),
+                                       Qs = mclust::randomOrthogonalMatrix(qs, p),
+                                       Bs = diag(sort(runif(p-1), decreasing = TRUE)),
+                                       Qe = mclust::randomOrthogonalMatrix(qe, p),
+                                       Be = diag(sort(runif(p-1), decreasing = TRUE)),
+                                       ce = rep(0, p)))
+  # convert to start to Shogo form:
+  start$Omega <- cbind(start$Omega[,1:qs], 0, start$Omega[,qs + (1:qe)])
+  start$qe1 <- c(1, rep(0, qe))
+  start$ce1 <- 1
+  opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start, type = "Shogo")
   if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$solution <- Euc_signswitch(opt2$solution)
   }

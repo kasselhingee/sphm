@@ -26,7 +26,7 @@ prelim_global <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", .
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   
-  if (type == "Shogo"){
+  if ((!is.null(xe)) && (type == "Shogo")){
     browser()
     omfixed <- lapply(om0, function(x) x * 0)
     omfixed$qe1 <- omfixed$qe1 + 1
@@ -34,6 +34,7 @@ prelim_global <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", .
     isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
     obj_tape <- scorematchingad::fixindependent(obj_tape, vec_om0, isfixed)
     constraint_tape <- scorematchingad::fixindependent(constraint_tape, vec_om0, isfixed)
+    constraint_tape <- scorematchingad:::keeprange(constraint_tape, seq(1,constraint_tape$range-1)) #drop the constraint related to qe1 since it is now fixed
     ineqconstraint_tape <- scorematchingad::fixindependent(ineqconstraint_tape, vec_om0, isfixed)
     vec_om0 <- vec_om0[!isfixed]
   }

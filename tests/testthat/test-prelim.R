@@ -67,6 +67,13 @@ test_that("prelim optimisation works with Sph covars",{
           B = diag(sort(runif(p-1), decreasing = TRUE))))
   opt2 <- prelim_ad(y, xs = x, paramobj0 = start)
   expect_equal(opt2$solution, omegapar, tolerance = 0.05)
+  
+  # check global
+  opt3 <- prelim_ad(y, xs = x, paramobj0 = start, type = "Kassel", globalfirst = TRUE)
+  # if (sign(opt3$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
+  #   opt3$solution <- Euc_signswitch(opt3$solution)
+  # }
+  # expect_equal(opt3$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
 })
 
 test_that("prelim optimisation works with Sph+Euc covars", {

@@ -43,29 +43,35 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", ...){
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",
                 xtol_rel = 1E-10, #1E-04,
                 tol_constraints_eq = rep(1E-1, 1 + (length(om0$qs1) > 0) + ((type != "Shogo") && (length(om0$qe1) > 0))),
-                check_derivatives = TRUE, check_derivatives_print = 'errors',
+                # check_derivatives = TRUE, check_derivatives_print = 'errors', check_derivatives_tol = 1E-3,
                 # print_level = 3,
                 maxeval = 1E4)
   ellipsis_args <- list(...)
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
-  browser()
   locopt <- nloptr::nloptr(
     x0 = vec_om0,
-    eval_f = function(theta){out <- obj_tape$eval(theta, vector(mode = "numeric")); print(out); out},
-    eval_grad_f = function(theta){out <- obj_tape$Jac(theta, vector(mode = "numeric")); print(out); out},
-    eval_g_eq =  function(theta){out <- constraint_tape$eval(theta, vector(mode = "numeric"))[-3]; print(out); out},
-    eval_jac_g_eq =  function(theta){out <- matrix(constraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))[-3, ]; print(out); out},
-    eval_g_ineq =  function(theta){out <- ineqconstraint_tape$eval(theta, vector(mode = "numeric")) - 2; print(out); out},
-    eval_jac_g_ineq =  function(theta){out <- matrix(ineqconstraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta)); print(out); out},
+    eval_f = function(theta){obj_tape$eval(theta, vector(mode = "numeric"))},
+    eval_grad_f = function(theta){obj_tape$Jac(theta, vector(mode = "numeric"))},
+    eval_g_eq =  function(theta){constraint_tape$eval(theta, vector(mode = "numeric"))[-3]},
+    eval_jac_g_eq =  function(theta){matrix(constraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))[-3, ]},
+    eval_g_ineq =  function(theta){ineqconstraint_tape$eval(theta, vector(mode = "numeric")) - 2},
+    eval_jac_g_ineq =  function(theta){matrix(ineqconstraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))},
     opts = combined_opts
   )
-  
   if (!(locopt$status %in% 1:4)){warning(locopt$message)}
+
+  # Because locopt$solution isnt the full Omega parameterisation for 'Shogo' type, we need to rebuild it.
+  if (type == "Shogo"){
+    fullparam <- isfixed
+    fullparam[!isfixed] <- locopt$solution
+    fullparam[isfixed] <- mnlink_Omega_vec(om0)[isfixed]
+  } else {
+    fullparam <- locopt$solution
+  }
   
-  browser()
   return(list(
-    solution = Omega_proj(mnlink_Omega_unvec(locopt$solution, p, length(om0$qe1), check = FALSE)),
+    solution = Omega_proj(mnlink_Omega_unvec(fullparam, p, length(om0$qe1), check = FALSE)),
     loc_nloptr = locopt
   ))
 }

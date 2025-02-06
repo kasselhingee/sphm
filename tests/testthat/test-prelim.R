@@ -145,7 +145,6 @@ test_that("Shogo with Sph+Euc covars", {
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- prelim_global(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj), type = "Shogo")
   tmp <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj), type = "Shogo")
   expect_equal(tmp$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
   

@@ -282,6 +282,7 @@ mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothne
     p1sizediff = (vnorm(obj$p1) - 1)^2,
     p1Omega = (t(obj$p1) %*% obj$Omega)^2
   )
+  browser()
   OmOm <- obj$Omega %*% t(obj$Omega) # for commutivity check
   if (qs > 0){
     Is_tilde <- diag(1, qs + qe, qs) # for commutivity check
@@ -290,7 +291,7 @@ mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothne
       checkvals,
       qs1sizediff = (vnorm(obj$qs1) - 1)^2,
       Omegaqs1 = (obj$Omega[, seq.int(1, qs)] %*% obj$qs1)^2,
-      Omega_comm_s = (OmOm %*% OmpartOmpart - OmpartOmpart %*% OmOm)[lower.tri(OmOm, diag = FALSE)]^2 # for commutivity check
+      Omega_comm_s = sum(OmOm %*% OmpartOmpart - OmpartOmpart %*% OmOm)^2 # for commutivity check - Frobenius norm of 0
     )
   }
   if (qe > 0){
@@ -301,7 +302,7 @@ mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothne
       qe1sizediff = (vnorm(obj$qe1) - 1)^2,
       Omegaqe1 = (obj$Omega[, qs + seq.int(1, qe)] %*% obj$qe1)^2,
       p1PBce = (t(obj$p1) %*% obj$PBce)^2,
-      Omega_comm_e = (OmOm %*% OmpartOmpart - OmpartOmpart %*% OmOm)[lower.tri(OmOm, diag = FALSE)]^2 # for commutivity check
+      Omega_comm_e = sum(OmOm %*% OmpartOmpart - OmpartOmpart %*% OmOm)^2 # for commutivity check - Frobenius norm of 0
     )
   }
   return(checkvals)

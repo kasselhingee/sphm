@@ -178,21 +178,21 @@ test_that("Shogo with Sph+Euc covars", {
 
 test_that("C++ Omega_constraints() is zero correctly", {
   rmnlink_cann__place_in_env(3, 0, 4)
-  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + 2*(qs>0) + 2*(qe>0)))
+  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + (qs>0) + (qe>0) + (p * (p-1)/2)*(qs>0)*(qe>0)))
   
   rmnlink_cann__place_in_env(3, 5, 0)
-  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + 2*(qs>0) + 2*(qe>0)))
+  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + (qs>0) + (qe>0) + (p * (p-1)/2)*(qs>0)*(qe>0)))
 
   rmnlink_cann__place_in_env(3, 5, 4)
-  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + 2*(qs>0) + 2*(qe>0)))
+  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe),  rep(0, 1 + (qs>0) + (qe>0) + (p * (p-1)/2)*(qs>0)*(qe>0)))
   
   # check Jacobian - if a row is zero nlopt gives a round off error
   dims_in <- c(p, qe)
   vec_om0 <- mnlink_Omega_vec(as_mnlink_Omega(paramobj))
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   Jac <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
-  colnames(Jac) <- names(vec_om0)
-  round(Jac, 3)
+  # colnames(Jac) <- names(vec_om0)
+  # round(Jac, 3)
   expect_true(all(apply(Jac, 1, function(x)max(abs(x))) > 0.1))
   expect_true(all(abs(svd(Jac)$d) > sqrt(.Machine$double.eps)))
 })
@@ -206,7 +206,7 @@ test_that("C++ Omega_constraints() is non-zero correctly", {
   Om$Omega <- matrix(rnorm(p * (qs + qe)), p, qs + qe)
   Om$PBce <- Om$PBce+1
   expect_true(all(mnlink_Omega_check_numerical(Om) > 1E-3))
-  expect_true(all(Omega_constraints(mnlink_Omega_vec(Om), p, qe) > 1E-3))
+  expect_true(all(abs(Omega_constraints(mnlink_Omega_vec(Om), p, qe)) > 1E-3))
 })
 
 test_that("pre_est3_mod optimisation works", {

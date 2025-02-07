@@ -109,9 +109,14 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   } else {
     fullparam <- locopt$solution
   }
+ 
+  unprojresult <- mnlink_Omega_unvec(fullparam, p, length(om0$qe1), check = FALSE)
+  # mnlink_Omega_check(unprojresult)
+  projresult <- Omega_proj(unprojresult)
+  # mnlink_Omega_check(projresult)
   
   return(list(
-    solution = Omega_proj(mnlink_Omega_unvec(fullparam, p, length(om0$qe1), check = FALSE)),
+    solution = projresult,
     loc_nloptr = locopt
   ))
 }

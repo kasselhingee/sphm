@@ -98,6 +98,9 @@ test_that("prelim optimisation works with Sph+Euc covars", {
   # starting at the optimum
   tmp <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
   expect_equal(tmp$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  # result should also satisfy the commutation constraint
+  expect_silent(mnlink_Omega_check(tmp$solution))
+  expect_silent(mnlink_cann_check(as_mnlink_cann(tmp$solution)))
   
   # starting away from optimum, but still within constraints
   set.seed(14)
@@ -112,6 +115,8 @@ test_that("prelim optimisation works with Sph+Euc covars", {
     opt2$solution <- Euc_signswitch(opt2$solution)
   }
   expect_equal(opt2$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_silent(mnlink_Omega_check(opt2$solution))
+  expect_silent(mnlink_cann_check(as_mnlink_cann(opt2$solution)))
   
   # check global
   # Global seems to get the constraints wrong instantly!!
@@ -178,13 +183,13 @@ test_that("Shogo with Sph+Euc covars", {
 
 test_that("C++ Omega_constraints() is zero correctly", {
   rmnlink_cann__place_in_env(3, 0, 4)
-  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + (qs>0) + (qe>0) + (p * (p-1)/2)*(qs>0)*(qe>0)))
+  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)))
   
   rmnlink_cann__place_in_env(3, 5, 0)
-  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + (qs>0) + (qe>0) + (p * (p-1)/2)*(qs>0)*(qe>0)))
+  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)))
 
   rmnlink_cann__place_in_env(3, 5, 4)
-  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe),  rep(0, 1 + (qs>0) + (qe>0) + (p * (p-1)/2)*(qs>0)*(qe>0)))
+  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe),  rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)))
   
   # check Jacobian - if a row is zero nlopt gives a round off error
   dims_in <- c(p, qe)
@@ -195,6 +200,9 @@ test_that("C++ Omega_constraints() is zero correctly", {
   # round(Jac, 3)
   expect_true(all(apply(Jac, 1, function(x)max(abs(x))) > 0.1))
   expect_true(all(abs(svd(Jac)$d) > sqrt(.Machine$double.eps)))
+  # this might be useful to check out dependence
+  # direction <- svd(Jac)$v[, 4]
+  # mnlink_Omega_unvec(vec_om0 + direction, p, qe)
 })
 
 test_that("C++ Omega_constraints() is non-zero correctly", {

@@ -21,7 +21,7 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
   // only needed when BOTH qe > 0 and qs > 0
   veca1 commutecheck(0);
   if ((ompar.qs > 0) && (ompar.qe > 0)){
-    commutecheck.resize(ompar.p * (ompar.p - 1) / 2);
+    commutecheck.resize(1);
     // Compute Omega * Omega^T for commutivity constraint
     mata1 OmOm = ompar.Omega * ompar.Omega.transpose();
     mata1 Is_tilde;
@@ -29,14 +29,7 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
     Is_tilde.topRows(ompar.qs) = mata1::Identity(ompar.qs, ompar.qs);
     mata1 OmpartOmpart = ompar.Omega * Is_tilde * Is_tilde.transpose() * ompar.Omega.transpose();
     mata1 commutediff = OmOm * OmpartOmpart - OmpartOmpart * OmOm; //OmOm etc are always symmetric, so commutediff is always antisymmetric
-    // place lower triangular elements into sphcheck
-    int idx = 0;
-    for (int i = 0; i < p; ++i) {
-      for (int j = 0; j < i; ++j) {
-        commutecheck(idx) = commutediff(i, j);
-        idx++;
-      }
-    }
+    commutecheck(0) = commutediff.cwiseAbs().sum();
   }
     
   veca1 out(1 + sphcheck.size() + Euccheck.size() + commutecheck.size());

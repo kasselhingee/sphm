@@ -96,12 +96,7 @@ test_that("Conversions work: Sph + Euc", {
   eige <- eigen(Om$Omega %*% (Ie_tilde %*% t(Ie_tilde)) %*% t(Om$Omega))
   expect_equal(eigfull$vectors, eigs$vectors)
   expect_equal(eigfull$vectors, eige$vectors)
-  # above constraints expressed as commutivity
-  A <- Om$Omega %*% (Ie_tilde %*% t(Ie_tilde)) %*% t(Om$Omega)
-  B <- Om$Omega %*% (Is_tilde %*% t(Is_tilde)) %*% t(Om$Omega)
-  C <- Om$Omega %*% t(Om$Omega)
-  expect_equal(A%*%C - C%*%A, matrix(0, p, p))
-  expect_equal(B%*%C - C%*%B, matrix(0, p, p))
+
   # commutivity doesn't apply to general matrices:
   # dummy <- matrix(rnorm(p * (qs + qe)), p, qs + qe)
   # A <- dummy %*% (Ie_tilde %*% t(Ie_tilde)) %*% t(dummy)

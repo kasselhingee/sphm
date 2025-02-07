@@ -282,18 +282,26 @@ mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothne
     p1sizediff = (vnorm(obj$p1) - 1)^2,
     p1Omega = (t(obj$p1) %*% obj$Omega)^2
   )
+  OmOm <- obj$Omega %*% t(obj$Omega) # for commutivity check
   if (qs > 0){
+    Is_tilde <- diag(1, qs + qe, qs) # for commutivity check
+    OmpartOmpart <- obj$Omega %*% (Is_tilde %*% t(Is_tilde)) %*% t(obj$Omega) # for commutivity check
     checkvals <- c(
       checkvals,
       qs1sizediff = (vnorm(obj$qs1) - 1)^2,
-      Omegaqs1 = (obj$Omega[, seq.int(1, qs)] %*% obj$qs1)^2
+      Omegaqs1 = (obj$Omega[, seq.int(1, qs)] %*% obj$qs1)^2,
+      Omega_comm_s = (OmOm %*% OmpartOmpart - OmpartOmpart %*% OmOm)[lower.tri(OmOm, diag = FALSE)]^2 # for commutivity check
     )
   }
   if (qe > 0){
+    Ie_tilde <- matrix(0, qs + qe, qe)
+    Ie_tilde[qs + (1:qe), ] <- diag(1, qe)
+    OmpartOmpart <- obj$Omega %*% (Ie_tilde %*% t(Ie_tilde)) %*% t(obj$Omega) # for commutivity check
     checkvals <- c(
       qe1sizediff = (vnorm(obj$qe1) - 1)^2,
       Omegaqe1 = (obj$Omega[, qs + seq.int(1, qe)] %*% obj$qe1)^2,
-      p1PBce = (t(obj$p1) %*% obj$PBce)^2
+      p1PBce = (t(obj$p1) %*% obj$PBce)^2,
+      Omega_comm_e = (OmOm %*% OmpartOmpart - OmpartOmpart %*% OmOm)[lower.tri(OmOm, diag = FALSE)]^2 # for commutivity check
     )
   }
   return(checkvals)

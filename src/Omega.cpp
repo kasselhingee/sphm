@@ -5,13 +5,26 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
   mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p, qe);
 
   // design so that function returns zero vector when constraints satisfied
-  veca1 out(1 + (ompar.qs>0) + (ompar.qe>0));
+  veca1 out(1 + 2*(ompar.qs>0) + 2*(ompar.qe>0));
   out(0) = ompar.p1.squaredNorm() - 1.;
+  
+  // Compute Omega * Omega^T for commutivity constraint
+  mata1 OmOm = ompar.Omega * ompar.Omega.transpose();
   if (ompar.qs>0){
     out(1) = ompar.qs1.squaredNorm() - 1.;
+    // commutivity constraint
+    mata1 Is_tilde = mata1::Zero(ompar.qs + ompar.qe, ompar.qs);
+    Is_tilde.topRows(ompar.qs) = mata1::Identity(ompar.qs, ompar.qs);
+    mata1 OmpartOmpart = ompar.Omega * Is_tilde * Is_tilde.transpose() * ompar.Omega.transpose();
+    out(2) = (OmOm * OmpartOmpart - OmpartOmpart * OmOm).squaredNorm();
   }
   if (ompar.qe>0){
-    out(1 + (ompar.qs>0)) = ompar.qe1.squaredNorm() - 1.;
+    out(1 + 2*(ompar.qs>0)) = ompar.qe1.squaredNorm() - 1.;
+    // commutivity constraint
+    mata1 Ie_tilde = mata1::Zero(ompar.qs + ompar.qe, ompar.qe);
+    Ie_tilde.bottomRows(ompar.qe) = mata1::Identity(ompar.qe, ompar.qe);
+    mata1 OmpartOmpart = ompar.Omega * Ie_tilde * Ie_tilde.transpose() * ompar.Omega.transpose();
+    out(2 + 2*(ompar.qs>0)) = (OmOm * OmpartOmpart - OmpartOmpart * OmOm).squaredNorm();
   }
   return(out);
 }

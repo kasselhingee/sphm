@@ -45,7 +45,12 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
     keep <- which(apply(Jac_eq, 1, function(x)max(x^2)) > sqrt(.Machine$double.eps))
     constraint_tape <- scorematchingad:::keeprange(constraint_tape, keep)
   }
- 
+  
+  # because commutivity constraint is not smooth at zero, check for this and add an epsilon to avoid
+  if (abs(constraint_tape$forward(0, vec_om0)[4]) < .Machine$double.eps){
+    vec_om0 <- vec_om0 + 1E-12
+  }
+  
   # check Jacobians of constraints 
   Jac_eq <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
   stopifnot(all(abs(svd(Jac_eq)$d) > sqrt(.Machine$double.eps)))

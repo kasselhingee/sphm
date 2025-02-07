@@ -193,6 +193,8 @@ test_that("C++ Omega_constraints() is zero correctly", {
   expect_equal(constraint_tape$forward(0, vec_om0), Omega_constraints(vec_om0, p, qe))
   Jac <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
   colnames(Jac) <- names(vecbad)
+  round(Jac, 3)
+  apply(Jac, 1, function(x)max(abs(x)))
   expect_true(all(abs(apply(Jac, 1, function(x)max(abs(x)))) > 0.1))
 })
 

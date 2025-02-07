@@ -24,7 +24,8 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
     mata1 Ie_tilde = mata1::Zero(ompar.qs + ompar.qe, ompar.qe);
     Ie_tilde.bottomRows(ompar.qe) = mata1::Identity(ompar.qe, ompar.qe);
     mata1 OmpartOmpart = ompar.Omega * Ie_tilde * Ie_tilde.transpose() * ompar.Omega.transpose();
-    out(2 + 2*(ompar.qs>0)) = (OmOm * OmpartOmpart - OmpartOmpart * OmOm).squaredNorm();
+    mata1 commutediff = OmOm * OmpartOmpart - OmpartOmpart * OmOm; //OmOm etc are always symmetric, so commutediff is always antisymmetric
+    out(2 + 2*(ompar.qs>0)) = commutediff.cwiseAbs().sum(); //since antisymmetric this sum will be zero only when the elements are zero
   }
   return(out);
 }

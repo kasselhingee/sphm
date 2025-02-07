@@ -98,12 +98,9 @@ test_that("Conversions work: Sph + Euc", {
   expect_equal(eigfull$vectors, eige$vectors)
 
   # commutivity doesn't apply to general matrices:
-  # dummy <- matrix(rnorm(p * (qs + qe)), p, qs + qe)
-  # A <- dummy %*% (Ie_tilde %*% t(Ie_tilde)) %*% t(dummy)
-  # B <- dummy %*% (Is_tilde %*% t(Is_tilde)) %*% t(dummy)
-  # C <- dummy %*% t(dummy)
-  # A%*%C - C%*%A
-  # B%*%C - C%*%B
+  dummy <- matrix(rnorm(p * (qs + qe)), p, qs + qe)
+  Om$Omega <- dummy
+  expect_true(all(mnlink_Omega_check_numerical(Om)[c("Omega_comm_s", "Omega_comm_e")] > rep(sqrt(.Machine$double.eps), 2)))
 })
 
 test_that("Conversions work: Sph only", {

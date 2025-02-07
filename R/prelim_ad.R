@@ -36,7 +36,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
     isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
     obj_tape <- scorematchingad::fixindependent(obj_tape, vec_om0, isfixed)
     constraint_tape <- scorematchingad::fixindependent(constraint_tape, vec_om0, isfixed)
-    constraint_tape <- scorematchingad:::keeprange(constraint_tape, seq(1,constraint_tape$range-1)) #drop the constraint related to qe1 since it is now fixed
+    constraint_tape <- scorematchingad:::keeprange(constraint_tape, setdiff(seq(1, constraint_tape$range), constraint_tape$range - 1)) #drop the constraint related to qe1 since it is now fixed
     ineqconstraint_tape <- scorematchingad::fixindependent(ineqconstraint_tape, vec_om0, isfixed)
     vec_om0 <- vec_om0[!isfixed]
   }
@@ -72,6 +72,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   ellipsis_args <- list(...)
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
+  browser()
   locopt <- nloptr::nloptr(
     x0 = vec_om0,
     eval_f = function(theta){obj_tape$eval(theta, vector(mode = "numeric"))},

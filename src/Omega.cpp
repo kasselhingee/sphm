@@ -64,7 +64,7 @@ veca1 Omega_ineqconstraints(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd &
   mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p, qe);
   a1type ssq_sv = (ompar.Omega.transpose() * ompar.Omega).diagonal().sum();
   veca1 out(1);
-  out(0) = ssq_sv - (ompar.qs>0 + ompar.qe>0) * (p-1.);
+  out(0) = ssq_sv - ((ompar.qs>0) + (ompar.qe>0)) * (p-1.);
   return(out);
 }
 

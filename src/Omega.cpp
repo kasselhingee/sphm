@@ -19,15 +19,17 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
 
   // commutivity constraint check // because OmOm = OmpartOmpart(Euc) + OmpartOmpart(Sph), checking both is redundant
   // only needed when BOTH qe > 0 and qs > 0
+  // check that commutivity of the projected Omega works
   veca1 commutecheck(0);
   if ((ompar.qs > 0) && (ompar.qe > 0)){
-    commutecheck.resize(ompar.p * (ompar.p - 1) / 2);
+    mnlink_Omega_cpp<a1type> ompar_proj = Omega_proj_cpp(ompar);
+    commutecheck.resize(ompar_proj.p * (ompar_proj.p - 1) / 2);
     // Compute Omega * Omega^T for commutivity constraint
-    mata1 OmOm = ompar.Omega * ompar.Omega.transpose();
+    mata1 OmOm = ompar_proj.Omega * ompar_proj.Omega.transpose();
     mata1 Is_tilde;
-    Is_tilde = mata1::Zero(ompar.qs + ompar.qe, ompar.qs);
-    Is_tilde.topRows(ompar.qs) = mata1::Identity(ompar.qs, ompar.qs);
-    mata1 OmpartOmpart = ompar.Omega * Is_tilde * Is_tilde.transpose() * ompar.Omega.transpose();
+    Is_tilde = mata1::Zero(ompar_proj.qs + ompar_proj.qe, ompar_proj.qs);
+    Is_tilde.topRows(ompar_proj.qs) = mata1::Identity(ompar_proj.qs, ompar_proj.qs);
+    mata1 OmpartOmpart = ompar_proj.Omega * Is_tilde * Is_tilde.transpose() * ompar_proj.Omega.transpose();
     mata1 commutediff = OmOm * OmpartOmpart - OmpartOmpart * OmOm; //OmOm etc are always symmetric, so commutediff is always antisymmetric
     // place lower triangular elements into sphcheck
     int idx = 0;

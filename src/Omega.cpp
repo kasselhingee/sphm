@@ -19,11 +19,13 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
 
   // commutivity constraint check // because OmOm = OmpartOmpart(Euc) + OmpartOmpart(Sph), checking both is redundant
   // only needed when BOTH qe > 0 and qs > 0
-  // check that commutivity of the projected Omega works
+  // require that commutivity of the *projected* Omega holds
+  // Since projected, there are only (p-1) vectors to be orthogonal to each other -->
+  // I suspect that means only (p-1)*(p-2)/2 unique constraints, which ones though!?? a sum would avoid this
   veca1 commutecheck(0);
   if ((ompar.qs > 0) && (ompar.qe > 0)){
     mnlink_Omega_cpp<a1type> ompar_proj = Omega_proj_cpp(ompar);
-    commutecheck.resize(ompar_proj.p * (ompar_proj.p - 1) / 2);
+    commutecheck.resize(1);
     // Compute Omega * Omega^T for commutivity constraint
     mata1 OmOm = ompar_proj.Omega * ompar_proj.Omega.transpose();
     mata1 Is_tilde;
@@ -31,14 +33,7 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
     Is_tilde.topRows(ompar_proj.qs) = mata1::Identity(ompar_proj.qs, ompar_proj.qs);
     mata1 OmpartOmpart = ompar_proj.Omega * Is_tilde * Is_tilde.transpose() * ompar_proj.Omega.transpose();
     mata1 commutediff = OmOm * OmpartOmpart - OmpartOmpart * OmOm; //OmOm etc are always symmetric, so commutediff is always antisymmetric
-    // place lower triangular elements into sphcheck
-    int idx = 0;
-    for (int i = 0; i < p; ++i) {
-      for (int j = 0; j < i; ++j) {
-        commutecheck(idx) = commutediff(i, j);
-        idx++;
-      }
-    }
+    commutecheck(0) = commutediff.norm();
   }
     
   veca1 out(1 + sphcheck.size() + Euccheck.size() + commutecheck.size());

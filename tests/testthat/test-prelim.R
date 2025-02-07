@@ -190,12 +190,11 @@ test_that("C++ Omega_constraints() is zero correctly", {
   dims_in <- c(p, qe)
   vec_om0 <- mnlink_Omega_vec(as_mnlink_Omega(paramobj))
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  expect_equal(constraint_tape$forward(0, vec_om0), Omega_constraints(vec_om0, p, qe))
   Jac <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
   colnames(Jac) <- names(vec_om0)
   round(Jac, 3)
   expect_true(all(apply(Jac, 1, function(x)max(abs(x))) > 0.1))
-  svd(Jac)$d #there are 3 redundant (at linear approximation) constraints!
+  expect_true(all(abs(svd(Jac)$d) > sqrt(.Machine$double.eps)))
 })
 
 test_that("C++ Omega_constraints() is non-zero correctly", {

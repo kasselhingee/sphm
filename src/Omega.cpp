@@ -6,46 +6,41 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
 
   // design so that function returns zero vector when constraints satisfied
   
-  // Compute Omega * Omega^T for commutivity constraint
-  mata1 OmOm = ompar.Omega * ompar.Omega.transpose();
   veca1 sphcheck(0);
   veca1 Euccheck(0);
   if (ompar.qs>0){
-    sphcheck.resize(1 + ompar.p * (ompar.p - 1)/2);
+    sphcheck.resize(1);
     sphcheck(0) = ompar.qs1.squaredNorm() - 1.;
-    // commutivity constraint
-    mata1 Is_tilde = mata1::Zero(ompar.qs + ompar.qe, ompar.qs);
+  }
+  if (ompar.qe>0){
+    Euccheck.resize(1);
+    Euccheck(0) = ompar.qe1.squaredNorm() - 1.;
+  }
+
+  // commutivity constraint check // because OmOm = OmpartOmpart(Euc) + OmpartOmpart(Sph), checking both is redundant
+  // only needed when BOTH qe > 0 and qs > 0
+  veca1 commutecheck(0);
+  if ((ompar.qs > 0) && (ompar.qe > 0)){
+    commutecheck.resize(ompar.p * (ompar.p - 1) / 2);
+    // Compute Omega * Omega^T for commutivity constraint
+    mata1 OmOm = ompar.Omega * ompar.Omega.transpose();
+    mata1 Is_tilde;
+    Is_tilde = mata1::Zero(ompar.qs + ompar.qe, ompar.qs);
     Is_tilde.topRows(ompar.qs) = mata1::Identity(ompar.qs, ompar.qs);
     mata1 OmpartOmpart = ompar.Omega * Is_tilde * Is_tilde.transpose() * ompar.Omega.transpose();
     mata1 commutediff = OmOm * OmpartOmpart - OmpartOmpart * OmOm; //OmOm etc are always symmetric, so commutediff is always antisymmetric
     // place lower triangular elements into sphcheck
-    int idx = 1;
+    int idx = 0;
     for (int i = 0; i < p; ++i) {
-        for (int j = 0; j < i; ++j) {
-            sphcheck(idx) = commutediff(i, j);
-            idx++;
-        }
+      for (int j = 0; j < i; ++j) {
+        commutecheck(idx) = commutediff(i, j);
+        idx++;
+      }
     }
   }
-  if (ompar.qe>0){
-    Euccheck.resize(1 + ompar.p * (ompar.p - 1)/2);//ompar.p * (ompar.p - 1)/2);
-    Euccheck(0) = ompar.qe1.squaredNorm() - 1.;
-    // commutivity constraint
-    mata1 Ie_tilde = mata1::Zero(ompar.qs + ompar.qe, ompar.qe);
-    Ie_tilde.bottomRows(ompar.qe) = mata1::Identity(ompar.qe, ompar.qe);
-    mata1 OmpartOmpart = ompar.Omega * Ie_tilde * Ie_tilde.transpose() * ompar.Omega.transpose();
-    mata1 commutediff = OmOm * OmpartOmpart - OmpartOmpart * OmOm; //OmOm etc are always symmetric, so commutediff is always antisymmetric
-    // place lower triangular elements into sphcheck
-    int idx = 1;
-    for (int i = 0; i < ompar.p; ++i) {
-        for (int j = 0; j < i; ++j) {
-            Euccheck(idx) = commutediff(i, j);
-            idx++;
-        }
-    }
-  }
-  veca1 out(1 + sphcheck.size() + Euccheck.size());
-  out << ompar.p1.squaredNorm() - 1., sphcheck, Euccheck;
+    
+  veca1 out(1 + sphcheck.size() + Euccheck.size() + commutecheck.size());
+  out << ompar.p1.squaredNorm() - 1., sphcheck, Euccheck, commutecheck;
   return(out);
 }
 

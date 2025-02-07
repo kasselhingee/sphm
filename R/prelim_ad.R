@@ -40,6 +40,13 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
     ineqconstraint_tape <- scorematchingad::fixindependent(ineqconstraint_tape, vec_om0, isfixed)
     vec_om0 <- vec_om0[!isfixed]
   }
+ 
+  # check Jacobians of constraints 
+  Jac_eq <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
+  stopifnot(all(abs(svd(Jac_eq)$d) > sqrt(.Machine$double.eps)))
+  Jac_ineq <- matrix(ineqconstraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
+  stopifnot(all(abs(svd(Jac_ineq)$d) > sqrt(.Machine$double.eps)))
+  
 
   if (globalfirst){ #do a quick global search first #nlopt recommends doing a local search afterwards
     default_opts <- list(algorithm = "NLOPT_GN_ISRES", #the only algorthim that natively handles non-linear equality constraints - all the others have to use augmented Lagrangian ideas.
@@ -79,7 +86,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
     eval_g_eq =  function(theta){constraint_tape$eval(theta, vector(mode = "numeric"))},
     eval_jac_g_eq =  function(theta){
       Jac <- matrix(constraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))
-      colnames(Jac) <- names(vec_om0)
+      # colnames(Jac) <- names(vec_om0)
       # print(round(Jac, 3))
       # print(apply(Jac, 1, function(x)max(abs(x))))
       Jac

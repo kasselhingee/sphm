@@ -75,15 +75,40 @@ test_that("Conversions work: Sph + Euc", {
   
   Om <- cann2Omega(cann, check = FALSE)
   
-  # check properties of Om
-  expect_equal(sum(diag(t(Om$Omega) %*% Om$Omega)), sum(Be^2 + Bs^2))
-  expect_silent(mnlink_Omega_check(Om))
+
   
   # check that convert back matches
   cann2 <- Omega2cann(Om, check = FALSE)
   expect_silent(mnlink_cann_check(cann2))
   cann2 <- P_signswitch(cann2, sign(cann2$P[1, ]) != sign(cann$P[1, ]))
   expect_equal(cann2, cann)
+  
+  # check properties of Om
+  expect_equal(sum(diag(t(Om$Omega) %*% Om$Omega)), sum(Be^2 + Bs^2))
+  expect_silent(mnlink_Omega_check(Om))
+  # further constraints
+  Is_tilde <- diag(1, qs + qe, qs)
+  Ie_tilde <- matrix(0, qs + qe, qe)
+  Ie_tilde[qs + (1:qe), ] <- diag(1, qe)
+  expect_equal(Om$Omega %*% Is_tilde, Om$Omega[, 1:qs])
+  eigfull <- eigen(Om$Omega %*% t(Om$Omega))
+  eigs <- eigen(Om$Omega %*% (Is_tilde %*% t(Is_tilde)) %*% t(Om$Omega))
+  eige <- eigen(Om$Omega %*% (Ie_tilde %*% t(Ie_tilde)) %*% t(Om$Omega))
+  expect_equal(eigfull$vectors, eigs$vectors)
+  expect_equal(eigfull$vectors, eige$vectors)
+  # above constraints expressed as commutivity
+  A <- Om$Omega %*% (Ie_tilde %*% t(Ie_tilde)) %*% t(Om$Omega)
+  B <- Om$Omega %*% (Is_tilde %*% t(Is_tilde)) %*% t(Om$Omega)
+  C <- Om$Omega %*% t(Om$Omega)
+  expect_equal(A%*%C - C%*%A, matrix(0, p, p))
+  expect_equal(B%*%C - C%*%B, matrix(0, p, p))
+  # commutivity doesn't apply to general matrices:
+  # dummy <- matrix(rnorm(p * (qs + qe)), p, qs + qe)
+  # A <- dummy %*% (Ie_tilde %*% t(Ie_tilde)) %*% t(dummy)
+  # B <- dummy %*% (Is_tilde %*% t(Is_tilde)) %*% t(dummy)
+  # C <- dummy %*% t(dummy)
+  # A%*%C - C%*%A
+  # B%*%C - C%*%B
 })
 
 test_that("Conversions work: Sph only", {
@@ -204,5 +229,4 @@ test_that("check Shogo conversion", {
   out <- Sp(mnlink(xe = rbind(0, c(0,x), c(0, 2*x)), param = paramobj) %*% P)
   expect_equal(out[2, ] - out[1, ], out[3, ] - out[2, ])
 })
-
 

@@ -192,10 +192,9 @@ test_that("C++ Omega_constraints() is zero correctly", {
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   expect_equal(constraint_tape$forward(0, vec_om0), Omega_constraints(vec_om0, p, qe))
   Jac <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
-  colnames(Jac) <- names(vecbad)
+  colnames(Jac) <- names(vec_om0)
   round(Jac, 3)
-  apply(Jac, 1, function(x)max(abs(x)))
-  expect_true(all(abs(apply(Jac, 1, function(x)max(abs(x)))) > 0.1))
+  expect_true(all(apply(Jac, 1, function(x)max(abs(x))) > 0.1))
 })
 
 test_that("C++ Omega_constraints() is non-zero correctly", {
@@ -208,15 +207,6 @@ test_that("C++ Omega_constraints() is non-zero correctly", {
   Om$PBce <- Om$PBce+1
   expect_true(all(mnlink_Omega_check_numerical(Om) > 1E-3))
   expect_true(all(Omega_constraints(mnlink_Omega_vec(Om), p, qe) > 1E-3))
-  
-  # check Jacobian - if a row is zero nlopt gives a round off error
-  dims_in <- c(p, qe)
-  constraint_tape <- tape_namedfun("Omega_constraints_wrap", mnlink_Omega_vec(as_mnlink_Omega(paramobj)), vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  vecbad <- mnlink_Omega_vec(Om)
-  expect_equal(constraint_tape$forward(0, vecbad), Omega_constraints(mnlink_Omega_vec(Om), p, qe))
-  Jac <- matrix(constraint_tape$Jacobian(vecbad), byrow = TRUE, ncol = length(vecbad))
-  colnames(Jac) <- names(vecbad)
-  apply(Jac, 1, min)
 })
 
 test_that("pre_est3_mod optimisation works", {

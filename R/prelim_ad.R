@@ -61,7 +61,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
     if (!(globopt$status %in% 1:4)){warning(globopt$message)}
     vec_om0 <- globopt$solution
   }
-
+  
   # prepare nloptr options
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",
                 xtol_rel = 1E-10, #1E-04,
@@ -72,15 +72,23 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   ellipsis_args <- list(...)
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
-  browser()
   locopt <- nloptr::nloptr(
     x0 = vec_om0,
     eval_f = function(theta){obj_tape$eval(theta, vector(mode = "numeric"))},
     eval_grad_f = function(theta){obj_tape$Jac(theta, vector(mode = "numeric"))},
     eval_g_eq =  function(theta){constraint_tape$eval(theta, vector(mode = "numeric"))},
-    eval_jac_g_eq =  function(theta){matrix(constraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))},
+    eval_jac_g_eq =  function(theta){
+      Jac <- matrix(constraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))
+      # print(round(Jac, 3))
+      # print(apply(Jac, 1, function(x)max(abs(x))))
+      Jac
+      },
     eval_g_ineq =  function(theta){ineqconstraint_tape$eval(theta, vector(mode = "numeric")) - 2},
-    eval_jac_g_ineq =  function(theta){matrix(ineqconstraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))},
+    eval_jac_g_ineq =  function(theta){
+      Jac <- matrix(ineqconstraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))
+      # print(apply(Jac, 1, function(x)max(abs(x))))
+      Jac
+      },
     opts = combined_opts
   )
   if (!(locopt$status %in% 1:4)){warning(locopt$message)}

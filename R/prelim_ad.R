@@ -36,9 +36,14 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
     isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
     obj_tape <- scorematchingad::fixindependent(obj_tape, vec_om0, isfixed)
     constraint_tape <- scorematchingad::fixindependent(constraint_tape, vec_om0, isfixed)
-    constraint_tape <- scorematchingad:::keeprange(constraint_tape, setdiff(seq(1, constraint_tape$range), constraint_tape$range - 1)) #drop the constraint related to qe1 since it is now fixed
     ineqconstraint_tape <- scorematchingad::fixindependent(ineqconstraint_tape, vec_om0, isfixed)
     vec_om0 <- vec_om0[!isfixed]
+    
+    # check Jacobians of constraints and remove the 0 corresponding to qe1 constraint since it is now fixed
+    Jac_eq <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
+    colnames(Jac_eq) <- names(vec_om0)
+    keep <- which(apply(Jac_eq, 1, function(x)max(x^2)) > sqrt(.Machine$double.eps))
+    constraint_tape <- scorematchingad:::keeprange(constraint_tape, keep)
   }
  
   # check Jacobians of constraints 

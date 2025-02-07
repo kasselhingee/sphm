@@ -159,6 +159,8 @@ test_that("Shogo with Sph+Euc covars", {
   # starting at the optimum
   tmp <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj), type = "Shogo")
   expect_equal(tmp$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_silent(mnlink_Omega_check(tmp$solution))
+  expect_silent(mnlink_cann_check(as_mnlink_cann(tmp$solution)))
   
   # starting away from optimum, but still within constraints
   set.seed(14)
@@ -177,6 +179,8 @@ test_that("Shogo with Sph+Euc covars", {
     opt2$solution <- Euc_signswitch(opt2$solution)
   }
   expect_equal(opt2$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_silent(mnlink_Omega_check(opt2$solution))
+  expect_silent(mnlink_cann_check(as_mnlink_cann(opt2$solution)))
 })
 
 

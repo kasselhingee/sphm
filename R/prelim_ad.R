@@ -79,6 +79,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
     eval_g_eq =  function(theta){constraint_tape$eval(theta, vector(mode = "numeric"))},
     eval_jac_g_eq =  function(theta){
       Jac <- matrix(constraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))
+      colnames(Jac) <- names(vec_om0)
       # print(round(Jac, 3))
       # print(apply(Jac, 1, function(x)max(abs(x))))
       Jac

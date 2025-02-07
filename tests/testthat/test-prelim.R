@@ -195,6 +195,7 @@ test_that("C++ Omega_constraints() is zero correctly", {
   colnames(Jac) <- names(vec_om0)
   round(Jac, 3)
   expect_true(all(apply(Jac, 1, function(x)max(abs(x))) > 0.1))
+  svd(Jac)$d #there are 3 redundant (at linear approximation) constraints!
 })
 
 test_that("C++ Omega_constraints() is non-zero correctly", {

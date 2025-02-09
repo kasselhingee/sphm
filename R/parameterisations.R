@@ -44,6 +44,36 @@ as_mnlink_cann <- function(obj){
   return(obj)
 }
 
+mnlink_cann_vec <- function(obj){
+  stopifnot(inherits(obj, "mnlink_cann"))
+  Pvec <- as.vector(obj$P)
+  names(Pvec) <- as.vector(outer(seq.int(1, nrow(obj$P)), seq.int(1, nrow(obj$P)), 
+                                 FUN = paste, sep = ","))
+  names(Pvec) <- paste0("P", names(Pvec))
+  Qsvec <- as.vector(obj$Qs)
+  if (!is.null(Qsvec)){
+    names(Qsvec) <- as.vector(outer(seq.int(1, nrow(obj$Qs)), seq.int(1, ncol(obj$Qs)), 
+                                    FUN = paste, sep = ","))
+    names(Qsvec) <- paste0("Qs", names(Qsvec))
+  }
+  Qevec <- as.vector(obj$Qe)
+  if (!is.null(Qevec)){
+    names(Qevec) <- as.vector(outer(seq.int(1, nrow(obj$Qe)), seq.int(1, ncol(obj$Qe)), 
+                                    FUN = paste, sep = ","))
+    names(Qevec) <- paste0("Qe", names(Qevec))
+  }
+  Bsvec <- as.vector(diag(obj$Bs))
+  if (length(Bsvec) > 0){names(Bsvec) <- paste0("Bs", 1:(nrow(obj$Bs)))}
+  Bevec <- as.vector(diag(obj$Be))
+  if (length(Bevec) > 0){names(Bevec) <- paste0("Be", 1:(nrow(obj$Be)))}
+  cevec <- obj$ce
+  if (!is.null(cevec)){names(cevec) <- paste0("ce", 1:length(cevec))}
+  return(c(Pvec, Bsvec, Qsvec, Bevec, Qevec, cevec))
+}
+
+
+
+
 #' @name mnlink_params
 #' @param p1 First column of the P matrix (vector of length `p`)
 #' @param qe1 First column of the Qe matrix (vector of length `qe`). `NULL` if no Euc covariates.
@@ -282,28 +312,28 @@ mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothne
     p1sizediff = (vnorm(obj$p1) - 1)^2,
     p1Omega = (t(obj$p1) %*% obj$Omega)^2
   )
-  OmOm <- obj$Omega %*% t(obj$Omega) # for commutivity check
   if (qs > 0){
-    Is_tilde <- diag(1, qs + qe, qs) # for commutivity check
-    OmpartOmpart <- obj$Omega %*% (Is_tilde %*% t(Is_tilde)) %*% t(obj$Omega) # for commutivity check
     checkvals <- c(
       checkvals,
       qs1sizediff = (vnorm(obj$qs1) - 1)^2,
-      Omegaqs1 = (obj$Omega[, seq.int(1, qs)] %*% obj$qs1)^2,
-      Omega_comm_s = sum((OmOm %*% OmpartOmpart - OmpartOmpart %*% OmOm)^2) # for commutivity check - Frobenius norm of 0
+      Omegaqs1 = (obj$Omega[, seq.int(1, qs)] %*% obj$qs1)^2
     )
   }
   if (qe > 0){
-    Ie_tilde <- matrix(0, qs + qe, qe)
-    Ie_tilde[qs + (1:qe), ] <- diag(1, qe)
-    OmpartOmpart <- obj$Omega %*% (Ie_tilde %*% t(Ie_tilde)) %*% t(obj$Omega) # for commutivity check
     checkvals <- c(
       checkvals,
       qe1sizediff = (vnorm(obj$qe1) - 1)^2,
       Omegaqe1 = (obj$Omega[, qs + seq.int(1, qe)] %*% obj$qe1)^2,
-      p1PBce = (t(obj$p1) %*% obj$PBce)^2,
-      Omega_comm_e = sum((OmOm %*% OmpartOmpart - OmpartOmpart %*% OmOm)^2) # for commutivity check - Frobenius norm of 0
+      p1PBce = (t(obj$p1) %*% obj$PBce)^2
     )
+  }
+  if ((qs > 0) & (qe > 0)) {# for commutivity check
+    OmOm <- obj$Omega %*% t(obj$Omega) 
+    Is_tilde <- diag(1, qs + qe, qs) # for commutivity check
+    OmpartOmpart <- obj$Omega %*% (Is_tilde %*% t(Is_tilde)) %*% t(obj$Omega) # for commutivity check
+    Omega_comm = (sum((OmOm %*% OmpartOmpart - OmpartOmpart %*% OmOm)^2)^2) # for commutivity check - Frobenius norm of 0
+    # above second ^2 is a temporary hack to make Omega_comm be on a similar scale to all the other tests
+    checkvals <- c(checkvals, Omega_comm = Omega_comm)
   }
   return(checkvals)
 }

@@ -3,7 +3,7 @@
 prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globalfirst = FALSE, ...){ #paramobj0 is the starting parameter object
   om0 <- as_mnlink_Omega(paramobj0)
   # check inputs:
-  mnlink_Omega_check(om0)
+  try(mnlink_Omega_check(om0))
   p <- ncol(y)
   stopifnot(p == length(om0$p1))
   if (!is.null(xs)){
@@ -126,6 +126,9 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   # mnlink_Omega_check(unprojresult)
   projresult <- Omega_proj(unprojresult)
   # mnlink_Omega_check(projresult)
+  
+  # remove the tapes from the return to save on memory
+  locopt$eval_f <- locopt$eval_g_eq <- locopt$eval_g_ineq <- NULL
   
   return(list(
     solution = projresult,

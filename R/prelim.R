@@ -23,13 +23,15 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
   if (is.null(start)){
     p <- ncol(y)
     if ((type == "Shogo") && !is.null(xe)){xe <- cbind(0, xe)}
+    if (!is.null(xe)){stopifnot(ncol(xe) >= p)}
+    if (!is.null(xs)){stopifnot(ncol(xs) >= p)}
     start <- mnlink_cann(
                 P = diag(p),
                 Bs = if (!is.null(xs)){diag(p-1)},
-                Qs = diag(p, ncol(xs)),
+                Qs = diag(1, ncol(xs), p),
                 Be = if (!is.null(xe)){diag(p-1)},
-                Qe = diag(p, ncol(xe)),
-                ce = c(1, rep(0, ncol(xe)-1))
+                Qe = diag(1, ncol(xe), p),
+                ce = c(1, rep(0, p-1))
     )
     if ((type == "Shogo") && !is.null(xe)){
       start$ce[1] <- 1
@@ -39,10 +41,33 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
   # check inputs:
   if (type == "Shogo"){stopifnot(is_Shogo(start))}
   if (method == "local"){
-    out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = start, ...)
+    out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = start, type = type, ...)
   }
   if (method == "global"){
-    out <- prelim_R(y = y, xs = xs, xe = xe, paramobj0 = start, ...)
+    out <- prelim_R(y = y, xs = xs, xe = xe, paramobj0 = start, type = type, ...)
   }
-  return(out)
+  
+  # some aspects of the fit:
+  pred <- mnlink(xs = faultsph, xe = xe, param = out$solution)
+  rresids <- rotatedresid(ystd, pred, nthpole(ncol(y)))[, -1]
+  colnames(rresids) <- paste0("r", 1:ncol(rresids))
+  dists <- rowSums(pred * y)
+  
+  colnames(out$solution$Omega) <- c(colnames(xs), colnames(xe))
+  names(out$solution$qe1) <- colnames(xe)
+  names(out$solution$qs1) <- colnames(xs)
+  
+  niceout <- list(
+    est = out$solution,
+    obj = out$loc_nloptr$objective,
+    solution = out$solution,
+    opt = out$loc_nloptr,
+    y = y,
+    xs = xs,
+    xe = xe,
+    pred = pred,
+    rresids = rresids,
+    dists = dists
+  )
+  return(niceout)
 }

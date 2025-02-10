@@ -39,17 +39,15 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
     ineqconstraint_tape <- scorematchingad::fixindependent(ineqconstraint_tape, vec_om0, isfixed)
     vec_om0 <- vec_om0[!isfixed]
     
-    # check Jacobians of constraints and remove the 0 corresponding to qe1 constraint since it is now fixed
-    Jac_eq <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
-    colnames(Jac_eq) <- names(vec_om0)
-    keep <- which(apply(Jac_eq, 1, function(x)max(x^2)) > sqrt(.Machine$double.eps))
+    # drop the qe constraint
+    keep <- setdiff(1:constraint_tape$range, 2 + !is.null(xs))
     constraint_tape <- scorematchingad:::keeprange(constraint_tape, keep)
   }
   
   # because commutivity constraint is not smooth at zero, check for this and add an epsilon to avoid
   if (!is.null(xs) && !is.null(xe)){
     if (abs(tail(constraint_tape$forward(0, vec_om0), 1)) < .Machine$double.eps){
-      vec_om0 <- vec_om0 + 1E-12
+      vec_om0 <- vec_om0 + 1E-4
     }
   }
   
@@ -128,7 +126,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   # mnlink_Omega_check(projresult)
   
   # remove the tapes from the return to save on memory
-  locopt$eval_f <- locopt$eval_g_eq <- locopt$eval_g_ineq <- NULL
+  locopt$eval_f <- locopt$eval_g_eq <- locopt$eval_g_ineq <- locopt$nloptr_environment <- NULL
   
   return(list(
     solution = projresult,

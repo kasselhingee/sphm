@@ -49,13 +49,16 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
   
   # some aspects of the fit:
   pred <- mnlink(xs = xs, xe = xe, param = out$solution)
-  rresids <- rotatedresid(ystd, pred, nthpole(ncol(y)))[, -1]
+  colnames(pred) <- colnames(y)
+  rresids <- rotatedresid(y, pred, nthpole(ncol(y)))[, -1]
   colnames(rresids) <- paste0("r", 1:ncol(rresids))
   dists <- rowSums(pred * y)
   
   colnames(out$solution$Omega) <- c(colnames(xs), colnames(xe))
   names(out$solution$qe1) <- colnames(xe)
   names(out$solution$qs1) <- colnames(xs)
+  rownames(out$solution$Omega) <- colnames(y)
+  names(out$solution$p1) <- colnames(y)
   
   niceout <- list(
     est = out$solution,

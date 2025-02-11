@@ -28,10 +28,10 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
     start <- mnlink_cann(
                 P = diag(p),
                 Bs = if (!is.null(xs)){diag(p-1)},
-                Qs = diag(1, ncol(xs), p),
+                Qs = if (!is.null(xs)){diag(1, ncol(xs), p)},
                 Be = if (!is.null(xe)){diag(p-1)},
-                Qe = diag(1, ncol(xe), p),
-                ce = c(1, rep(0, p-1))
+                Qe = if (!is.null(xe)){diag(1, ncol(xe), p)},
+                ce = if (!is.null(xe)){c(1, rep(0, p-1))}
     )
     if ((type == "Shogo") && !is.null(xe)){
       start$ce[1] <- 1
@@ -48,7 +48,7 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
   }
   
   # some aspects of the fit:
-  pred <- mnlink(xs = faultsph, xe = xe, param = out$solution)
+  pred <- mnlink(xs = xs, xe = xe, param = out$solution)
   rresids <- rotatedresid(ystd, pred, nthpole(ncol(y)))[, -1]
   colnames(rresids) <- paste0("r", 1:ncol(rresids))
   dists <- rowSums(pred * y)

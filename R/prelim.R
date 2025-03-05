@@ -36,7 +36,7 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
     if ((type == "Shogo") && !is.null(xe)){
       start$ce[1] <- 1
     }
-    if (!is.null(xe)){ #default to be larger an all values of -xe
+    if ((type == "Kassel") && !is.null(xe)){ #default to be larger an all values of -xe
       start$ce[1] <- max(-xe)  +  0.1*IQR(xe)
     }
   }

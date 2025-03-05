@@ -396,6 +396,8 @@ P_signswitch <- function(obj, cols){
 #' Place all the parameters in the environment by running list2env(obj, envir = environment())
 #' @export
 rmnlink_cann <- function(p = 3, qs = 5, qe = 4, preseed = 0){
+  stopifnot(qe >= p)
+  stopifnot(qs >= p)
   set.seed(preseed + 1)
   P <- mclust::randomOrthogonalMatrix(p, p)
   Qs <- Qe <- Bs <- Be <- ce <- NULL
@@ -404,9 +406,9 @@ rmnlink_cann <- function(p = 3, qs = 5, qe = 4, preseed = 0){
     Qs <- mclust::randomOrthogonalMatrix(qs, p)
     set.seed(preseed + 3)
     Bs <- diag(sort(runif(p-1), decreasing = TRUE))
-    set.seed(preseed + 2 + 10)
   }
   if (qe > 0){
+    set.seed(preseed + 2 + 10)
     Qe <- mclust::randomOrthogonalMatrix(qe, p)
     set.seed(preseed + 3 + 10)
     Be <- diag(sort(runif(p-1), decreasing = TRUE))

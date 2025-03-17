@@ -46,6 +46,17 @@ standardise_mat <- function(y){
   mom2 <- t(y) %*% y #quickly calculates the sum of projection matrices of rows of y
   projmom2 <- mnproj %*% mom2 %*% mnproj
 
+  # use the non-degenerate directions in Ghat, then an arbitrary basis for the remaining except for the mean!!
+  # Avoiding the mean direction is tricky.
+  # one direction (corresponding to the mean) will ALWAYS be degenerate
+  eig_projmom2 <- eigen(projmom2)
+  degeneratedirections <- abs(eig_projmom2$values) <= sqrt(.Machine$double.eps)
+  if (sum(degeneratedirections) > 1){
+    # making the mom2 a little ridgier, then project again to remove the mean and continue
+    eig_projmom2$values[degeneratedirections] <- eig_projmom2$values[degeneratedirections] + min(eig_projmom2$values[!degeneratedirections])/seq.int(2, length.out = sum(degeneratedirections))
+    projmom2 <- mnproj %*% eig_projmom2$vectors %*% diag(eig_projmom2$values) %*% t(eig_projmom2$vectors) %*% mnproj
+    eig_projmom2 <- eigen(projmom2)
+  }
   Ghat <- cbind(mn, eigen(projmom2)$vectors[, 1:(p-1)])
   # make sure that Ghat is a rotation matrix, by making sure determinant is 1
   if (det(Ghat) < 0){Ghat[, p] <- -Ghat[, p]}

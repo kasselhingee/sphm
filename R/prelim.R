@@ -19,7 +19,9 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' 
 #' Before fitting, standardises y, xs and xe (*the latter needs implementing*). If supplied, `start`, is updated accordingly.
 #' Note that if standardised y has a vMF distribution with the given means, the unstandardised y *does not* because of the second-moment standardisation (I would expect is to not be isotropic).
-#' @param paramobj0 is a starting parameter object.
+#' 
+#' If `type == "Shogo"` a column of zeros called `'dummyzero'` is added to the front of `xe`.
+#' @param start is a starting parameter object. For Shogo mean link the Qe matrix must have an extra row and column that at the front/top, with 1 in the first entry (and zero elsewhere).
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @export
 prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", start = NULL, ...){
@@ -31,7 +33,7 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
     xs <- standardise(xs, xs_stdmat)
   }
   
-  # TO DO center and rotate xe if it exists. 
+  # Center and rotate xe if it exists. 
   # Link isn't equivariant to scaling so dont do it
   if (!is.null(xe)){
     xe_names <- colnames(xe)
@@ -42,33 +44,33 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
   }
   
   if (!is.null(start)){
-    browser()
     start <- as_mnlink_cann(start)
     start$P <- t(y_stdmat) %*% start$P
     if (!is.null(xs)){
       start$Qs <- t(xs_stdmat) %*% start$Qs
     }
     if (!is.null(xe)){
-      start$ce <- t(start$Qe) %*% xe_centers + start$ce
-      start$Qe <- xe_pcares$loadings %*% start$Qe
+      start$ce <- drop(t(start$Qe) %*% c(if(type=="Shogo"){0}, xe_centers) + start$ce)
+      tmploadings <- xe_pcares$loadings
+      if (type=="Shogo"){
+        tmploadings <- diag(1, nrow(start$Qe))
+        tmploadings[-1, -1] <- xe_pcares$loadings
+        }
+      start$Qe <- t(tmploadings) %*% start$Qe
     }
   }
   
   
   if (is.null(start)){
     p <- ncol(y)
-    if ((type == "Shogo") && !is.null(xe)){
-      xe <- cbind(0, xe)
-      xe_names <- c("dummyzero", xe_names)
-    }
-    if (!is.null(xe)){stopifnot(ncol(xe) >= p)}
+    if (!is.null(xe)){stopifnot(ncol(xe) + (type == "Shogo") >= p)}
     if (!is.null(xs)){stopifnot(ncol(xs) >= p)}
     start <- mnlink_cann(
                 P = diag(p),
                 Bs = if (!is.null(xs)){diag(p-1)},
                 Qs = if (!is.null(xs)){diag(1, ncol(xs), p)},
                 Be = if (!is.null(xe)){diag(p-1)},
-                Qe = if (!is.null(xe)){diag(1, ncol(xe), p)},
+                Qe = if (!is.null(xe)){diag(1, ncol(xe) + (type == "Shogo"), p)},
                 ce = if (!is.null(xe)){c(1, rep(0, p-1))}
     )
     if ((type == "Shogo") && !is.null(xe)){
@@ -80,7 +82,13 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
   }
   
   # RUN
-  if (type == "Shogo"){stopifnot(is_Shogo(start))}
+  if (type == "Shogo"){
+    stopifnot(is_Shogo(start))
+    if (!is.null(xe)){
+      xe <- cbind(0, xe)
+      xe_names <- c("dummyzero", xe_names)
+    }
+  }
   if (method == "local"){
     out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = start, type = type, ...)
   }
@@ -119,7 +127,7 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
   niceout <- list(
     est = est,
     obj = out$loc_nloptr$objective,
-    solution = est,
+    solution = out$solution, #non-standardised solution
     opt = out$loc_nloptr,
     y = destandardise(y, y_stdmat),
     xs = destandardise(xs, xs_stdmat),

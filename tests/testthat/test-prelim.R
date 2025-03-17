@@ -281,4 +281,8 @@ test_that("prelim() destandardises variables correctly", {
   rownames(paramobj$Qs) <- colnames(xs)
   rownames(paramobj$Qe) <- colnames(xe)
   expect_equal(res$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  
+  # the following checks the start standardisation of supplied starting parameters
+  res2 <- prelim(y, xs = xs, xe = xe[, -1], type = "Shogo", start = res$est)
+  expect_equal(res2$opt$x0, mnlink_Omega_vec(res$solution)[-c(seq.int(9, length.out = 5), 44)])
 })

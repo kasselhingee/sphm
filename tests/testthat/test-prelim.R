@@ -76,33 +76,6 @@ test_that("prelim optimisation works with Sph covars",{
   # expect_equal(opt3$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
 })
 
-test_that("prelim() destandardises variables correctly", {
-  rmnlink_cann__place_in_env(p = 4, qs = 5, qe = 0)
-  omegapar <- as_mnlink_Omega(paramobj)
-  
-  #generate covariates uniformly on the sphere
-  set.seed(4)
-  x <- matrix(rnorm(1000*qs), nrow = 1000)
-  x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
-  colnames(x) <- paste0("x", 1:ncol(x))
-  
-  ymean <- mnlink(xs = x, param = omegapar)
-  
-  # generate noise
-  if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
-  set.seed(5)
-  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
-  colnames(y) <- paste0("y", 1:ncol(y))
-  
-  res <- prelim(y, xs = x)
-  expect_equal(res$y, y)
-  expect_equal(res$xs, x)
-  expect_equal(-mean(res$dists), res$obj)
-  names(omegapar$p1) <- rownames(omegapar$Omega) <- colnames(y)
-  names(omegapar$qs1) <- colnames(omegapar$Omega) <- colnames(x)
-  expect_equal(res$est, omegapar, tolerance = 0.05)
-})
-
 test_that("prelim optimisation works with Sph+Euc covars", {
   rmnlink_cann__place_in_env(3, 5, 4)
   
@@ -268,3 +241,44 @@ expect_equal(result$par[8] * result$par[7], Bs[2,2], tolerance = 1E-3)
 
 
 
+
+test_that("prelim() destandardises variables correctly", {
+  rmnlink_cann__place_in_env(3, 5, 4)
+  # convert to Shogo form:
+  bigQe <- rbind(0, Qe)
+  bigQe[, 1] <- 0
+  bigQe[1,1] <- 1
+  bigce <- ce
+  bigce[1] <- 1
+  ce <- ce[-1]
+  paramobj <- mnlink_cann(P, Qs = Qs, Bs = Bs, Be = Be, Qe = bigQe, ce = bigce)
+  expect_true(is_Shogo(paramobj))
+  
+  #generate covariates Gaussianly
+  set.seed(4)
+  xe <- cbind(0, matrix(rnorm(1000*qe), nrow = 1000))
+  colnames(xe) <- c("dummyzero", paste0("xe", 2:ncol(xe)))
+  #generate covariates on the sphere
+  set.seed(4)
+  xs <- matrix(rnorm(1000*qs), nrow = 1000)
+  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
+  colnames(xs) <- paste0("xs", 1:ncol(x))
+  
+  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
+  
+  # generate noise
+  if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
+  set.seed(5)
+  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
+  colnames(y) <- paste0("y", 1:ncol(y))
+  
+  res <- prelim(y, xs = xs, xe = xe[, -1], type = "Shogo") #drop first column of zeros to account for user-friendly use of Shogo in prelim()
+  expect_equal(res$y, y)
+  expect_equal(res$xs, xs)
+  expect_equal(res$xe[,-1], xe[,-1])
+  expect_equal(-mean(res$dists), res$obj)
+  rownames(paramobj$P) <- colnames(y)
+  rownames(paramobj$Qs) <- colnames(xs)
+  rownames(paramobj$Qe) <- colnames(xe)
+  expect_equal(res$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+})

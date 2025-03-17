@@ -17,28 +17,50 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' Optimisation of the Preliminary Objective Function
 #' @details Uses `nloptr`. `NLopt` doesn't have any algorithms for global optimisation with non-linear equality constraints that use provided gradients. So `_parttape` only does local optimisation and uses `NLOPT_LD_SLSQP` which is the only algorithm that takes advantage of derivatives and can handle non-linear equality constraints.
 #' 
-#' Before fitting, standardises y, xs and xe. If supplied, `start`, is updated accordingly.
+#' Before fitting, standardises y, xs and xe (*the latter needs implementing*). If supplied, `start`, is updated accordingly.
 #' Note that if standardised y has a vMF distribution with the given means, the unstandardised y *does not* because of the second-moment standardisation (I would expect is to not be isotropic).
 #' @param paramobj0 is a starting parameter object.
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @export
 prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", start = NULL, ...){
+  # standardise inputs
   y_stdmat <- standardise_mat(y)
   y <- standardise(y, y_stdmat)
   if (!is.null(xs)){
     xs_stdmat <- standardise_mat(xs)
     xs <- standardise(xs, xs_stdmat)
   }
+  
+  # TO DO center and rotate xe if it exists. 
+  # Link isn't equivariant to scaling so dont do it
+  if (!is.null(xe)){
+    xe_names <- colnames(xe)
+    xe_centers <- colMeans(xe)
+    xe <- t(t(xe) - xe_centers)
+    xe_pcares <- princomp(xe)
+    xe <- xe_pcares$scores #ie xe <- xe %*% xe_pcares$loadings
+  }
+  
   if (!is.null(start)){
+    browser()
     start <- as_mnlink_cann(start)
     start$P <- t(y_stdmat) %*% start$P
     if (!is.null(xs)){
       start$Qs <- t(xs_stdmat) %*% start$Qs
     }
+    if (!is.null(xe)){
+      start$ce <- t(start$Qe) %*% xe_centers + start$ce
+      start$Qe <- xe_pcares$loadings %*% start$Qe
+    }
   }
+  
+  
   if (is.null(start)){
     p <- ncol(y)
-    if ((type == "Shogo") && !is.null(xe)){xe <- cbind(0, xe)}
+    if ((type == "Shogo") && !is.null(xe)){
+      xe <- cbind(0, xe)
+      xe_names <- c("dummyzero", xe_names)
+    }
     if (!is.null(xe)){stopifnot(ncol(xe) >= p)}
     if (!is.null(xs)){stopifnot(ncol(xs) >= p)}
     start <- mnlink_cann(
@@ -78,15 +100,22 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
   if (!is.null(xs)){
     est$Qs <- xs_stdmat %*% est$Qs #xs_stdmat has colnames included
   }
+  if (!is.null(xe)){
+    if (type == "Shogo"){
+      est$ce[-1] <- est$ce[-1] - t(est$Qe[-1,-1]) %*% t(xe_pcares$loadings) %*% xe_centers
+      est$Qe[-1, -1] <- xe_pcares$loadings %*% est$Qe[-1, -1]
+      rownames(est$Qe) <- xe_names #could also get all but the dummyzero name from rownames(xe_pcares$loadings)
+    } else {
+      warning("destandardisation not implemented")
+    }
+  }
   est <- as_mnlink_Omega(est)
   pred <- pred %*% t(y_stdmat) #y_stdmat has colnames included
   
-  colnames(out$solution$Omega) <- c(rownames(xs_stdmat), colnames(xe))
-  names(out$solution$qe1) <- colnames(xe)
-  names(out$solution$qs1) <- rownames(xs_stdmat)
-  rownames(out$solution$Omega) <- rownames(y_stdmat)
-  names(out$solution$p1) <- rownames(y_stdmat)
-  
+  # destandardise xe
+  if (type == "Shogo"){
+    xe <- cbind(xe[,1], t(t(xe[, -1] %*% t(xe_pcares$loadings)) + xe_centers))
+  }
   niceout <- list(
     est = est,
     obj = out$loc_nloptr$objective,

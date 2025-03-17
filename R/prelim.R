@@ -33,7 +33,7 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
     start <- as_mnlink_cann(start)
     start$P <- t(y_stdmat) %*% start$P
     if (!is.null(xs)){
-      start$Qs <- start$Qs %*% xs_stdmat
+      start$Qs <- t(xs_stdmat) %*% start$Qs
     }
   }
   if (is.null(start)){
@@ -57,7 +57,7 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
     }
   }
   
-  # check inputs:
+  # RUN
   if (type == "Shogo"){stopifnot(is_Shogo(start))}
   if (method == "local"){
     out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = start, type = type, ...)
@@ -66,26 +66,34 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
     out <- prelim_R(y = y, xs = xs, xe = xe, paramobj0 = start, type = type, ...)
   }
   
-  # some aspects of the fit:
+  # Aspect of the fit using standardised coordinates
   pred <- mnlink(xs = xs, xe = xe, param = out$solution)
-  colnames(pred) <- colnames(y)
+  dists <- rowSums(pred * y)
   rresids <- rotatedresid(y, pred, nthpole(ncol(y)))[, -1]
   colnames(rresids) <- paste0("r", 1:ncol(rresids))
-  dists <- rowSums(pred * y)
   
-  colnames(out$solution$Omega) <- c(colnames(xs), colnames(xe))
+  # revert estimated parameters and pred to pre-standardisation coordinates
+  est <- as_mnlink_cann(out$solution)
+  est$P <- y_stdmat %*% est$P
+  if (!is.null(xs)){
+    est$Qs <- xs_stdmat %*% est$Qs #xs_stdmat has colnames included
+  }
+  est <- as_mnlink_Omega(est)
+  pred <- pred %*% t(y_stdmat) #y_stdmat has colnames included
+  
+  colnames(out$solution$Omega) <- c(rownames(xs_stdmat), colnames(xe))
   names(out$solution$qe1) <- colnames(xe)
-  names(out$solution$qs1) <- colnames(xs)
-  rownames(out$solution$Omega) <- colnames(y)
-  names(out$solution$p1) <- colnames(y)
+  names(out$solution$qs1) <- rownames(xs_stdmat)
+  rownames(out$solution$Omega) <- rownames(y_stdmat)
+  names(out$solution$p1) <- rownames(y_stdmat)
   
   niceout <- list(
-    est = out$solution,
+    est = est,
     obj = out$loc_nloptr$objective,
-    solution = out$solution,
+    solution = est,
     opt = out$loc_nloptr,
-    y = y,
-    xs = xs,
+    y = destandardise(y, y_stdmat),
+    xs = destandardise(xs, xs_stdmat),
     xe = xe,
     pred = pred,
     rresids = rresids,

@@ -76,6 +76,33 @@ test_that("prelim optimisation works with Sph covars",{
   # expect_equal(opt3$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
 })
 
+test_that("prelim() destandardises variables correctly", {
+  rmnlink_cann__place_in_env(p = 4, qs = 5, qe = 0)
+  omegapar <- as_mnlink_Omega(paramobj)
+  
+  #generate covariates uniformly on the sphere
+  set.seed(4)
+  x <- matrix(rnorm(1000*qs), nrow = 1000)
+  x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
+  colnames(x) <- paste0("x", 1:ncol(x))
+  
+  ymean <- mnlink(xs = x, param = omegapar)
+  
+  # generate noise
+  if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
+  set.seed(5)
+  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
+  colnames(y) <- paste0("y", 1:ncol(y))
+  
+  res <- prelim(y, xs = x)
+  expect_equal(res$y, y)
+  expect_equal(res$xs, x)
+  expect_equal(-mean(res$dists), res$obj)
+  names(omegapar$p1) <- rownames(omegapar$Omega) <- colnames(y)
+  names(omegapar$qs1) <- colnames(omegapar$Omega) <- colnames(x)
+  expect_equal(res$est, omegapar, tolerance = 0.05)
+})
+
 test_that("prelim optimisation works with Sph+Euc covars", {
   rmnlink_cann__place_in_env(3, 5, 4)
   

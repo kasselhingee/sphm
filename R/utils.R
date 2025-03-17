@@ -30,6 +30,11 @@ standardise <- function(y, G = standardise_mat(y)){
   return(ystd)
 }
 
+destandardise <- function(y, G){
+  ydestd <- y %*% t(G)
+  return(ydestd)
+}
+
 #' @describeIn standardise
 #' @export
 standardise_mat <- function(y){
@@ -42,6 +47,8 @@ standardise_mat <- function(y){
   projmom2 <- mnproj %*% mom2 %*% mnproj
 
   Ghat <- cbind(mn, eigen(projmom2)$vectors[, 1:(p-1)])
+  # make sure that Ghat is a rotation matrix, by making sure determinant is 1
+  if (det(Ghat) < 0){Ghat[, p] <- -Ghat[, p]}
   return(Ghat)
 }
 

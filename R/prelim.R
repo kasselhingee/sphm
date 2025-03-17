@@ -16,26 +16,10 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 
 #' Optimisation of the Preliminary Objective Function
 #' @details Uses `nloptr`. `NLopt` doesn't have any algorithms for global optimisation with non-linear equality constraints that use provided gradients. So `_parttape` only does local optimisation and uses `NLOPT_LD_SLSQP` which is the only algorithm that takes advantage of derivatives and can handle non-linear equality constraints.
-#' 
-#' Before fitting, standardises y, xs and xe. If supplied, `start`, is updated accordingly.
-#' Note that if standardised y has a vMF distribution with the given means, the unstandardised y *does not* because of the second-moment standardisation (I would expect is to not be isotropic).
 #' @param paramobj0 is a starting parameter object.
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @export
 prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", start = NULL, ...){
-  y_stdmat <- standardise_mat(y)
-  y <- standardise(y, y_stdmat)
-  if (!is.null(xs)){
-    xs_stdmat <- standardise_mat(xs)
-    xs <- standardise(xs, xs_stdmat)
-  }
-  if (!is.null(start)){
-    start <- as_mnlink_cann(start)
-    start$P <- t(y_stdmat) %*% start$P
-    if (!is.null(xs)){
-      start$Qs <- start$Qs %*% xs_stdmat
-    }
-  }
   if (is.null(start)){
     p <- ncol(y)
     if ((type == "Shogo") && !is.null(xe)){xe <- cbind(0, xe)}

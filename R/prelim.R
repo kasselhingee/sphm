@@ -100,7 +100,7 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
   
   # Aspect of the fit using standardised coordinates
   pred <- mnlink(xs = xs, xe = xe, param = out$solution)
-  dists <- rowSums(pred * y)
+  dists <- acos(rowSums(pred * y))
   rresids <- rotatedresid(y, pred, nthpole(ncol(y)))[, -1]
   colnames(rresids) <- paste0("r", 1:ncol(rresids))
   

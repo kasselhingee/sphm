@@ -21,6 +21,8 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' Note that if standardised y has a vMF distribution with the given means, the unstandardised y *does not* because of the second-moment standardisation (I would expect is to not be isotropic).
 #' 
 #' If `type == "Shogo"` a column of zeros called `'dummyzero'` is added to the front of `xe`.
+#' 
+#' Default scaling of 0.9 avoids being on the inequality boundary at the start of the search.
 #' @param start is a starting parameter object. For Shogo mean link the Qe matrix must have an extra row and column that at the front/top, with 1 in the first entry (and zero elsewhere).
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @export
@@ -67,9 +69,9 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
     if (!is.null(xs)){stopifnot(ncol(xs) >= p)}
     start <- mnlink_cann(
                 P = diag(p),
-                Bs = if (!is.null(xs)){diag(p-1)},
+                Bs = if (!is.null(xs)){diag(0.9, p-1)},
                 Qs = if (!is.null(xs)){diag(1, ncol(xs), p)},
-                Be = if (!is.null(xe)){diag(p-1)},
+                Be = if (!is.null(xe)){diag(0.9, p-1)},
                 Qe = if (!is.null(xe)){diag(1, ncol(xe) + (type == "Shogo"), p)},
                 ce = if (!is.null(xe)){c(1, rep(0, p-1))}
     )

@@ -101,7 +101,9 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
   # Aspect of the fit using standardised coordinates
   pred <- mnlink(xs = xs, xe = xe, param = out$solution)
   dists <- acos(rowSums(pred * y))
-  rresids <- rotatedresid(y, pred, nthpole(ncol(y)))[, -1]
+  rresids_tmp <- rotatedresid(y, pred, nthpole(ncol(y)))
+  rresids <- rresids_tmp[, -1]
+  attr(rresids, "samehemisphere") <-  attr(rresids_tmp, "samehemisphere")
   colnames(rresids) <- paste0("r", 1:ncol(rresids))
   
   # revert estimated parameters and pred to pre-standardisation coordinates

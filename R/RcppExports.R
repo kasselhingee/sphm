@@ -104,8 +104,22 @@ tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for
 #'   f(z,..) = 1 - (mu-1)/ (8*z) + (mu-1)(mu-9)/(2! (8z)^2) - ...
 #'           = 1- (mu-1)/(8z)*(1- (mu-9)/(2(8z))*(1-(mu-25)/(3(8z))*..))
 #' where  mu = 4*a^2  *and*  |arg(z)| < pi/2
+#' This is useful for large x
+#' @param x is the vMF concentration parameter
+#' @param nu is such that nu + 1 = d/2, where d is the ambient dimension of the sphere.
 besselIasym <- function(x, nu, k_max, log_result = TRUE) {
     .Call(`_sphm_besselIasym`, x, nu, k_max, log_result)
+}
+
+#' For small x (i.e. concentration) Hornik and Grun use simple relation by Schou 1979 (and others)
+#' for approximating the derivative of log(const(k)) but I want a coarse idea of the value here.
+#' I'm going to use the series 10.25.2 from Nist: `https://dlmf.nist.gov/10.25#E2`
+#' This looks actually to be just a solution to equation defining the modified Bessel function.
+#' (x/2)^nu sum_i{1/i! 1/gamma(nu + i + 1) (x/2)^(2i)}.
+#' nu and order are NOT differentiable
+#' @param order Maximum order of series to compute
+besselItrunc <- function(x, nu, order, log_result = TRUE) {
+    .Call(`_sphm_besselItrunc`, x, nu, order, log_result)
 }
 
 uldSvMF_cann <- function(y, k, a, G) {

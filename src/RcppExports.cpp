@@ -245,6 +245,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// besselItrunc
+a1type besselItrunc(const a1type& x, const double& nu, int order, bool log_result);
+RcppExport SEXP _sphm_besselItrunc(SEXP xSEXP, SEXP nuSEXP, SEXP orderSEXP, SEXP log_resultSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const a1type& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< int >::type order(orderSEXP);
+    Rcpp::traits::input_parameter< bool >::type log_result(log_resultSEXP);
+    rcpp_result_gen = Rcpp::wrap(besselItrunc(x, nu, order, log_result));
+    return rcpp_result_gen;
+END_RCPP
+}
 // uldSvMF_cann
 veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
 RcppExport SEXP _sphm_uldSvMF_cann(SEXP ySEXP, SEXP kSEXP, SEXP aSEXP, SEXP GSEXP) {
@@ -306,6 +320,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_prelimobj_cpp", (DL_FUNC) &_sphm_prelimobj_cpp, 4},
     {"_sphm_tape_namedfun", (DL_FUNC) &_sphm_tape_namedfun, 6},
     {"_sphm_besselIasym", (DL_FUNC) &_sphm_besselIasym, 4},
+    {"_sphm_besselItrunc", (DL_FUNC) &_sphm_besselItrunc, 4},
     {"_sphm_uldSvMF_cann", (DL_FUNC) &_sphm_uldSvMF_cann, 4},
     {"_sphm_uldSvMF_muV", (DL_FUNC) &_sphm_uldSvMF_muV, 5},
     {"_sphm_ull_SvMF_V", (DL_FUNC) &_sphm_ull_SvMF_V, 3},

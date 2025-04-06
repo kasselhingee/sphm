@@ -8,6 +8,9 @@
 //'   f(z,..) = 1 - (mu-1)/ (8*z) + (mu-1)(mu-9)/(2! (8z)^2) - ...
 //'           = 1- (mu-1)/(8z)*(1- (mu-9)/(2(8z))*(1-(mu-25)/(3(8z))*..))
 //' where  mu = 4*a^2  *and*  |arg(z)| < pi/2
+//' This is useful for large x
+//' @param x is the vMF concentration parameter
+//' @param nu is such that nu + 1 = d/2, where d is the ambient dimension of the sphere.
 // [[Rcpp::export]]
 a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool log_result = true) {
   // Constants
@@ -46,6 +49,34 @@ a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool log_result
     return scaling_factor * f / CppAD::sqrt(pi2 * x);
   }
 }
+
+//' For small x (i.e. concentration) Hornik and Grun use simple relation by Schou 1979 (and others)
+//' for approximating the derivative of log(const(k)) but I want a coarse idea of the value here.
+//' I'm going to use the series 10.25.2 from Nist: `https://dlmf.nist.gov/10.25#E2`
+//' This looks actually to be just a solution to equation defining the modified Bessel function.
+//' (x/2)^nu sum_i{1/i! 1/gamma(nu + i + 1) (x/2)^(2i)}.
+//' nu and order are NOT differentiable
+//' @param order Maximum order of series to compute
+// [[Rcpp::export]]
+a1type besselItrunc(const a1type& x, const double & nu, int order, bool log_result = true) {
+    a1type sum = 0.0;
+    a1type x2 = x / 2.0;
+    double gamma_val, ifact;
+    for (int i = 0; i <= order; ++i) {
+        gamma_val = std::tgamma(i + nu + 1.0);
+        ifact = std::tgamma(i + 1.0);  // == i!
+
+        a1type term = CppAD::pow(x2, 2 * i + nu) / (ifact * gamma_val);
+        sum = sum + term;
+    }
+
+    if (log_result)
+        return CppAD::log(sum);
+    else
+        return sum;
+}
+
+
 
 // Helper function lvMFnormconst
 a1type lvMFnormconst(a1type kappa, int p) {

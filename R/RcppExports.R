@@ -71,11 +71,10 @@ mnlink_cpp <- function(xs, xe, vec, p) {
 }
 
 #' Preliminary Objective in the style of the `generalfunction` class:
-#' @param yx is the response the spherical covariates, and the Euclidean covariates *cbind* together. Each row an observation.
-#' @param dyn is a zero length vector that is ignored
+#' @param yx is the concatenation of the response, the spherical covariates, then Euclidean covariates *cbind* together
 #' @param dims_in A vector of `c(p, qe)`. `p` and `qe` are required to separate yx and omvec into their constituents.
-prelimobj_cpp <- function(omvec, dyn, dims_in, yx) {
-    .Call(`_sphm_prelimobj_cpp`, omvec, dyn, dims_in, yx)
+prelimobj_cpp <- function(omvec, yx, dims_in, ignore) {
+    .Call(`_sphm_prelimobj_cpp`, omvec, yx, dims_in, ignore)
 }
 
 #' Function to create tapes of besselImixed() from uldSvMF purely for testing differentiation

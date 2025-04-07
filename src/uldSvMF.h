@@ -17,5 +17,12 @@ veca1 uldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
 // a helper
 mata1 getHstar(veca1 m);
 
+//' This function approximates the BesselI function by
+//' Using BesselItrunc for small values of x
+//' Using BesselIasym for large values of x
+//' @param threshold is the location at which the calculation switches
+// [[Rcpp::export]]
+a1type besselImixed(const a1type & x, const double & nu, double threshold, int order, bool log_result = true);
+
 #endif
 

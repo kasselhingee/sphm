@@ -78,6 +78,11 @@ prelimobj_cpp <- function(omvec, dyn, dims_in, yx) {
     .Call(`_sphm_prelimobj_cpp`, omvec, dyn, dims_in, yx)
 }
 
+#' Function to create tapes of besselImixed() from uldSvMF purely for testing differentiation
+tape_besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
+    .Call(`_sphm_tape_besselImixed`, x, nu, threshold, order, log_result)
+}
+
 #' Function for taping a general function. The function must have signature
 #' `veca1 fun(const veca1 & independent, const veca2 & dynamic, const vecd & constvec, const matd & constmat)`.
 #' Differentiation of `fun` will occur with respect to the independent arguments. The taping will keep of dependence on the dynamic arguments so that the value of the dynamic arguments can be changed in the tape. The constants (constvec and constmat) will be baked into the tape (to change these constants `tapefun` will have to be called again.
@@ -97,7 +102,10 @@ tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for
     .Call(`_sphm_tape_namedfun`, func_name, ind_t, dyn_t, constvec, constmat, check_for_nan)
 }
 
-#' Function to create tapes, purely for testing differentiation
+#' This function approximates the BesselI function by
+#' Using BesselItrunc for small values of x
+#' Using BesselIasym for large values of x
+#' @param threshold is the location at which the calculation switches
 NULL
 
 #' Helper function Bessel I approximation from BesselI::besselIasym()
@@ -125,20 +133,20 @@ besselItrunc <- function(x, nu, order, log_result = TRUE) {
     .Call(`_sphm_besselItrunc`, x, nu, order, log_result)
 }
 
-#' This function approximates the BesselI function by
-#' Using BesselItrunc for small values of x
-#' Using BesselIasym for large values of x
-#' @param threshold is the location at which the calculation switches
-besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
-    .Call(`_sphm_besselImixed`, x, nu, threshold, order, log_result)
-}
-
 uldSvMF_cann <- function(y, k, a, G) {
     .Call(`_sphm_uldSvMF_cann`, y, k, a, G)
 }
 
 uldSvMF_muV <- function(y, k, m, a1, V) {
     .Call(`_sphm_uldSvMF_muV`, y, k, m, a1, V)
+}
+
+#' This function approximates the BesselI function by
+#' Using BesselItrunc for small values of x
+#' Using BesselIasym for large values of x
+#' @param threshold is the location at which the calculation switches
+besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
+    .Call(`_sphm_besselImixed`, x, nu, threshold, order, log_result)
 }
 
 #' @param Vvec Vectorised form of matrix V ala vech

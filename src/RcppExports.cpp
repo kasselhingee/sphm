@@ -215,6 +215,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// tape_besselImixed
+pADFun tape_besselImixed(veca1& x, const double& nu, double threshold, int order, bool log_result);
+RcppExport SEXP _sphm_tape_besselImixed(SEXP xSEXP, SEXP nuSEXP, SEXP thresholdSEXP, SEXP orderSEXP, SEXP log_resultSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< veca1& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
+    Rcpp::traits::input_parameter< int >::type order(orderSEXP);
+    Rcpp::traits::input_parameter< bool >::type log_result(log_resultSEXP);
+    rcpp_result_gen = Rcpp::wrap(tape_besselImixed(x, nu, threshold, order, log_result));
+    return rcpp_result_gen;
+END_RCPP
+}
 // tape_namedfun
 pADFun tape_namedfun(std::string func_name, veca1& ind_t, veca1& dyn_t, vecd& constvec, matd& constmat, bool check_for_nan);
 RcppExport SEXP _sphm_tape_namedfun(SEXP func_nameSEXP, SEXP ind_tSEXP, SEXP dyn_tSEXP, SEXP constvecSEXP, SEXP constmatSEXP, SEXP check_for_nanSEXP) {
@@ -259,21 +274,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// besselImixed
-a1type besselImixed(const a1type& x, const double& nu, double threshold, int order, bool log_result);
-RcppExport SEXP _sphm_besselImixed(SEXP xSEXP, SEXP nuSEXP, SEXP thresholdSEXP, SEXP orderSEXP, SEXP log_resultSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const a1type& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
-    Rcpp::traits::input_parameter< int >::type order(orderSEXP);
-    Rcpp::traits::input_parameter< bool >::type log_result(log_resultSEXP);
-    rcpp_result_gen = Rcpp::wrap(besselImixed(x, nu, threshold, order, log_result));
-    return rcpp_result_gen;
-END_RCPP
-}
 // uldSvMF_cann
 veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
 RcppExport SEXP _sphm_uldSvMF_cann(SEXP ySEXP, SEXP kSEXP, SEXP aSEXP, SEXP GSEXP) {
@@ -300,6 +300,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
     Rcpp::traits::input_parameter< mata1 >::type V(VSEXP);
     rcpp_result_gen = Rcpp::wrap(uldSvMF_muV(y, k, m, a1, V));
+    return rcpp_result_gen;
+END_RCPP
+}
+// besselImixed
+a1type besselImixed(const a1type& x, const double& nu, double threshold, int order, bool log_result);
+RcppExport SEXP _sphm_besselImixed(SEXP xSEXP, SEXP nuSEXP, SEXP thresholdSEXP, SEXP orderSEXP, SEXP log_resultSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const a1type& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
+    Rcpp::traits::input_parameter< int >::type order(orderSEXP);
+    Rcpp::traits::input_parameter< bool >::type log_result(log_resultSEXP);
+    rcpp_result_gen = Rcpp::wrap(besselImixed(x, nu, threshold, order, log_result));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -333,12 +348,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_tape_ull_S2S_constV_nota1", (DL_FUNC) &_sphm_tape_ull_S2S_constV_nota1, 7},
     {"_sphm_mnlink_cpp", (DL_FUNC) &_sphm_mnlink_cpp, 4},
     {"_sphm_prelimobj_cpp", (DL_FUNC) &_sphm_prelimobj_cpp, 4},
+    {"_sphm_tape_besselImixed", (DL_FUNC) &_sphm_tape_besselImixed, 5},
     {"_sphm_tape_namedfun", (DL_FUNC) &_sphm_tape_namedfun, 6},
     {"_sphm_besselIasym", (DL_FUNC) &_sphm_besselIasym, 4},
     {"_sphm_besselItrunc", (DL_FUNC) &_sphm_besselItrunc, 4},
-    {"_sphm_besselImixed", (DL_FUNC) &_sphm_besselImixed, 5},
     {"_sphm_uldSvMF_cann", (DL_FUNC) &_sphm_uldSvMF_cann, 4},
     {"_sphm_uldSvMF_muV", (DL_FUNC) &_sphm_uldSvMF_muV, 5},
+    {"_sphm_besselImixed", (DL_FUNC) &_sphm_besselImixed, 5},
     {"_sphm_ull_SvMF_V", (DL_FUNC) &_sphm_ull_SvMF_V, 3},
     {NULL, NULL, 0}
 };

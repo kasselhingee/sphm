@@ -12,7 +12,7 @@
 //' @param x is the vMF concentration parameter
 //' @param nu is such that nu + 1 = d/2, where d is the ambient dimension of the sphere.
 // [[Rcpp::export]]
-a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool log_result = true) {
+a1type besselIasym(const a1type& x, const double & nu, int order, bool log_result = true) {
   // Constants
   a1type pi = CppAD::atan(1.0) * 4.0;
   a1type pi2 = 2.0 * pi;
@@ -26,10 +26,10 @@ a1type besselIasym(const a1type& x, const a1type& nu, int k_max, bool log_result
   // Precompute 8*x for efficiency
   a1type x8 = 8.0 * x;
   
-  // Compute the asymptotic series for f(x, nu) up to order k_max
+  // Compute the asymptotic series for f(x, nu) up to order
   a1type d = 0.0; // Initialize d
-  if (k_max >= 1) {
-    for (int k = k_max; k >= 1; --k) {
+  if (order >= 1) {
+    for (int k = order; k >= 1; --k) {
       // mu = (2*(nu-k)+1)*(2*(nu+k)-1)
       a1type term1 = 2.0 * (nu - k) + 1.0;
       a1type term2 = 2.0 * (nu + k) - 1.0;
@@ -76,7 +76,39 @@ a1type besselItrunc(const a1type& x, const double & nu, int order, bool log_resu
         return sum;
 }
 
+//' This function approximates the BesselI function by
+//' Using BesselItrunc for small values of x
+//' Using BesselIasym for large values of x
+//' @param threshold is the location at which the calculation switches
+// [[Rcpp::export]]
+a1type besselImixed(const a1type & x, const double & nu, double threshold, int order, bool log_result = true) {
+  // CppAD::CondExpLe returns one of two T‐typed branches
+  // depending on x <= threshold
+  return CppAD::CondExpLe(
+    x,                          // condition: x <= threshold?
+    a1type(threshold),               // compare against this
+    besselItrunc(x, nu, order, log_result),   // if true
+    besselIasym(x, nu, order, log_result)     // if false
+  );
+}
 
+// # include <utils/pADFun.h>
+// # include "sphm_forward.h"
+//' Function to create tapes, purely for testing differentiation
+// pADFun tape_besselImixed(a1type & x, const double & nu, double threshold, int order, bool log_result = true) {
+//   CppAD::Independent(x);
+//   a1type y;
+//   y = besselImixed(x, nu, threshold, order, log_result);
+//   CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
+//   tape.Dependent(x, y);
+//   tape.check_for_nan(false);
+//   veca1 dyn_t(0);
+//   veca1 xvec(1);
+//   xvec(0) = x;
+//   pADFun out(tape, xvec, dyn_t, "besselImixed");
+//   return(out);
+// }
+ 
 
 // Helper function lvMFnormconst
 a1type lvMFnormconst(a1type kappa, int p) {

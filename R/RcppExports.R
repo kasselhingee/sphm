@@ -97,6 +97,9 @@ tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for
     .Call(`_sphm_tape_namedfun`, func_name, ind_t, dyn_t, constvec, constmat, check_for_nan)
 }
 
+#' Function to create tapes, purely for testing differentiation
+NULL
+
 #' Helper function Bessel I approximation from BesselI::besselIasym()
 #' which should be from Asymptotic expansion of Bessel I_nu(x) function   x -> oo
 #'       by Abramowitz & Stegun (9.7.1), p.377 
@@ -107,8 +110,8 @@ tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for
 #' This is useful for large x
 #' @param x is the vMF concentration parameter
 #' @param nu is such that nu + 1 = d/2, where d is the ambient dimension of the sphere.
-besselIasym <- function(x, nu, k_max, log_result = TRUE) {
-    .Call(`_sphm_besselIasym`, x, nu, k_max, log_result)
+besselIasym <- function(x, nu, order, log_result = TRUE) {
+    .Call(`_sphm_besselIasym`, x, nu, order, log_result)
 }
 
 #' For small x (i.e. concentration) Hornik and Grun use simple relation by Schou 1979 (and others)
@@ -120,6 +123,14 @@ besselIasym <- function(x, nu, k_max, log_result = TRUE) {
 #' @param order Maximum order of series to compute
 besselItrunc <- function(x, nu, order, log_result = TRUE) {
     .Call(`_sphm_besselItrunc`, x, nu, order, log_result)
+}
+
+#' This function approximates the BesselI function by
+#' Using BesselItrunc for small values of x
+#' Using BesselIasym for large values of x
+#' @param threshold is the location at which the calculation switches
+besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
+    .Call(`_sphm_besselImixed`, x, nu, threshold, order, log_result)
 }
 
 uldSvMF_cann <- function(y, k, a, G) {

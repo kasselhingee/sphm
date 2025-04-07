@@ -11,7 +11,7 @@ mata1 JuppRmat(const veca1 & y1, const veca1 & y2){
 }
 
 
-veca1 ull_S2S_constV(mata1 y, mata1 x, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
+veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
   int p = om.p1.size();
   //check that ncol(y) == p
   if (y.cols() != p){Rcpp::stop("width of y does not equal length of p1");}
@@ -22,7 +22,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 x, mnlink_Omega_cpp<a1type> om, a1type k, a1
 
   //get mean
   mata1 ypred;
-  ypred = mnlink_cpp(x, mata1(x.rows(), 0), omvec_projected, p); //0 specified no Euc covars
+  ypred = mnlink_cpp(xs, xe, omvec_projected, p); //0 specified no Euc covars
 
   //evaluate SvMF density of each observation
   veca1 ld(y.rows());
@@ -43,7 +43,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 x, mnlink_Omega_cpp<a1type> om, a1type k, a1
 
 veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
    mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, y.cols(), 0); //0 specifies no Euc covars
-   veca1 ld = ull_S2S_constV(y, x, om, k, a1, aremaining, Kstar);
+   veca1 ld = ull_S2S_constV(y, x, mata1(x.rows(), 0), om, k, a1, aremaining, Kstar);
    return ld;
 }
 
@@ -208,7 +208,7 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, 0);
 
-  veca1 ld = ull_S2S_constV(y, x, om, k, a1vec(0), aremaining, Kstar);
+  veca1 ld = ull_S2S_constV(y, x, mata1(x.rows(), 0), om, k, a1vec(0), aremaining, Kstar);
 
   CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
   tape.Dependent(mainvec, ld);

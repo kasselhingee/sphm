@@ -42,3 +42,18 @@ test_that("differentiation of besselImixed() works and allows x below and above 
   x <- 11
   expect_equal(mytape$Jacobian(x), drop(attr(numericDeriv(quote(besselImixed(x, 0.5, 10, 15)), "x"), "gradient")))
 })
+
+test_that("evaluation of lvMFnormconst_approx() runs and is close to lvMFnormconst()", {
+  # should be exact at p=3
+  expect_equal(lvMFnormconst_approx(9, 3), lvMFnormconst(9, 3))
+  
+  # for p=4
+  expect_equal(lvMFnormconst_approx(9 , 4), lvMFnormconst(9 , 4))
+  expect_equal(lvMFnormconst_approx(11, 4), lvMFnormconst(11, 4))
+  expect_equal(lvMFnormconst_approx(15, 4), lvMFnormconst(15, 4))
+  
+  # for p = 5, much less exact
+  expect_equal(lvMFnormconst_approx(9 , 5), lvMFnormconst(9 , 5), tolerance = 1E-1)
+  expect_equal(lvMFnormconst_approx(11, 5), lvMFnormconst(11, 5), tolerance = 1E-1)
+  expect_equal(lvMFnormconst_approx(15, 5), lvMFnormconst(15, 5), tolerance = 1E-1)
+})

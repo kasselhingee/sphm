@@ -133,6 +133,19 @@ besselItrunc <- function(x, nu, order, log_result = TRUE) {
     .Call(`_sphm_besselItrunc`, x, nu, order, log_result)
 }
 
+#' Helper function lvMFnormconst_approx
+#' For p == 3 using an exact formula
+#' Otherwise uses *approximations* of the modified Bessel function of the first order.
+#' The normalising constant is \eqn{(2 * \pi)^{p/2} besselI(k, p/2 - 1)/k^{p/2 -1}}
+#' where \eqn{p} is the dimension of the ambient space of the sphere (i.e. vectors have \eqn{p} entries)
+#' @details
+#' Returns the log of the normalising constant.
+#' The approximation uses a threshold of 10 to choose between the small concentration and large concentration regime,
+#' and in each regime the series order used is 15.
+lvMFnormconst_approx <- function(kappa, p) {
+    .Call(`_sphm_lvMFnormconst_approx`, kappa, p)
+}
+
 uldSvMF_cann <- function(y, k, a, G) {
     .Call(`_sphm_uldSvMF_cann`, y, k, a, G)
 }

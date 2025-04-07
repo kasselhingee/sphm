@@ -92,12 +92,24 @@ a1type besselImixed(const a1type & x, const double & nu, double threshold, int o
 }
 
 
-// Helper function lvMFnormconst
-a1type lvMFnormconst(a1type kappa, int p) {
+//' Helper function lvMFnormconst_approx
+//' For p == 3 using an exact formula
+//' Otherwise uses *approximations* of the modified Bessel function of the first order.
+//' The normalising constant is \eqn{(2 * \pi)^{p/2} besselI(k, p/2 - 1)/k^{p/2 -1}}
+//' where \eqn{p} is the dimension of the ambient space of the sphere (i.e. vectors have \eqn{p} entries)
+//' @details
+//' Returns the log of the normalising constant.
+//' The approximation uses a threshold of 10 to choose between the small concentration and large concentration regime,
+//' and in each regime the series order used is 15.
+// [[Rcpp::export]]
+a1type lvMFnormconst_approx(a1type kappa, int p) {
   if (p == 3) {
     return CppAD::log(2 * M_PI) + CppAD::log(CppAD::exp(kappa) - CppAD::exp(-kappa)) - CppAD::log(kappa);
   } else {
-    return 1.;
+    double nu = p/2 - 1.0;
+    a1type log_bIval = besselImixed(kappa, nu, 10, 15, true);
+    a1type out = (p/2) * CppAD::log(2 * M_PI) + log_bIval - nu * CppAD::log(kappa);
+    return(out);
   }
 }
 
@@ -119,7 +131,7 @@ mata1 getHstar(veca1 m) {
 
 veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G) {
   int p = a.size();
-  a1type lconst = - lvMFnormconst(k, p) - CppAD::log(a.coeff(0));
+  a1type lconst = - lvMFnormconst_approx(k, p) - CppAD::log(a.coeff(0));
  
   // Scale columns of G by the corresponding elements of a
   mata1 Gscal = G.array().rowwise() / a.transpose().array();
@@ -135,7 +147,7 @@ veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G) {
 
 veca1 uldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V) {
   int p = m.size();
-  a1type lconst = - lvMFnormconst(k, p) - CppAD::log(a1);
+  a1type lconst = - lvMFnormconst_approx(k, p) - CppAD::log(a1);
   
   mata1 Hstar = getHstar(m);
   

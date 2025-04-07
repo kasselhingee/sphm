@@ -8,7 +8,7 @@
 // function that accepts all the major arguments in usual (non-vector) format
 // for a single observation y with covariates x and return the ull for that observation, parallel transporting axes H*(p1)*Kstar to the mean using Jupp's method from base being the first column of P.
 // will include projection of om
-veca1 ull_S2S_constV(mata1 y, mata1 x, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar);
+veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar);
 
 // for checking ull_S2S_constV via unit testing
 // [[Rcpp::export]]

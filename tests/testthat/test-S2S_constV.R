@@ -63,7 +63,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   }))
   
   # check ull_S2S_constV in C++
-  ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], x = x, omvec = mnlink_Omega_vec(omegapar), k = k,
+  ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], xs = x, xe = matrix(NA, nrow(x), 0), omvec = mnlink_Omega_vec(omegapar), k = k,
                       a1 = a[1], aremaining = a[-1], Kstar = Kstar)
   expect_equal(ldCpp, y_ld[, p+1])
   

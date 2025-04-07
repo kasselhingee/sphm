@@ -41,9 +41,9 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
 
 
 
-veca1 ull_S2S_constV_forR(mata1 y, mata1 x, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
+veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
    mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, y.cols(), 0); //0 specifies no Euc covars
-   veca1 ld = ull_S2S_constV(y, x, mata1(x.rows(), 0), om, k, a1, aremaining, Kstar);
+   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar);
    return ld;
 }
 

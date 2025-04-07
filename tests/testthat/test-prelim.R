@@ -47,11 +47,10 @@ test_that("prelim optimisation works with Sph covars",{
   
   # objective function in C++ and R should match when omegapar passes mnlink_Omega_check()
   objval <- prelimobj(y, xs = x, param = omegapar)
-  objvals <- apply(cbind(y, x), function(yx){
-    prelimobj_cpp(mnlink_Omega_vec(omegapar), cbind(y,x)[1, ],  c(p, qe), matrix(NA, 0, 0))
+  objvals <- apply(cbind(y, x), 1, function(yx){
+    prelimobj_cpp(mnlink_Omega_vec(omegapar), yx,  c(p, qe), matrix(NA, 0, 0))
   })
-  prelimobj_cpp(mnlink_Omega_vec(omegapar), cbind(y,x)[1, ],  c(p, qe), matrix(NA, 0, 0))
-  objvalcpp <-  prelimobj_cpp(mnlink_Omega_vec(omegapar), vector(), c(p, qe), cbind(y,x))
+  objvalcpp <- mean(objvals)
   expect_equal(objvalcpp, objval)
 
   # optimise using pure R
@@ -266,7 +265,7 @@ test_that("prelim() destandardises variables correctly", {
   set.seed(4)
   xs <- matrix(rnorm(1000*qs), nrow = 1000)
   xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
-  colnames(xs) <- paste0("xs", 1:ncol(x))
+  colnames(xs) <- paste0("xs", 1:ncol(xs))
   
   ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
   

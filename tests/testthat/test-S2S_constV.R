@@ -65,7 +65,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   # check vectorisation and reverse
   vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                aremaining = a[-1], Kstar = Kstar)
-  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, q, 0),
+  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe),
                list(omvec = mnlink_Omega_vec(omegapar),
                     k = k,
                     aremaining = a[-1],
@@ -74,17 +74,17 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   #check tape:
   ulltape <- tape_ull_S2S_constV_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
                             a1 = a[1], aremaining = a[-1], Kstar = Kstar,
-                            yx = cbind(y_ld[, 1:p], x)[1, ],
-                            p, qe_in = 0)
+                            yx = cbind(y_ld[, 1:p], xs, xe)[1, ],
+                            p, qe)
   expect_equal(ulltape$forward(0, ulltape$xtape), y_ld[1, 4])
   
-  exactll <- sum(scorematchingad::evaltape(ulltape, ulltape$xtape, cbind(y_ld[, 1:p], x)))
+  exactll <- sum(scorematchingad::evaltape(ulltape, ulltape$xtape, cbind(y_ld[, 1:p], xs, xe)))
   
   set.seed(7)
   Kstardifferent <- mclust::randomOrthogonalMatrix(p-1, p-1)
   Kstardifferent[, 1] <- det(Kstardifferent) * Kstardifferent[,1]
   badll <- sum(scorematchingad::evaltape(ulltape, S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
-                               aremaining = a[-1], Kstar = Kstardifferent), cbind(y_ld[, 1:p], x)))
+                               aremaining = a[-1], Kstar = Kstardifferent), cbind(y_ld[, 1:p], xs, xe)))
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##

@@ -113,7 +113,8 @@ test_that("prelim optimisation works with Sph+Euc covars", {
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
                                        ce = c(1, rep(0, p-1))))
-  opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start)
+  # opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start)
+  profvis::profvis({  replicate(10, {opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start, xtol_rel = 1E-15)})})
   if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$solution <- Euc_signswitch(opt2$solution)
   }

@@ -185,23 +185,23 @@ Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs,
 }
 
 
-pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, double a1, veca1 aremaining, mata1 Kstar, veca1 & yx, vecd & p_in, vecd & qe_in){
+pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, vecd & qe_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qe = int(qe_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qs = yx.size() - qe - p; //0.1 to make sure p_in is above the integer it represents
   if (p!=3){Rcpp::warning("This function approximates the vMF normalising constant when p!=3.");}
-
+  // separate the response the covariates
+  mata1 y = yx.leftCols(p);
+  mata1 xs = yx.rightCols(qs + qe).leftCols(qs);
+  mata1 xe = yx.rightCols(qe);
 
   // Get all parameters except a1 into a vector
   veca1 mainvec = S2S_constV_nota1_tovecparams(omvec, k, aremaining, Kstar);
+  veca1 a1vec(1);
+  a1vec(0) = a1;
 
-  // tape with main vector and yx as a dynamic
-  CppAD::Independent(mainvec, yx);
-  // split yx into y, xs and xe
-  veca1 y = yx.head(p);
-  veca1 xs = yx.tail(qs + qe).head(qs);
-  veca1 xe = yx.tail(qe);
-  
+// tape with main vector and a1 as a dynamic
+  CppAD::Independent(mainvec, a1vec);
   // split mainvec into parts, overwriting passed arguments
   auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe);
   omvec = std::get<0>(result);
@@ -211,7 +211,7 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, double a1, veca1 aremain
   
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
 
-  veca1 ld = ull_S2S_constV(y.transpose(), xs.transpose(), xe.transpose(), om, k, a1, aremaining, Kstar);
+  veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar);
 
   CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
   tape.Dependent(mainvec, ld);

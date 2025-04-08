@@ -1,25 +1,30 @@
 #' Homosckedastic SvMF Regression
+#' @description
+#' This function is designed to eventually be an internal function.
+#' No standardisation is performed.
+#' 
 #' @details
 #' The mean is assumed to follow the usual mean link.
 #' The concentration and scaling in the SvMF is assumed constant across observations.
 #' The scaling axes of the SvMF at location \eqn{\mu} are assumed to be the parallel transport along the geodesic of axes at the first column of the matrix `P` from the mean link. These axes specified at first column of the matrix `P` are to be estimated and constant with respect to covariates (and \eqn{\mu})
-#' __Warning: C++ function still uses Jupp's transport rather than Amaral matrix and p !=3 not handled yet__
+#' __Warning: C++ function still uses Jupp's transport rather than Amaral matrix and p!=3 only handled approximately__
 #' __Warning: resulting relevant matrices are only very close to orthogonal - something do with with p1 not being precisely orthogonal to singular vectors despite the projection of Omega (I could do a projection again!?)__
 #' __Warning: estimation could be improved by using moment estimators for Gstar and a etc if possible to start the optimisation__
 #' 
 #' The first element of each column of Gstar will have positive value.
 #' @param y Response data on a sphere
-#' @param x Covariate data on a sphere
+#' @param xs Covariate data on a sphere
+#' @param xe Covariate data in Euclidean Space
 #' @param a1 The first element of the vector a, which is tuning parameter.
 #' @param aremaining The remaining vector a, used as a starting guess.
 #' @param mean Parameters for the mean link, used as a starting guess.
 #' @param Gstar starting guess of the axes at `p1`.
 #' @param k Starting concentration. I suspect lower means less chance of finding a local minimum.
 #' @export
-optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, ...){
-
+optim_constV <- function(y, xs, xe, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, ...){
   p <- ncol(y)
-  q <- ncol(x)
+  qs <- ncol(xs)
+  qe <- ncol(xe)
   # checks
   om0 <- as_mnlink_Omega(mean)
   mnlink_Omega_check(om0)
@@ -43,19 +48,22 @@ optim_constV <- function(y, x, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, 
   ystd <- y %*% stdmat
   # apply same operation to initial parameters
   cann0 <- as_mnlink_cann(om0)
-  om0std <- as_mnlink_Omega(cannS2S(t(stdmat) %*% cann0$P, cann0$Q, cann0$B))
+  cann0$P <- t(stdmat) %*% cann0$P
+  om0std <- as_mnlink_Omega(cann0)
   stdGstar <- t(stdmat) %*% Gstar #Because stdmat performs a rigid transformation, it is really just a change in basis for the whole problem, so I think this is what we want for the axes too.
   stdKstar <- t(getHstar(om0std$p1)) %*% stdGstar
   stdKstar[, 1] <- det(stdKstar) * stdKstar[,1] #because Cayley transform only works on det of +1
   
   # preliminary estimate of mean link
-  estprelim <- prelim_ad(ystd, xs = x, paramobj0 = om0std)
+  estprelim <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = om0, print_level = 1)
   if (!(estprelim$loc_nloptr$status %in% c(0, 1, 2, 3, 4))){warning("Preliminary optimistation did not finish properly.")}
   om0prelim <- estprelim$solution
   
   # estimation any p prep
+  dims_in <- c(p, length(om0$qe1))
   omvec0 <- mnlink_Omega_vec(om0prelim)
-  ll_mean_constraint <- tape_namedfun("Omega_constraints_wrap", omvec0, vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  constraint_tape <- tape_namedfun("Omega_constraints_wrap", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   # prepare nloptr options
   default_opts <- list(xtol_rel = xtol_rel, #1E-04,
                        maxeval = 1E4,

@@ -141,15 +141,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // S2S_constV_nota1_fromvecparamsR
-Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1& mainvec, int p, int q);
-RcppExport SEXP _sphm_S2S_constV_nota1_fromvecparamsR(SEXP mainvecSEXP, SEXP pSEXP, SEXP qSEXP) {
+Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1& mainvec, int p, int qs, int qe);
+RcppExport SEXP _sphm_S2S_constV_nota1_fromvecparamsR(SEXP mainvecSEXP, SEXP pSEXP, SEXP qsSEXP, SEXP qeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const veca1& >::type mainvec(mainvecSEXP);
     Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< int >::type q(qSEXP);
-    rcpp_result_gen = Rcpp::wrap(S2S_constV_nota1_fromvecparamsR(mainvec, p, q));
+    Rcpp::traits::input_parameter< int >::type qs(qsSEXP);
+    Rcpp::traits::input_parameter< int >::type qe(qeSEXP);
+    rcpp_result_gen = Rcpp::wrap(S2S_constV_nota1_fromvecparamsR(mainvec, p, qs, qe));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -172,19 +173,20 @@ BEGIN_RCPP
 END_RCPP
 }
 // tape_ull_S2S_constV_nota1
-pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd& p_in, matd& yx);
-RcppExport SEXP _sphm_tape_ull_S2S_constV_nota1(SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP KstarSEXP, SEXP p_inSEXP, SEXP yxSEXP) {
+pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, double a1, veca1 aremaining, mata1 Kstar, veca1& yx, vecd& p_in, vecd& qe_in);
+RcppExport SEXP _sphm_tape_ull_S2S_constV_nota1(SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP KstarSEXP, SEXP yxSEXP, SEXP p_inSEXP, SEXP qe_inSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< veca1 >::type omvec(omvecSEXP);
     Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
-    Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
+    Rcpp::traits::input_parameter< double >::type a1(a1SEXP);
     Rcpp::traits::input_parameter< veca1 >::type aremaining(aremainingSEXP);
     Rcpp::traits::input_parameter< mata1 >::type Kstar(KstarSEXP);
+    Rcpp::traits::input_parameter< veca1& >::type yx(yxSEXP);
     Rcpp::traits::input_parameter< vecd& >::type p_in(p_inSEXP);
-    Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
-    rcpp_result_gen = Rcpp::wrap(tape_ull_S2S_constV_nota1(omvec, k, a1, aremaining, Kstar, p_in, yx));
+    Rcpp::traits::input_parameter< vecd& >::type qe_in(qe_inSEXP);
+    rcpp_result_gen = Rcpp::wrap(tape_ull_S2S_constV_nota1(omvec, k, a1, aremaining, Kstar, yx, p_in, qe_in));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -356,9 +358,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_vectorizeLowerTriangle", (DL_FUNC) &_sphm_vectorizeLowerTriangle, 1},
     {"_sphm_inverseVectorizeLowerTriangle", (DL_FUNC) &_sphm_inverseVectorizeLowerTriangle, 1},
     {"_sphm_S2S_constV_nota1_tovecparams", (DL_FUNC) &_sphm_S2S_constV_nota1_tovecparams, 4},
-    {"_sphm_S2S_constV_nota1_fromvecparamsR", (DL_FUNC) &_sphm_S2S_constV_nota1_fromvecparamsR, 3},
+    {"_sphm_S2S_constV_nota1_fromvecparamsR", (DL_FUNC) &_sphm_S2S_constV_nota1_fromvecparamsR, 4},
     {"_sphm_ull_S2S_constV_forR", (DL_FUNC) &_sphm_ull_S2S_constV_forR, 8},
-    {"_sphm_tape_ull_S2S_constV_nota1", (DL_FUNC) &_sphm_tape_ull_S2S_constV_nota1, 7},
+    {"_sphm_tape_ull_S2S_constV_nota1", (DL_FUNC) &_sphm_tape_ull_S2S_constV_nota1, 8},
     {"_sphm_mnlink_cpp", (DL_FUNC) &_sphm_mnlink_cpp, 4},
     {"_sphm_prelimobj_cpp", (DL_FUNC) &_sphm_prelimobj_cpp, 4},
     {"_sphm_tape_besselImixed", (DL_FUNC) &_sphm_tape_besselImixed, 5},

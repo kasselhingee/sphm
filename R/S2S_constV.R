@@ -43,6 +43,17 @@ optim_constV <- function(y, xs, xe, mean, k, a, Gstar, xtol_rel = 1E-5, verbose 
       Gstar = Gstar
     )
   
+  # standardisation of data
+  stdmat <- standardise_mat(y)
+  ystd <- y %*% stdmat
+  # apply same operation to initial parameters
+  cann0 <- as_mnlink_cann(om0)
+  cann0$P <- t(stdmat) %*% cann0$P
+  om0std <- as_mnlink_Omega(cann0)
+  stdGstar <- t(stdmat) %*% Gstar #Because stdmat performs a rigid transformation, it is really just a change in basis for the whole problem, so I think this is what we want for the axes too.
+  stdKstar <- t(getHstar(om0std$p1)) %*% stdGstar
+  stdKstar[, 1] <- det(stdKstar) * stdKstar[,1] #because Cayley transform only works on det of +1
+  
   # preliminary estimate of mean link
   estprelim <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = om0, print_level = 1)
   if (!(estprelim$loc_nloptr$status %in% c(0, 1, 2, 3, 4))){warning("Preliminary optimistation did not finish properly.")}

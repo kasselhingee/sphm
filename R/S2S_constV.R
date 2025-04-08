@@ -44,13 +44,15 @@ optim_constV <- function(y, xs, xe, mean, k, a, Gstar, xtol_rel = 1E-5, verbose 
     )
   
   # preliminary estimate of mean link
-  estprelim <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = om0)
+  estprelim <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = om0, print_level = 1)
   if (!(estprelim$loc_nloptr$status %in% c(0, 1, 2, 3, 4))){warning("Preliminary optimistation did not finish properly.")}
   om0prelim <- estprelim$solution
   
   # estimation any p prep
+  dims_in <- c(p, length(om0$qe1))
   omvec0 <- mnlink_Omega_vec(om0prelim)
-  ll_mean_constraint <- tape_namedfun("Omega_constraints_wrap", omvec0, vector(mode = "numeric"), p, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  constraint_tape <- tape_namedfun("Omega_constraints_wrap", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   # prepare nloptr options
   default_opts <- list(xtol_rel = xtol_rel, #1E-04,
                        maxeval = 1E4,

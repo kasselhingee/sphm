@@ -24,23 +24,18 @@ test_that("rotatedresiduals() rotates residuals to the northpole along a geodesi
 })
 
 test_that("maximum likelihood for parallel axes per geodesic path", {
-  p <- 3
-  q <- 5
-  # data generating parameters:
-  set.seed(1)
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  set.seed(2)
-  Q <- mclust::randomOrthogonalMatrix(q, p)
-  set.seed(3)
-  B <- diag(sort(runif(p-1), decreasing = TRUE))
-  omegapar <- as_mnlink_Omega(cannS2S(P,Q,B))
+  rmnlink_cann__place_in_env(3, 5, 4)
+  omegapar <- as_mnlink_Omega(paramobj)
   
-  #generate covariates uniformly on the sphere
+  #generate covariates Gaussianly
   set.seed(4)
-  x <- matrix(rnorm(1000*q), nrow = 1000)
-  x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
+  xe <- matrix(rnorm(1000*qe), nrow = 1000)
+  #generate covariates on the sphere
+  set.seed(4)
+  xs <- matrix(rnorm(1000*qs), nrow = 1000)
+  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
   
-  ymean <- meanlinkS2S(x = x, paramobj = omegapar)
+  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
  
   # generate noise
   # step 1: axes defined at P[, 1], orthogonal to P[, 1]
@@ -63,7 +58,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   }))
   
   # check ull_S2S_constV in C++
-  ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], xs = x, xe = matrix(NA, nrow(x), 0), omvec = mnlink_Omega_vec(omegapar), k = k,
+  ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], xs = xs, xe = xe, omvec = mnlink_Omega_vec(omegapar), k = k,
                       a1 = a[1], aremaining = a[-1], Kstar = Kstar)
   expect_equal(ldCpp, y_ld[, p+1])
   

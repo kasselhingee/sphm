@@ -62,8 +62,8 @@ ull_S2S_constV_forR <- function(y, xs, xe, omvec, k, a1, aremaining, Kstar) {
     .Call(`_sphm_ull_S2S_constV_forR`, y, xs, xe, omvec, k, a1, aremaining, Kstar)
 }
 
-tape_ull_S2S_constV_nota1 <- function(omvec, k, a1, aremaining, Kstar, yx, p_in, qe_in) {
-    .Call(`_sphm_tape_ull_S2S_constV_nota1`, omvec, k, a1, aremaining, Kstar, yx, p_in, qe_in)
+tape_ull_S2S_constV_nota1 <- function(omvec, k, a1, aremaining, Kstar, p_in, qe_in, yx) {
+    .Call(`_sphm_tape_ull_S2S_constV_nota1`, omvec, k, a1, aremaining, Kstar, p_in, qe_in, yx)
 }
 
 mnlink_cpp <- function(xs, xe, vec, p) {

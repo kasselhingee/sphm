@@ -147,12 +147,13 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
 }
 
 // reverse function
-std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const veca1 & mainvec, int p, int q) {
-  if (mainvec.size() != p + q + p*q + 1 + (p-2) + ((p-2) * (p-1) / 2)  ) {
+// without ce, would only need q = qs + qe to be passed in
+std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const veca1 & mainvec, int p, int qs, int qe) {
+  if (mainvec.size() != p + (qs + qe) + p*(qs + qe) + (qe>0) * (1 + p) + 1 + (p-2) + ((p-2) * (p-1) / 2)  ) {
     Rcpp::stop("Input vector size does not match expected dimensions.");
   }
   
-  veca1 omvec = mainvec.segment(0,  p + q + p*q);
+  veca1 omvec = mainvec.segment(0,  p + (qs + qe) + p*(qs + qe) + (qe>0) * (1 + p));
   a1type k = mainvec(omvec.size());
   veca1 laremaining_m1(p - 2); //convert log remaining to full aremaining
   laremaining_m1 = mainvec.segment(omvec.size() + 1, p - 2);
@@ -167,8 +168,8 @@ std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const vec
 
 //export the reverse function
 // [[Rcpp::export]]
-Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int q) {
-  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, q);
+Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs, int qe) {
+  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe);
   veca1 omvec = std::get<0>(result);
   a1type k = std::get<1>(result);
   veca1 aremaining = std::get<2>(result);
@@ -184,37 +185,39 @@ Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int q) 
 }
 
 
-pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, matd & yx){
+pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, double a1, veca1 aremaining, mata1 Kstar, veca1 & yx, vecd & p_in, vecd & qe_in){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
-  Rcpp::warning("This function approximates the vMF normalising constant when p!=3.");
-  // separate the response the covariates
-  mata1 y = yx.leftCols(p);
-  mata1 x = yx.rightCols(yx.cols() - p);
+  int qe = int(qe_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
+  int qs = yx.size() - qe - p; //0.1 to make sure p_in is above the integer it represents
+  if (p!=3){Rcpp::warning("This function approximates the vMF normalising constant when p!=3.");}
 
 
-// get everything except a1 into a vector
+  // Get all parameters except a1 into a vector
   veca1 mainvec = S2S_constV_nota1_tovecparams(omvec, k, aremaining, Kstar);
-  veca1 a1vec(1);
-  a1vec(0) = a1;
 
-// tape with main vector and a1 as a dynamic
-  CppAD::Independent(mainvec, a1vec);
-// split mainvec into parts, overwriting passed arguments
-  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, x.cols());
+  // tape with main vector and yx as a dynamic
+  CppAD::Independent(mainvec, yx);
+  // split yx into y, xs and xe
+  veca1 y = yx.head(p);
+  veca1 xs = yx.tail(qs + qe).head(qs);
+  veca1 xe = yx.tail(qe);
+  
+  // split mainvec into parts, overwriting passed arguments
+  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe);
   omvec = std::get<0>(result);
   k = std::get<1>(result);
   aremaining = std::get<2>(result);
   Kstar = std::get<3>(result);
   
-  mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, 0);
+  mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
 
-  veca1 ld = ull_S2S_constV(y, x, mata1(x.rows(), 0), om, k, a1vec(0), aremaining, Kstar);
+  veca1 ld = ull_S2S_constV(y.transpose(), xs.transpose(), xe.transpose(), om, k, a1, aremaining, Kstar);
 
   CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
   tape.Dependent(mainvec, ld);
   tape.check_for_nan(false);
 
-  pADFun out(tape, mainvec, a1vec, "ull_S2S_constV_nota1");
+  pADFun out(tape, mainvec, yx, "ull_S2S_constV_nota1");
   return(out);
 }
 

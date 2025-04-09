@@ -262,7 +262,7 @@ test_that("prelim() destandardises variables correctly", {
   set.seed(4)
   xs <- matrix(rnorm(1000*qs), nrow = 1000)
   xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
-  colnames(xs) <- paste0("xs", 1:ncol(x))
+  colnames(xs) <- paste0("xs", 1:ncol(xs))
   
   ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
   
@@ -276,7 +276,7 @@ test_that("prelim() destandardises variables correctly", {
   expect_equal(res$y, y)
   expect_equal(res$xs, xs)
   expect_equal(res$xe[,-1], xe[,-1])
-  expect_equal(-mean(res$dists), res$obj)
+  expect_equal(-mean(cos(res$dists)), res$obj)
   rownames(paramobj$P) <- colnames(y)
   rownames(paramobj$Qs) <- colnames(xs)
   rownames(paramobj$Qe) <- colnames(xe)

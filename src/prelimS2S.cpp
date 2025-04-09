@@ -18,8 +18,10 @@ veca1 prelimobj_cpp(veca1 & omvec, veca1 & dyn, vecd & dims_in, matd & yx){
 
   mata1 ypred;
   ypred = mnlink_cpp(xs, xe, omvec_projected, p);
-  veca1 obj(1);
-  obj(0) = -1 * (ypred.array() * y.array()).sum()/y.rows();
+  veca1 obj;
+  // obj is mu.x = (log(vMF density) - log(vMF norm const(k)))/k
+  // therefor the gradient of obj wrt mu is: grad(mu.x) = grad(log(vMF density))/k
+  obj = (ypred.array() * y.array()).rowwise().sum();
   return(obj);
 }
 

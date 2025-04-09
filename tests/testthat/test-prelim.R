@@ -47,7 +47,7 @@ test_that("prelim optimisation works with Sph covars",{
   
   # objective function in C++ and R should match when omegapar passes mnlink_Omega_check()
   objval <- prelimobj(y, xs = x, param = omegapar)
-  objvalcpp <-  prelimobj_cpp(mnlink_Omega_vec(omegapar), vector(), c(p, qe), cbind(y,x))
+  objvalcpp <-  -mean(prelimobj_cpp(mnlink_Omega_vec(omegapar), vector(), c(p, qe), cbind(y,x)))
   expect_equal(objvalcpp, objval)
 
   # optimise using pure R
@@ -110,7 +110,8 @@ test_that("prelim optimisation works with Sph+Euc covars", {
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
                                        ce = c(1, rep(0, p-1))))
-  opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start)
+  # opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start)
+  profvis::profvis({  replicate(10, {opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start, xtol_rel = 1E-15)})})
   if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$solution <- Euc_signswitch(opt2$solution)
   }

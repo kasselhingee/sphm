@@ -10,7 +10,7 @@ Imports:
   Rdpack,
   movMF,
   mclust,
-  scorematchingad,
+  scorematchingad (>= 0.1.3),
   nloptr
 Suggests:
   testthat (>= 3.0.0),

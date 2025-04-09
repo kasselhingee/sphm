@@ -24,7 +24,9 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
 
   dims_in <- c(p, length(om0$qe1))
   vec_om0 <- mnlink_Omega_vec(om0)
+  # Prepare objective tape.
   obj_tape <- tape_namedfun("prelimobj_cpp", vec_om0, vector(mode = "numeric"), dims_in, cbind(y,xs,xe), check_for_nan = FALSE)
+  obj_tape <- scorematchingad::avgrange(obj_tape) #Average of mu.y.
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   
@@ -67,7 +69,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
     combined_opts <- utils::modifyList(default_opts, ellipsis_args)
     globopt <- nloptr::nloptr(
       x0 = vec_om0,
-      eval_f = function(theta){-mean(obj_tape$eval(theta, vector(mode = "numeric")))},
+      eval_f = function(theta){-obj_tape$eval(theta, vector(mode = "numeric"))},
       eval_g_eq =  function(theta){constraint_tape$eval(theta, vector(mode = "numeric"))},
       eval_g_ineq =  function(theta){ineqconstraint_tape$eval(theta, vector(mode = "numeric")) - ssqOmbuffer},
       lb = vec_om0 * 0 - 10, #10 is just a guess here. For the spherical covariate stuff, I suspect most values are well below 1. *Euc will be different*
@@ -91,8 +93,8 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   
   locopt <- nloptr::nloptr(
     x0 = vec_om0,
-    eval_f = function(theta){-mean(obj_tape$eval(theta, vector(mode = "numeric")))},
-    eval_grad_f = function(theta){-colMeans(matrix(obj_tape$Jac(theta, vector(mode = "numeric")), byrow = TRUE, ncol = length(theta)))},
+    eval_f = function(theta){-obj_tape$eval(theta, vector(mode = "numeric"))},
+    eval_grad_f = function(theta){-obj_tape$Jac(theta, vector(mode = "numeric"))},
     eval_g_eq =  function(theta){constraint_tape$eval(theta, vector(mode = "numeric"))},
     eval_jac_g_eq =  function(theta){
       Jac <- matrix(constraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))

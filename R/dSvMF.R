@@ -37,7 +37,7 @@ SvMF_ll_muV <- function(y, param){
 
 # This is the __log__ of the normalising constant w.r.t. the Lebesgue measure on the sphere.
 lvMFnormconst <- function(k, p, method = 'base'){
-  if (p == 3){return(log(2*pi) + log(1 - exp(-2*k)) + k - log(k))} #from Scealy and Wood 2019, this nice and simple for p = 3
+  if (p == 3){return(log(2*pi) + log(1 - exp(-2*k)) + k - log(k))} #from Scealy and Wood 2019, this nice and simple for p = 3, with exponential scaling to avoid Inf at large k: log(exp(k) - exp(-k)) = log(1-exp(-2k)) + k
     if (method == 'base'){
       # formula in Scealy and Wood 2019
       # using expon.scaled so that logarithm behaves well at large k

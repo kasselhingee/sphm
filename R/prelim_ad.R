@@ -169,6 +169,7 @@ vMF_SE <- function(y, xs = NULL, xe = NULL, k = NULL, param, type = "Kassel"){
   # Fisher Information Matrix is the variance of the gradient of the log-likelihood
   # And in MLE is equal to the expected double derivative of the log-likelihood
   # But I'm missing something because the covariance of the gradients gets scaled by k twice while the average hessian is scaled by k only once.
+  # I think I need to project the gradients/hessians to the tangent of the parameter space: i.e. tangent to p1, qe1, qs1, and *somehow* Omega's special orthogonality constraints
   grads <- matrix(obj_tape_long$Jacobian(vec_om), byrow = TRUE, ncol = obj_tape_long$domain) * k #each row is the gradient at a data point
   FisherI <- stats::cov(grads) #also called the 'variablility matrix'
   

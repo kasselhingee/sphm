@@ -27,6 +27,9 @@ test_that("prelim optimisation works with Euc covars", {
     opt2$solution <- Omega_Euc_signswitch(opt2$solution)
   }
   expect_equal(opt2$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  
+  # check standard errors
+  vMF_SE(y, xe = x, param = opt2$solution)
 })
 
 test_that("prelim optimisation works with Sph covars",{

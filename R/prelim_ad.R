@@ -136,4 +136,53 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   ))
 }
 
-
+# Standard errors using the Fisher Information Matrix
+# If k not supplied, estimates k
+vMF_SE <- function(y, xs = NULL, xe = NULL, k = NULL, param, type = "Kassel"){
+  p <- ncol(y)
+  om <- as_mnlink_Omega(param)
+  dims_in <- c(p, length(om$qe1))
+  vec_om <- mnlink_Omega_vec(om)
+  # Prepare objective tape.
+  obj_tape_long <- tape_namedfun("prelimobj_cpp", vec_om, vector(mode = "numeric"), dims_in, cbind(y,xs,xe), check_for_nan = FALSE)
+  
+  if ((!is.null(xe)) && (type == "Shogo")){
+    # if shogo and Euc, fix some elements
+    omfixed <- lapply(om, function(x) x * 0)
+    omfixed$qe1 <- omfixed$qe1 + 1
+    omfixed$ce1 <- omfixed$ce1 + 1
+    isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
+    obj_tape_long <- scorematchingad::fixindependent(obj_tape_long, vec_om, isfixed)
+    vec_om <- vec_om[!isfixed]
+  }
+  
+  # Estimate concentration
+  if (is.null(k)){
+    mu_y <- mean(obj_tape_long$eval(vec_om, vector(mode = "numeric"))) #average of mu.y
+    res <- optimise(function(k){
+      -lvMFnormconst(k, p) + k * mu_y #full vMF log-likelihood (standardised by number of observations)
+    }, lower = 1E-8, upper = 1E5, maximum = TRUE)
+    k <- res$maximum
+  }
+  browser()
+  
+  # Fisher Information Matrix is the variance of the gradient of the log-likelihood
+  # And in MLE is equal to the expected double derivative of the log-likelihood
+  # But I'm missing something because the covariance of the gradients gets scaled by k twice while the average hessian is scaled by k only once.
+  grads <- matrix(obj_tape_long$Jacobian(vec_om), byrow = TRUE, ncol = obj_tape_long$domain) * k #each row is the gradient at a data point
+  FisherI <- stats::cov(grads) #also called the 'variablility matrix'
+  
+  # Sensitivity Matrix
+  # E(d^2(ll)/dtheta^2) under certain regularity conditions (passing derivatives outside an intergal) will be equal to d^2(E[ll])/dtheta^2
+  # Here, I dont assume the regularity conditions:
+  jactape <- scorematchingad::tape_Jacobian(obj_tape_long) #rowwise fill of gradient of each data point
+  allhess <- matrix(jactape$Jacobian(vec_om), byrow = TRUE, ncol = obj_tape_long$domain^2)
+  sensitivitymat <- -matrix(colMeans(allhess), nrow = obj_tape_long$domain, ncol = obj_tape_long$domain) * k
+  
+  # method assuming that E(d^2(ll)/dtheta^2) = d^2(E[ll])/dtheta^2
+  obj_tape <- scorematchingad::avgrange(obj_tape_long) #Average of mu.y.
+  sensitivitymatb <- -matrix(obj_tape$Hessian0(vec_om), ncol = obj_tape$domain, nrow = obj_tape$domain) * k
+  
+  es <- eigen(sensitivitymat)
+  
+}

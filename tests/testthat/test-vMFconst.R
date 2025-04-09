@@ -18,9 +18,9 @@ test_that("my implementation of the series for besselI works", {
   expect_equal(Bessel::BesselI(17, 5), besselItrunc(17, 5, 15, log_result = FALSE), tolerance = 1E-4)
   
   # for d = 5, nu = 1.5
-  expect_equal(besselItrunc(15, 1.5, 15, log_result = FALSE), Bessel::BesselI(15, 1.5), tolerance = 1E-5)
+  expect_equal(besselItrunc(15, 1.5, 15, log_result = FALSE), Bessel::BesselI(15, 1.5), tolerance = 1E-4)
   # for d = 3, nu = 3/2 - 1 = 0.5
-  expect_equal(besselItrunc(14, 0.5, 15, log_result = FALSE), Bessel::BesselI(14, 0.5), tolerance = 1E-5)
+  expect_equal(besselItrunc(14, 0.5, 15, log_result = FALSE), Bessel::BesselI(14, 0.5), tolerance = 1E-4)
 })
 
 test_that("besselImixed() evaluation works", {

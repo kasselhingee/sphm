@@ -40,11 +40,12 @@ lvMFnormconst <- function(k, p, method = 'base'){
   if (p == 3){return(log(2*pi) + log(exp(k) - exp(-k)) - log(k))} #from Scealy and Wood 2019, this nice and simple for p = 3
     if (method == 'base'){
       # formula in Scealy and Wood 2019
-      return(p/2 * log(2*pi) + log(besselI(k, p/2 - 1)) - (p/2 - 1) * log(k))  #p/2-1 kind
+      # using expon.scaled so that logarithm behaves well at large k
+      return(p/2 * log(2*pi) + log(besselI(k, p/2 - 1, expon.scaled = TRUE)) + k - (p/2 - 1) * log(k))  #p/2-1 kind
     }
     if (method == 'Bessel'){
       requireNamespace("Bessel")
-      return(p/2 * log(2*pi) + log(besselI(k, p/2 - 1)) - (p/2 - 1) * log(k))  #p/2-1 kind
+      return(p/2 * log(2*pi) + log(Bessel::BesselI(k, p/2 - 1)) - (p/2 - 1) * log(k))  #p/2-1 kind
     }
     if (method == "movMF"){
       requireNamespace("movMF")

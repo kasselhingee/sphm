@@ -278,12 +278,9 @@ test_that("prelim() destandardises variables correctly", {
   res <- prelim(y, xs = xs, xe = xe[, -1], type = "Shogo") #drop first column of zeros to account for user-friendly use of Shogo in prelim()
   expect_equal(res$y, y)
   expect_equal(res$xs, xs)
-  expect_equal(res$xe[,-1], xe[,-1])
+  expect_equal(res$xe, xe)
   expect_equal(-mean(cos(res$dists)), res$obj)
-  rownames(paramobj$P) <- colnames(y)
-  rownames(paramobj$Qs) <- colnames(xs)
-  rownames(paramobj$Qe) <- colnames(xe)
-  expect_equal(res$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(res$est, as_mnlink_Omega(paramobj), tolerance = 0.05, ignore_attr = TRUE)
   
   # the following checks the start standardisation of supplied starting parameters
   res2 <- prelim(y, xs = xs, xe = xe[, -1], type = "Shogo", start = res$est)

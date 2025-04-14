@@ -28,69 +28,42 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' @export
 prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", start = NULL, ssqOmbuffer = 2, ...){
   # standardise inputs
-  y_stdmat <- standardise_mat(y)
-  y <- standardise(y, y_stdmat)
-  if (!is.null(xs)){
-    xs_stdmat <- standardise_mat(xs)
-    xs <- standardise(xs, xs_stdmat)
+  y <- standardise_sph(y)
+  if (!is.null(xs)){xs <- standardise_sph(xs)}
+  if ((type == "Shogo") && (!is.null(xe))){
+    if (!is.null(xe)){xe <- cbind("dummyzero" = 0, xe)}
+    if (!is.null(start)){stopifnot(is_Shogo(start))}
   }
+  if (!is.null(xe)){xe <- standardise_Euc(xe)}
   
-  # Center and rotate xe if it exists. 
-  # Link isn't equivariant to scaling so dont do it
-  if (!is.null(xe)){
-    xe_names <- colnames(xe)
-    xe_centers <- colMeans(xe)
-    xe <- t(t(xe) - xe_centers)
-    xe_pcares <- princomp(xe)
-    xe <- xe_pcares$scores #ie xe <- xe %*% xe_pcares$loadings
-  }
-  
+  # update starting coordinates if provided
   if (!is.null(start)){
-    start <- as_mnlink_cann(start)
-    start$P <- t(y_stdmat) %*% start$P
-    if (!is.null(xs)){
-      start$Qs <- t(xs_stdmat) %*% start$Qs
-    }
-    if (!is.null(xe)){
-      start$ce <- drop(t(start$Qe) %*% c(if(type=="Shogo"){0}, xe_centers) + start$ce)
-      tmploadings <- xe_pcares$loadings
-      if (type=="Shogo"){
-        tmploadings <- diag(1, nrow(start$Qe))
-        tmploadings[-1, -1] <- xe_pcares$loadings
-        }
-      start$Qe <- t(tmploadings) %*% start$Qe
-    }
+    start <- recoordinate_Omega(as_mnlink_Omega(start), 
+                                yrot = attr(y, "std_rotation"), 
+                                xsrot = attr(xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
+                                xerot = attr(xe, "std_rotation"), 
+                                xecenter = attr(xe, "std_center"))
   }
-  
-  
+
+  # If start not supplied, choose start close to identities
   if (is.null(start)){
     p <- ncol(y)
-    if (!is.null(xe)){stopifnot(ncol(xe) + (type == "Shogo") >= p)}
+    if (!is.null(xe)){stopifnot(ncol(xe) >= p)}
     if (!is.null(xs)){stopifnot(ncol(xs) >= p)}
     start <- mnlink_cann(
                 P = diag(p),
                 Bs = if (!is.null(xs)){diag(0.9, p-1)},
                 Qs = if (!is.null(xs)){diag(1, ncol(xs), p)},
                 Be = if (!is.null(xe)){diag(0.9, p-1)},
-                Qe = if (!is.null(xe)){diag(1, ncol(xe) + (type == "Shogo"), p)},
+                Qe = if (!is.null(xe)){diag(1, ncol(xe), p)},
                 ce = if (!is.null(xe)){c(1, rep(0, p-1))}
     )
-    if ((type == "Shogo") && !is.null(xe)){
-      start$ce[1] <- 1
-    }
     if ((type == "Kassel") && !is.null(xe)){ #default to be larger an all values of -xe
       start$ce[1] <- max(-xe)  +  0.1*IQR(xe)
     }
   }
   
   # RUN
-  if (type == "Shogo"){
-    stopifnot(is_Shogo(start))
-    if (!is.null(xe)){
-      xe <- cbind(0, xe)
-      xe_names <- c("dummyzero", xe_names)
-    }
-  }
   if (method == "local"){
     out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = start, type = type, ssqOmbuffer = ssqOmbuffer, ...)
   }
@@ -98,7 +71,8 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
     out <- prelim_R(y = y, xs = xs, xe = xe, paramobj0 = start, type = type, ...)
   }
   
-  # Aspect of the fit using standardised coordinates
+  # Aspects of the fit that are invariant to coordinates used
+  # distances in response space
   pred <- mnlink(xs = xs, xe = xe, param = out$solution)
   dists <- acos(rowSums(pred * y))
   rresids_tmp <- rotatedresid(y, pred, nthpole(ncol(y)))
@@ -107,38 +81,21 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
   colnames(rresids) <- paste0("r", 1:ncol(rresids))
   
   # revert estimated parameters and pred to pre-standardisation coordinates
-  est <- as_mnlink_cann(out$solution)
-  est$P <- y_stdmat %*% est$P
-  if (!is.null(xs)){
-    est$Qs <- xs_stdmat %*% est$Qs #xs_stdmat has colnames included
-  }
-  if (!is.null(xe)){
-    if (type == "Shogo"){
-      est$Qe[-1, -1] <- xe_pcares$loadings %*% est$Qe[-1, -1]
-      est$ce[-1] <- est$ce[-1] - t(est$Qe[-1,-1]) %*% xe_centers
-      rownames(est$Qe) <- xe_names #could also get all but the dummyzero name from rownames(xe_pcares$loadings)
-    } else {
-      est$Qe <- xe_pcares$loadings %*% est$Qe
-      est$ce <- est$ce - t(est$Qe) %*% xe_centers
-      warning("destandardisation not checked for Kassel link")
-    }
-  }
-  est <- as_mnlink_Omega(est)
-  pred <- pred %*% t(y_stdmat) #y_stdmat has colnames included
+  est <- undo_recoordinate_Omega(as_mnlink_Omega(out$solution), 
+                          yrot = attr(y, "std_rotation"), 
+                          xsrot = attr(xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
+                          xerot = attr(xe, "std_rotation"), 
+                          xecenter = attr(xe, "std_center"))
   
-  # destandardise xe
-  if (type == "Shogo"){
-    xe <- cbind(xe[,1], t(t(xe[, -1] %*% t(xe_pcares$loadings)) + xe_centers))
-  }
   niceout <- list(
     est = est,
     obj = out$loc_nloptr$objective,
     solution = out$solution, #non-standardised solution
     opt = out$loc_nloptr,
-    y = destandardise(y, y_stdmat),
-    xs = destandardise(xs, xs_stdmat),
-    xe = xe,
-    pred = pred,
+    y = destandardise_sph(y, attr(y, "std_rotation")),
+    xs = destandardise_sph(xs, attr(xs, "std_rotation")),
+    xe = destandardise_Euc(xe, attr(xe, "std_center"), attr(xe, "std_rotation")),
+    pred = destandardise_sph(pred, tG = attr(y, "std_rotation")),
     rresids = rresids,
     dists = dists
   )

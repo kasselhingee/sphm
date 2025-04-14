@@ -27,6 +27,10 @@ mnlink <- function(xs = NULL, xe = NULL, param = NULL, check = TRUE){
     # by C++
     if (is.null(xs)){xs <- matrix(ncol = 0, nrow = nrow(xe))}
     if (is.null(xe)){xe <- matrix(ncol = 0, nrow = nrow(xs))}
+    # Checks that xs and xe compatible with param
+    stopifnot(ncol(xs) == length(param$qs1))
+    stopifnot(ncol(xe) == length(param$qe1))
+    # Evaluate
     out <- mnlink_cpp(xs, xe, mnlink_Omega_vec(param), length(param$p1))
   } else if (inherits(param, "mnlink_cann")){
     out <- mnlink_pred_cann(xs, xe, param)

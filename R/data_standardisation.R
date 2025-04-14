@@ -7,20 +7,20 @@
 #' @param G Axes of the second moment matrix of the data, projected so that the first column is the global mean.
 #' @details Each returned data point is `t(G) %*% y` of the original data point y, where `G` is computed by `standardise_mat()`.
 #' @export
-standardise <- function(y, tG = t(standardise_mat(y))){
+standardise_sph <- function(y, tG = t(standardise_mat(y))){
   ystd <- y %*% t(tG)
   ystd <- unname(ystd)
   attr(ystd, "std_rotation") <- tG
   return(ystd)
 }
 
-destandardise <- function(y, tG){
+destandardise_sph <- function(y, tG){
   ydestd <- y %*% tG
   attr(ydestd, "std_rotation") <- NULL
   return(ydestd)
 }
 
-#' @describeIn standardise
+#' @describeIn standardise_sph
 #' @export
 standardise_mat <- function(y){
   p <- ncol(y)
@@ -48,7 +48,8 @@ standardise_mat <- function(y){
   return(Ghat)
 }
 
-# For covariates that are all a const != 0, standardise to 1
+# For covariates that are all a const != 0, leave unchanged
+# Link isn't equivariant to scaling so dont do scaling
 standardise_Euc <- function(xe){
   xe_names <- colnames(xe)
   constcovars <- apply(xe, 2, sd) < sqrt(.Machine$double.eps)
@@ -76,11 +77,33 @@ standardise_Euc <- function(xe){
 }
 
 destandardise_Euc <- function(xe, center, rotation){
+  stopifnot(is.vector(center))
+  stopifnot(all(abs(t(rotation) %*% rotation - diag(ncol(rotation))) < sqrt(.Machine$double.eps)))
   xe <- xe %*% rotation #because xe is row vectors, destandardisation uses non-transpose of the forward rotation
   xe <- t(t(xe) + center)
   return(xe)
 }
 
+#' @noRd
+#' @title Change parameters of mean link to match data standardisation
+#' @description
+#' Spherical covariates and response can be standardised by a rotation.
+#' Euclidean covariates can be standardised by a shift and then rotation.
+#' After the standardisation, the relationship between covariates and response
+#' has the same form, but the parameters are different.
+#' This function computes those parameters.
+#' @details
+#' Suppose spherical \eqn{xs} and Euclidean covariate \eqn{xe} are related to a spherical 
+#' response \eqn{y} by [`meanlink()`].
+#' Then `xsrot %*% xs` and `xerot %*% (xe - xecenter)` are related to
+#' \eqn{`yrot` \times y} according to `meanlink()` with parameters given by
+#' [`recoordinate_cann()`], [`recoordinate_Omega()`].
+#' 
+#' Reversing this coordinate change can be performed by [`undo_recoordinate_Omega()`].
+#' 
+#' The standardisation of the data `xs`, `xe` and `y` can be performed by 
+#' [`standardise_sph()`] and [`standardise_Euc()`].
+#' 
 recoordinate_cann <- function(param, yrot = diag(nrow(param$P)), 
                               xsrot = diag(nrow(param$Qs)),
                               xerot = diag(nrow(param$Qe)), 
@@ -102,13 +125,17 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   qs <- length(param$qs1)
   qe <- length(param$qe1)
   omstd <- om <- param
+  
+  # changes from xsrot, xerot and xecenter
   omstd$qs1 <- drop(xsrot %*% om$qs1)
   omstd$qe1 <- drop(xerot %*% om$qe1)
   omstd$ce1 <- drop(t(om$qe1) %*% xecenter) + om$ce1
   omstd$Omega[, seq.int(1, length.out = qs)] <- om$Omega[, seq.int(1, length.out = qs)] %*% t(xsrot)
   omstd$Omega[, seq.int(qs + 1, length.out = qe)] <- om$Omega[, seq.int(qs + 1, length.out = qe)] %*% t(xerot)
-  omstd$Omega <- yrot %*% omstd$Omega
   omstd$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% xecenter + om$PBce)
+  
+  # add yrot change
+  omstd$Omega <- yrot %*% omstd$Omega
   omstd$PBce <- drop(yrot %*% omstd$PBce)
   omstd$p1 <- drop(yrot %*% omstd$p1)
   return(omstd)
@@ -122,15 +149,19 @@ undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   qs <- length(param$qs1)
   qe <- length(param$qe1)
   om <- omstd <- param
+  # First undo effect of xsrot, xerot and xecenter
   om$qs1 <- drop(t(xsrot) %*% omstd$qs1)
   om$qe1 <- drop(t(xerot) %*% omstd$qe1)
   
   om$Omega[, seq.int(1, length.out = qs)] <- omstd$Omega[, seq.int(1, length.out = qs)] %*% xsrot
   om$Omega[, seq.int(qs + 1, length.out = qe)] <- omstd$Omega[, seq.int(qs + 1, length.out = qe)] %*% xerot
-  om$p1 <- drop(t(yrot) %*% omstd$p1)
   
+  # use the above calculated qe1 and Omega to get ce1 and PBce unde xerot and xecenter
   om$ce1 <- drop(t(om$qe1) %*% (-xecenter)) + omstd$ce1
   om$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% (-xecenter)) + omstd$PBce
+  
+  # Undo the effect of yrot
+  om$p1 <- drop(t(yrot) %*% omstd$p1)
   om$PBce <- drop(t(yrot) %*% om$PBce)
   om$Omega <- t(yrot) %*% om$Omega
   return(om)

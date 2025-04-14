@@ -17,52 +17,6 @@ cayley <- function(x){
   return(P)
 }
 
-#' Standardise Data to North Pole
-#' @description Rotation according to the eigenvectors of the second moment of the data
-#' projected perpendicular to the mean direction. Standardised data have mean of c(1, 0, 0,...). See Scealy and Wood 2019 for details.
-#' @param y Data on the sphere. Each row is a data point in Cartesian coordinates.
-#' @param G Axes of the second moment matrix of the data, projected so that the first column is the global mean.
-#' @details Each returned data point is `t(G)` of the original data point, where `G` is computed by `standardise_mat()`.
-#' @export
-standardise <- function(y, G = standardise_mat(y)){
-  ystd <- y %*% G
-  ystd <- unname(ystd)
-  return(ystd)
-}
-
-destandardise <- function(y, G){
-  ydestd <- y %*% t(G)
-  return(ydestd)
-}
-
-#' @describeIn standardise
-#' @export
-standardise_mat <- function(y){
-  p <- ncol(y)
-  mn <- colMeans(y)
-  mn <- mn/sqrt(sum(mn^2))
-  mnproj <- diag(1, p) - mn %*% t(mn)
-
-  mom2 <- t(y) %*% y #quickly calculates the sum of projection matrices of rows of y
-  projmom2 <- mnproj %*% mom2 %*% mnproj
-
-  # use the non-degenerate directions in Ghat, then an arbitrary basis for the remaining except for the mean!!
-  # Avoiding the mean direction is tricky.
-  # one direction (corresponding to the mean) will ALWAYS be degenerate
-  eig_projmom2 <- eigen(projmom2)
-  degeneratedirections <- abs(eig_projmom2$values) <= sqrt(.Machine$double.eps)
-  if (sum(degeneratedirections) > 1){
-    # making the mom2 a little ridgier, then project again to remove the mean and continue
-    eig_projmom2$values[degeneratedirections] <- eig_projmom2$values[degeneratedirections] + min(eig_projmom2$values[!degeneratedirections])/seq.int(2, length.out = sum(degeneratedirections))
-    projmom2 <- mnproj %*% eig_projmom2$vectors %*% diag(eig_projmom2$values) %*% t(eig_projmom2$vectors) %*% mnproj
-    eig_projmom2 <- eigen(projmom2)
-  }
-  Ghat <- cbind(mn, eigen(projmom2)$vectors[, 1:(p-1)])
-  # make sure that Ghat is a rotation matrix, by making sure determinant is 1
-  if (det(Ghat) < 0){Ghat[, p] <- -Ghat[, p]}
-  return(Ghat)
-}
-
 nthpole <- function(p){c(1, rep(0, p-1))}
 
 #' Standardise sign of columns of a matrix to have positive first element

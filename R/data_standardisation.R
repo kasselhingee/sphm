@@ -5,17 +5,17 @@
 #' projected perpendicular to the mean direction. Standardised data have mean of c(1, 0, 0,...). See Scealy and Wood 2019 for details.
 #' @param y Data on the sphere. Each row is a data point in Cartesian coordinates.
 #' @param G Axes of the second moment matrix of the data, projected so that the first column is the global mean.
-#' @details Each returned data point is `t(G)` of the original data point, where `G` is computed by `standardise_mat()`.
+#' @details Each returned data point is `t(G) %*% y` of the original data point y, where `G` is computed by `standardise_mat()`.
 #' @export
-standardise <- function(y, G = standardise_mat(y)){
-  ystd <- y %*% G
+standardise <- function(y, tG = t(standardise_mat(y))){
+  ystd <- y %*% t(tG)
   ystd <- unname(ystd)
-  attr(ystd, "std_rotation") <- G
+  attr(ystd, "std_rotation") <- tG
   return(ystd)
 }
 
-destandardise <- function(y, G){
-  ydestd <- y %*% t(G)
+destandardise <- function(y, tG){
+  ydestd <- y %*% tG
   attr(ydestd, "std_rotation") <- NULL
   return(ydestd)
 }

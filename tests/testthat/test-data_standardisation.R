@@ -86,4 +86,10 @@ test_that("standardisations applied to parameters work", {
   expect_equal(omstd, as_mnlink_Omega(paramstd), ignore_attr = TRUE)
   
   # given parameters for standardised data, solve for the corresponding parameters of the non-standard data
+  om2 <- undo_recoordinate_Omega(omstd,  
+                          yrot = attr(ystd, "std_rotation"), 
+                          xsrot = attr(xsstd, "std_rotation"),
+                          xerot = attr(xestd, "std_rotation"), 
+                          xecenter = attr(xestd, "std_center"))
+  expect_equal(om2, as_mnlink_Omega(paramobj))
 })

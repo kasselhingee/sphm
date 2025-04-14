@@ -105,12 +105,33 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   omstd$qs1 <- drop(xsrot %*% om$qs1)
   omstd$qe1 <- drop(xerot %*% om$qe1)
   omstd$ce1 <- drop(t(om$qe1) %*% xecenter) + om$ce1
-  omstd$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% xecenter + om$PBce)
   omstd$Omega[, seq.int(1, length.out = qs)] <- om$Omega[, seq.int(1, length.out = qs)] %*% t(xsrot)
   omstd$Omega[, seq.int(qs + 1, length.out = qe)] <- om$Omega[, seq.int(qs + 1, length.out = qe)] %*% t(xerot)
-  # add std of P
-  omstd$PBce <- drop(yrot %*% omstd$PBce)
   omstd$Omega <- yrot %*% omstd$Omega
+  omstd$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% xecenter + om$PBce)
+  omstd$PBce <- drop(yrot %*% omstd$PBce)
   omstd$p1 <- drop(yrot %*% omstd$p1)
   return(omstd)
+}
+
+undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)), 
+                                    xsrot = diag(length(param$qs1)),
+                                    xerot = diag(length(param$qe1)), 
+                                    xecenter = rep(0, length(param$qe1))){
+  stopifnot(inherits(param, "mnlink_Omega"))
+  qs <- length(param$qs1)
+  qe <- length(param$qe1)
+  om <- omstd <- param
+  om$qs1 <- drop(t(xsrot) %*% omstd$qs1)
+  om$qe1 <- drop(t(xerot) %*% omstd$qe1)
+  
+  om$Omega[, seq.int(1, length.out = qs)] <- omstd$Omega[, seq.int(1, length.out = qs)] %*% xsrot
+  om$Omega[, seq.int(qs + 1, length.out = qe)] <- omstd$Omega[, seq.int(qs + 1, length.out = qe)] %*% xerot
+  om$p1 <- drop(t(yrot) %*% omstd$p1)
+  
+  om$ce1 <- drop(t(om$qe1) %*% (-xecenter)) + omstd$ce1
+  om$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% (-xecenter)) + omstd$PBce
+  om$PBce <- drop(t(yrot) %*% om$PBce)
+  om$Omega <- t(yrot) %*% om$Omega
+  return(om)
 }

@@ -68,28 +68,21 @@ test_that("standardisations applied to parameters work", {
   ystd <- standardise(ymean)
   
   # standardise cann version:
-  paramstd <- paramobj
-  paramstd$Qs <- attr(xsstd, "std_rotation") %*% paramobj$Qs
-  paramstd$Qe <- attr(xestd, "std_rotation") %*% paramobj$Qe
-  paramstd$ce <- drop(t(paramobj$Qe) %*% attr(xestd, "std_center")) + paramobj$ce
+  paramstd <- recoordinate_cann(paramobj, #yrot = diag(nrow(param$P)), 
+                              xsrot = attr(xsstd, "std_rotation"),
+                              xerot = attr(xestd, "std_rotation"), 
+                              xecenter = attr(xestd, "std_center"))
   expect_equal(mnlink(xsstd, xestd, param = paramstd), ymean)
   # extra for ystd:
-  paramstd$P <-  attr(ystd, "std_rotation") %*% paramobj$P
+  paramstd <- recoordinate_cann(paramstd, yrot = attr(ystd, "std_rotation"))
   expect_equal(mnlink(xsstd, xestd, param = paramstd), ystd, ignore_attr = TRUE)
   
   # standardise omega version
-  om <- as_mnlink_Omega(paramobj)
-  omstd <- om
-  omstd$qs1 <- drop(attr(xsstd, "std_rotation") %*% om$qs1)
-  omstd$qe1 <- drop(attr(xestd, "std_rotation") %*% om$qe1)
-  omstd$ce1 <- drop(t(om$qe1) %*% attr(xestd, "std_center")) + om$ce1
-  omstd$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% attr(xestd, "std_center") + om$PBce)
-  omstd$Omega[, seq.int(1, length.out = qs)] <- om$Omega[, seq.int(1, length.out = qs)] %*% t(attr(xsstd, "std_rotation"))
-  omstd$Omega[, seq.int(qs + 1, length.out = qe)] <- om$Omega[, seq.int(qs + 1, length.out = qe)] %*% t(attr(xestd, "std_rotation"))
-  # add std of P
-  omstd$PBce <- drop(attr(ystd, "std_rotation") %*% omstd$PBce)
-  omstd$Omega <- attr(ystd, "std_rotation") %*% omstd$Omega
-  omstd$p1 <- drop(attr(ystd, "std_rotation") %*% omstd$p1)
+  omstd <- recoordinate_Omega(as_mnlink_Omega(paramobj), 
+                                yrot = attr(ystd, "std_rotation"), 
+                                xsrot = attr(xsstd, "std_rotation"),
+                                xerot = attr(xestd, "std_rotation"), 
+                                xecenter = attr(xestd, "std_center"))
   expect_equal(omstd, as_mnlink_Omega(paramstd), ignore_attr = TRUE)
   
   # given parameters for standardised data, solve for the corresponding parameters of the non-standard data

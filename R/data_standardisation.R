@@ -80,3 +80,37 @@ destandardise_Euc <- function(xe, center, rotation){
   xe <- t(t(xe) + center)
   return(xe)
 }
+
+recoordinate_cann <- function(param, yrot = diag(nrow(param$P)), 
+                              xsrot = diag(nrow(param$Qs)),
+                              xerot = diag(nrow(param$Qe)), 
+                              xecenter = rep(0, nrow(param$Qe))){
+  stopifnot(inherits(param, "mnlink_cann"))
+  paramstd <- param
+  paramstd$Qs <- xsrot %*% param$Qs
+  paramstd$Qe <- xerot %*% param$Qe
+  paramstd$ce <- drop(t(param$Qe) %*% xecenter + param$ce)
+  paramstd$P <-  yrot %*% param$P
+  return(paramstd)
+}
+
+recoordinate_Omega <- function(param, yrot = diag(length(param$p1)), 
+                               xsrot = diag(length(param$qs1)),
+                               xerot = diag(length(param$qe1)), 
+                               xecenter = rep(0, length(param$qe1))){
+  stopifnot(inherits(param, "mnlink_Omega"))
+  qs <- length(param$qs1)
+  qe <- length(param$qe1)
+  omstd <- om <- param
+  omstd$qs1 <- drop(xsrot %*% om$qs1)
+  omstd$qe1 <- drop(xerot %*% om$qe1)
+  omstd$ce1 <- drop(t(om$qe1) %*% xecenter) + om$ce1
+  omstd$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% xecenter + om$PBce)
+  omstd$Omega[, seq.int(1, length.out = qs)] <- om$Omega[, seq.int(1, length.out = qs)] %*% t(xsrot)
+  omstd$Omega[, seq.int(qs + 1, length.out = qe)] <- om$Omega[, seq.int(qs + 1, length.out = qe)] %*% t(xerot)
+  # add std of P
+  omstd$PBce <- drop(yrot %*% omstd$PBce)
+  omstd$Omega <- yrot %*% omstd$Omega
+  omstd$p1 <- drop(yrot %*% omstd$p1)
+  return(omstd)
+}

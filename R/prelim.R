@@ -114,11 +114,13 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
   }
   if (!is.null(xe)){
     if (type == "Shogo"){
-      est$ce[-1] <- est$ce[-1] - t(est$Qe[-1,-1]) %*% t(xe_pcares$loadings) %*% xe_centers
       est$Qe[-1, -1] <- xe_pcares$loadings %*% est$Qe[-1, -1]
+      est$ce[-1] <- est$ce[-1] - t(est$Qe[-1,-1]) %*% xe_centers
       rownames(est$Qe) <- xe_names #could also get all but the dummyzero name from rownames(xe_pcares$loadings)
     } else {
-      warning("destandardisation not implemented")
+      est$Qe <- xe_pcares$loadings %*% est$Qe
+      est$ce <- est$ce - t(est$Qe) %*% xe_centers
+      warning("destandardisation not checked for Kassel link")
     }
   }
   est <- as_mnlink_Omega(est)

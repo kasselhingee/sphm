@@ -78,17 +78,19 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
                             yx = cbind(y_ld[, 1:p], xs, xe))
   expect_equal(ulltape$forward(0, ulltape$xtape), y_ld[, 4])
   
-  exactll <- sum(scorematchingad::evaltape(ulltape, ulltape$xtape, cbind(y_ld[, 1:p], xs, xe)))
+  exactll <- sum(ulltape$forward(0, ulltape$xtape))
   
   set.seed(7)
   Kstardifferent <- mclust::randomOrthogonalMatrix(p-1, p-1)
   Kstardifferent[, 1] <- det(Kstardifferent) * Kstardifferent[,1]
-  badll <- sum(scorematchingad::evaltape(ulltape, S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
-                               aremaining = a[-1], Kstar = Kstardifferent), cbind(y_ld[, 1:p], xs, xe)))
+  badll <- sum(ulltape$forward(0, 
+                               S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+                               aremaining = a[-1], Kstar = Kstardifferent)))
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  tmp <- prelim(y_ld[, 1:p], xs, xe, start = paramobj, print_level = 1)
+  tmp <- prelim(y_ld[, 1:p], xs, xe, start = paramobj, xtol_rel = 1E-8, print_level = 1)
+  expect_equal(tmp$est, omegapar, tolerance = 1E-1)
   est1 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, Gstar, xtol_rel = 1E-4)
   expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1, ignore_attr = TRUE)

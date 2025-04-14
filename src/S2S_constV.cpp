@@ -23,6 +23,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
   //get mean
   mata1 ypred;
   ypred = mnlink_cpp(xs, xe, omvec_projected, p); 
+  Rcpp::Rcout << "ypred:" << std::endl << ypred << std::endl;
 
   //evaluate SvMF density of each observation
   veca1 ld(y.rows());
@@ -30,6 +31,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
   mata1 G(p, p);
   veca1 a(p);
   a(0) = a1;
+  if (aremaining.size() != p - 1){ Rcpp::stop("aremaining must have length p - 1."); }
   a.segment(1, p-1) = aremaining;
   for (int i = 0; i < y.rows(); ++i){
      G.col(0) = ypred.row(i);
@@ -128,7 +130,7 @@ mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
   return A;  // Return the reconstructed skew-symmetric matrix
 }
 
-// aremaining becomes log a with the first element dropped
+// aremaining becomes log(1/a) with the first element dropped
 // [[Rcpp::export]]
 veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 Kstar){
   int p = aremaining.size() + 1;
@@ -188,17 +190,25 @@ Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs,
 pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, vecd & qe_in, matd & yx){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qe = int(qe_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
-  int qs = yx.size() - qe - p; //0.1 to make sure p_in is above the integer it represents
+  int qs = yx.cols() - qe - p; 
   if (p!=3){Rcpp::warning("This function approximates the vMF normalising constant when p!=3.");}
+  if (qs < 0){
+    Rcpp::stop("yx has insufficient columns to match p and qe.");
+  }
   // separate the response the covariates
   mata1 y = yx.leftCols(p);
   mata1 xs = yx.rightCols(qs + qe).leftCols(qs);
   mata1 xe = yx.rightCols(qe);
+  Rcpp::Rcout << "y:" << std::endl << y << std::endl;
+  Rcpp::Rcout << "xs:" << std::endl << xs << std::endl;
+  Rcpp::Rcout << "xe:" << std::endl << xe << std::endl;
 
   // Get all parameters except a1 into a vector
   veca1 mainvec = S2S_constV_nota1_tovecparams(omvec, k, aremaining, Kstar);
   veca1 a1vec(1);
   a1vec(0) = a1;
+
+  Rcpp::Rcout << "mainvec:" << std::endl << mainvec << std::endl;
 
 // tape with main vector and a1 as a dynamic
   CppAD::Independent(mainvec, a1vec);
@@ -209,6 +219,10 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   aremaining = std::get<2>(result);
   Kstar = std::get<3>(result);
   
+  Rcpp::Rcout << "omvec:" << std::endl << omvec << std::endl;
+  Rcpp::Rcout << "k:" << std::endl << k << std::endl;
+  Rcpp::Rcout << "aremaining:" << std::endl << aremaining << std::endl;
+  Rcpp::Rcout << "Kstar:" << std::endl << Kstar << std::endl;
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
 
   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar);
@@ -217,7 +231,7 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   tape.Dependent(mainvec, ld);
   tape.check_for_nan(false);
 
-  pADFun out(tape, mainvec, yx, "ull_S2S_constV_nota1");
+  pADFun out(tape, mainvec, a1vec, "ull_S2S_constV_nota1");
   return(out);
 }
 

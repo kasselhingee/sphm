@@ -74,8 +74,8 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   #check tape:
   ulltape <- tape_ull_S2S_constV_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
                             a1 = a[1], aremaining = a[-1], Kstar = Kstar,
-                            yx = cbind(y_ld[, 1:p], xs, xe)[1, ],
-                            p, qe)
+                            p, qe,
+                            yx = cbind(y_ld[, 1:p], xs, xe)[1:3,])
   expect_equal(ulltape$forward(0, ulltape$xtape), y_ld[1, 4])
   
   exactll <- sum(scorematchingad::evaltape(ulltape, ulltape$xtape, cbind(y_ld[, 1:p], xs, xe)))

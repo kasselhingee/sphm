@@ -23,7 +23,6 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
   //get mean
   mata1 ypred;
   ypred = mnlink_cpp(xs, xe, omvec_projected, p); 
-  Rcpp::Rcout << "ypred:" << std::endl << ypred << std::endl;
 
   //evaluate SvMF density of each observation
   veca1 ld(y.rows());
@@ -199,16 +198,11 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   mata1 y = yx.leftCols(p);
   mata1 xs = yx.rightCols(qs + qe).leftCols(qs);
   mata1 xe = yx.rightCols(qe);
-  Rcpp::Rcout << "y:" << std::endl << y << std::endl;
-  Rcpp::Rcout << "xs:" << std::endl << xs << std::endl;
-  Rcpp::Rcout << "xe:" << std::endl << xe << std::endl;
 
   // Get all parameters except a1 into a vector
   veca1 mainvec = S2S_constV_nota1_tovecparams(omvec, k, aremaining, Kstar);
   veca1 a1vec(1);
   a1vec(0) = a1;
-
-  Rcpp::Rcout << "mainvec:" << std::endl << mainvec << std::endl;
 
 // tape with main vector and a1 as a dynamic
   CppAD::Independent(mainvec, a1vec);
@@ -219,10 +213,6 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   aremaining = std::get<2>(result);
   Kstar = std::get<3>(result);
   
-  Rcpp::Rcout << "omvec:" << std::endl << omvec << std::endl;
-  Rcpp::Rcout << "k:" << std::endl << k << std::endl;
-  Rcpp::Rcout << "aremaining:" << std::endl << aremaining << std::endl;
-  Rcpp::Rcout << "Kstar:" << std::endl << Kstar << std::endl;
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
 
   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar);

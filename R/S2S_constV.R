@@ -20,6 +20,9 @@
 #' @param mean Parameters for the mean link, used as a starting guess.
 #' @param Gstar starting guess of the axes at `p1`.
 #' @param k Starting concentration. I suspect lower means less chance of finding a local minimum.
+#' @details
+#' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
+#' No standardisation is performed.
 #' @export
 optim_constV <- function(y, xs, xe, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, ...){
   p <- ncol(y)
@@ -36,63 +39,56 @@ optim_constV <- function(y, xs, xe, mean, k, a, Gstar, xtol_rel = 1E-5, verbose 
   aremaining = a[-1]
   stopifnot(isTRUE(all.equal(prod(aremaining), 1)))
   
-    initial <-  list(
-      mean = om0,
-      k = k, 
-      a = a, 
-      Gstar = Gstar
-    )
+  initial <-  list(
+    mean = om0,
+    k = k, 
+    a = a, 
+    Gstar = Gstar
+  )
   
-  # standardisation of data
-  stdmat <- standardise_mat(y)
-  ystd <- y %*% stdmat
-  # apply same operation to initial parameters
-  cann0 <- as_mnlink_cann(om0)
-  cann0$P <- t(stdmat) %*% cann0$P
-  om0std <- as_mnlink_Omega(cann0)
-  stdGstar <- t(stdmat) %*% Gstar #Because stdmat performs a rigid transformation, it is really just a change in basis for the whole problem, so I think this is what we want for the axes too.
-  stdKstar <- t(getHstar(om0std$p1)) %*% stdGstar
-  stdKstar[, 1] <- det(stdKstar) * stdKstar[,1] #because Cayley transform only works on det of +1
+  Kstar <- t(getHstar(om0$p1)) %*% Gstar
+  Kstar[, 1] <- det(Kstar) * Kstar[,1] #because Cayley transform only works on det of +1
   
-  # preliminary estimate of mean link
-  estprelim <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = om0, print_level = 1)
-  if (!(estprelim$loc_nloptr$status %in% c(0, 1, 2, 3, 4))){warning("Preliminary optimistation did not finish properly.")}
-  om0prelim <- estprelim$solution
-  
-  # estimation any p prep
+  # estimation prep
   dims_in <- c(p, length(om0$qe1))
-  omvec0 <- mnlink_Omega_vec(om0prelim)
+  omvec0 <- mnlink_Omega_vec(om0)
+  ulltape <- tape_ull_S2S_constV_nota1(omvec = omvec0, k = k,
+                                       a1 = a1, aremaining = aremaining, Kstar = Kstar,
+                                       p = p, qe = qe, cbind(y, xs, xe))
+  ulltape <- scorematchingad::avgrange(ulltape)
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+
   # prepare nloptr options
-  default_opts <- list(xtol_rel = xtol_rel, #1E-04,
-                       maxeval = 1E4,
-                       check_derivatives = FALSE)
+  default_opts <- list(algorithm = "NLOPT_LD_SLSQP",
+                       xtol_rel = 1E-10, #1E-04,
+                       tol_constraints_eq = rep(1E-1, constraint_tape$range),
+                       # check_derivatives = TRUE, check_derivatives_print = 'errors', check_derivatives_tol = 1E-3,
+                       # print_level = 3,
+                       maxeval = 1E4)
   ellipsis_args <- list(...)
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
-  #estimation for p=3 specific
-  ulltape <- tape_ull_S2S_constV_nota1(omvec = omvec0, k = k,
-                                       a1 = a1, aremaining = aremaining, Kstar = stdKstar,
-                                       p = p, cbind(ystd, x))
   # lower bound for concentration k
   lb <- rep(-Inf, ulltape$domain)
-  lb[p + q + p*q + 1] <- 0
+  lb[length(omvec0) + 1] <- 0
+  
+  # Optimisation
   est <- nloptr::nloptr(
-    x0 = S2S_constV_nota1_tovecparams(omvec = omvec0, k = k, aremaining = aremaining, Kstar = stdKstar),
-    eval_f = function(theta){
-      # print(unlist(S2S_constV_nota1_fromvecparamsR(theta, p, q)[c("k", "aremaining")]))
-      -sum(ulltape$eval(theta, a[1]))
-      },
-    eval_grad_f = function(theta){-colSums(matrix(ulltape$Jac(theta, a[1]), byrow = TRUE, ncol = length(theta)))},
+    x0 = S2S_constV_nota1_tovecparams(omvec = omvec0, k = k, aremaining = aremaining, Kstar = Kstar),
+    eval_f = function(theta){-ulltape$eval(theta, a1)},
+    eval_grad_f = function(theta){-ulltape$Jac(theta, a1)},
     lb = lb,
-    eval_g_eq =  function(theta){ll_mean_constraint$eval(theta[1:length(omvec0)], vector(mode = "numeric"))},
+    eval_g_eq =  function(theta){constraint_tape$forward(0, theta[1:length(omvec0)])},
     eval_jac_g_eq =  function(theta){
-      cbind(matrix(ll_mean_constraint$Jac(theta[1:length(omvec0)], vector(mode = "numeric")), byrow = TRUE, ncol = length(omvec0)),
-            matrix(0, nrow = 2, ncol = length(ulltape$xtape) - length(ll_mean_constraint$xtape)))
+      out <- cbind(matrix(constraint_tape$Jac(theta[1:length(omvec0)], vector(mode = "numeric")), byrow = TRUE, ncol = length(omvec0)),
+            matrix(0, nrow = constraint_tape$range, ncol = length(theta) - length(omvec0)))
+      if (any(is.nan(out))){browser()}
+      return(out)
     },
-    opts = c(list(algorithm = "NLOPT_LD_SLSQP", tol_constraints_eq = rep(1E-1, 2)), combined_opts)
+    opts = combined_opts
   )
+  browser()
   
   # estimation for p!=3 (alternating between k and others) ## NOT COMPLETE
   

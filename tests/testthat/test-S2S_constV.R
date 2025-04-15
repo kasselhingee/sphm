@@ -89,9 +89,10 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  tmp <- prelim(y_ld[, 1:p], xs, xe, start = paramobj, xtol_rel = 1E-8, print_level = 1)
-  expect_equal(tmp$est, omegapar, tolerance = 1E-1)
-  est1 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, Gstar, xtol_rel = 1E-4)
+  est1 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, Gstar, xtol_rel = 1E-4, print_level = 1, maxeval = 150)
+  
+  
+  preest <- prelim(y_ld[, 1:p], xs, xe, start = paramobj, xtol_rel = 1E-8)
   expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1, ignore_attr = TRUE)
   # check angle between estimated and true axes

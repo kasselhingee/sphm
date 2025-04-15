@@ -49,6 +49,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   # because commutivity constraint is not smooth at zero, check for this and add an epsilon to avoid
   if (!is.null(xs) && !is.null(xe)){
     if (abs(tail(constraint_tape$forward(0, vec_om0), 1)) < .Machine$double.eps){
+      browser()
       vec_om0 <- vec_om0 + seq(0,1, length.out = length(vec_om0)) * 1E-4
     }
   }

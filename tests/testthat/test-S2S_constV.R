@@ -93,6 +93,8 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   
   
   preest <- prelim(y_ld[, 1:p], xs, xe, start = paramobj, xtol_rel = 1E-8)
+  
+  
   expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1, ignore_attr = TRUE)
   # check angle between estimated and true axes

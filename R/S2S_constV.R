@@ -58,6 +58,19 @@ optim_constV <- function(y, xs, xe, mean, k, a, Gstar, xtol_rel = 1E-5, verbose 
   ulltape <- scorematchingad::avgrange(ulltape)
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  
+  # because commutivity constraint is not smooth at zero, check for this and add an epsilon to avoid
+  if (!is.null(xs) && !is.null(xe)){
+    if (abs(tail(constraint_tape$forward(0, omvec0), 1)) < .Machine$double.eps){
+      omvec0 <- omvec0 + seq(0,1, length.out = length(omvec0)) * 1E-4
+    }
+  }
+  
+  # check Jacobians of constraints 
+  Jac_eq <- matrix(constraint_tape$Jacobian(omvec0), byrow = TRUE, ncol = length(omvec0))
+  stopifnot(all(abs(svd(Jac_eq)$d) > sqrt(.Machine$double.eps))) #if this occurs may need to add an epsilon to omvec0 to avoid - the commutivity constraint is not smooth when perfectly satisfied
+  Jac_ineq <- matrix(ineqconstraint_tape$Jacobian(omvec0), byrow = TRUE, ncol = length(omvec0))
+  stopifnot(all(abs(svd(Jac_ineq)$d) > sqrt(.Machine$double.eps)))
 
   # prepare nloptr options
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",

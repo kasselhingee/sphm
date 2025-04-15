@@ -1,15 +1,7 @@
 #include "S2S_constV.h"
 #include "mnlink_cpp.h"
 #include "uldSvMF.h"
-
-mata1 JuppRmat(const veca1 & y1, const veca1 & y2){
-  veca1 sum = y1 + y2;
-  a1type denom = 1.0 + y1.dot(y2);//(y1.transpose() * y2).coeff(0,0)
-  mata1 ident = mata1::Identity(y1.size(), y1.size());
-  mata1 out = ((sum * sum.transpose()).array() / denom).matrix() - ident;
-  return out;
-}
-
+#include "utils.h"
 
 veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
   int p = om.p1.size();

@@ -80,7 +80,7 @@ test_that("prelim optimisation works with Sph covars",{
 })
 
 test_that("prelim optimisation works with Sph+Euc covars", {
-  rmnlink_cann__place_in_env(3, 5, 4)
+  rmnlink_cann__place_in_env(4, 5, 4)
   
   #generate covariates Gaussianly
   set.seed(4)
@@ -216,13 +216,14 @@ test_that("C++ Omega_constraints() is zero correctly", {
   expect_equal(direction[c("p1", "qs1", "qe1", "ce1", "PBce")], list(p1 = rep(0, p), qs1 = rep(0, qs), qe1 = rep(0, qe), ce1 = 0, PBce = rep(0, p)))
 })
 
-test_that("C++ Omega_constraints() is non-zero correctly", {
+test_that("C++ Omega_constraints() and Omega check is non-zero correctly", {
   rmnlink_cann__place_in_env(5, 5, 6)
   Om <- as_mnlink_Omega(paramobj)
   Om$qe1 <- Om$qe1*2 #check qe1 size
   Om$qs1 <- Om$qs1*2 #check qs1 size
   Om$p1 <- Om$p1 * 2 #check p1 size
   Om$Omega <- matrix(rnorm(p * (qs + qe)), p, qs + qe) #check commutivity
+  Om$PBce <- Om$PBce+1 #check PBce size/orthogonality?
   expect_true(all(mnlink_Omega_check_numerical(Om) > 1E-3))
   expect_true(all(abs(Omega_constraints(mnlink_Omega_vec(Om), p, qe)) > 1E-3))
 })

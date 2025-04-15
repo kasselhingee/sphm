@@ -195,7 +195,7 @@ test_that("C++ Omega_constraints() is zero correctly", {
   rmnlink_cann__place_in_env(3, 5, 0)
   expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)))
 
-  rmnlink_cann__place_in_env(3, 5, 4)
+  rmnlink_cann__place_in_env(5, 5, 6)
   expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe),  rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)))
   
   # check Jacobian - if a row is zero nlopt gives a round off error
@@ -213,11 +213,11 @@ test_that("C++ Omega_constraints() is zero correctly", {
 })
 
 test_that("C++ Omega_constraints() is non-zero correctly", {
-  rmnlink_cann__place_in_env(3, 5, 4)
+  rmnlink_cann__place_in_env(5, 5, 6)
   Om <- as_mnlink_Omega(paramobj)
   Om$qe1 <- Om$qe1*2
   Om$qs1 <- Om$qs1*2
-  Om$p1 <- Om$p1*2
+  Om$p1 <- nthpole(p) * 2
   Om$Omega <- matrix(rnorm(p * (qs + qe)), p, qs + qe)
   Om$PBce <- Om$PBce+1
   expect_true(all(mnlink_Omega_check_numerical(Om) > 1E-3))

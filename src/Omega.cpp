@@ -33,6 +33,7 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
     Is_tilde.topRows(ompar_proj.qs) = mata1::Identity(ompar_proj.qs, ompar_proj.qs);
     mata1 OmpartOmpart = ompar_proj.Omega * Is_tilde * Is_tilde.transpose() * ompar_proj.Omega.transpose();
     mata1 commutediff = OmOm * OmpartOmpart - OmpartOmpart * OmOm; //OmOm etc are always symmetric, so commutediff is always antisymmetric
+    Rcpp::Rcout << "commutediff:" << std::endl << commutediff << std::endl;
     commutecheck(0) = commutediff.norm();
   }
     

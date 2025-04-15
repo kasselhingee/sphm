@@ -48,8 +48,11 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   
   # because commutivity constraint is not smooth at zero, check for this and add an epsilon to avoid
   if (!is.null(xs) && !is.null(xe)){
+    Jac_eq <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
+    if(any(is.nan(Jac_eq)) || (!all(abs(svd(Jac_eq)$d) > sqrt(.Machine$double.eps)))){
+      vec_om0 <- vec_om0 + seq(0,1, length.out = length(vec_om0)) * 1E-4
+    }
     if (abs(tail(constraint_tape$forward(0, vec_om0), 1)) < .Machine$double.eps){
-      browser()
       vec_om0 <- vec_om0 + seq(0,1, length.out = length(vec_om0)) * 1E-4
     }
   }

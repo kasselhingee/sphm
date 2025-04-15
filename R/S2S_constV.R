@@ -94,23 +94,17 @@ optim_constV <- function(y, xs, xe, mean, k, a, Gstar, xtol_rel = 1E-5, verbose 
     },
     opts = combined_opts
   )
-  browser()
   
   # estimation for p!=3 (alternating between k and others) ## NOT COMPLETE
   
   if (!(est$status %in% c(0, 1, 2, 3, 4))){warning("Optimistation did not finish properly.")}
-  estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, p, q)
+  estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, p, qs, qe)
   
   # project Omega to satisfy orthogonality constraint
-  est_om <- Omega_proj(mnlink_Omega_unvec(estparamlist$omvec, p, check = FALSE))
+  est_om <- Omega_proj(mnlink_Omega_unvec(estparamlist$omvec, p, qe = qe, check = FALSE))
   
   # calculate Gstar now (because getHstar is sensitive to changes of basis A * H(p1) != H(A*p1))
   Gstar <- getHstar(est_om$p1) %*% estparamlist$Kstar
-  
-  # undo standardisation coordinate change
-  est_cann <- as_mnlink_cann(est_om)
-  est_om <- as_mnlink_Omega(cannS2S(stdmat %*% est_cann$P, est_cann$Q, est_cann$B, check = FALSE))
-  Gstar <- stdmat %*% Gstar
   
   #make first element of each vector positive
   Gstar <- topos1strow(Gstar)
@@ -130,9 +124,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, Gstar, xtol_rel = 1E-5, verbose 
   
   return(list(
     solution = outsolution,
-    stdmat = stdmat,
-    nlopt_prelim = estprelim,
-    nlopt_final = est,
+    nlopt = est,
     initial = initial
   ))
 }

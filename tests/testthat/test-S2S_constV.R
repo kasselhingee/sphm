@@ -89,34 +89,31 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  est1 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, Gstar, xtol_rel = 1E-4, print_level = 1, maxeval = 150)
-  
-  
-  preest <- prelim(y_ld[, 1:p], xs, xe, start = paramobj, xtol_rel = 1E-8)
-  
-  
+  est1 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, Gstar, xtol_rel = 1E-4)
   expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
-  expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1, ignore_attr = TRUE)
+  expect_equal(est1$solution,
+               list(mean = omegapar, k = k, a = a, Gstar = topos1strow(Gstar)),
+               tolerance = 1E-1)
+  
   # check angle between estimated and true axes
-    axis_distance <- function(angle1, angle2 = 0){
+  axis_distance <- function(angle1, angle2 = 0){
     diff <- abs(angle1 - angle2)
     pmin(diff, pi - diff)
   }
   expect_equal(axis_distance(acos(colSums(est1$solution$Gstar * Gstar))), rep(0, ncol(Gstar)), tolerance = 1E-2, ignore_attr = TRUE)
   
-  ## now starting optimisation with bad Kstar ##
-  set.seed(14)
-  start <- as_mnlink_Omega(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
-                               Q = mclust::randomOrthogonalMatrix(q, p),
-                               B = diag(sort(runif(p-1), decreasing = TRUE))))
-  set.seed(14)
-  badGstar <- getHstar(omegapar$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)[, c(2, 1)]
-  est2 <- optim_constV(y_ld[, 1:p], x, omegapar, k = k, a = a, badGstar, xtol_rel = 1E-4)
-  expect_equal(as_mnlink_cann(est2$solution$mean), as_mnlink_cann(omegapar), tolerance = 1E-1)
-  #estimation of the concentration and scaling is quite bad without the flip of [, c(2,1)] for creating badGstar! 
-  expect_equal(est2$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1, ignore_attr = TRUE)
-  # check angle between estimated and true axes
-  expect_equal(axis_distance(acos(colSums(est2$solution$Gstar * Gstar))), rep(0, ncol(Gstar)), tolerance = pi/10, ignore_attr = TRUE)
+  
+  ## now starting optimisation away from starting parameters ##
+  bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
+  set.seed(3)
+  badGstar <- getHstar(bad_om$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
+  est2 <- optim_constV(y_ld[, 1:p], xs, xe, bad_om, k = 10, a = c(1, 1, 1), Gstar = badGstar, xtol_rel = 1E-4)
+  expect_equal(est2$solution, est1$solution, tolerance = 1E-7)
+  
+  ## try with specifically bad Gstar start ##
+  # I would expect this to make no difference vs est1 because the order of the columns shouldn't matter
+  est3 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, Gstar = Gstar[, c(2,1)], xtol_rel = 1E-4, print_level = 1)
+  expect_equal(est3$solution, est1$solution, tolerance = 1E-7)
 })
 
 

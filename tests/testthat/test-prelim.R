@@ -196,30 +196,33 @@ test_that("C++ Omega_constraints() is zero correctly", {
   expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)))
 
   rmnlink_cann__place_in_env(5, 5, 6)
-  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe),  rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)))
+  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe),  rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)*(p-1)*(p-2)/2))
   
-  # check Jacobian - if a row is zero nlopt gives a round off error
+  # check Jacobian has non-zero singular values when constraint satisfied
+  # I suspect NLOPT_LD_SLSQP has issues (a round off error) when the Jacobian has zero singular values
+  # Which is highly likely if the constraint is pushing towards this.
   dims_in <- c(p, qe)
   vec_om0 <- mnlink_Omega_vec(as_mnlink_Omega(paramobj))
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   Jac <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
-  # colnames(Jac) <- names(vec_om0)
-  # round(Jac, 3)
-  expect_true(all(apply(Jac, 1, function(x)max(abs(x))) > 0.1))
   expect_true(all(abs(svd(Jac)$d) > sqrt(.Machine$double.eps)))
-  # this might be useful to check out dependence
-  # direction <- svd(Jac)$v[, 4]
-  # mnlink_Omega_unvec(vec_om0 + direction, p, qe)
+
+  # The following suggest that the commutivity constraint, after rotation to be orthogonal to p1,
+  # doesnt depend on qs1 and qe1, at least locally,
+  # because the direction of v[,4], v[,5]... is non-zero in Omega only 
+  # round(svd(Jac)$v, 2)
+  direction <- svd(Jac)$v[, 4]
+  direction <- mnlink_Omega_unvec(direction, p, qe, check = FALSE)
+  expect_equal(direction[c("p1", "qs1", "qe1", "ce1", "PBce")], list(p1 = rep(0, p), qs1 = rep(0, qs), qe1 = rep(0, qe), ce1 = 0, PBce = rep(0, p)))
 })
 
 test_that("C++ Omega_constraints() is non-zero correctly", {
   rmnlink_cann__place_in_env(5, 5, 6)
   Om <- as_mnlink_Omega(paramobj)
-  Om$qe1 <- Om$qe1*2
-  Om$qs1 <- Om$qs1*2
-  Om$p1 <- nthpole(p) * 2
-  Om$Omega <- matrix(rnorm(p * (qs + qe)), p, qs + qe)
-  Om$PBce <- Om$PBce+1
+  Om$qe1 <- Om$qe1*2 #check qe1 size
+  Om$qs1 <- Om$qs1*2 #check qs1 size
+  Om$p1 <- Om$p1 * 2 #check p1 size
+  Om$Omega <- matrix(rnorm(p * (qs + qe)), p, qs + qe) #check commutivity
   expect_true(all(mnlink_Omega_check_numerical(Om) > 1E-3))
   expect_true(all(abs(Omega_constraints(mnlink_Omega_vec(Om), p, qe)) > 1E-3))
 })

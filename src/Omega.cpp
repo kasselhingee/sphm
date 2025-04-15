@@ -21,12 +21,12 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
   // commutivity constraint check // because OmOm = OmpartOmpart(Euc) + OmpartOmpart(Sph), checking both is redundant
   // only needed when BOTH qe > 0 and qs > 0
   // require that commutivity of the *projected* Omega holds
-  // Since projected, there are only (p-1) vectors to be orthogonal to each other -->
+  // Since projected to be orthogonal to p1, there are only (p-1) vectors to be orthogonal to each other -->
   // I suspect that means only (p-1)*(p-2)/2 unique constraints, which ones though!?? a sum would avoid this
   veca1 commutecheck(0);
   if ((ompar.qs > 0) && (ompar.qe > 0)){
     mnlink_Omega_cpp<a1type> ompar_proj = Omega_proj_cpp(ompar);
-    commutecheck.resize(1);
+    commutecheck.resize((ompar_proj.p-1) * (ompar_proj.p - 2) / 2);
     // Compute Omega * Omega^T for commutivity constraint
     mata1 OmOm = ompar_proj.Omega * ompar_proj.Omega.transpose();
     mata1 Is_tilde;
@@ -38,7 +38,18 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
     veca1 nthpole = vecd::Unit(ompar_proj.p, 0);
     mata1 rotmat = JuppRmat(ompar_proj.p1, nthpole);
     Rcpp::Rcout << "commutediff:" << std::endl << commutediff << std::endl;
-    commutecheck(0) = commutediff.norm();
+    commutediff = rotmat * commutediff * (rotmat.transpose());
+    // place lower triangular elements into commutecheck
+    // ignoring elements that must be zero because nthpole * commutediff = 0.
+    int idx = 0;
+    for (int j = 1; j < p-1; ++j) {//columns
+      for (int i = j+1; i < p; ++i) {//rows
+        commutecheck(idx) = commutediff(i, j);
+        idx++;
+      }
+    }
+    Rcpp::Rcout << "RcommutediffR:" << std::endl << commutediff << std::endl;
+    Rcpp::Rcout << "commutecheck:" << std::endl << commutecheck << std::endl;
   }
     
   veca1 out(1 + sphcheck.size() + Euccheck.size() + commutecheck.size());

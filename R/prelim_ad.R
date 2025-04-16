@@ -50,7 +50,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   # For pathological params (e.g. the default starting params of no rotations), it can be zero.
   # If it is singular, perturb start very slightly
   Jac_eq <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
-  if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){vec_om0 <- vec_om0+1E-4}
+  if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){vec_om0 <- vec_om0 - 1E-4}
   Jac_eq <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
   stopifnot(all(abs(svd(Jac_eq)$d) > sqrt(.Machine$double.eps)))
   Jac_ineq <- matrix(ineqconstraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))

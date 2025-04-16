@@ -161,7 +161,7 @@ vMF_SE <- function(y, xs = NULL, xe = NULL, k = NULL, param, type = "Kassel"){
     }, lower = 1E-8, upper = 1E5, maximum = TRUE)
     k <- res$maximum
   }
-  browser()
+  stop("SEs not implemented correctly")
   
   # Fisher Information Matrix is the variance of the gradient of the log-likelihood
   # And in MLE is equal to the expected double derivative of the log-likelihood

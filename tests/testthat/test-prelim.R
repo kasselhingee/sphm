@@ -279,7 +279,7 @@ test_that("prelim() destandardises variables correctly", {
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
   colnames(y) <- paste0("y", 1:ncol(y))
   
-  res <- prelim(y, xs = xs, xe = xe[, -1], type = "Shogo") #drop first column of zeros to account for user-friendly use of Shogo in prelim()
+  res <- prelim(y, xs = xs, xe = xe[, -1], type = "Shogo", print_level = 1) #drop first column of zeros to account for user-friendly use of Shogo in prelim()
   expect_equal(res$y, y)
   expect_equal(res$xs, xs)
   expect_equal(res$xe, xe)

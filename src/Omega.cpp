@@ -23,6 +23,7 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
   // require that commutivity of the *projected* Omega holds
   // Since projected to be orthogonal to p1, there are only (p-1) vectors to be orthogonal to each other -->
   // I suspect that means only (p-1)*(p-2)/2 unique constraints, which ones though!?? a sum would avoid this
+  // See ExtraOmegaConstraint.pdf for more maths behind this expression of this Omega constraint.
   veca1 commutecheck(0);
   if ((ompar.qs > 0) && (ompar.qe > 0)){
     mnlink_Omega_cpp<a1type> ompar_proj = Omega_proj_cpp(ompar);

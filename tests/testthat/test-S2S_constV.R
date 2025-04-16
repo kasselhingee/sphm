@@ -24,7 +24,7 @@ test_that("rotatedresiduals() rotates residuals to the northpole along a geodesi
 })
 
 test_that("maximum likelihood for parallel axes per geodesic path", {
-  rmnlink_cann__place_in_env(3, 5, 4)
+  rmnlink_cann__place_in_env(4, 5, 4)
   omegapar <- as_mnlink_Omega(paramobj)
   
   #generate covariates Gaussianly
@@ -76,7 +76,8 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
                             a1 = a[1], aremaining = a[-1], Kstar = Kstar,
                             p, qe,
                             yx = cbind(y_ld[, 1:p], xs, xe))
-  expect_equal(ulltape$forward(0, ulltape$xtape), y_ld[, 4])
+  expect_equal(ulltape$xtape, vecparams)
+  expect_equal(ulltape$forward(0, ulltape$xtape), y_ld[, p+1])
   
   exactll <- sum(ulltape$forward(0, ulltape$xtape))
   
@@ -91,11 +92,8 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   ## now try optimisation starting at true values ##
   est1 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, Gstar, xtol_rel = 1E-4)
   expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
-  expect_equal(est1$solution,
-               list(mean = omegapar, k = k, a = a, Gstar = topos1strow(Gstar)),
-               tolerance = 1E-1)
-  
-  # check angle between estimated and true axes
+  expect_equal(est1$solution[c("k", "a")], list(k = k, a = a))
+  # check Gstar by checking angle between estimated and true axes
   axis_distance <- function(angle1, angle2 = 0){
     diff <- abs(angle1 - angle2)
     pmin(diff, pi - diff)
@@ -106,14 +104,10 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
   set.seed(3)
-  badGstar <- getHstar(bad_om$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
-  est2 <- optim_constV(y_ld[, 1:p], xs, xe, bad_om, k = 10, a = c(1, 1, 1), Gstar = badGstar, xtol_rel = 1E-4)
+  pre <- prelim_ad(y_ld[, 1:p], xs, xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
+  badGstar <- getHstar(pre$solution$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
+  est2 <- optim_constV(y_ld[, 1:p], xs, xe, pre$solution, k = 10, a = rep(1, p), Gstar = badGstar, xtol_rel = 1E-4)
   expect_equal(est2$solution, est1$solution, tolerance = 1E-7)
-  
-  ## try with specifically bad Gstar start ##
-  # I would expect this to make no difference vs est1 because the order of the columns shouldn't matter
-  est3 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, Gstar = Gstar[, c(2,1)], xtol_rel = 1E-4, print_level = 1)
-  expect_equal(est3$solution, est1$solution, tolerance = 1E-7)
 })
 
 

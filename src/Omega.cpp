@@ -37,7 +37,6 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
     //rotate commutediff so that p1 is the northpole
     veca1 nthpole = vecd::Unit(ompar_proj.p, 0);
     mata1 rotmat = JuppRmat(ompar_proj.p1, nthpole);
-    Rcpp::Rcout << "commutediff:" << std::endl << commutediff << std::endl;
     commutediff = rotmat * commutediff * (rotmat.transpose());
     // place lower triangular elements into commutecheck
     // ignoring elements that must be zero because nthpole * commutediff = 0.
@@ -48,8 +47,6 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
         idx++;
       }
     }
-    Rcpp::Rcout << "RcommutediffR:" << std::endl << commutediff << std::endl;
-    Rcpp::Rcout << "commutecheck:" << std::endl << commutecheck << std::endl;
   }
     
   veca1 out(1 + sphcheck.size() + Euccheck.size() + commutecheck.size());

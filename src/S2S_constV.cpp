@@ -7,6 +7,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
   int p = om.p1.size();
   //check that ncol(y) == p
   if (y.cols() != p){Rcpp::stop("width of y does not equal length of p1");}
+  
 
   // project Omega matrix to satisfy orthogonality to p1 and q1
   mnlink_Omega_cpp<a1type> om_projected = Omega_proj_cpp(om);
@@ -25,7 +26,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
   if (aremaining.size() != p - 1){ Rcpp::stop("aremaining must have length p - 1."); }
   a.segment(1, p-1) = aremaining;
   for (int i = 0; i < y.rows(); ++i){
-     G.col(0) = ypred.row(i);
+    G.col(0) = ypred.row(i);
     G.block(0, 1, p, p-1) = JuppRmat(om_projected.p1, ypred.row(i)) * Gstar;
     ld(i) = uldSvMF_cann(y.row(i), k, a, G)(0);
   }

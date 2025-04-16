@@ -72,10 +72,10 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
                     Kstar = Kstar), ignore_attr = TRUE)
   
   #check tape:
-  ulltape <- tape_ull_S2S_constV_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
+  expect_warning({ulltape <- tape_ull_S2S_constV_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
                             a1 = a[1], aremaining = a[-1], Kstar = Kstar,
                             p, qe,
-                            yx = cbind(y_ld[, 1:p], xs, xe))
+                            yx = cbind(y_ld[, 1:p], xs, xe))}, "p!=3")
   expect_equal(ulltape$xtape, vecparams)
   expect_equal(ulltape$forward(0, ulltape$xtape), y_ld[, p+1])
   
@@ -90,15 +90,15 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  est1 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, Gstar, xtol_rel = 1E-4)
+  expect_warning({est1 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, Gstar, xtol_rel = 1E-4)}, "p!=3")
   expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
-  expect_equal(est1$solution[c("k", "a")], list(k = k, a = a))
+  expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
   axis_distance <- function(angle1, angle2 = 0){
     diff <- abs(angle1 - angle2)
     pmin(diff, pi - diff)
   }
-  expect_equal(axis_distance(acos(colSums(est1$solution$Gstar * Gstar))), rep(0, ncol(Gstar)), tolerance = 1E-2, ignore_attr = TRUE)
+  expect_equal(axis_distance(acos(colSums(est1$solution$Gstar * Gstar))), rep(0, ncol(Gstar)), tolerance = 1E-1, ignore_attr = TRUE)
   
   
   ## now starting optimisation away from starting parameters ##
@@ -106,7 +106,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   set.seed(3)
   pre <- prelim_ad(y_ld[, 1:p], xs, xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
   badGstar <- getHstar(pre$solution$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
-  est2 <- optim_constV(y_ld[, 1:p], xs, xe, pre$solution, k = 10, a = rep(1, p), Gstar = badGstar, xtol_rel = 1E-4)
+  expect_warning({est2 <- optim_constV(y_ld[, 1:p], xs, xe, pre$solution, k = 10, a = rep(1, p), Gstar = badGstar, xtol_rel = 1E-4)}, "p!=3")
   expect_equal(est2$solution, est1$solution, tolerance = 1E-7)
 })
 

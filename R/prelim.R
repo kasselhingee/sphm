@@ -94,7 +94,7 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
     opt = out$loc_nloptr,
     y = destandardise_sph(y, attr(y, "std_rotation")),
     xs = destandardise_sph(xs, attr(xs, "std_rotation")),
-    xe = destandardise_Euc(xe, attr(xe, "std_center"), attr(xe, "std_rotation")),
+    if (!is.null(xe)){xe = destandardise_Euc(xe, attr(xe, "std_center"), attr(xe, "std_rotation"))},
     pred = destandardise_sph(pred, tG = attr(y, "std_rotation")),
     rresids = rresids,
     dists = dists

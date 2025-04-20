@@ -122,6 +122,11 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
                                xerot = diag(length(param$qe1)), 
                                xecenter = rep(0, length(param$qe1))){
   stopifnot(inherits(param, "mnlink_Omega"))
+  # in case arguments passed are NULL set to default
+  if (is.null(yrot)){yrot <- diag(length(param$p1))}
+  if (is.null(xsrot)){xsrot <- diag(length(param$qs1))}
+  if (is.null(xerot)){xerot <- diag(length(param$qe1))}
+  if (is.null(xecenter)){xecenter <- rep(0, length(param$qe1))}
   qs <- length(param$qs1)
   qe <- length(param$qe1)
   omstd <- om <- param
@@ -132,11 +137,11 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   omstd$ce1 <- drop(t(om$qe1) %*% xecenter) + om$ce1
   omstd$Omega[, seq.int(1, length.out = qs)] <- om$Omega[, seq.int(1, length.out = qs)] %*% t(xsrot)
   omstd$Omega[, seq.int(qs + 1, length.out = qe)] <- om$Omega[, seq.int(qs + 1, length.out = qe)] %*% t(xerot)
-  omstd$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% xecenter + om$PBce)
+  if (qe > 0){omstd$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% xecenter + om$PBce)}
   
   # add yrot change
   omstd$Omega <- yrot %*% omstd$Omega
-  omstd$PBce <- drop(yrot %*% omstd$PBce)
+  if (qe > 0){omstd$PBce <- drop(yrot %*% omstd$PBce)}
   omstd$p1 <- drop(yrot %*% omstd$p1)
   return(omstd)
 }
@@ -146,6 +151,11 @@ undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
                                     xerot = diag(length(param$qe1)), 
                                     xecenter = rep(0, length(param$qe1))){
   stopifnot(inherits(param, "mnlink_Omega"))
+  # in case arguments passed are NULL set to default
+  if (is.null(yrot)){yrot <- diag(length(param$p1))}
+  if (is.null(xsrot)){xsrot <- diag(length(param$qs1))}
+  if (is.null(xerot)){xerot <- diag(length(param$qe1))}
+  if (is.null(xecenter)){xecenter <- rep(0, length(param$qe1))}
   qs <- length(param$qs1)
   qe <- length(param$qe1)
   om <- omstd <- param
@@ -158,11 +168,11 @@ undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   
   # use the above calculated qe1 and Omega to get ce1 and PBce unde xerot and xecenter
   om$ce1 <- drop(t(om$qe1) %*% (-xecenter)) + omstd$ce1
-  om$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% (-xecenter)) + omstd$PBce
+  if (qe > 0){om$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% (-xecenter)) + omstd$PBce}
   
   # Undo the effect of yrot
   om$p1 <- drop(t(yrot) %*% omstd$p1)
-  om$PBce <- drop(t(yrot) %*% om$PBce)
+  if (qe > 0){om$PBce <- drop(t(yrot) %*% om$PBce)}
   om$Omega <- t(yrot) %*% om$Omega
   return(om)
 }

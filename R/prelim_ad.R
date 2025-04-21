@@ -100,12 +100,12 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
       # print(apply(Jac, 1, function(x)max(abs(x))))
       Jac
       },
-    eval_g_ineq =  function(theta){ineqconstraint_tape$eval(theta, vector(mode = "numeric")) - ssqOmbuffer},
-    eval_jac_g_ineq =  function(theta){
-      Jac <- matrix(ineqconstraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))
-      # print(apply(Jac, 1, function(x)max(abs(x))))
-      Jac
-      },
+    # eval_g_ineq =  function(theta){ineqconstraint_tape$eval(theta, vector(mode = "numeric")) - ssqOmbuffer},
+    # eval_jac_g_ineq =  function(theta){
+    #   Jac <- matrix(ineqconstraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))
+    #   # print(apply(Jac, 1, function(x)max(abs(x))))
+    #   Jac
+    #   },
     opts = combined_opts
   )
   if (!(locopt$status %in% 1:4)){warning(locopt$message)}

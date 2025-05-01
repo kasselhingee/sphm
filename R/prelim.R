@@ -26,7 +26,7 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' @param start is a starting parameter object. For Shogo mean link the Qe matrix must have an extra row and column that at the front/top, with 1 in the first entry (and zero elsewhere).
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @export
-prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", start = NULL, ssqOmbuffer = 2, ...){
+prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", fix_qs1 = FALSE, method = "local", start = NULL, ssqOmbuffer = 2, ...){
   # standardise inputs
   y <- standardise_sph(y)
   if (!is.null(xs)){xs <- standardise_sph(xs)}
@@ -63,9 +63,15 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", method = "local", s
     }
   }
   
+  # Check Shogo link initiated properly
+  if ((type == "Shogo") && (!is.null(xe))){
+    stopifnot(is_Shogo(start))
+    stopifnot(all(xe[, 1]^2 < sqrt(.Machine$double.eps)))
+  }
+  
   # RUN
   if (method == "local"){
-    out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = start, type = type, ssqOmbuffer = ssqOmbuffer, ...)
+    out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = start, fix_qs1 = fix_qs1, fix_qe1 = (type == "Shogo"), ssqOmbuffer = ssqOmbuffer, ...)
   }
   if (method == "global"){
     out <- prelim_R(y = y, xs = xs, xe = xe, paramobj0 = start, type = type, ...)

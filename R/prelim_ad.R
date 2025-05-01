@@ -1,6 +1,6 @@
 
 #' @param ssqOmbuffer The sum of squared singular values of Omega is allowed to go `ssqOmbuffer` above the limit given by singular values of 1 (or 2 if there are both Euclidean and spherical coordinates).
-prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globalfirst = FALSE, ssqOmbuffer = 2, ...){ #paramobj0 is the starting parameter object
+prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_qe1 = TRUE, globalfirst = FALSE, ssqOmbuffer = 2, ...){ #paramobj0 is the starting parameter object
   om0 <- as_mnlink_Omega(paramobj0)
   # check inputs:
   try(mnlink_Omega_check(om0))
@@ -14,10 +14,6 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   # check Euc info if Euc is part of the link
   if (!is.null(xe)){
     stopifnot(ncol(xe) == length(om0$qe1))
-    if (type == "Shogo"){
-      stopifnot(is_Shogo(om0))
-      stopifnot(all(xe[, 1]^2 < sqrt(.Machine$double.eps)))
-    }
   } else {
     stopifnot(length(om0$qe1) == 0)
   }
@@ -30,30 +26,41 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   
-  if ((!is.null(xe)) && (type == "Shogo")){
+  # fix qe1 to the starting values if qe1 exists
+  # use the starting parameters om0 to check as their form is more constrained by the Omega class than xe
+  omfixed <- lapply(om0, function(x) x * 0)
+  if (fix_qe1 && (length(om0$qe1) > 0)){
     # if shogo and Euc, fix some elements
-    omfixed <- lapply(om0, function(x) x * 0)
     omfixed$qe1 <- omfixed$qe1 + 1
     omfixed$ce1 <- omfixed$ce1 + 1
-    isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
-    obj_tape <- scorematchingad::fixindependent(obj_tape, vec_om0, isfixed)
-    constraint_tape <- scorematchingad::fixindependent(constraint_tape, vec_om0, isfixed)
-    ineqconstraint_tape <- scorematchingad::fixindependent(ineqconstraint_tape, vec_om0, isfixed)
-    vec_om0 <- vec_om0[!isfixed]
-    
-    # drop the qe constraint
-    keep <- setdiff(1:constraint_tape$range, 2 + !is.null(xs))
-    constraint_tape <- scorematchingad:::keeprange(constraint_tape, keep)
   }
+  
+  # fix qs1 to the starting values if qs1 exists
+  # use the starting parameters to check as their form is more constrained by the Omega class
+  if (fix_qs1 && (length(om0$qs1) > 0)){
+    omfixed$qs1 <- omfixed$qs1 + 1
+  }
+  
+  # update tapes based on omfixed
+  isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
+  obj_tape <- scorematchingad::fixindependent(obj_tape, vec_om0, isfixed)
+  constraint_tape <- scorematchingad::fixindependent(constraint_tape, vec_om0, isfixed)
+  ineqconstraint_tape <- scorematchingad::fixindependent(ineqconstraint_tape, vec_om0, isfixed)
+  # drop constraint returns that are constant:
+  keep <- which(vapply((1:constraint_tape$range)-1, function(i){!constraint_tape$parameter(i)}, FUN.VALUE = FALSE))
+  constraint_tape <- scorematchingad::keeprange(constraint_tape, keep)
+  
+  # drop fixed values from x0
+  x0 <- mnlink_Omega_vec(om0)[!isfixed]
   
   # check Jacobians of constraints are non-singular for the starting parameters.
   # For pathological params (e.g. the default starting params of no rotations), it can be zero.
   # If it is singular, perturb start very slightly
-  Jac_eq <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
-  if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){vec_om0 <- vec_om0 - 1E-4}
-  Jac_eq <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
+  Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = length(x0))
+  if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){x0 <- x0 - 1E-4}
+  Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = length(x0))
   stopifnot(all(abs(svd(Jac_eq)$d) > sqrt(.Machine$double.eps)))
-  Jac_ineq <- matrix(ineqconstraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
+  Jac_ineq <- matrix(ineqconstraint_tape$Jacobian(x0), byrow = TRUE, ncol = length(x0))
   stopifnot(all(abs(svd(Jac_ineq)$d) > sqrt(.Machine$double.eps)))
   
 
@@ -65,7 +72,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
     ellipsis_args <- list(...)
     combined_opts <- utils::modifyList(default_opts, ellipsis_args)
     globopt <- nloptr::nloptr(
-      x0 = vec_om0,
+      x0 = x0,
       eval_f = function(theta){-obj_tape$eval(theta, vector(mode = "numeric"))},
       eval_g_eq =  function(theta){constraint_tape$eval(theta, vector(mode = "numeric"))},
       eval_g_ineq =  function(theta){ineqconstraint_tape$eval(theta, vector(mode = "numeric")) - ssqOmbuffer},
@@ -89,7 +96,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
   locopt <- nloptr::nloptr(
-    x0 = vec_om0,
+    x0 = x0,
     eval_f = function(theta){-obj_tape$eval(theta, vector(mode = "numeric"))},
     eval_grad_f = function(theta){-obj_tape$Jac(theta, vector(mode = "numeric"))},
     eval_g_eq =  function(theta){constraint_tape$eval(theta, vector(mode = "numeric"))},
@@ -110,18 +117,11 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, type = "Kassel", globa
   )
   if (!(locopt$status %in% 1:4)){warning(locopt$message)}
 
-  # Because locopt$solution isnt the full Omega parameterisation for 'Shogo' type, we need to rebuild it.
-  if (type == "Shogo"){
-    fullparam <- isfixed
-    fullparam[!isfixed] <- locopt$solution
-    fullparam[isfixed] <- mnlink_Omega_vec(om0)[isfixed]
-  } else {
-    fullparam <- locopt$solution
-  }
+  # sub in any fixed values
+  fullparam <- scorematchingad:::t_sfi2u(locopt$solution, mnlink_Omega_vec(om0), isfixed)
  
-  unprojresult <- mnlink_Omega_unvec(fullparam, p, length(om0$qe1), check = FALSE)
-  # mnlink_Omega_check(unprojresult)
-  projresult <- Omega_proj(unprojresult)
+  #project results to have correct orthogonality
+  projresult <- Omega_proj(mnlink_Omega_unvec(fullparam, p, length(om0$qe1), check = FALSE))
   # mnlink_Omega_check(projresult)
   
   # remove the tapes from the return to save on memory

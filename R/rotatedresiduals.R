@@ -6,7 +6,7 @@ rotatedresid <- function(y, ypred, base, path = "geo"){
   cresids <- cruderesid(y, ypred)
 
   # rotate them
-  transportmat <- if (path == "Jupp"){JuppRmat} else {rotationmat_amaral}
+  transportmat <- switch(path, Jupp = JuppRmat, geo = rotationmat_amaral, Amaral = rotationmat_amaral, Absil = partransportmat)
   rresids <- t(sapply(1:nrow(y), function(i){
     transportmat(ypred[i, ], base) %*%  cresids[i, ]
   }))
@@ -37,4 +37,11 @@ rotationmat_amaral  <- function(start, end){ #assumes a and b are unit vectors
   A <- end%o%c - c%o%end
   Q = diag(length(end)) + sin(alpha)*A + (cos(alpha) - 1)*(end%o%end + c%o%c)
   return(Q)
+}
+
+# Parallel transport matrix from Absil, Mahony and Sepulchre equation (8.4)
+partransportmat <- function(start, end){
+  alpha <- drop(acos(start %*% end))
+  u <- (end - cos(alpha) * start)/sin(alpha)
+  out <- diag(length(start)) - sin(alpha) * start %*% t(u) + (cos(alpha) - 1) * u %*% t(u)
 }

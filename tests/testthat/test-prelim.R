@@ -290,7 +290,7 @@ test_that("prelim() destandardises variables correctly", {
 })
 
 
-test_that("prelim Hessian eigenvalues match DoF", {
+test_that("Hessian eigenvalues match DoF", {
   rmnlink_cann__place_in_env(4, 5, 4)
   
   #generate covariates Gaussianly
@@ -306,14 +306,17 @@ test_that("prelim Hessian eigenvalues match DoF", {
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
   set.seed(5)
-  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
+  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
   
-  fit <- prelim(y, xs = xs, xe = xe, type = "Kassel", fix_qs1 = FALSE)
-  round(eigen(fit$opt$solution_Hes_f)$values, 3)
-  sphm:::DoF_Stiefel(p, p) + #P
-    sphm:::DoF_Stiefel(qs, p) + #Qs
-    sphm:::DoF_Stiefel(qe, p) + #Qe
+  fit <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
+  evals <- eigen(fit$loc_nloptr$solution_Hes_f, only.values = TRUE)$values
+  expect_lt(max(abs(Im(evals))), sqrt(.Machine$double.eps))
+  DoF <- DoF_Stiefel(p, p) + #P
+    DoF_Stiefel(qs, p) + #Qs
+    DoF_Stiefel(qe, p) + #Qe
     qs-1 + #Bs
     qe-1 + #Be
-    p #ce[-1]
+    p #ce
+  expect_equal(sum(Re(evals) > sqrt(.Machine$double.eps)), DoF)
+  #round(Re(evals), 3)
 })

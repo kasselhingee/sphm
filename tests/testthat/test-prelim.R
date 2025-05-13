@@ -318,5 +318,8 @@ test_that("Hessian eigenvalues match DoF", {
     qe-1 + #Be
     p #ce
   expect_equal(sum(Re(evals) > sqrt(.Machine$double.eps)), DoF)
-  #round(Re(evals), 3)
+  # There are more positive eigenvalues than DoF! That shouldn't happen either, should it?
+  round(Re(evals), 3)
+  # there are also slightly negative eigenvalues - which also shouldn't happen!!
+  expect_gt(min(Re(evals)), -sqrt(.Machine$double.eps))
 })

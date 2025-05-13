@@ -24,3 +24,7 @@ topos1strow <- function(mat){
   mat <- t(t(mat) * sign(mat[1, ]))
   return(mat)
 }
+
+# gives the degree of freedom of an object with n rows and p columns (i.e. p orthonormal vectors in n space)
+# This formula is from wikipedia and (2.1) of Edelman et al 1998.
+DoF_Stiefel <- function(n, p){n*p - p * (p+1)/2}

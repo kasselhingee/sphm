@@ -309,4 +309,11 @@ test_that("prelim Hessian eigenvalues match DoF", {
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
   
   fit <- prelim(y, xs = xs, xe = xe, type = "Kassel", fix_qs1 = FALSE)
+  round(eigen(fit$opt$solution_Hes_f)$values, 3)
+  sphm:::DoF_Stiefel(p, p) + #P
+    sphm:::DoF_Stiefel(qs, p) + #Qs
+    sphm:::DoF_Stiefel(qe, p) + #Qe
+    qs-1 + #Bs
+    qe-1 + #Be
+    p #ce[-1]
 })

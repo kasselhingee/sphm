@@ -62,7 +62,6 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_q
   stopifnot(all(abs(svd(Jac_eq)$d) > sqrt(.Machine$double.eps)))
   Jac_ineq <- matrix(ineqconstraint_tape$Jacobian(x0), byrow = TRUE, ncol = length(x0))
   stopifnot(all(abs(svd(Jac_ineq)$d) > sqrt(.Machine$double.eps)))
-  
 
   if (globalfirst){ #do a quick global search first #nlopt recommends doing a local search afterwards
     default_opts <- list(algorithm = "NLOPT_GN_ISRES", #the only algorthim that natively handles non-linear equality constraints - all the others have to use augmented Lagrangian ideas.
@@ -116,7 +115,18 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_q
     opts = combined_opts
   )
   if (!(locopt$status %in% 1:4)){warning(locopt$message)}
-
+  
+  #output some diagnostics
+  locopt$solution_grad_f <- -obj_tape$Jac(locopt$solution, vector(mode = "numeric"))
+  names(locopt$solution_grad_f) <- names(x0)
+  locopt$solution_jac_g_eq <- matrix(constraint_tape$Jacobian(locopt$solution),
+                                     byrow = TRUE, ncol = length(locopt$solution))
+  colnames(locopt$solution_jac_g_eq) <- names(x0)
+  locopt$solution_Hes_f <- matrix(-obj_tape$Hessian0(locopt$solution),
+         nrow = obj_tape$domain,
+         byrow = TRUE)
+  colnames(locopt$solution_Hes_f) <- rownames(locopt$solution_Hes_f) <- names(x0)
+   
   # sub in any fixed values
   fullparam <- scorematchingad:::t_sfi2u(locopt$solution, mnlink_Omega_vec(om0), isfixed)
  

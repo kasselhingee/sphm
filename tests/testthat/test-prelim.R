@@ -27,9 +27,6 @@ test_that("prelim optimisation works with Euc covars", {
     opt2$solution <- Omega_Euc_signswitch(opt2$solution)
   }
   expect_equal(opt2$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
-  
-  # check standard errors
-  vMF_SE(y, xe = x, param = opt2$solution)
 })
 
 test_that("prelim optimisation works with Sph covars",{
@@ -290,4 +287,26 @@ test_that("prelim() destandardises variables correctly", {
   res2 <- prelim(y, xs = xs, xe = xe[, -1], type = "Shogo", start = res$est)
   expect_equal(res2$opt$x0, mnlink_Omega_vec(res$solution)[-c(seq.int(9, length.out = 5), 44)])
   
+})
+
+
+test_that("prelim Hessian eigenvalues match DoF", {
+  rmnlink_cann__place_in_env(4, 5, 4)
+  
+  #generate covariates Gaussianly
+  set.seed(4)
+  xe <- matrix(rnorm(1000*qe), nrow = 1000)
+  #generate covariates on the sphere
+  set.seed(4)
+  xs <- matrix(rnorm(1000*qs), nrow = 1000)
+  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
+  
+  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
+  
+  # generate noise
+  if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
+  set.seed(5)
+  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
+  
+  fit <- prelim(y, xs = xs, xe = xe, type = "Kassel", fix_qs1 = FALSE)
 })

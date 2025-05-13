@@ -237,7 +237,8 @@ mnlink_cann_check <- function(obj){
     stopifnot(nrow(obj$Bs) == p - 1)
     stopifnot(ncol(obj$Qs) == p)
     
-    stopifnot(max(abs(obj$Bs-diag(diag(obj$Bs)))) < sqrt(.Machine$double.eps))
+    row(obj$Bs)!=col(obj$Bs)
+    stopifnot(max(abs(obj$Bs[row(obj$Bs)!=col(obj$Bs)]), 0) < sqrt(.Machine$double.eps))
     stopifnot(max(abs(t(obj$Qs) %*% obj$Qs - diag(1, ncol(obj$Qs)))) < sqrt(.Machine$double.eps))
     if (any(diag(obj$Bs) > 1)){warning("Elements of Bs are larger than 1")}
     if (any(diag(obj$Bs) < 0)){warning("Elements of Bs are negative")}
@@ -252,7 +253,7 @@ mnlink_cann_check <- function(obj){
     stopifnot(nrow(obj$Be) == p - 1)
     stopifnot(ncol(obj$Qe) == p)
     
-    stopifnot(max(abs(obj$Be-diag(diag(obj$Be)))) < sqrt(.Machine$double.eps))
+    stopifnot(max(abs(obj$Be[row(obj$Be)!=col(obj$Be)]), 0) < sqrt(.Machine$double.eps))
     stopifnot(max(abs(t(obj$Qe) %*% obj$Qe - diag(1, ncol(obj$Qe)))) < sqrt(.Machine$double.eps))
     stopifnot(is.vector(obj$ce))
     stopifnot(length(obj$ce) == p)
@@ -405,13 +406,13 @@ rmnlink_cann <- function(p = 3, qs = 5, qe = 4, preseed = 0){
     set.seed(preseed + 2)
     Qs <- mclust::randomOrthogonalMatrix(qs, p)
     set.seed(preseed + 3)
-    Bs <- diag(sort(runif(p-1), decreasing = TRUE))
+    Bs <- diag(x = sort(runif(p-1), decreasing = TRUE), nrow = p-1)
   }
   if (qe > 0){
     set.seed(preseed + 2 + 10)
     Qe <- mclust::randomOrthogonalMatrix(qe, p)
     set.seed(preseed + 3 + 10)
-    Be <- diag(sort(runif(p-1), decreasing = TRUE))
+    Be <-diag(x = sort(runif(p-1), decreasing = TRUE), nrow = p-1) 
     set.seed(preseed + 4 + 10)
     ce <- runif(p)
   }

@@ -291,7 +291,7 @@ test_that("prelim() destandardises variables correctly", {
 
 
 test_that("Hessian eigenvalues match DoF", {
-  rmnlink_cann__place_in_env(2, 2, 2)
+  rmnlink_cann__place_in_env(3, 3, 3)
   
   #generate covariates Gaussianly
   set.seed(4)
@@ -314,12 +314,65 @@ test_that("Hessian eigenvalues match DoF", {
   DoF <- DoF_Stiefel(p, p) + #P
     DoF_Stiefel(qs, p) + #Qs
     DoF_Stiefel(qe, p) + #Qe
-    qs-1 + #Bs
-    qe-1 + #Be
+    p-1 + #Bs
+    p-1 + #Be
     p #ce
   expect_equal(sum(Re(evals) > sqrt(.Machine$double.eps)), DoF)
   # There are more positive eigenvalues than DoF! That shouldn't happen either, should it?
   round(Re(evals), 3)
   # there are also slightly negative eigenvalues - which also shouldn't happen!!
   expect_gt(min(Re(evals)), -sqrt(.Machine$double.eps))
+  # could also count using Omega:
+  DoF2 <- (p-1) + #p1
+    qs-1 + # qs1 
+    qe-1 + # qe1
+    1 + #ce
+    (p-1) + #PBce minus 1 from orthogonal with p1 constraint
+    p * (qe + qs) + #Omega
+    -1*(qe + qs) + #p1 orthogonality
+    -1*p + #qe1 orthogonality
+    -1*p + #qs1 orthogonality
+    - (p-1) * (p - 2) / 2 #commutative constraint on Omega 
+  expect_equal(DoF2, DoF)
+  DoF2
+  DoF
+})
+
+test_that("Hessian eigenvalues match DoF for S2S", {
+  rmnlink_cann__place_in_env(3, 4, 0)
+  
+  #generate covariates Gaussianly
+  #generate covariates on the sphere
+  set.seed(4)
+  xs <- matrix(rnorm(1000*qs), nrow = 1000)
+  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
+  
+  ymean <- mnlink(xs = xs, param = paramobj)
+  
+  # generate noise
+  if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
+  set.seed(5)
+  y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
+  
+  fit <- prelim_ad(y, xs = xs, paramobj0 = as_mnlink_Omega(paramobj))
+  evals <- eigen(fit$loc_nloptr$solution_Hes_f, only.values = TRUE)$values
+  expect_lt(max(abs(Im(evals))), sqrt(.Machine$double.eps))
+  DoF <- DoF_Stiefel(p, p) + #P
+    DoF_Stiefel(qs, p) + #Qs
+    p-1 #Bs
+  expect_equal(sum(Re(evals) > sqrt(.Machine$double.eps)), DoF)
+  # There are more positive eigenvalues than DoF! That shouldn't happen either, should it?
+  round(Re(evals), 3)
+  # there are also slightly negative eigenvalues - which also shouldn't happen!!
+  expect_gt(min(Re(evals)), -sqrt(.Machine$double.eps))
+  # could also count using Omega:
+  DoF2 <- (p-1) + #p1
+    qs-1 + # qs1 
+    (p-1) + #PBce minus 1 from orthogonal with p1 constraint
+    p * (qe + qs) + #Omega
+    -1*(qe + qs) + #p1 Omega orthogonality
+    -1*p #qs1 Omega orthogonality
+  expect_equal(DoF2, DoF)
+  DoF2
+  DoF
 })

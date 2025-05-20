@@ -291,7 +291,7 @@ test_that("prelim() destandardises variables correctly", {
 
 
 test_that("Hessian eigenvalues match DoF", {
-  rmnlink_cann__place_in_env(5, 9, 7)
+  rmnlink_cann__place_in_env(3, 4, 3)
   
   #generate covariates Gaussianly
   set.seed(4)

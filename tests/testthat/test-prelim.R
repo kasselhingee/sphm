@@ -295,10 +295,10 @@ test_that("Hessian eigenvalues match DoF", {
   
   #generate covariates Gaussianly
   set.seed(4)
-  xe <- matrix(rnorm(1000*qe), nrow = 1000)
+  xe <- matrix(rnorm(100*qe), nrow = 100)
   #generate covariates on the sphere
   set.seed(4)
-  xs <- matrix(rnorm(1000*qs), nrow = 1000)
+  xs <- matrix(rnorm(100*qs), nrow = 100)
   xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
   
   ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
@@ -309,20 +309,48 @@ test_that("Hessian eigenvalues match DoF", {
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
   
   fit <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
-  evals <- eigen(fit$loc_nloptr$solution_Hes_f, only.values = TRUE)$values
-  expect_lt(max(abs(Im(evals))), sqrt(.Machine$double.eps))
+
+  # In the below Hessian the constraints built into the likelihood calculation are incorporated: 
+  #p1 size, 
+  #qs1 size, 
+  #qe1 size, 
+  #Omega orthogonal to qs1 and qe1
+  #PBce orthogonal to p1
+  #maybe more in mnlink_cpp()?
+  #So far it is omitting the commutativity constraints on Omega
+  #which have (p-1) * (p - 2) / 2 DoF
+  evals <- eigen(fit$loc_nloptr$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
+  
   DoF <- DoF_Stiefel(p, p) + #P
     DoF_Stiefel(qs, p) + #Qs
     DoF_Stiefel(qe, p) + #Qe
     p-1 + #Bs
     p-1 + #Be
     p #ce
-  expect_equal(sum(Re(evals) > sqrt(.Machine$double.eps)), DoF)
+  expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + (p-1) * (p - 2) / 2)
   # There are more positive eigenvalues than DoF! That shouldn't happen either, should it?
-  round(Re(evals), 3)
+  round(evals, 3)
+  evals[17]
   # there are also slightly negative eigenvalues - which also shouldn't happen!!
-  expect_gt(min(Re(evals)), -sqrt(.Machine$double.eps))
-  # could also count using Omega:
+  expect_gt(min(evals), -sqrt(.Machine$double.eps))
+  
+  mnlink_cann_check(as_mnlink_cann(fit$solution))
+  mnlink_Omega_check_numerical(fit$solution)
+  espace <- eigen(fit$loc_nloptr$solution_Hes_f)
+  rownames(espace$vectors) <- colnames(fit$loc_nloptr$solution_Hes_f)
+  round(, 4)
+  dir <- Re(espace$vectors[,17])
+  dir_obj <- mnlink_Omega_unvec(dir, p = p, qe = qe, check = FALSE)
+  dir_obj$p1 %*% fit$solution$p1
+  dir_obj$qs1 %*% fit$solution$qs1
+  dir_obj$qe1 %*% fit$solution$qe1
+  dir_obj$PBce %*% fit$solution$p1
+  fit$solution$p1 %*% dir_obj$Omega
+  dir_obj$Omega[,1:qs] %*% fit$solution$qs1
+  dir_obj$Omega[,qs + (1:qe)] %*% fit$solution$qe1
+  round(mnlink_Omega_check_numerical(dir_obj), 4)
+  
+  # could also count using Omega (I'm pretty sure this is wrong - but how!?)
   DoF2 <- (p-1) + #p1
     qs-1 + # qs1 
     qe-1 + # qe1
@@ -336,6 +364,13 @@ test_that("Hessian eigenvalues match DoF", {
   expect_equal(DoF2, DoF)
   DoF2
   DoF
+  
+  set.seed(112)
+  rstart <- rmnlink_cann(p, qs, qe)
+  fit2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = rstart)
+  all.equal(fit$solution, fit2$solution)
+  evals <- eigen(fit2$loc_nloptr$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
+  evals[17]
 })
 
 test_that("Hessian eigenvalues match DoF for S2S", {

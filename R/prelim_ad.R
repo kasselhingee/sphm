@@ -143,6 +143,15 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_q
   ))
 }
 
+prelim_ad_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
+  DoF <- DoF_Stiefel(p, p) + #P
+    DoF_Stiefel(qs, p) + #Qs
+    DoF_Stiefel(qe, p) + #Qe
+    (qs>0)*(p-1) + #Bs
+    (qe>0)*(p-1) + #Be
+    (qe>0)*p #ce  
+}
+
 # Standard errors using the Fisher Information Matrix
 # If k not supplied, estimates k
 vMF_SE <- function(y, xs = NULL, xe = NULL, k = NULL, param, type = "Kassel"){

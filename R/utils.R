@@ -27,4 +27,8 @@ topos1strow <- function(mat){
 
 # gives the degree of freedom of an object with n rows and p columns (i.e. p orthonormal vectors in n space)
 # This formula is from wikipedia and (2.1) of Edelman et al 1998.
-DoF_Stiefel <- function(n, p){n*p - p * (p+1)/2}
+DoF_Stiefel <- function(n, p){
+  if (n == 0){return(0)}
+  if (n < p){return(NA_integer_)} #it is not possible to have more orthogonal vectors (p) than the dimension of the ambient space (n)
+  n*p - p * (p+1)/2
+}

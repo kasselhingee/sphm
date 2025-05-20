@@ -100,7 +100,7 @@ test_that("Conversions work: Sph + Euc", {
   # commutivity doesn't apply to general matrices:
   dummy <- matrix(rnorm(p * (qs + qe)), p, qs + qe)
   Om$Omega <- dummy
-  expect_true(all(mnlink_Omega_check_numerical(Om)[c("Omega_comm_s", "Omega_comm_e")] > rep(sqrt(.Machine$double.eps), 2)))
+  expect_gt(mnlink_Omega_check_numerical(Om)["Omega_comm"], sqrt(.Machine$double.eps))
 })
 
 test_that("Conversions work: Sph only", {

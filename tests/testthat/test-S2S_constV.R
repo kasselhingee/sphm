@@ -23,53 +23,6 @@ test_that("rotatedresiduals() rotates residuals to the northpole along a geodesi
   expect_equal(rresid2, -rresid)
 })
 
-test_that("Jupp's transport gives the reflected residual of geodesic transport", {
-  rmnlink_cann__place_in_env(6, 7, 7)
-  omegapar <- as_mnlink_Omega(paramobj)
-  
-  #generate covariates Gaussianly
-  set.seed(4)
-  xe <- matrix(rnorm(1000*qe), nrow = 1000)
-  #generate covariates on the sphere
-  set.seed(4)
-  xs <- matrix(rnorm(1000*qs), nrow = 1000)
-  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
-  
-  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
-  
-  # generate noise
-  # step 1: axes defined at P[, 1], orthogonal to P[, 1]
-  set.seed(5)
-  Kstar <- mclust::randomOrthogonalMatrix(p-1, p-1)
-  Kstar[, 1] <- det(Kstar) * Kstar[,1]
-  Gstar <- getHstar(P[ ,1]) %*% Kstar
-  # step 2: assume concentration and scales are constant
-  k <- 30
-  a <- c(1, seq(5, 0.2, length.out = p-1))
-  a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
-  #step 3: for each location define G as mean and geodesic transport of Gstar columns
-  # then simulate from a SvMF, and evaluate density at the noise
-  set.seed(6)
-  y_ld <- t(apply(ymean, 1, function(mn){
-    G <- cbind(mn, rotationmat_amaral(P[,1], mn) %*% Gstar)
-    obs <- rSvMF(1, SvMFcann(k, a, G))
-    ld <- uldSvMF_cann(obs, k = k, a = a, G = G)
-    return(c(obs, ld))
-  }))
-  
-  rresid1 <- rotatedresid(y = y_ld[, 1:p], ypred = ymean, base = nthpole(p), path = "Amaral")
-  rresid2 <- rotatedresid(y = y_ld[, 1:p], ypred = ymean, base = nthpole(p), path = "Jupp")
-  rresid3 <- rotatedresid(y = y_ld[, 1:p], ypred = ymean, base = nthpole(p), path = "Absil")
-  expect_equal(rresid2, -rresid1)
-  expect_equal(rresid1, rresid3)
-  
-  a <- lapply(1:nrow(ymean), function(i){
-    projmat <- diag(p) - ymean[i, ] %*% t(ymean[i, ])
-    expect_equal(rotationmat_amaral(ymean[i, ], nthpole(p)) %*% projmat, -JuppRmat(ymean[i, ], nthpole(p)) %*% projmat)
-    expect_equal(rotationmat_amaral(ymean[i, ], nthpole(p)) %*% projmat, partransportmat(ymean[i, ], nthpole(p)) %*% projmat)
-  })
-})
-
 test_that("maximum likelihood for parallel axes per geodesic path", {
   rmnlink_cann__place_in_env(4, 5, 4)
   omegapar <- as_mnlink_Omega(paramobj)

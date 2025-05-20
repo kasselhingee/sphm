@@ -8,18 +8,20 @@
 #' @param Be Scaling matrix for Euclidean covariates: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size. `NULL` if no Euc covariates.
 #' @param Qs The qs x p rotation-like matrix `R_s` for rotating the spherical covariate vector. `NULL` if no Sph covariates.
 #' @param Qe The qe x p rotation-like matrix `R_e` for rotating the Euclidean covariate vector. `NULL` if no Euc covariates.
-#' @param ce The additive offset \eqn{c_e} for Euclidean covariates only. Vector of length p. If an element of `Be` is 0, then the convention will be for th corresponding element of `ce` to be zero. `NULL` if no Euc covariates.
+#' @param ce A single real value. The additive offset \eqn{c_e} in the denominator below Euclidean covariates in the 'H' link. `NULL` if no Euc covariates.
 #' @details
 #' # Cannonical Parameterisation
-#' The `P`, `Bs`, `Be`, `Qs`, `Qe` and `ce` is slightly more flexible than Shogo's link function with both Euclidean covariates and a spherical covariate that matches Remark 1 of Manuscript (Nov 29, 2024).
+#' The parameters here are for a mean link defined as
+#' \deqn{\mu_{H}(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  \frac{B_e(Q_e[,-1]^\top x_e\right)}{Qe[,1]^\top x_e + c_e}.}
+#' The `P`, `Bs`, `Be`, `Qs`, `Qe` and `ce` is slightly more flexible than Shogo's link function with both Euclidean covariates and a spherical covariate in Definition 1 of `main_v8.tex` (May 20, 2024).
 #' Shogo's link (Equation (1) from that manuscript) 
-#' \deqn{\mu(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  B_e(Q_e[,-1]^\top x_e + c_e[-1]\right)}
-#' can be obtained by including an extra zero-valued Euclidean covariate as the first covariate and forcing \eqn{q_{1e}} to be `(1, 0, ...)` to match the index of the constant covariate and setting `ce[1]` to be 1. I think these changes will not affect the estimation method as both \eqn{q_{1e}} and `ce[1]` separate out of the "Omega" parameterisation.
+#' \deqn{\mu(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  B_e(Q_e[,-1]^\top x_e\right)}
+#' can be obtained by including an extra zero-valued Euclidean covariate as the first covariate and forcing \eqn{q_{1e}} to be `(1, 0, ...)` to match the index of the constant covariate and setting `ce=1`. I think these changes will not affect the estimation method as both \eqn{q_{1e}} and `ce` separate out of the "Omega" parameterisation.
 #' 
 #' Andy's link function for Euclidean covariates needs an additional scaling \eqn{b_{im}} parameter for the imaginary component Andy's link function to be parameterised. It will also need `ce = 0` and `Bs` and `Qs` will be ignored since spherical covariates not incorporated yet.
 #' 
 #' # Omega Parameterisation
-#' The link functions are simplified by writing \eqn{\Omega_s = P^* B_s {Q_s^*}^T} and \eqn{\Omega_e = P^* B_e {Q_e^*}^T}, \eqn{\Omega = [\Omega_s \,\, \Omega_e]}, and \eqn{'PBc_e' = P^* B_e c_e[-1]}.
+#' The link functions are simplified by writing \eqn{\Omega_s = P^* B_s {Q_s^*}^T} and \eqn{\Omega_e = P^* B_e {Q_e^*}^T}, \eqn{\Omega = [\Omega_s \,\, \Omega_e]}.
 #' This parameterisation helps optimisation as optimisation in Stiefel manifolds is harder than other spaces, and also reflects the sign ambiguity of columns of P with the matching columns of `Qe` and `Qs`.
 #' 
 NULL
@@ -67,7 +69,7 @@ mnlink_cann_vec <- function(obj){
   Bevec <- as.vector(diag(obj$Be))
   if (length(Bevec) > 0){names(Bevec) <- paste0("Be", 1:(nrow(obj$Be)))}
   cevec <- obj$ce
-  if (!is.null(cevec)){names(cevec) <- paste0("ce", 1:length(cevec))}
+  if (!is.null(cevec)){names(cevec) <- paste0("ce", c("",1:(length(cevec) - 1)))}
   return(c(Pvec, Bsvec, Qsvec, Bevec, Qevec, cevec))
 }
 
@@ -185,8 +187,7 @@ cann2Omega <- function(obj, check = TRUE){
   }
   if (!is.null(qe1)){
     Omega_e <- obj$P[,-1] %*% obj$Be %*% t(obj$Qe[, -1])
-    ce1 <- obj$ce[1]
-    PBce <- as.vector(obj$P[,-1] %*% obj$Be %*% obj$ce[-1])
+    ce1 <- obj$ce
   }
   Omega <- cbind(Omega_s, Omega_e)
   return(mnlink_Omega(p1, qs1 = qs1, Omega = Omega, qe1 = qe1, ce1 = ce1, PBce = PBce, check = FALSE))
@@ -200,7 +201,7 @@ Omega2cann <- function(obj, check = TRUE){
 
   P <- cbind(obj$p1, svdres$u)
   
-  # the rest uses the SVD of Omega as written in the Euclidean link document
+  # much of the rest uses the SVD of Omega as written in the Euclidean link document (not ce)
   Qs <- Qe <- Bs <- Be <- ce <- NULL
   if (length(obj$qs1) > 0){
     Qs_unnorm <- svdres$v[seq.int(1, length.out = length(obj$qs1)), , drop = FALSE]
@@ -215,8 +216,7 @@ Omega2cann <- function(obj, check = TRUE){
     Qestar <- t(t(Qe_unnorm)/ Qe_norms)
     Qe <- cbind(obj$qe1, Qestar)
     Be <- diag(Qe_norms * svdres$d[-nrow(obj$Omega)])
-    ce <- c(obj$ce1, diag(1/diag(Be)) %*% t(P[,-1]) %*% obj$PBce)
-    ce[-1][abs(diag(Be)) < .Machine$double.eps] <- 0  #if element of B very close to 0, set the element of ce to 0, rather than NaN
+    ce <- obj$ce1
   }
   
   mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = check)
@@ -256,7 +256,7 @@ mnlink_cann_check <- function(obj){
     stopifnot(max(abs(obj$Be[row(obj$Be)!=col(obj$Be)]), 0) < sqrt(.Machine$double.eps))
     stopifnot(max(abs(t(obj$Qe) %*% obj$Qe - diag(1, ncol(obj$Qe)))) < sqrt(.Machine$double.eps))
     stopifnot(is.vector(obj$ce))
-    stopifnot(length(obj$ce) == p)
+    stopifnot(length(obj$ce) == 1)
     if (any(diag(obj$Be) > 1)){warning("Elements of Be are larger than 1")}
     if (any(diag(obj$Be) < 0)){warning("Elements of Be are negative")}
   } else {

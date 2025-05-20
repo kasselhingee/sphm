@@ -291,7 +291,7 @@ test_that("prelim() destandardises variables correctly", {
 
 
 test_that("Hessian eigenvalues match DoF", {
-  rmnlink_cann__place_in_env(3, 3, 3)
+  rmnlink_cann__place_in_env(4, 4, 4)
   
   #generate covariates Gaussianly
   set.seed(4)
@@ -310,7 +310,7 @@ test_that("Hessian eigenvalues match DoF", {
   
   fit <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
 
-  # In the below Hessian the constraints built into the likelihood calculation are incorporated: 
+  # In the below Hessian of `prelimobj_cpp()` only the constraints built into prelimobj_cpp are incorporated (all from `Omega_proj_cpp()`): 
   #p1 size, 
   #qs1 size, 
   #qe1 size, 
@@ -326,30 +326,7 @@ test_that("Hessian eigenvalues match DoF", {
     DoF_Stiefel(qe, p) + #Qe
     p-1 + #Bs
     p-1 + #Be
-    p #ce
-  expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + (p-1) * (p - 2) / 2)
-  # There are more positive eigenvalues than DoF! That shouldn't happen either, should it?
-  round(evals, 3)
-  evals[17]
-  # there are also slightly negative eigenvalues - which also shouldn't happen!!
-  expect_gt(min(evals), -sqrt(.Machine$double.eps))
-  
-  mnlink_cann_check(as_mnlink_cann(fit$solution))
-  mnlink_Omega_check_numerical(fit$solution)
-  espace <- eigen(fit$loc_nloptr$solution_Hes_f)
-  rownames(espace$vectors) <- colnames(fit$loc_nloptr$solution_Hes_f)
-  round(, 4)
-  dir <- Re(espace$vectors[,17])
-  dir_obj <- mnlink_Omega_unvec(dir, p = p, qe = qe, check = FALSE)
-  dir_obj$p1 %*% fit$solution$p1
-  dir_obj$qs1 %*% fit$solution$qs1
-  dir_obj$qe1 %*% fit$solution$qe1
-  dir_obj$PBce %*% fit$solution$p1
-  fit$solution$p1 %*% dir_obj$Omega
-  dir_obj$Omega[,1:qs] %*% fit$solution$qs1
-  dir_obj$Omega[,qs + (1:qe)] %*% fit$solution$qe1
-  round(mnlink_Omega_check_numerical(dir_obj), 4)
-  
+    p #ce  
   # could also count using Omega (I'm pretty sure this is wrong - but how!?)
   DoF2 <- (p-1) + #p1
     qs-1 + # qs1 
@@ -362,15 +339,11 @@ test_that("Hessian eigenvalues match DoF", {
     -1*p + #qs1 orthogonality
     - (p-1) * (p - 2) / 2 #commutative constraint on Omega 
   expect_equal(DoF2, DoF)
-  DoF2
-  DoF
-  
-  set.seed(112)
-  rstart <- rmnlink_cann(p, qs, qe)
-  fit2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = rstart)
-  all.equal(fit$solution, fit2$solution)
-  evals <- eigen(fit2$loc_nloptr$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
-  evals[17]
+  expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + (p-1) * (p - 2) / 2)
+  # There are more positive eigenvalues than DoF! That shouldn't happen either, should it?
+  round(evals, 3)
+  # there are slightly negative eigenvalues - which can only happen because some the constraints aren't incorporated into the calculation
+  expect_gt(min(evals), -sqrt(.Machine$double.eps))
 })
 
 test_that("Hessian eigenvalues match DoF for S2S", {

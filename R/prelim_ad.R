@@ -1,6 +1,6 @@
 
 #' @param ssqOmbuffer The sum of squared singular values of Omega is allowed to go `ssqOmbuffer` above the limit given by singular values of 1 (or 2 if there are both Euclidean and spherical coordinates).
-prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_qe1 = FALSE, globalfirst = FALSE, ssqOmbuffer = 2, ...){ #paramobj0 is the starting parameter object
+prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_qe1 = FALSE, ssqOmbuffer = 2, ...){ #paramobj0 is the starting parameter object
   om0 <- as_mnlink_Omega(paramobj0)
   # check inputs:
   try(mnlink_Omega_check(om0))
@@ -63,27 +63,6 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_q
   Jac_ineq <- matrix(ineqconstraint_tape$Jacobian(x0), byrow = TRUE, ncol = length(x0))
   stopifnot(all(abs(svd(Jac_ineq)$d) > sqrt(.Machine$double.eps)))
 
-  if (globalfirst){ #do a quick global search first #nlopt recommends doing a local search afterwards
-    default_opts <- list(algorithm = "NLOPT_GN_ISRES", #the only algorthim that natively handles non-linear equality constraints - all the others have to use augmented Lagrangian ideas.
-	        xtol_rel = 1E-04,
-	        tol_constraints_eq = rep(1E-1, constraint_tape$range),
-	        maxeval = 1E2)
-    ellipsis_args <- list(...)
-    combined_opts <- utils::modifyList(default_opts, ellipsis_args)
-    globopt <- nloptr::nloptr(
-      x0 = x0,
-      eval_f = function(theta){-obj_tape$eval(theta, vector(mode = "numeric"))},
-      eval_g_eq =  function(theta){constraint_tape$eval(theta, vector(mode = "numeric"))},
-      eval_g_ineq =  function(theta){ineqconstraint_tape$eval(theta, vector(mode = "numeric")) - ssqOmbuffer},
-      lb = vec_om0 * 0 - 10, #10 is just a guess here. For the spherical covariate stuff, I suspect most values are well below 1. *Euc will be different*
-      ub = vec_om0 * 0 + 10,
-      opts = combined_opts
-    )
-    warning("lb and ub not properly set")
-    if (!(globopt$status %in% 1:4)){warning(globopt$message)}
-    vec_om0 <- globopt$solution
-  }
-  
   # prepare nloptr options
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",
                 xtol_rel = 1E-10, #1E-04,

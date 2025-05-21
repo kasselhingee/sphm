@@ -112,7 +112,7 @@ recoordinate_cann <- function(param, yrot = diag(nrow(param$P)),
   paramstd <- param
   paramstd$Qs <- xsrot %*% param$Qs
   paramstd$Qe <- xerot %*% param$Qe
-  paramstd$ce <- drop(t(param$Qe) %*% xecenter + param$ce)
+  paramstd$ce <- drop(t(param$Qe[,1]) %*% xecenter + param$ce)
   paramstd$P <-  yrot %*% param$P
   return(paramstd)
 }
@@ -134,14 +134,12 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   # changes from xsrot, xerot and xecenter
   omstd$qs1 <- drop(xsrot %*% om$qs1)
   omstd$qe1 <- drop(xerot %*% om$qe1)
-  omstd$ce1 <- drop(t(om$qe1) %*% xecenter) + om$ce1
+  omstd$ce <- drop(t(om$qe1) %*% xecenter) + om$ce
   omstd$Omega[, seq.int(1, length.out = qs)] <- om$Omega[, seq.int(1, length.out = qs)] %*% t(xsrot)
   omstd$Omega[, seq.int(qs + 1, length.out = qe)] <- om$Omega[, seq.int(qs + 1, length.out = qe)] %*% t(xerot)
-  if (qe > 0){omstd$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% xecenter + om$PBce)}
   
   # add yrot change
   omstd$Omega <- yrot %*% omstd$Omega
-  if (qe > 0){omstd$PBce <- drop(yrot %*% omstd$PBce)}
   omstd$p1 <- drop(yrot %*% omstd$p1)
   return(omstd)
 }
@@ -166,13 +164,11 @@ undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   om$Omega[, seq.int(1, length.out = qs)] <- omstd$Omega[, seq.int(1, length.out = qs)] %*% xsrot
   om$Omega[, seq.int(qs + 1, length.out = qe)] <- omstd$Omega[, seq.int(qs + 1, length.out = qe)] %*% xerot
   
-  # use the above calculated qe1 and Omega to get ce1 and PBce unde xerot and xecenter
-  om$ce1 <- drop(t(om$qe1) %*% (-xecenter)) + omstd$ce1
-  if (qe > 0){om$PBce <- drop(om$Omega[, seq.int(qs + 1, length.out = qe)] %*% (-xecenter)) + omstd$PBce}
+  # use the above calculated qe1 and Omega to get ce under xerot and xecenter
+  om$ce <- drop(t(om$qe1) %*% (-xecenter)) + omstd$ce
   
   # Undo the effect of yrot
   om$p1 <- drop(t(yrot) %*% omstd$p1)
-  if (qe > 0){om$PBce <- drop(t(yrot) %*% om$PBce)}
   om$Omega <- t(yrot) %*% om$Omega
   return(om)
 }

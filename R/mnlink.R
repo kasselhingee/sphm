@@ -1,7 +1,7 @@
 #' Calculate the Mean Given Covariates
 #' @description
-#' Implements mean following Remark 1:
-#' \deqn{\mu(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  \frac{B_e(Q_e[,-1]^\top x_e + c_e[-1])}{Q_e[,1]^\top x_e + c_e[1]}\right)}
+#' Implements mean link:
+#' \deqn{\mu_{H}(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  \frac{B_e(Q_e[,-1]^\top x_e\right)}{Qe[,1]^\top x_e + c_e}.}
 #' @param xs A matrix of row-vectors of the spherical covariate.
 #' @param xe A matrix of row-vectors of the Euclidean covariates.
 #' @param param Parameters of the mean link. As an object of class "mnlink_Omega" or "mnlink_cann". See [`mnlink_params`]. 
@@ -9,8 +9,8 @@
 #' If `param` is of class "mnlink_Omega" then means are computed as
 #' \deqn{\mu(x) = \frac{(1-\|\tilde{y}(x)\|^2) P[,1] + 2 \tilde{y}(x)}{1+\|\tilde{y}(x)\|^2}}
 #' where
-#' \deqn{\tilde{y}(x) = \frac{\Omega_s x_s}{1+Q_s[,1]^\top x_s} + \frac{\Omega_e x_e + \tilde{c}_e}{c_e[1]+{Q_e[,1]}^\top x_e}}
-#' and \eqn{x_s} and \eqn{x_e} are the spherical and Euclidean covariate and \eqn{\tilde{c}_e = P[,-1]B_e c_e[-1]} is the `PBce` element of `param`.
+#' \deqn{\tilde{y}(x) = \frac{\Omega_s x_s}{1+Q_s[,1]^\top x_s} + \frac{\Omega_e x_e}{c_e+{Q_e[,1]}^\top x_e}}
+#' and \eqn{x_s} and \eqn{x_e} are the spherical and Euclidean covariate.
 #' @export
 mnlink <- function(xs = NULL, xe = NULL, param = NULL, check = TRUE){
   if (!is.null(xs)){
@@ -50,9 +50,9 @@ mnlink_pred_cann <- function(xs = NULL, xe = NULL, paramobj){
     y <- y + Sp(xs %*% paramobj$Qs) %*% paramobj$Bs
   }
   if (!is.null(paramobj$Qe)){
-    xetilde <- t(t(xe %*% paramobj$Qe) + paramobj$ce) #first column is used in denominator
+    xetilde <- xe %*% paramobj$Qe #first column is used in denominator
     numerator <- (xetilde[, -1, drop = FALSE]) %*% paramobj$Be
-    denominator <- xetilde[,1]
+    denominator <- xetilde[,1] + paramobj$ce
     y <- y + (numerator/denominator)
   }
   out <- iSp(y) %*% t(paramobj$P)

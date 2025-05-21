@@ -98,7 +98,7 @@ mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("nu
     qs1 = qs1,
     qe1 = qe1,
     Omega = Omega,
-    ce = ce,
+    ce = ce
   )
   class(obj) <- c("mnlink_Omega", class(obj))
   if (check) {mnlink_Omega_check(obj)}
@@ -144,10 +144,10 @@ mnlink_Omega_vec <- function(obj){
 #' @param p The dimension of the response (The dimension of covariates will be infered from `p`).
 #' @param qe Number of Euclidean covariates
 mnlink_Omega_unvec <- function(vec, p, qe = 0, check = TRUE){
-  # length of vec = p + qs + qe + p*(qs + qe) + (qe>0) + p*(qe>0)
-  # l - (p+1)*(qe>0) - qe - p*qe = qs + p*qs
-  # (l - (p+1)*(qe>0) - qe - p*qe)/(1+p) = qs
-  qs <- (length(vec) - p - (p+1)*(qe>0) - qe - p*qe)/(1+p)
+  # length of vec = p + qs + qe + p*(qs + qe) + (qe>0)
+  # l - 1*(qe>0) - qe - p*qe = qs + p*qs
+  # (l - (qe>0) - qe - p*qe)/(1+p) = qs
+  qs <- (length(vec) - p - (qe>0) - qe - p*qe)/(1+p)
   stopifnot(qs == as.integer(qs))
   names(vec) <- NULL
   
@@ -403,7 +403,7 @@ rmnlink_cann <- function(p = 3, qs = 5, qe = 4, preseed = 0){
     set.seed(preseed + 3 + 10)
     Be <-diag(x = sort(runif(p-1), decreasing = TRUE), nrow = p-1) 
     set.seed(preseed + 4 + 10)
-    ce <- runif(p)
+    ce <- runif(1)
   }
   paramobj <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = TRUE)
   return(paramobj)

@@ -80,4 +80,11 @@ veca1 Omega_ineqconstraints(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd &
 }
 
 
-
+int Omega_veclength(int p, int qs, int qe){
+  int out;
+  out = p + //p1
+    (qs + qe) + //qs1 and qe1
+    p*(qs + qe) + //Omega
+    (qe>0); //ce
+  return(out);
+}

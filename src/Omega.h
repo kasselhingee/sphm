@@ -117,5 +117,6 @@ veca1 Omega_constraints_wrap(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd 
 //Constraints on the singular values of Omega - not exact unfortunately, just on total sum
 veca1 Omega_ineqconstraints(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd & ignore2);
 
+int Omega_veclength(int p, int qs, int qe);
 
 #endif

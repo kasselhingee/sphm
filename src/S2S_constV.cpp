@@ -143,11 +143,11 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
 // reverse function
 // without ce, would only need q = qs + qe to be passed in
 std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const veca1 & mainvec, int p, int qs, int qe) {
-  if (mainvec.size() != p + (qs + qe) + p*(qs + qe) + (qe>0) * (1 + p) + 1 + (p-2) + ((p-2) * (p-1) / 2)  ) {
+  if (mainvec.size() != Omega_veclength(p, qs, qe) + 1 + (p-2) + ((p-2) * (p-1) / 2)  ) {
     Rcpp::stop("Input vector size does not match expected dimensions.");
   }
   
-  veca1 omvec = mainvec.segment(0,  p + (qs + qe) + p*(qs + qe) + (qe>0) * (1 + p));
+  veca1 omvec = mainvec.segment(0,  Omega_veclength(p, qs, qe));
   a1type k = mainvec(omvec.size());
   veca1 laremaining_m1(p - 2); //convert log remaining to full aremaining
   laremaining_m1 = mainvec.segment(omvec.size() + 1, p - 2);

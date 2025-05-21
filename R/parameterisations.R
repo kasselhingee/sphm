@@ -324,7 +324,7 @@ mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothne
     Is_tilde <- diag(1, qs + qe, qs) # for commutivity check
     OmpartOmpart <- obj$Omega %*% (Is_tilde %*% t(Is_tilde)) %*% t(obj$Omega) # for commutivity check
     Omega_comm = (sum((OmOm %*% OmpartOmpart - OmpartOmpart %*% OmOm)^2)^2) # for commutivity check - Frobenius norm of 0
-    # above second ^2 is a temporary hack to make Omega_comm be on a similar scale to all the other tests
+    # above second ^2 is a hack to make Omega_comm be on a similar scale to all the other tests. See the C++ implementation of this constraint for a vector that is a more refined representation of the constraint
     checkvals <- c(checkvals, Omega_comm = Omega_comm)
   }
   return(checkvals)

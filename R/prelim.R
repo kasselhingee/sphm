@@ -56,7 +56,7 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", fix_qs1 = FALSE, st
                 Qs = if (!is.null(xs)){diag(1, ncol(xs), p)},
                 Be = if (!is.null(xe)){diag(0.9, p-1)},
                 Qe = if (!is.null(xe)){diag(1, ncol(xe), p)},
-                ce = if (!is.null(xe)){c(1, rep(0, p-1))}
+                ce = if (!is.null(xe)){1}
     )
     if ((type == "Kassel") && !is.null(xe)){ #default to be larger an all values of -xe
       start$ce[1] <- max(-xe)  +  0.1*IQR(xe)

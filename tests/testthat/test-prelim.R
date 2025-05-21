@@ -21,7 +21,7 @@ test_that("prelim optimisation works with Euc covars", {
   start <- as_mnlink_Omega(mnlink_cann(P = mclust::randomOrthogonalMatrix(p, p),
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
-                                       ce = rep(0, p)))
+                                       ce = 0))
   opt2 <- prelim_ad(y, xe = x, paramobj0 = start)
   if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$solution <- Omega_Euc_signswitch(opt2$solution)
@@ -102,7 +102,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
                                        Bs = diag(sort(runif(p-1), decreasing = TRUE)),
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
-                                       ce = c(1, rep(0, p-1))))
+                                       ce = 1))
   opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start)
   if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$solution <- Euc_signswitch(opt2$solution)
@@ -151,7 +151,7 @@ test_that("Shogo with Sph+Euc covars", {
                                        Bs = diag(sort(runif(p-1), decreasing = TRUE)),
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
-                                       ce = rep(0, p)))
+                                       ce = 0))
   # convert to start to Shogo form:
   start$Omega <- cbind(start$Omega[,1:qs], 0, start$Omega[,qs + (1:qe)])
   start$qe1 <- c(1, rep(0, qe))

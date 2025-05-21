@@ -30,7 +30,7 @@ mata1 mnlink_cpp(const mata1 &xs, const mata1 &xe, const veca1 &vec, const int p
     ytilde = ytilde + sph_res;
   }
   if (ompar.qe > 0){
-    mata1 numerator = (Omega_e * xe_t).colwise(); //this is something called broadcasting in Eigen
+    mata1 numerator = (Omega_e * xe_t);
     veca1 denominator = (qe1.transpose() * xe_t).array() + ce[0];
     mata1 Euc_res = numerator.array().rowwise()/denominator.transpose().array(); //broadcast the denominator along each row
     ytilde = ytilde + Euc_res; 

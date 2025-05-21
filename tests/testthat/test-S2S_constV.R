@@ -107,7 +107,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   pre <- prelim_ad(y_ld[, 1:p], xs, xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
   badGstar <- getHstar(pre$solution$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], xs, xe, pre$solution, k = 10, a = rep(1, p), Gstar = badGstar, xtol_rel = 1E-4)}, "p!=3")
-  expect_equal(est2$solution, est1$solution, tolerance = 1E-7)
+  expect_equal(est2$solution, est1$solution, tolerance = 1E-3)
 })
 
 

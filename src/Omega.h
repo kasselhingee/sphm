@@ -58,7 +58,7 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> mnlink_Omega_cpp_vec(const mnlink_Omega_cpp<
 // Function to unvectorize into an mnlink_Omega_cpp object
 template <typename T>
 mnlink_Omega_cpp<T> mnlink_Omega_cpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vec, const int p, const int qe = 0) {
-    int qs = (vec.size() - p - (p + 1) * (qe > 0) - qe - p * qe) / (1 + p);
+    int qs = (vec.size() - p - (qe > 0) - qe - p * qe) / (1 + p);
    
     return mnlink_Omega_cpp<T>(vec.segment(0, p), //p1
                         vec.segment(p, qs), //qs1

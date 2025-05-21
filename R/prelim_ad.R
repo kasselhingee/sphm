@@ -32,7 +32,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_q
   if (fix_qe1 && (length(om0$qe1) > 0)){
     # if shogo and Euc, fix some elements
     omfixed$qe1 <- omfixed$qe1 + 1
-    omfixed$ce1 <- omfixed$ce1 + 1
+    omfixed$ce <- omfixed$ce + 1
   }
   
   # fix qs1 to the starting values if qs1 exists
@@ -128,7 +128,7 @@ prelim_ad_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
     DoF_Stiefel(qe, p) + #Qe
     (qs>0)*(p-1) + #Bs
     (qe>0)*(p-1) + #Be
-    (qe>0)*p #ce  
+    (qe>0) #ce  
 }
 
 # Standard errors using the Fisher Information Matrix
@@ -145,7 +145,7 @@ vMF_SE <- function(y, xs = NULL, xe = NULL, k = NULL, param, type = "Kassel"){
     # if shogo and Euc, fix some elements
     omfixed <- lapply(om, function(x) x * 0)
     omfixed$qe1 <- omfixed$qe1 + 1
-    omfixed$ce1 <- omfixed$ce1 + 1
+    omfixed$ce <- omfixed$ce + 1
     isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
     obj_tape_long <- scorematchingad::fixindependent(obj_tape_long, vec_om, isfixed)
     vec_om <- vec_om[!isfixed]

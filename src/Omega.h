@@ -17,7 +17,6 @@ struct mnlink_Omega_cpp {
     Eigen::Matrix<T, Eigen::Dynamic, 1> qe1; //uninitialised these vectors have 0 length
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega;
     Eigen::Matrix<T, Eigen::Dynamic, 1> ce1;  //uninitialised these vectors have 0 length
-    Eigen::Matrix<T, Eigen::Dynamic, 1> PBce;  //uninitialised these vectors have 0 length
     int p = 0;
     int qs = 0;
     int qe = 0;
@@ -26,19 +25,17 @@ struct mnlink_Omega_cpp {
                      Eigen::Matrix<T, Eigen::Dynamic, 1> qs1_,
                      Eigen::Matrix<T, Eigen::Dynamic, 1> qe1_,
                      Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega_, 
-                     Eigen::Matrix<T, Eigen::Dynamic, 1> ce1_,
-                     Eigen::Matrix<T, Eigen::Dynamic, 1> PBce_) 
+                     Eigen::Matrix<T, Eigen::Dynamic, 1> ce1_) 
         : p1(p1_), 
           qs1(qs1_), 
           qe1(qe1_), 
           Omega(Omega_), 
           ce1(ce1_), 
-          PBce(PBce_), 
           p(p1_.size()),
           qs(qs1_.size()), 
           qe(qe1_.size()) {
-        if (qe == 0 && (ce1.size() + PBce.size()) > 0) {
-            Rcpp::stop("ce1 and PBce must be empty when qe is 0");
+        if (qe == 0 && (ce1.size() > 0)) {
+            Rcpp::stop("ce1 must be empty when qe is 0");
         }
     }
 };
@@ -52,8 +49,8 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> mnlink_Omega_cpp_vec(const mnlink_Omega_cpp<
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega = obj.Omega;
 
     //vectorise
-    Eigen::Matrix<T, Eigen::Dynamic, 1> out(obj.p + obj.qs + obj.qe + obj.p * (obj.qs + obj.qe) + obj.ce1.size() + obj.PBce.size());
-    out << obj.p1, obj.qs1, obj.qe1, Eigen::Map< Eigen::Matrix<T, Eigen::Dynamic, 1> >(Omega.data(), Omega.size()), obj.ce1, obj.PBce;
+    Eigen::Matrix<T, Eigen::Dynamic, 1> out(obj.p + obj.qs + obj.qe + obj.p * (obj.qs + obj.qe) + obj.ce1.size());
+    out << obj.p1, obj.qs1, obj.qe1, Eigen::Map< Eigen::Matrix<T, Eigen::Dynamic, 1> >(Omega.data(), Omega.size()), obj.ce1;
 
     return out;
 }
@@ -96,7 +93,6 @@ mnlink_Omega_cpp<T> Omega_proj_cpp(const mnlink_Omega_cpp<T>& inobj) {
         obj.qe1 = obj.qe1 / obj.qe1.norm();
         Omega_e = newOmega.rightCols(obj.qe);
         Omega_e = Omega_e - Omega_e * obj.qe1 * obj.qe1.transpose();
-        obj.PBce = obj.PBce - (obj.p1 * obj.p1.transpose()) * obj.PBce;
     }
 
     // Combine Omega_s and Omega_e into obj.Omega

@@ -375,7 +375,6 @@ P_signswitch <- function(obj, cols){
   if (!is.null(obj$Qs)){obj$Qs[,cols] <- -1 * obj$Qs[,cols]}
   if (!is.null(obj$Qe)){
     obj$Qe[,cols] <- -1 * obj$Qe[,cols]
-    obj$ce[cols] <- -1 * obj$ce[cols]
   }
   return(obj)
 }

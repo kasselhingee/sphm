@@ -16,7 +16,7 @@ struct mnlink_Omega_cpp {
     Eigen::Matrix<T, Eigen::Dynamic, 1> qs1; //uninitialised these vectors have 0 length
     Eigen::Matrix<T, Eigen::Dynamic, 1> qe1; //uninitialised these vectors have 0 length
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega;
-    Eigen::Matrix<T, Eigen::Dynamic, 1> ce1;  //uninitialised these vectors have 0 length
+    Eigen::Matrix<T, Eigen::Dynamic, 1> ce;  //uninitialised these vectors have 0 length
     int p = 0;
     int qs = 0;
     int qe = 0;
@@ -25,17 +25,17 @@ struct mnlink_Omega_cpp {
                      Eigen::Matrix<T, Eigen::Dynamic, 1> qs1_,
                      Eigen::Matrix<T, Eigen::Dynamic, 1> qe1_,
                      Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega_, 
-                     Eigen::Matrix<T, Eigen::Dynamic, 1> ce1_) 
+                     Eigen::Matrix<T, Eigen::Dynamic, 1> ce_) 
         : p1(p1_), 
           qs1(qs1_), 
           qe1(qe1_), 
           Omega(Omega_), 
-          ce1(ce1_), 
+          ce(ce_), 
           p(p1_.size()),
           qs(qs1_.size()), 
           qe(qe1_.size()) {
-        if (qe == 0 && (ce1.size() > 0)) {
-            Rcpp::stop("ce1 must be empty when qe is 0");
+        if (qe == 0 && (ce.size() > 0)) {
+            Rcpp::stop("ce must be empty when qe is 0");
         }
     }
 };
@@ -49,8 +49,8 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> mnlink_Omega_cpp_vec(const mnlink_Omega_cpp<
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega = obj.Omega;
 
     //vectorise
-    Eigen::Matrix<T, Eigen::Dynamic, 1> out(obj.p + obj.qs + obj.qe + obj.p * (obj.qs + obj.qe) + obj.ce1.size());
-    out << obj.p1, obj.qs1, obj.qe1, Eigen::Map< Eigen::Matrix<T, Eigen::Dynamic, 1> >(Omega.data(), Omega.size()), obj.ce1;
+    Eigen::Matrix<T, Eigen::Dynamic, 1> out(obj.p + obj.qs + obj.qe + obj.p * (obj.qs + obj.qe) + obj.ce.size());
+    out << obj.p1, obj.qs1, obj.qe1, Eigen::Map< Eigen::Matrix<T, Eigen::Dynamic, 1> >(Omega.data(), Omega.size()), obj.ce;
 
     return out;
 }

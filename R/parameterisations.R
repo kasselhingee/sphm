@@ -82,23 +82,23 @@ mnlink_cann_vec <- function(obj){
 #' @param qs1 First column of the Qs matrix (vector of length `qs`). `NULL` if no Sph covariates.
 #' @param Omega A `p` by `qe + qs` matrix representing 
 #' \deqn{\Omega = [\Omega_s \Omega_e] = [P^* B_s {Q_s^*}^T \,   P^* B_e {Q_e^*}^T]}
-#' @param ce1 The first element of \eqn{c_e}.
+#' @param ce The value of \eqn{c_e}.
 NULL
 
 OmegaS2S <- function(p1, q1, Omega, check = TRUE){
   mnlink_Omega(p1 = p1, qs1 = q1, Omega = Omega, check = check)
 }
 
-mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("numeric", 0), ce1 = vector("numeric", 0), check = TRUE){
+mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("numeric", 0), ce = vector("numeric", 0), check = TRUE){
   if (is.null(qs1)){qs1 <- vector("numeric", 0)}
   if (is.null(qe1)){qe1 <- vector("numeric", 0)}
-  if (is.null(ce1)){ce1 <- vector("numeric", 0)}
+  if (is.null(ce)){ce <- vector("numeric", 0)}
   obj <- list(
     p1 = p1,
     qs1 = qs1,
     qe1 = qe1,
     Omega = Omega,
-    ce1 = ce1,
+    ce = ce,
   )
   class(obj) <- c("mnlink_Omega", class(obj))
   if (check) {mnlink_Omega_check(obj)}
@@ -122,7 +122,7 @@ mnlink_Omega_vec <- function(obj){
   qs1 <- obj$qs1
   qe1 <- obj$qe1
   Omega <- obj$Omega
-  ce1 <- obj$ce1
+  ce <- obj$ce
   Omegavec <- as.vector(Omega)
   names(Omegavec) <- as.vector(
       outer(seq.int(1, length.out = length(p1)), 
@@ -133,8 +133,8 @@ mnlink_Omega_vec <- function(obj){
   names(p1) <- paste0("p1_", seq.int(1, length.out = length(p1)), recycle0 = TRUE)
   names(qs1) <- paste0("qs1_", seq.int(1, length.out = length(qs1)), recycle0 = TRUE)
   names(qe1) <- paste0("qe1_", seq.int(1, length.out = length(qe1)), recycle0 = TRUE)
-  names(ce1) <- paste0("ce", seq.int(1, length.out = length(ce1)), recycle0 = TRUE)
-  out <- c(p1, qs1, qe1, Omegavec, ce1)
+  names(ce) <- paste0("ce", seq.int(1, length.out = length(ce)), recycle0 = TRUE)
+  out <- c(p1, qs1, qe1, Omegavec, ce)
   class(out) <- "mnlink_Omega_vec"
   return(out)
 }
@@ -155,7 +155,7 @@ mnlink_Omega_unvec <- function(vec, p, qe = 0, check = TRUE){
            qs1 = vec[p + seq.int(1, length.out = qs)],
            qe1 = vec[p + qs + seq.int(1, length.out = qe)],
            Omega = matrix(vec[p + qs + qe + seq.int(1, length.out = p*(qe + qs))], nrow = p, ncol = qs + qe, byrow = FALSE),
-           ce1 = vec[p + qs + qe + p*(qs + qe) + seq.int(1, length.out = (qe > 0))],
+           ce = vec[p + qs + qe + p*(qs + qe) + seq.int(1, length.out = (qe > 0))],
            check = check)
 }
 
@@ -175,16 +175,16 @@ cann2Omega <- function(obj, check = TRUE){
   p1 <- obj$P[, 1]
   qs1 <- obj$Qs[, 1]
   qe1 <- obj$Qe[, 1]
-  Omega_s <- Omega_e <- ce1 <- NULL
+  Omega_s <- Omega_e <- ce <- NULL
   if (!is.null(qs1)){
     Omega_s <- obj$P[,-1] %*% obj$Bs %*% t(obj$Qs[, -1])
   }
   if (!is.null(qe1)){
     Omega_e <- obj$P[,-1] %*% obj$Be %*% t(obj$Qe[, -1])
-    ce1 <- obj$ce
+    ce <- obj$ce
   }
   Omega <- cbind(Omega_s, Omega_e)
-  return(mnlink_Omega(p1, qs1 = qs1, Omega = Omega, qe1 = qe1, ce1 = ce1, check = FALSE))
+  return(mnlink_Omega(p1, qs1 = qs1, Omega = Omega, qe1 = qe1, ce = ce, check = FALSE))
 }
 
 #' # Warning
@@ -210,7 +210,7 @@ Omega2cann <- function(obj, check = TRUE){
     Qestar <- t(t(Qe_unnorm)/ Qe_norms)
     Qe <- cbind(obj$qe1, Qestar)
     Be <- diag(Qe_norms * svdres$d[-nrow(obj$Omega)])
-    ce <- obj$ce1
+    ce <- obj$ce
   }
   
   mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = check)
@@ -265,9 +265,9 @@ mnlink_Omega_check <- function(obj){
   if (is.null(obj$p1)){stop("p1 should be non-null")}
   if (is.null(obj$qs1)){stop("qs1 should be non-null")}
   if (is.null(obj$qe1)){stop("qe1 should be non-null")}
-  if (is.null(obj$ce1)){stop("ce1 should be non-null")}
+  if (is.null(obj$ce)){stop("ce should be non-null")}
   
-  elementnames <- c("p1", "qs1", "qe1", "ce1", "Omega")
+  elementnames <- c("p1", "qs1", "qe1", "ce", "Omega")
   nullelements <- vapply(obj[elementnames], is.null, FUN.VALUE = FALSE) 
   names(nullelements) <- elementnames #needed in case an element is completely missing
   if (any(nullelements)){stop("The following elements are null: ", paste(names(which(nullelements)), collapse = ", "))}
@@ -276,9 +276,9 @@ mnlink_Omega_check <- function(obj){
 
   stopifnot(length(obj$p1) == nrow(obj$Omega))
   stopifnot(length(obj$qs1) + length(obj$qe1) == ncol(obj$Omega))
-  stopifnot( ( (length(obj$qe1) > 0) + (length(obj$ce1) > 0)) %in% c(0, 2))
+  stopifnot( ( (length(obj$qe1) > 0) + (length(obj$ce) > 0)) %in% c(0, 2))
   if(length(obj$qe1) > 0){
-    stopifnot(length(obj$ce1) == 1)
+    stopifnot(length(obj$ce) == 1)
   }
   
   vals <- mnlink_Omega_check_numerical(obj)
@@ -353,11 +353,11 @@ Omega_proj <- function(obj){
   return(obj)
 }
 
-# The Euc part of the Omega parameterisations is invariant to sign because ce1 can be anything (if it was fixed to +1 then there would be no invariance). This function switches the sign
+# The Euc part of the Omega parameterisations is invariant to sign because ce can be anything (if it was fixed to +1 then there would be no invariance). This function switches the sign
 Euc_signswitch <- function(obj){
   if (inherits(obj, "mnlink_Omega")){
     obj$qe1 <- -1 * obj$qe1
-    obj$ce1 <- -1 * obj$ce1
+    obj$ce <- -1 * obj$ce
     obj$Omega[, length(obj$qs1) + (1:length(obj$qe1))] <- -1 * obj$Omega[, length(obj$qs1) + (1:length(obj$qe1))]
     return(obj)
   }
@@ -420,7 +420,7 @@ rmnlink_cann__place_in_env <- function(p = 3, qs = 5, qe = 4, preseed = 0){
 is_Shogo <- function(obj, tol = sqrt(.Machine$double.eps)){
   if (inherits(obj, "mnlink_Omega")){
     if (length(obj$qe1) > 0){
-      checks <- c((obj$qe1 - c(1, rep(0, length(obj$qe1) - 1)))^2, (obj$ce1 - 1)^2)
+      checks <- c((obj$qe1 - c(1, rep(0, length(obj$qe1) - 1)))^2, (obj$ce - 1)^2)
       if (all(checks < tol)){return(TRUE)}else{return(FALSE)}
     }
   }

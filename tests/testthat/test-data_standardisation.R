@@ -100,11 +100,9 @@ test_that("recoordination works seemlessly when there is a Euc covariate that is
   bigQe <- rbind(0, Qe)
   bigQe[, 1] <- 0
   bigQe[1,1] <- 1
-  bigce <- ce
-  bigce[1] <- 1
-  ce <- ce[-1]
   qe <- qe + 1
-  paramobj <- mnlink_cann(P, Be = Be, Qs = Qs, Bs = Bs, Qe = bigQe, ce = bigce)
+  ce <- 1
+  paramobj <- mnlink_cann(P, Be = Be, Qs = Qs, Bs = Bs, Qe = bigQe, ce = ce)
   expect_true(is_Shogo(paramobj))
   
   #generate covariates Gaussianly

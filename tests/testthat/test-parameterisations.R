@@ -21,7 +21,7 @@ test_that("mnlink_cann() objects pass check: Euc only", {
   set.seed(3)
   Be <- diag(sort(runif(p-1), decreasing = TRUE))
   set.seed(4)
-  ce <- runif(p)
+  ce <- runif(1)
   obj <- mnlink_cann(P, Be = Be, Qe = Qe, ce = ce, check = FALSE)
   expect_silent(mnlink_cann_check(obj))
 })
@@ -41,7 +41,7 @@ test_that("mnlink_cann() objects pass check: Sph + Euc only", {
   set.seed(13)
   Be <- diag(sort(runif(p-1), decreasing = TRUE))
   set.seed(14)
-  ce <- runif(p)
+  ce <- runif(1)
   obj <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = FALSE)
   expect_silent(mnlink_cann_check(obj))
 })
@@ -61,10 +61,9 @@ test_that("mnlink_cann(): common mistakes", {
   set.seed(13)
   Be <- diag(sort(runif(p-1), decreasing = TRUE))
   set.seed(14)
-  ce <- runif(p)
+  ce <- runif(1)
   
   expect_error(mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = NULL, check = TRUE))
-  expect_error(mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce[-1], check = TRUE))
   expect_error(mnlink_cann(P, Bs = Bs, Qe = Qs, check = TRUE))
   expect_error(mnlink_cann(P, Be = Be, Qs = Qe, check = TRUE))
 })
@@ -143,7 +142,7 @@ test_that("mnlink_Omega works directly", {
   cann <- paramobj
   Om <- cann2Omega(cann)
   
-  Om2 <- mnlink_Omega(p1 = Om$p1, qs1 = Om$qs1, qe1 = Om$qe1, Omega = Om$Omega, ce1 = Om$ce1, PBce = Om$PBce, check = TRUE)
+  Om2 <- mnlink_Omega(p1 = Om$p1, qs1 = Om$qs1, qe1 = Om$qe1, Omega = Om$Omega, ce = Om$ce, check = TRUE)
   expect_equal(Om2, Om)
 })
   
@@ -204,19 +203,17 @@ test_that("check Shogo conversion", {
   bigQe <- rbind(0, Qe)
   bigQe[, 1] <- 0
   bigQe[1,1] <- 1
-  bigce <- ce
-  bigce[1] <- 1
-  ce <- ce[-1]
-  paramobj <- mnlink_cann(P, Be = Be, Qe = bigQe, ce = bigce)
+  ce <- 1
+  paramobj <- mnlink_cann(P, Be = Be, Qe = bigQe, ce = ce)
   expect_true(is_Shogo(paramobj))
   
   # check manual
   x <- runif(qe)
   expect_equal(drop(mnlink(xe = matrix(c(0, x), nrow = 1), param = paramobj)),
-               drop(P %*% iSp(drop(Be %*% (t(bigQe[-1,-1]) %*% x + ce)))))
+               drop(P %*% iSp(drop(Be %*% (t(bigQe[-1,-1]) %*% x)))))
   
   # check Shogo:
-  # need to check linearity of P^{-1} S(y) wrt x_e and ce or even Qe
+  # need to check linearity of P^{-1} S(y) wrt x_e or even Qe
   # expect differences between the intermediate output to be purely due to the difference between inputs
   out <- Sp(mnlink(xe = rbind(0, c(0,x), c(0, 2*x)), param = paramobj) %*% P)
   expect_equal(out[2, ] - out[1, ], out[3, ] - out[2, ])

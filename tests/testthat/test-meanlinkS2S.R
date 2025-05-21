@@ -46,7 +46,7 @@ test_that("Omega and cannonical versions match manual version, and give same res
   mnA <- mnlink(xe = xe, param = pEuc)
   mnB <- mnlink(xe = xe, param = as_mnlink_Omega(pEuc))
   expect_equal(mnA, mnB)
-  expect_equal(mnA[1, ], drop(P %*% iSp(drop( Be %*% (t(Qe[,-1]) %*% xe[1, ] + ce[-1]) / drop(Qe[, 1] %*% xe[1, ]  + ce[1]) ) )))
+  expect_equal(mnA[1, ], drop(P %*% iSp(drop( Be %*% (t(Qe[,-1]) %*% xe[1, ]) / drop(Qe[, 1] %*% xe[1, ]  + ce) ) )))
 
   # errors
   expect_error(mnlink(xs, as_mnlink_Omega(pSph)), "parameter object")

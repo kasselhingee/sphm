@@ -118,10 +118,8 @@ test_that("Shogo with Sph+Euc covars", {
   bigQe <- rbind(0, Qe)
   bigQe[, 1] <- 0
   bigQe[1,1] <- 1
-  bigce <- ce
-  bigce[1] <- 1
-  ce <- ce[-1]
-  paramobj <- mnlink_cann(P, Qs = Qs, Bs = Bs, Be = Be, Qe = bigQe, ce = bigce)
+  ce <- 1
+  paramobj <- mnlink_cann(P, Qs = Qs, Bs = Bs, Be = Be, Qe = bigQe, ce = ce)
   expect_true(is_Shogo(paramobj))
   
   #generate covariates Gaussianly
@@ -157,7 +155,7 @@ test_that("Shogo with Sph+Euc covars", {
   # convert to start to Shogo form:
   start$Omega <- cbind(start$Omega[,1:qs], 0, start$Omega[,qs + (1:qe)])
   start$qe1 <- c(1, rep(0, qe))
-  start$ce1 <- 1
+  start$ce <- 1
   opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start, fix_qe1 = TRUE)
   if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$solution <- Euc_signswitch(opt2$solution)
@@ -194,7 +192,7 @@ test_that("C++ Omega_constraints() is zero correctly", {
   # round(svd(Jac)$v, 2)
   direction <- svd(Jac)$v[, 4]
   direction <- mnlink_Omega_unvec(direction, p, qe, check = FALSE)
-  expect_equal(direction[c("p1", "qs1", "qe1", "ce1", "PBce")], list(p1 = rep(0, p), qs1 = rep(0, qs), qe1 = rep(0, qe), ce1 = 0, PBce = rep(0, p)))
+  expect_equal(direction[c("p1", "qs1", "qe1", "ce")], list(p1 = rep(0, p), qs1 = rep(0, qs), qe1 = rep(0, qe), ce = 0))
 })
 
 test_that("C++ Omega_constraints() and Omega check is non-zero correctly", {
@@ -204,7 +202,6 @@ test_that("C++ Omega_constraints() and Omega check is non-zero correctly", {
   Om$qs1 <- Om$qs1*2 #check qs1 size
   Om$p1 <- Om$p1 * 2 #check p1 size
   Om$Omega <- matrix(rnorm(p * (qs + qe)), p, qs + qe) #check commutivity
-  Om$PBce <- Om$PBce+1 #check PBce size/orthogonality?
   expect_true(all(mnlink_Omega_check_numerical(Om) > 1E-3))
   expect_true(all(abs(Omega_constraints(mnlink_Omega_vec(Om), p, qe)) > 1E-3))
 })
@@ -236,10 +233,8 @@ test_that("prelim() destandardises variables correctly", {
   bigQe <- rbind(0, Qe)
   bigQe[, 1] <- 0
   bigQe[1,1] <- 1
-  bigce <- ce
-  bigce[1] <- 1
-  ce <- ce[-1]
-  paramobj <- mnlink_cann(P, Qs = Qs, Bs = Bs, Be = Be, Qe = bigQe, ce = bigce)
+  ce <- 1
+  paramobj <- mnlink_cann(P, Qs = Qs, Bs = Bs, Be = Be, Qe = bigQe, ce = ce)
   expect_true(is_Shogo(paramobj))
   
   #generate covariates Gaussianly
@@ -299,7 +294,6 @@ test_that("Hessian eigenvalues match DoF", {
   #qs1 size, 
   #qe1 size, 
   #Omega orthogonal to qs1 and qe1
-  #PBce orthogonal to p1
   #maybe more in mnlink_cpp()?
   #So far it is omitting the commutativity constraints on Omega
   #which have (p-1) * (p - 2) / 2 DoF
@@ -318,7 +312,6 @@ test_that("DoF via cann params matches DoF via Omega", {
     (qs>0)*(qs-1) + # qs1 
     (qe>0)*(qe-1) + # qe1
     (qe>0)*1 + #ce
-    (qe>0)*(p-1) + #PBce minus 1 from orthogonal with p1 constraint
     p * (qe + qs) + #Omega
     -1*(qe + qs) + #p1 orthogonality
     -1*(qs>0)*(p-1) + #qs1 orthogonality, but only p-1 reduction because vectors already constrained by p1
@@ -331,7 +324,6 @@ test_that("DoF via cann params matches DoF via Omega", {
     (qs>0)*(qs-1) + # qs1 
     (qe>0)*(qe-1) + # qe1
     (qe>0)*1 + #ce
-    (qe>0)*(p-1) + #PBce minus 1 from orthogonal with p1 constraint
     DoF_Stiefel(p-1, p-1) + #left vectors
     (p-1) + #singular values
     DoF_Stiefel(qs + qe, p-1) +#right vectors unconstrained

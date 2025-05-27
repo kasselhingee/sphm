@@ -48,20 +48,21 @@ standardise_mat <- function(y){
   return(Ghat)
 }
 
-# For covariates that are all a const, leave unchanged
-# Link isn't equivariant to scaling or translation so dont do these
+# For covariates that are all a const != 0, leave unchanged
+# Link isn't equivariant to scaling so dont do scaling
 standardise_Euc <- function(xe){
   xe_names <- colnames(xe)
   constcovars <- apply(xe, 2, sd) < sqrt(.Machine$double.eps)
-  # do a rotation of the other covariates
-  browser()
+  # do shift and rotation of the other covariates
   xe_pcares <- princomp(xe[, !constcovars], cor = FALSE, scores = TRUE)
   # xe_pcares$scores is equivalent to xe[, !constcovars] %*% xe_pcares$loadings with centering
   
-  # keep constant covariates at the left
+  # keep contant covariats at the left
   xe <- cbind(xe[, constcovars, drop = FALSE], xe_pcares$scores)
   
-  # update loadings for any constcovars
+  # update loadings and center for any constcovars
+  xe_centers <- c(rep(0, sum(constcovars)), xe_pcares$center)
+  names(xe_centers) <- xe_names
   xe_loadings <- diag(ncol(xe))
   xe_loadings[seq.int(1+sum(constcovars), length.out = ncol(xe_pcares$loadings)),
               seq.int(1+sum(constcovars), length.out = ncol(xe_pcares$loadings))] <-
@@ -71,12 +72,15 @@ standardise_Euc <- function(xe){
   colnames(xe_loadings)[seq.int(1+sum(constcovars), length.out = ncol(xe_pcares$loadings))] <- colnames(xe_pcares$loadings)
   
   attr(xe, "std_rotation") <- t(xe_loadings)
+  attr(xe, "std_center") <- xe_centers
   return(xe)
 }
 
-destandardise_Euc <- function(xe, rotation){
+destandardise_Euc <- function(xe, center, rotation){
+  stopifnot(is.vector(center))
   stopifnot(all(abs(t(rotation) %*% rotation - diag(ncol(rotation))) < sqrt(.Machine$double.eps)))
   xe <- xe %*% rotation #because xe is row vectors, destandardisation uses non-transpose of the forward rotation
+  xe <- t(t(xe) + center)
   return(xe)
 }
 

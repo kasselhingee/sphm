@@ -41,7 +41,7 @@ test_that("standadise_Euc works seemlessly when covariates are all 0 or 1", {
   expect_equal(xe2, xe)
   
   # check with constants
-  xe <- cbind("const1" = 0, "const2" = 1.5, xe)
+  xe <- cbind("const1" = 0, "const2" = 1, xe)
   xestd <- standardise_Euc(xe)
   expect_equal(xestd[, c(1, 2)], xe[, c(1,2)], ignore_attr = FALSE)
   expect_equal(xestd[, -c(1, 2)], standardise_Euc(xe[, -c(1, 2)]), ignore_attr = TRUE)

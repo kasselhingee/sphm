@@ -103,11 +103,12 @@ destandardise_Euc <- function(xe, center, rotation){
 #' 
 #' The standardisation of the data `xs`, `xe` and `y` can be performed by 
 #' [`standardise_sph()`] and [`standardise_Euc()`].
-#' 
+#' @param onescovaridx Gives the index in `xe` of the covariate that is identically 1 - needed whenever xecenter is non-zero.
 recoordinate_cann <- function(param, yrot = diag(nrow(param$P)), 
                               xsrot = diag(nrow(param$Qs)),
                               xerot = diag(nrow(param$Qe)), 
-                              xecenter = rep(0, nrow(param$Qe))){
+                              xecenter = rep(0, nrow(param$Qe)),
+                              onescovaridx = 1){
   stopifnot(inherits(param, "mnlink_cann"))
   paramstd <- param
   paramstd$Qs <- xsrot %*% param$Qs
@@ -120,7 +121,8 @@ recoordinate_cann <- function(param, yrot = diag(nrow(param$P)),
 recoordinate_Omega <- function(param, yrot = diag(length(param$p1)), 
                                xsrot = diag(length(param$qs1)),
                                xerot = diag(length(param$qe1)), 
-                               xecenter = rep(0, length(param$qe1))){
+                               xecenter = rep(0, length(param$qe1)),
+                               onescovaridx = 1){
   stopifnot(inherits(param, "mnlink_Omega"))
   # in case arguments passed are NULL set to default
   if (is.null(yrot)){yrot <- diag(length(param$p1))}
@@ -130,6 +132,21 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   qs <- length(param$qs1)
   qe <- length(param$qe1)
   omstd <- om <- param
+  browser()
+  # if xecenter non-zero, check onescovaridx
+  if (any(abs(xecenter) > .Machine$double.eps)){
+    # xecenter shouldn't shift the 1s covariate
+    stopifnot(abs(xecenter[onescovaridx]) < .Machine$double.eps)
+    # if qe1 is non-zero for the 1s covariate, then I dont know what it would mean
+    if (abs(om$qe1[onescovaridx]) > .Machine$double.eps){
+      warning(sprintf("qe1[onescovaridx]=%f is non-zero and incorporating a shift in the other covariates may not work", om$qe1[onescovaridx]))
+    }
+    # if the column of Omega related to the 1s covariate is non-zero
+    # then the parameters already incorporate a shift
+    if (any(abs(om$Omega[, qs+onescovaridx]) > .Machine$double.eps)){
+      warning(paste("A shift of Euclidean covariates is already included in the parameters. Omega * shift =",  paste(om$Omega[, qs+onescovaridx], collapse = ", ")))
+    }
+  }
   
   # changes from xsrot, xerot and xecenter
   omstd$qs1 <- drop(xsrot %*% om$qs1)

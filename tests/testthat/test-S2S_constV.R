@@ -23,6 +23,12 @@ test_that("rotatedresiduals() rotates residuals to the northpole along a geodesi
   expect_equal(rresid2, -rresid)
 })
 
+test_that("rotationmat_amaral() rotates start to end", {
+  vecs <- matrix(rnorm(6), nrow = 2)
+  vecs <- vecs/sqrt(rowSums(vecs^2))
+  expect_equal(drop(rotationmat_amaral(vecs[1, ], vecs[2,]) %*% vecs[1,]), vecs[2, ])
+})
+
 test_that("maximum likelihood for parallel axes per geodesic path", {
   rmnlink_cann__place_in_env(4, 5, 4)
   omegapar <- as_mnlink_Omega(paramobj)

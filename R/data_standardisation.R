@@ -54,6 +54,7 @@ standardise_Euc <- function(xe){
   xe_names <- colnames(xe)
   constcovars <- apply(xe, 2, sd) < sqrt(.Machine$double.eps)
   # do a rotation of the other covariates
+  browser()
   xe_pcares <- princomp(xe[, !constcovars], cor = FALSE, scores = TRUE)
   # xe_pcares$scores is equivalent to xe[, !constcovars] %*% xe_pcares$loadings with centering
   

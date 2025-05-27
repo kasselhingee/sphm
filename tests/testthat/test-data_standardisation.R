@@ -37,7 +37,7 @@ test_that("standadise_Euc works seemlessly when covariates are all 0 or 1", {
   # check standardisation and destandardisation for xe without constants
   xestd <- standardise_Euc(xe)
   expect_equal(cor(xestd), diag(qe), ignore_attr = TRUE) #check correlation only because not standardising scale
-  xe2 <- destandardise_Euc(xestd, center = attr(xestd, "std_center"), rotation = attr(xestd, "std_rotation"))
+  xe2 <- destandardise_Euc(xestd,  rotation = attr(xestd, "std_rotation"))
   expect_equal(xe2, xe)
   
   # check with constants
@@ -45,7 +45,7 @@ test_that("standadise_Euc works seemlessly when covariates are all 0 or 1", {
   xestd <- standardise_Euc(xe)
   expect_equal(xestd[, c(1, 2)], xe[, c(1,2)], ignore_attr = FALSE)
   expect_equal(xestd[, -c(1, 2)], standardise_Euc(xe[, -c(1, 2)]), ignore_attr = TRUE)
-  xe2 <- destandardise_Euc(xestd, center = attr(xestd, "std_center"), rotation = attr(xestd, "std_rotation"))
+  xe2 <- destandardise_Euc(xestd, rotation = attr(xestd, "std_rotation"))
   expect_equal(xe2, xe)
 })
 

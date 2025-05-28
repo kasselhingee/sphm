@@ -57,7 +57,7 @@ standardise_Euc <- function(xe){
   xe_pcares <- princomp(xe[, !constcovars], cor = FALSE, scores = TRUE)
   # xe_pcares$scores is equivalent to xe[, !constcovars] %*% xe_pcares$loadings with centering
   
-  # keep contant covariats at the left
+  # keep contsant covariats at the left
   xe <- cbind(xe[, constcovars, drop = FALSE], xe_pcares$scores)
   
   # update loadings and center for any constcovars
@@ -118,6 +118,7 @@ recoordinate_cann <- function(param, yrot = diag(nrow(param$P)),
   return(paramstd)
 }
 
+# I'm only sure that the following works when there is no shift of the 1s covariate and when param$qe1[onescovaridx] = 0
 recoordinate_Omega <- function(param, yrot = diag(length(param$p1)), 
                                xsrot = diag(length(param$qs1)),
                                xerot = diag(length(param$qe1)), 
@@ -132,7 +133,7 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   qs <- length(param$qs1)
   qe <- length(param$qe1)
   omstd <- om <- param
-  browser()
+  
   # if xecenter non-zero, check onescovaridx
   if (any(abs(xecenter) > .Machine$double.eps)){
     # xecenter shouldn't shift the 1s covariate
@@ -148,12 +149,16 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
     }
   }
   
-  # changes from xsrot, xerot and xecenter
-  omstd$qs1 <- drop(xsrot %*% om$qs1)
-  omstd$qe1 <- drop(xerot %*% om$qe1)
-  omstd$ce <- drop(t(om$qe1) %*% xecenter) + om$ce
-  omstd$Omega[, seq.int(1, length.out = qs)] <- om$Omega[, seq.int(1, length.out = qs)] %*% t(xsrot)
-  omstd$Omega[, seq.int(qs + 1, length.out = qe)] <- om$Omega[, seq.int(qs + 1, length.out = qe)] %*% t(xerot)
+  # update for centering first
+  omstd$ce <- om$ce + drop(omstd$qe1 %*% xecenter) 
+  omstd$Omega[, qs + onescovaridx] <- om$Omega[, qs + onescovaridx, drop = FALSE] + om$Omega[,seq.int(qs + 1, length.out = qe)] %*% xecenter
+  # Here unclear how to update qe1 based on centering if qe1[onescovaridx] is non-zero
+  
+  # update based on rotations xsrot and xerot
+  omstd$qs1 <- drop(xsrot %*% omstd$qs1)
+  omstd$qe1 <- drop(xerot %*% omstd$qe1)
+  omstd$Omega[, seq.int(1, length.out = qs)] <- omstd$Omega[, seq.int(1, length.out = qs)] %*% t(xsrot)
+  omstd$Omega[, seq.int(qs + 1, length.out = qe)] <- omstd$Omega[, seq.int(qs + 1, length.out = qe)] %*% t(xerot)
   
   # add yrot change
   omstd$Omega <- yrot %*% omstd$Omega

@@ -54,18 +54,34 @@ test_that("recoordination of parameters work", {
   
   #generate covariates Gaussianly
   set.seed(4)
-  xe <- cbind(0, matrix(rnorm(20*(qe-1)), nrow = 20))
+  xe <- cbind(matrix(rnorm(20*qe), nrow = 20))
   #generate covariates on the sphere
   set.seed(4)
   xs <- matrix(rnorm(20*qs), nrow = 20)
   xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
   
+  # add dummy covariates
+  xe <- cbind(zeros = 0, ones = 1, xe)
+  paramobj$Qe <- rbind(0, 0, paramobj$Qe)
+  mnlink_cann_check(paramobj)
+  
   ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
+  
   
   #standardise xs, xe and response and compute paramobj that includes the reverse
   xsstd <- standardise_sph(xs)
   xestd <- standardise_Euc(xe)
   ystd <- standardise_sph(ymean)
+  
+  # standardise omega version
+  omstd <- recoordinate_Omega(as_mnlink_Omega(paramobj), 
+                                yrot = attr(ystd, "std_rotation"),
+                                xsrot = attr(xsstd, "std_rotation"),
+                                xerot = attr(xestd, "std_rotation"),
+                                xecenter = attr(xestd, "std_center"),
+                                onescovaridx = 2)
+  # expect_equal(mnlink(xsstd,  xestd, param = omstd), ymean)
+  expect_equal(mnlink(xsstd,  xestd, param = omstd), ystd, ignore_attr = "std_rotation")
   
   # standardise cann version:
   paramstd <- recoordinate_cann(paramobj, #yrot = diag(nrow(param$P)), 
@@ -77,12 +93,6 @@ test_that("recoordination of parameters work", {
   paramstd <- recoordinate_cann(paramstd, yrot = attr(ystd, "std_rotation"))
   expect_equal(mnlink(xsstd, xestd, param = paramstd), ystd, ignore_attr = TRUE)
   
-  # standardise omega version
-  omstd <- recoordinate_Omega(as_mnlink_Omega(paramobj), 
-                                yrot = attr(ystd, "std_rotation"), 
-                                xsrot = attr(xsstd, "std_rotation"),
-                                xerot = attr(xestd, "std_rotation"), 
-                                xecenter = attr(xestd, "std_center"))
   expect_equal(omstd, as_mnlink_Omega(paramstd), ignore_attr = TRUE)
   
   # given parameters for standardised data, solve for the corresponding parameters of the non-standard data

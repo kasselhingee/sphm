@@ -57,19 +57,18 @@ standardise_Euc <- function(xe){
   xe_pcares <- princomp(xe[, !constcovars], cor = FALSE, scores = TRUE)
   # xe_pcares$scores is equivalent to xe[, !constcovars] %*% xe_pcares$loadings with centering
   
-  # keep contsant covariats at the left
-  xe <- cbind(xe[, constcovars, drop = FALSE], xe_pcares$scores)
+  # update only the non-constant covariates
+  xe[,!constcovars] <- xe_pcares$scores
   
   # update loadings and center for any constcovars
-  xe_centers <- c(rep(0, sum(constcovars)), xe_pcares$center)
+  xe_centers <- rep(0, ncol(xe))
+  xe_centers[!constcovars] <- xe_pcares$center
   names(xe_centers) <- xe_names
   xe_loadings <- diag(ncol(xe))
-  xe_loadings[seq.int(1+sum(constcovars), length.out = ncol(xe_pcares$loadings)),
-              seq.int(1+sum(constcovars), length.out = ncol(xe_pcares$loadings))] <-
-    xe_pcares$loadings
+  xe_loadings[!constcovars, !constcovars] <- xe_pcares$loadings
   rownames(xe_loadings) <- xe_names
   colnames(xe_loadings)[constcovars] <- xe_names[constcovars]
-  colnames(xe_loadings)[seq.int(1+sum(constcovars), length.out = ncol(xe_pcares$loadings))] <- colnames(xe_pcares$loadings)
+  colnames(xe_loadings)[!constcovars] <- colnames(xe_pcares$loadings)
   
   attr(xe, "std_rotation") <- t(xe_loadings)
   attr(xe, "std_center") <- xe_centers
@@ -123,6 +122,9 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   
   # if xecenter non-zero, check onescovaridx
   if (any(abs(xecenter) > .Machine$double.eps)){
+    if ((length(onescovaridx) == 0) || !is.finite(onescovaridx)){
+      stop("Please specify the index corresponding to the 1s covariate.")
+    }
     # xecenter shouldn't shift the 1s covariate
     stopifnot(abs(xecenter[onescovaridx]) < .Machine$double.eps)
     # if qe1 is non-zero for the 1s covariate, then I dont know what it would mean

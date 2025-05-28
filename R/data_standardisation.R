@@ -97,7 +97,7 @@ destandardise_Euc <- function(xe, center, rotation){
 #' response \eqn{y} by [`meanlink()`].
 #' Then `xsrot %*% xs` and `xerot %*% (xe - xecenter)` are related to
 #' \eqn{`yrot` \times y} according to `meanlink()` with parameters given by
-#' [`recoordinate_cann()`], [`recoordinate_Omega()`].
+#' [`recoordinate_Omega()`].
 #' 
 #' Reversing this coordinate change can be performed by [`undo_recoordinate_Omega()`].
 #' 

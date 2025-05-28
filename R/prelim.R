@@ -25,16 +25,42 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' Default scaling of 0.9 avoids being on the inequality boundary at the start of the search.
 #' @param start is a starting parameter object. For Shogo mean link the Qe matrix must have an extra row and column that at the front/top, with 1 in the first entry (and zero elsewhere).
 #' @param ... Passed as options to [`nloptr()`]. 
+#' @param intercept `TRUE` to include a Euclidean intercept term using a covariate that is always `1`. This is needed for centering of Euclidean covariates, which is part of standardising the covariates. If `intercept = FALSE` then the Euclidean covariates will not be standardised.
 #' @export
-prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", fix_qs1 = FALSE, start = NULL, ssqOmbuffer = 2, ...){
+prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", fix_qs1 = FALSE, start = NULL, intercept = TRUE, ssqOmbuffer = 2, ...){
+  # if Shogo add a zeros covariate too
+  if ((type == "Shogo") && (!is.null(xe))){
+    if (!is.null(xe)){
+      xe <- cbind("dummyzero" = 0, xe)
+    }
+    if (!is.null(start)){stopifnot(is_Shogo(start))}
+  }
+  
+  onescovaridx <- NA_integer_
+  if (intercept && !is.null(xe)){
+    # search for 1s covariate, otherwise add it to end
+    constxe <- (apply(xe, 2, sd) < sqrt(.Machine$double.eps))
+    onescovaridx <- which(abs(colMeans(xe[,constxe, drop = FALSE]) - 1) < .Machine$double.eps)
+    if (length(onescovaridx) == 0){
+      xe <- cbind(xe, "ones" = 1)
+      onescovaridx <- ncol(xe)
+      if (!is.null(start)){
+        start <- as_mnlink_cann(start)
+        # if start is wrong dimension add a row of zeros
+        if (dim(start)["qe"] != ncol(xe)){
+          browser()
+          stopifnot(dim(start)["qe"] == ncol(xe) - 1)
+          start$Qe <- rbind(start$Qe, ones = 0)
+        }
+      }
+    }
+    if (length(onescovaridx) > 1){onescovaridx <- onescovaridx[1]}
+  }
+  
   # standardise inputs
   y <- standardise_sph(y)
   if (!is.null(xs)){xs <- standardise_sph(xs)}
-  if ((type == "Shogo") && (!is.null(xe))){
-    if (!is.null(xe)){xe <- cbind("dummyzero" = 0, xe)}
-    if (!is.null(start)){stopifnot(is_Shogo(start))}
-  }
-  if (!is.null(xe)){xe <- standardise_Euc(xe)}
+  if (!is.null(xe) && intercept){xe <- standardise_Euc(xe)}
   
   # update starting coordinates if provided
   if (!is.null(start)){
@@ -42,7 +68,8 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", fix_qs1 = FALSE, st
                                 yrot = attr(y, "std_rotation"), 
                                 xsrot = attr(xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
                                 xerot = attr(xe, "std_rotation"), 
-                                xecenter = attr(xe, "std_center"))
+                                xecenter = attr(xe, "std_center"),
+                                onescovaridx = onescovaridx)
   }
 
   # If start not supplied, choose start close to identities
@@ -86,7 +113,8 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", fix_qs1 = FALSE, st
                           yrot = attr(y, "std_rotation"), 
                           xsrot = attr(xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
                           xerot = attr(xe, "std_rotation"), 
-                          xecenter = attr(xe, "std_center"))
+                          xecenter = attr(xe, "std_center"),
+                          onescovaridx = onescovaridx)
   
   niceout <- list(
     est = est,

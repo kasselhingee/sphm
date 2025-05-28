@@ -131,11 +131,6 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
     if (abs(om$qe1[onescovaridx]) > .Machine$double.eps){
       warning(sprintf("qe1[onescovaridx]=%f is non-zero and incorporating a shift in the other covariates may not work", om$qe1[onescovaridx]))
     }
-    # if the column of Omega related to the 1s covariate is non-zero
-    # then the parameters already incorporate a shift
-    if (any(abs(om$Omega[, qs+onescovaridx]) > .Machine$double.eps)){
-      warning(paste("A shift of Euclidean covariates is already included in the parameters. Omega * shift =",  paste(om$Omega[, qs+onescovaridx], collapse = ", ")))
-    }
   }
   
   # update for centering first

@@ -445,8 +445,8 @@ is_Shogo <- function(obj, tol = sqrt(.Machine$double.eps)){
 #' @export
 dim.mnlink_cann <- function(x){
   c(p = ncol(x$P), 
-    qs = switch(1 + is.null(x$Qs), 0, ncol(x$Qs)),
-    qe = switch(1 + is.null(x$Qe), 0, ncol(x$Qe)))
+    qs = switch(1 + is.null(x$Qs), nrow(x$Qs), 0),
+    qe = switch(1 + is.null(x$Qe), nrow(x$Qe), 0))
 }
 
 #' Obtain dimensions corresponding to a mean link parameter set

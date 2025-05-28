@@ -275,8 +275,7 @@ test_that("prelim() destandardises variables correctly for Kassel", {
   rmnlink_cann__place_in_env(3, 5, 4)
   #generate covariates Gaussianly
   set.seed(4)
-  xe <- cbind(0, matrix(rnorm(1000*qe), nrow = 1000))
-  colnames(xe) <- c("dummyzero", paste0("xe", 2:ncol(xe)))
+  xe <- matrix(rnorm(1000*qe), nrow = 1000)
   #generate covariates on the sphere
   set.seed(4)
   xs <- matrix(rnorm(1000*qs), nrow = 1000)
@@ -292,10 +291,10 @@ test_that("prelim() destandardises variables correctly for Kassel", {
   colnames(y) <- paste0("y", 1:ncol(y))
   
   # apply prelim as if directly on raw data (drop first column of zeros to account for user-friendly use of Shogo in prelim())
-  res <- prelim(y, xs = xs, xe = xe[, -1], type = "Shogo") 
+  res <- prelim(y, xs = xs, xe = xe) 
   expect_equal(res$y, y)
   expect_equal(res$xs, xs)
-  expect_equal(res$xe[,-(ncol(xe) + 1)], xe) #expect returned xe to include an intercept term
+  expect_equal(res$xe, cbind(xe, ones = 1))
   expect_equal(-mean(cos(res$dists)), res$obj)
   # create a reference parameter object that hasnt been standardised, but has the ones covariate
   refpar <- paramobj

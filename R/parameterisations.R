@@ -213,7 +213,11 @@ Omega2cann <- function(obj, check = TRUE){
     ce <- obj$ce
   }
   
-  mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = check)
+  out <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = check)
+  if (det(out$P) < 0){#if negative determinant, flip an axis to get positive determinant of P (i.e. a rotation matrix)
+    out <- P_signswitch(out, ncol(out$P))
+  }
+  return(out)
 }
 
 mnlink_cann_check <- function(obj){

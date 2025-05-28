@@ -33,6 +33,8 @@ mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL
   stopifnot(is.matrix(P))
   obj <- list(P = P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
   obj <- lapply(obj, function(element){if (length(element) == 0){return(NULL)}else{return(element)}})
+
+  # export
   class(obj) <- c("mnlink_cann", class(obj))
   if (check){mnlink_cann_check(obj)}
   return(obj)
@@ -100,6 +102,8 @@ mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("nu
     Omega = Omega,
     ce = ce
   )
+
+  #export
   class(obj) <- c("mnlink_Omega", class(obj))
   if (check) {mnlink_Omega_check(obj)}
   return(obj)
@@ -435,4 +439,20 @@ is_Shogo <- function(obj, tol = sqrt(.Machine$double.eps)){
   }
   warning("obj doesn't have Euclidean component")
   return(NULL)
+}
+
+#' Obtain dimensions corresponding to a mean link parameter set
+#' @export
+dim.mnlink_cann <- function(x){
+  c(p = ncol(x$P), 
+    qs = switch(1 + is.null(x$Qs), 0, ncol(x$Qs)),
+    qe = switch(1 + is.null(x$Qe), 0, ncol(x$Qe)))
+}
+
+#' Obtain dimensions corresponding to a mean link parameter set
+#' @export
+dim.mnlink_Omega <- function(x){
+  c(p = length(x$p1), 
+    qs = length(x$qs1),
+    qe = length(x$qe1))
 }

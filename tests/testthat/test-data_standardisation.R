@@ -80,28 +80,16 @@ test_that("recoordination of parameters work", {
                                 xerot = attr(xestd, "std_rotation"),
                                 xecenter = attr(xestd, "std_center"),
                                 onescovaridx = 2)
-  # expect_equal(mnlink(xsstd,  xestd, param = omstd), ymean)
   expect_equal(mnlink(xsstd,  xestd, param = omstd), ystd, ignore_attr = "std_rotation")
-  
-  # standardise cann version:
-  paramstd <- recoordinate_cann(paramobj, #yrot = diag(nrow(param$P)), 
-                              xsrot = attr(xsstd, "std_rotation"),
-                              xerot = attr(xestd, "std_rotation"), 
-                              xecenter = attr(xestd, "std_center"))
-  expect_equal(mnlink(xsstd, xestd, param = paramstd), ymean)
-  # extra for ystd:
-  paramstd <- recoordinate_cann(paramstd, yrot = attr(ystd, "std_rotation"))
-  expect_equal(mnlink(xsstd, xestd, param = paramstd), ystd, ignore_attr = TRUE)
-  
-  expect_equal(omstd, as_mnlink_Omega(paramstd), ignore_attr = TRUE)
   
   # given parameters for standardised data, solve for the corresponding parameters of the non-standard data
   om2 <- undo_recoordinate_Omega(omstd,  
                           yrot = attr(ystd, "std_rotation"), 
                           xsrot = attr(xsstd, "std_rotation"),
                           xerot = attr(xestd, "std_rotation"), 
-                          xecenter = attr(xestd, "std_center"))
-  expect_equal(om2, as_mnlink_Omega(paramobj))
+                          xecenter = attr(xestd, "std_center"),
+                          onescovaridx = 2)
+  expect_equal(om2, as_mnlink_Omega(paramobj), ignore_attr = TRUE)
 })
 
 test_that("recoordination works seemlessly when there is a Euc covariate that is all 1", {

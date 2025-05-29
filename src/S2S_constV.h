@@ -8,7 +8,8 @@
 // function that accepts all the major arguments in usual (non-vector) format
 // for a single observation y with covariates x and return the ull for that observation, parallel transporting axes H*(p1)*Kstar to the mean using Jupp's method from base being the first column of P.
 // will include projection of om
-//' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms
+//' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms. It is best if referencecoords is close to the best G0 (so rG0 is close the identity) and it will fail if `G01` is the antepode of `referencoords[,1]`.
+//' @param rG0 specifies the axes relative to referencecoords. That is `referencecoords * rG0` give the axes G0 of the SvMF at the base point.
 veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, matd referencecoords);
 
 // for checking ull_S2S_constV via unit testing

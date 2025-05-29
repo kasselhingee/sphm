@@ -3,11 +3,14 @@
 #include "uldSvMF.h"
 #include "utils.h"
 
-veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, matd referencecoords){
+veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 rG0, matd referencecoords){
   int p = om.p1.size();
   //check that ncol(y) == p
   if (y.cols() != p){Rcpp::stop("width of y does not equal length of p1");}
-  
+  //check that referencecoords are orthonormal (wont be taped as uses purely matd objects)
+  if ((referencecoords.transpose() * referencecoords - matd::Identity(referencecoords.rows(), referencecoords.rows())).norm() < 1E-8){
+    Rcpp::stop("referencecoords columns are not an orthonormal basis");
+  }
 
   // project Omega matrix to satisfy orthogonality to p1 and q1
   mnlink_Omega_cpp<a1type> om_projected = Omega_proj_cpp(om);
@@ -19,7 +22,10 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
 
   //evaluate SvMF density of each observation
   veca1 ld(y.rows());
-  mata1 Gstar = getHstar(om_projected.p1) * Kstar;
+  //rG0 is provided in coordinate system given by referencecoords
+  //to get G0 in the canonical reference system of p1 etc, use referencecoords * G0
+  //then to parallel transport G0 to p1, use JuppRmat
+  mata1 G0star = JuppRmat(rG0.col(0), om_projected.p1) * referencecoords * (rG0.rightCols(rG0.cols() - 1));
   mata1 G(p, p);
   veca1 a(p);
   a(0) = a1;
@@ -27,7 +33,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
   a.segment(1, p-1) = aremaining;
   for (int i = 0; i < y.rows(); ++i){
     G.col(0) = ypred.row(i);
-    G.block(0, 1, p, p-1) = JuppRmat(om_projected.p1, ypred.row(i)) * Gstar;
+    G.block(0, 1, p, p-1) = JuppRmat(om_projected.p1, ypred.row(i)) * G0star;
     ld(i) = uldSvMF_cann(y.row(i), k, a, G)(0);
   }
   return ld;
@@ -35,9 +41,9 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
 
 
 
-veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, matd referencecoords){
+veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 rG0, matd referencecoords){
    mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, y.cols(), xe.cols());
-   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar, referencecoords);
+   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, rG0, referencecoords);
    return ld;
 }
 
@@ -208,7 +214,16 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
 
-  veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar, referencecoords);
+  //identify G0 with p1
+  mata1 rG0(p,p);
+  rG0.col(0) = referencecoords.transpose() * om.p1;
+  //kstar should be rG0[,-1] parallel transported so that rG0[,1] = nthpole, then with the first row dropped
+  //rG0[,-1] back add a row of zeros, then use reverse parallel transport to get full axes
+  mata1 rrG0star(p,p-1);
+  rrG0star << mata1::Zero(1,p-1),Kstar;
+  rG0.block(0, 1, p, p-1) = JuppRmat(rG0.col(0),veca1::Unit(p,0)).transpose() * rrG0star;
+
+  veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, rG0, referencecoords);
 
   CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
   tape.Dependent(mainvec, ld);

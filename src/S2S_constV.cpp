@@ -3,7 +3,7 @@
 #include "uldSvMF.h"
 #include "utils.h"
 
-veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
+veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, matd referencecoords){
   int p = om.p1.size();
   //check that ncol(y) == p
   if (y.cols() != p){Rcpp::stop("width of y does not equal length of p1");}
@@ -37,7 +37,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
 
 veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
    mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, y.cols(), xe.cols());
-   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar);
+   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar, matd::Identity(y.cols(), y.cols()));
    return ld;
 }
 
@@ -208,7 +208,7 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
 
-  veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar);
+  veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar, matd::Identity(y.cols(), y.cols()));
 
   CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
   tape.Dependent(mainvec, ld);

@@ -25,7 +25,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
   //rG0 is provided in coordinate system given by referencecoords
   //to get G0 in the canonical reference system of p1 etc, use referencecoords * G0
   //then to parallel transport G0 to p1, use JuppRmat
-  mata1 G0star = JuppRmat(rG0.col(0), om_projected.p1) * referencecoords * (rG0.rightCols(rG0.cols() - 1));
+  mata1 G0star = JuppRmat(rG0.col(0), om_projected.p1) * referencecoords.cast<a1type>() * (rG0.rightCols(rG0.cols() - 1));
   mata1 G(p, p);
   veca1 a(p);
   a(0) = a1;

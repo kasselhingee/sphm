@@ -58,12 +58,15 @@ S2S_constV_nota1_fromvecparamsR <- function(mainvec, p, qs, qe) {
     .Call(`_sphm_S2S_constV_nota1_fromvecparamsR`, mainvec, p, qs, qe)
 }
 
-ull_S2S_constV_forR <- function(y, xs, xe, omvec, k, a1, aremaining, Kstar) {
-    .Call(`_sphm_ull_S2S_constV_forR`, y, xs, xe, omvec, k, a1, aremaining, Kstar)
+#' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms
+NULL
+
+ull_S2S_constV_forR <- function(y, xs, xe, omvec, k, a1, aremaining, Kstar, referencecoords) {
+    .Call(`_sphm_ull_S2S_constV_forR`, y, xs, xe, omvec, k, a1, aremaining, Kstar, referencecoords)
 }
 
-tape_ull_S2S_constV_nota1 <- function(omvec, k, a1, aremaining, Kstar, p_in, qe_in, yx) {
-    .Call(`_sphm_tape_ull_S2S_constV_nota1`, omvec, k, a1, aremaining, Kstar, p_in, qe_in, yx)
+tape_ull_S2S_constV_nota1 <- function(omvec, k, a1, aremaining, Kstar, p_in, qe_in, yx, referencecoords) {
+    .Call(`_sphm_tape_ull_S2S_constV_nota1`, omvec, k, a1, aremaining, Kstar, p_in, qe_in, yx, referencecoords)
 }
 
 mnlink_cpp <- function(xs, xe, vec, p) {

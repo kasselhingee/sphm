@@ -35,9 +35,9 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
 
 
 
-veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar){
+veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, matd referencecoords){
    mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, y.cols(), xe.cols());
-   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar, matd::Identity(y.cols(), y.cols()));
+   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar, referencecoords);
    return ld;
 }
 
@@ -179,7 +179,7 @@ Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs,
 }
 
 
-pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, vecd & qe_in, matd & yx){
+pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, vecd & qe_in, matd & yx, matd referencecoords){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qe = int(qe_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qs = yx.cols() - qe - p; 
@@ -208,7 +208,7 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
 
-  veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar, matd::Identity(y.cols(), y.cols()));
+  veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, Kstar, referencecoords);
 
   CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
   tape.Dependent(mainvec, ld);

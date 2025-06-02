@@ -50,23 +50,24 @@ inverseVectorizeLowerTriangle <- function(vec) {
     .Call(`_sphm_inverseVectorizeLowerTriangle`, vec)
 }
 
-S2S_constV_nota1_tovecparams <- function(omvec, k, aremaining, Kstar) {
-    .Call(`_sphm_S2S_constV_nota1_tovecparams`, omvec, k, aremaining, Kstar)
+S2S_constV_nota1_tovecparams <- function(omvec, k, aremaining, G0star, referencecoords) {
+    .Call(`_sphm_S2S_constV_nota1_tovecparams`, omvec, k, aremaining, G0star, referencecoords)
 }
 
 S2S_constV_nota1_fromvecparamsR <- function(mainvec, p, qs, qe) {
     .Call(`_sphm_S2S_constV_nota1_fromvecparamsR`, mainvec, p, qs, qe)
 }
 
-#' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms
+#' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms. It is best if referencecoords is close to the best G0 (so rG0 is close the identity) and it will fail if `G01` is the antepode of `referencoords[,1]`.
+#' @param rG0 specifies the axes relative to referencecoords. That is `referencecoords * rG0` give the axes G0 of the SvMF at the base point.
 NULL
 
 ull_S2S_constV_forR <- function(y, xs, xe, omvec, k, a1, aremaining, Kstar, referencecoords) {
     .Call(`_sphm_ull_S2S_constV_forR`, y, xs, xe, omvec, k, a1, aremaining, Kstar, referencecoords)
 }
 
-tape_ull_S2S_constV_nota1 <- function(omvec, k, a1, aremaining, Kstar, p_in, qe_in, yx, referencecoords) {
-    .Call(`_sphm_tape_ull_S2S_constV_nota1`, omvec, k, a1, aremaining, Kstar, p_in, qe_in, yx, referencecoords)
+tape_ull_S2S_constV_nota1 <- function(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords) {
+    .Call(`_sphm_tape_ull_S2S_constV_nota1`, omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords)
 }
 
 mnlink_cpp <- function(xs, xe, vec, p) {

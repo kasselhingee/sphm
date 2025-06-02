@@ -3,6 +3,9 @@
 #include "uldSvMF.h"
 #include "utils.h"
 
+//rG0 specifies the axes of the SvMF according to the reference coords.
+//referencecoords * rG0 are back in the same coords as everything else
+//(referencecoords * rG0) are pararallel tranported so that the first column equals p1
 veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 rG0, matd referencecoords){
   int p = om.p1.size();
   //check that ncol(y) == p
@@ -129,13 +132,29 @@ mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
 }
 
 // aremaining becomes log(1/a) with the first element dropped
+// G0star are the orientation axes of SvMF in cannonical coordinate (p x p-1 matrix). These axes must be orthogonal to p1. It is converted to a p-1 x p-1 skew-symmetrix matrix
+// ideally G0star is close to the referencecoords axes
 // [[Rcpp::export]]
-veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 Kstar){
+veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 G0star, matd referencecoords){
   int p = aremaining.size() + 1;
-  if (Kstar.cols() != Kstar.rows()){Rcpp::stop("Kstar should be square");}
-  if (Kstar.cols() != p-1){Rcpp::stop("Kstar should have dimension p-1");}
+
+  //check G0star
+  if (G0star.cols() != p-1){Rcpp::stop("G0star should have p-1 columns");}
+  if (G0star.rows() != p){Rcpp::stop("G0star should have p columns");}
+  if ((omvec.segment(0, p).transpose() * G0star).norm() > 1e-8){Rcpp::stop("G0star columns should be orthogonal to p1.");}
+
+  //convert G0star to referencecoords
+  G0star = referencecoords.cast<a1type>().transpose() * G0star;
+  Rcpp::Rcout << G0star << std::endl;
+  //parallel transport along p1 to referencecoords[,1] so that first row of G0star is zeros
+  G0star = JuppRmat(referencecoords.transpose() * omvec.segment(0,p), referencecoords.col(0)) * G0star;
+  Rcpp::Rcout << G0star << std::endl;
+  //drop first row of zeros
+  mata1 Kstar(p-1,p-1);
+  Kstar = G0star.bottomRows(p-1);
+  Rcpp::Rcout << Kstar << std::endl;
   a1type detKstar = Kstar.determinant();
-  if (std::abs(CppAD::Value(detKstar) + 1.0) < 1e-8) {Rcpp::stop("Kstar has a determinant very close to -1, please change the sign of one of Kstar's columns");}
+  if (std::abs(CppAD::Value(detKstar) + 1.0) < 1e-8) {Rcpp::stop("Kstar has a determinant very close to -1, please change the sign of one of G0star's columns");}
   
   veca1 vecCayaxes = vectorizeLowerTriangle(inverseCayleyTransform(Kstar)); 
   veca1 result(omvec.size() + 1 + aremaining.size() - 1 + vecCayaxes.size());
@@ -185,7 +204,8 @@ Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs,
 }
 
 
-pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, vecd & p_in, vecd & qe_in, matd & yx, matd referencecoords){
+//G0star are the orientation axes of SvMF in cannonical coordinate (p x p-1) matrix
+pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0star, vecd & p_in, vecd & qe_in, matd & yx, matd referencecoords){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qe = int(qe_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qs = yx.cols() - qe - p; 
@@ -199,25 +219,25 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   mata1 xe = yx.rightCols(qe);
 
   // Get all parameters except a1 into a vector
-  veca1 mainvec = S2S_constV_nota1_tovecparams(omvec, k, aremaining, Kstar);
+  veca1 mainvec = S2S_constV_nota1_tovecparams(omvec, k, aremaining, G0star, referencecoords);
   veca1 a1vec(1);
   a1vec(0) = a1;
 
-// tape with main vector and a1 as a dynamic
+  // tape with main vector and a1 as a dynamic
   CppAD::Independent(mainvec, a1vec);
   // split mainvec into parts, overwriting passed arguments
   auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe);
   omvec = std::get<0>(result);
   k = std::get<1>(result);
   aremaining = std::get<2>(result);
-  Kstar = std::get<3>(result);
+  mata1 Kstar = std::get<3>(result);
   
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
 
   //identify G0 with p1
   mata1 rG0(p,p);
-  rG0.col(0) = referencecoords.transpose() * om.p1;
-  //kstar should be rG0[,-1] parallel transported so that rG0[,1] = nthpole, then with the first row dropped
+  rG0.col(0) = referencecoords.transpose() * om.p1; //rG0 because it is G0 expressed in the referencecoords coordinate system
+  //Kstar should be rG0[,-1] parallel transported so that rG0[,1] = nthpole, then with the first row dropped
   //rG0[,-1] back add a row of zeros, then use reverse parallel transport to get full axes
   mata1 rrG0star(p,p-1);
   rrG0star << mata1::Zero(1,p-1),Kstar;

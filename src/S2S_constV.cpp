@@ -169,7 +169,7 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
 
 // reverse function
 // without ce, would only need q = qs + qe to be passed in
-std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const veca1 & mainvec, int p, int qs, int qe) {
+std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords) {
   if (mainvec.size() != Omega_veclength(p, qs, qe) + 1 + (p-2) + ((p-2) * (p-1) / 2)  ) {
     Rcpp::stop("Input vector size does not match expected dimensions.");
   }
@@ -181,27 +181,39 @@ std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const vec
   veca1 aremaining(p-1);
   aremaining[0] = CppAD::exp(-laremaining_m1.sum());
   aremaining.tail(aremaining.size() - 1) = laremaining_m1.array().exp();
+
+  //get back Kstart then G0star
   veca1 vecCayaxes = mainvec.segment(omvec.size() + 1 + aremaining.size() - 1, (p-1) * (p-2)/2);
   mata1 Kstar = cayleyTransform(inverseVectorizeLowerTriangle(vecCayaxes));
+  Rcpp::Rcout << "Kstar:" << std::endl << Kstar << std::endl;
+  mata1 G0star = mata1::Zero(p, p-1);
+  G0star.bottomRows(p-1) = Kstar;
+  Rcpp::Rcout << "rrG0star:" << std::endl << G0star << std::endl;
+  //undo: parallel transport along p1 to referencecoords[,1] so that first row of G0star is zeros
+  G0star = JuppRmat(referencecoords.transpose() * omvec.segment(0,p), veca1::Unit(p,0)).transpose() * G0star;
+  Rcpp::Rcout << "rG0star:" << std::endl << G0star << std::endl;
+  //undo: convert G0star to referencecoords
+  G0star = referencecoords.cast<a1type>() * G0star;
+  Rcpp::Rcout << "G0star:" << std::endl << G0star << std::endl;
   
-  return std::make_tuple(omvec, k, aremaining, Kstar);
+  return std::make_tuple(omvec, k, aremaining, G0star);
 }
 
 //export the reverse function
 // [[Rcpp::export]]
-Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs, int qe) {
-  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe);
+Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords) {
+  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords);
   veca1 omvec = std::get<0>(result);
   a1type k = std::get<1>(result);
   veca1 aremaining = std::get<2>(result);
-  mata1 Kstar = std::get<3>(result);
+  mata1 G0star = std::get<3>(result);
   
   // Return as a list
   return Rcpp::List::create(
     Rcpp::Named("omvec") = omvec,
     Rcpp::Named("k") = k,
     Rcpp::Named("aremaining") = aremaining,
-    Rcpp::Named("Kstar") = Kstar
+    Rcpp::Named("G0star") = G0star
   );
 }
 
@@ -228,22 +240,18 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   // tape with main vector and a1 as a dynamic
   CppAD::Independent(mainvec, a1vec);
   // split mainvec into parts, overwriting passed arguments
-  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe);
+  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords);
   omvec = std::get<0>(result);
   k = std::get<1>(result);
   aremaining = std::get<2>(result);
-  mata1 Kstar = std::get<3>(result);
+  G0star = std::get<3>(result);
   
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
 
-  //identify G0 with p1
+  //identify G01 with p1 occurs in to/from vecparams too
   mata1 rG0(p,p);
-  rG0.col(0) = referencecoords.transpose() * om.p1; //rG0 because it is G0 expressed in the referencecoords coordinate system
-  //Kstar should be rG0[,-1] parallel transported so that rG0[,1] = nthpole, then with the first row dropped
-  //rG0[,-1] back add a row of zeros, then use reverse parallel transport to get full axes
-  mata1 rrG0star(p,p-1);
-  rrG0star << mata1::Zero(1,p-1),Kstar;
-  rG0.block(0, 1, p, p-1) = JuppRmat(rG0.col(0),veca1::Unit(p,0)).transpose() * rrG0star;
+  rG0.col(0) = referencecoords.transpose() * om.p1;
+  rG0.rightCols(p-1) = referencecoords.cast<a1type>().transpose() * G0star;
 
   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, rG0, referencecoords);
 

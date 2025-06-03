@@ -54,8 +54,8 @@ S2S_constV_nota1_tovecparams <- function(omvec, k, aremaining, G0star, reference
     .Call(`_sphm_S2S_constV_nota1_tovecparams`, omvec, k, aremaining, G0star, referencecoords)
 }
 
-S2S_constV_nota1_fromvecparamsR <- function(mainvec, p, qs, qe) {
-    .Call(`_sphm_S2S_constV_nota1_fromvecparamsR`, mainvec, p, qs, qe)
+S2S_constV_nota1_fromvecparamsR <- function(mainvec, p, qs, qe, referencecoords) {
+    .Call(`_sphm_S2S_constV_nota1_fromvecparamsR`, mainvec, p, qs, qe, referencecoords)
 }
 
 #' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms. It is best if referencecoords is close to the best G0 (so rG0 is close the identity) and it will fail if `G01` is the antepode of `referencoords[,1]`.

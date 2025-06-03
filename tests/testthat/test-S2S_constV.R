@@ -78,7 +78,7 @@ test_that("to and from vecparams functions correctly", {
                                             referencecoords = referencecoords,
                                             G01behaviour = "free")
   expect_equal(length(vecparams), veclength + p-1)
-  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "fixed", G01 = G0[,1]),
+  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "free"),
                list(omvec = mnlink_Omega_vec(omegapar),
                     k = k,
                     aremaining = a[-1],

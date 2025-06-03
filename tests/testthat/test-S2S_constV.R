@@ -29,6 +29,63 @@ test_that("rotationmat_amaral() rotates start to end", {
   expect_equal(drop(rotationmat_amaral(vecs[1, ], vecs[2,]) %*% vecs[1,]), vecs[2, ])
 })
 
+test_that("to and from vecparams functions correctly", {
+  rmnlink_cann__place_in_env(4, 5, 4)
+  omegapar <- as_mnlink_Omega(paramobj)
+  k <- 30
+  a <- c(1, seq(5, 0.2, length.out = p-1))
+  a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
+  
+  set.seed(5)
+  G0 <- mclust::randomOrthogonalMatrix(p, p) #axes around a random location
+  G0[, p] <- det(G0) * G0[,p]
+  
+  set.seed(7)
+  referencecoords <- mclust::randomOrthogonalMatrix(p, p)
+  referencecoords[, p] <- det(referencecoords) * referencecoords[,p]
+  
+  # G01 identified with p1
+  G01_p1 <- cbind(omegapar$p1, -JuppRmat(G0[,1], omegapar$p1) %*% G0[,-1])
+  vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+                                            aremaining = a[-1],
+                                            G0 = G01_p1,
+                                            referencecoords = referencecoords,
+                                            G01behaviour = "p1")
+  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "p1"),
+               list(omvec = mnlink_Omega_vec(omegapar),
+                    k = k,
+                    aremaining = a[-1],
+                    G0 = G01_p1), ignore_attr = TRUE)
+  veclength <- length(vecparams)
+  
+  # G01 fixed
+  vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+                                            aremaining = a[-1],
+                                            G0 = G0,
+                                            referencecoords = referencecoords,
+                                            G01behaviour = "fixed")
+  expect_equal(length(vecparams), veclength)
+  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "fixed", G01 = G0[,1]),
+               list(omvec = mnlink_Omega_vec(omegapar),
+                    k = k,
+                    aremaining = a[-1],
+                    G0 = G0), ignore_attr = TRUE)
+  
+  # G01 free
+  vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+                                            aremaining = a[-1],
+                                            G0 = G0,
+                                            referencecoords = referencecoords,
+                                            G01behaviour = "free")
+  expect_equal(length(vecparams), veclength + p-1)
+  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "fixed", G01 = G0[,1]),
+               list(omvec = mnlink_Omega_vec(omegapar),
+                    k = k,
+                    aremaining = a[-1],
+                    G0 = G0), ignore_attr = TRUE)
+  
+})
+
 test_that("maximum likelihood for parallel axes per geodesic path", {
   rmnlink_cann__place_in_env(4, 5, 4)
   omegapar <- as_mnlink_Omega(paramobj)
@@ -73,11 +130,6 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   referencecoords <- mclust::randomOrthogonalMatrix(p, p)
   vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                aremaining = a[-1], G0star = G0star, referencecoords = referencecoords)
-  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords),
-               list(omvec = mnlink_Omega_vec(omegapar),
-                    k = k,
-                    aremaining = a[-1],
-                    G0star = G0star), ignore_attr = TRUE)
   
   #check tape:
   expect_warning({ulltape <- tape_ull_S2S_constV_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,

@@ -192,14 +192,11 @@ std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const vec
   aremaining[0] = CppAD::exp(-laremaining_m1.sum());
   aremaining.tail(aremaining.size() - 1) = laremaining_m1.array().exp();
 
-  Rcpp::Rcout << "Starting G0 recovery" << std::endl;
 
   //Recovery of G0
   //get back rotmat from vecCay
   veca1 vecCayaxes = mainvec.tail(vecCay_length);
-  Rcpp::Rcout << "vecCayaxes:" << std::endl << vecCayaxes << std::endl;
   mata1 rotmat = cayleyTransform(inverseVectorizeLowerTriangle(vecCayaxes));
-  Rcpp::Rcout << "rotmat:" << std::endl << rotmat << std::endl;
 
   // get back G0
   mata1 G0 = mata1::Zero(p,p);
@@ -207,19 +204,16 @@ std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const vec
   if (G01behaviour == "p1"){G0.col(0) = referencecoords.transpose() * omvec.segment(0,p);}
   if (G01behaviour == "fixed"){G0.col(0) = referencecoords.transpose() * G01;}
   if ((G01behaviour == "p1") || (G01behaviour == "fixed")){
-    Rcpp::Rcout << "G01:" << std::endl << G0.col(0) << std::endl;
     mata1 G0star = mata1::Zero(p, p-1);
     G0star.bottomRows(p-1) = rotmat;
     //undo: parallel transport along p1 to referencecoords[,1] so that first row of G0star is zeros
     G0star = JuppRmat(G0.col(0), veca1::Unit(p,0)).transpose() * G0star;
     G0.rightCols(p-1) = G0star;
-    Rcpp::Rcout << "G0:" << std::endl << G0 << std::endl;
   } else if (G01behaviour == "free") {
     G0 = rotmat;
   }
   //undo: convert G0 to referencecoords
   G0 = referencecoords.cast<a1type>() * G0;
-  Rcpp::Rcout << "G0:" << std::endl << G0 << std::endl;
 
   return std::make_tuple(omvec, k, aremaining, G0);
 }

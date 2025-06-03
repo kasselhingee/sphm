@@ -44,12 +44,10 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
  
   # generate noise
-  # step 1: axes defined at P[, 1], orthogonal to P[, 1]
+  # step 1: SvMF axes and reference location defined at P[, 1], orthogonal to P[, 1]
   set.seed(5)
-  G0_other <- mclust::randomOrthogonalMatrix(p, p) #axes around any location
-  G0_other[, p] <- det(G0_other) * G0_other[,p]
-  # parallel transport to make them axes around P[,1]
-  G0 <- rotationmat_amaral(G0_other[,1], P[,1]) %*% G0_other
+  G0 <- mclust::randomOrthogonalMatrix(p, p) #axes around a random location
+  G0[, p] <- det(G0) * G0[,p]
   G0star <- G0[,-1]
   # step 2: assume concentration and scales are constant
   k <- 30
@@ -59,7 +57,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   # then simulate from a SvMF, and evaluate density at the noise
   set.seed(6)
   y_ld <- t(apply(ymean, 1, function(mn){
-    G <- cbind(mn, JuppRmat(P[,1], mn) %*% G0star)
+    G <- cbind(mn, JuppRmat(G0[,1], mn) %*% G0star)
     obs <- rSvMF(1, SvMFcann(k, a, G))
     ld <- uldSvMF_cann(obs, k = k, a = a, G = G)
     return(c(obs, ld))
@@ -67,7 +65,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   
   # check ull_S2S_constV in C++
   ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], xs = xs, xe = xe, omvec = mnlink_Omega_vec(omegapar), k = k,
-                      a1 = a[1], aremaining = a[-1], G0 = G0_other)
+                      a1 = a[1], aremaining = a[-1], G0 = G0)
   expect_equal(ldCpp, y_ld[, p+1])
   
   # check vectorisation and reverse

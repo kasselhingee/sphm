@@ -179,92 +179,148 @@ test_that("MLE with p1 = G01", {
   expect_equal(est2$solution, est1$solution, tolerance = 1E-3)
 })
 
-
-test_that("maximum likelihood for parallel axes per geodesic path", {
+test_that("MLE with G01 fixed", {
   rmnlink_cann__place_in_env(4, 5, 4)
   omegapar <- as_mnlink_Omega(paramobj)
-  
-  #generate covariates Gaussianly
   set.seed(4)
-  xe <- matrix(rnorm(1000*qe), nrow = 1000)
-  #generate covariates on the sphere
-  set.seed(4)
-  xs <- matrix(rnorm(1000*qs), nrow = 1000)
-  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
-  
-  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
- 
-  # generate noise
-  # step 1: SvMF axes and reference location defined at P[, 1], orthogonal to P[, 1]
+  x <- rcovars(1000, qs, qe)
   set.seed(5)
   G0 <- mclust::randomOrthogonalMatrix(p, p) #axes around a random location
   G0[, p] <- det(G0) * G0[,p]
-  G0star <- G0[,-1]
-  # step 2: assume concentration and scales are constant
+  
+  # simulate observations
+  set.seed(6)
   k <- 30
   a <- c(1, seq(5, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
-  #step 3: for each location define G as mean and geodesic transport of Gstar columns
-  # then simulate from a SvMF, and evaluate density at the noise
-  set.seed(6)
-  y_ld <- t(apply(ymean, 1, function(mn){
-    G <- cbind(mn, JuppRmat(G0[,1], mn) %*% G0star)
-    obs <- rSvMF(1, SvMFcann(k, a, G))
-    ld <- uldSvMF_cann(obs, k = k, a = a, G = G)
-    return(c(obs, ld))
-  }))
+  y_ld <- rS2S_constV(x$xs, x$xe, mnparam = omegapar, k, a, G0)
   
   # check ull_S2S_constV in C++
-  ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], xs = xs, xe = xe, omvec = mnlink_Omega_vec(omegapar), k = k,
-                      a1 = a[1], aremaining = a[-1], G0 = G0)
+  ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mnlink_Omega_vec(omegapar), k = k,
+                               a1 = a[1], aremaining = a[-1], G0 = G0)
   expect_equal(ldCpp, y_ld[, p+1])
   
-  # check vectorisation and reverse
-  set.seed(7)
-  referencecoords <- mclust::randomOrthogonalMatrix(p, p)
-  vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
-                               aremaining = a[-1], G0star = G0star, referencecoords = referencecoords)
   
   #check tape:
+  set.seed(7)
+  referencecoords <- mclust::randomOrthogonalMatrix(p, p)
+  referencecoords[, p] <- det(referencecoords) * referencecoords[,p]
+  vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+                                            aremaining = a[-1],
+                                            G0 = G0, 
+                                            referencecoords = referencecoords,
+                                            G01behaviour = "fixed")
   expect_warning({ulltape <- tape_ull_S2S_constV_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
-                            a1 = a[1], aremaining = a[-1], G0star = G0star,
-                            p, qe,
-                            yx = cbind(y_ld[, 1:p], xs, xe), 
-                            referencecoords)}, "p!=3")
+                                                       a1 = a[1], aremaining = a[-1],
+                                                       G0 = G0,
+                                                       p, qe,
+                                                       yx = cbind(y_ld[, 1:p], x$xs, x$xe), 
+                                                       referencecoords,
+                                                       G01behaviour = "fixed")}, "p!=3")
   expect_equal(ulltape$xtape, vecparams)
   expect_equal(ulltape$forward(0, ulltape$xtape), y_ld[, p+1])
   
   exactll <- sum(ulltape$forward(0, ulltape$xtape))
   
-  set.seed(7)
-  Kstardifferent <- mclust::randomOrthogonalMatrix(p-1, p-1)
-  Kstardifferent[, 1] <- det(Kstardifferent) * Kstardifferent[,1]
-  G0stardifferent <- t(rotationmat_amaral(omegapar$p1, nthpole(p))) %*% rbind(0, Kstardifferent)
+  set.seed(18)
+  G0_other <- mclust::randomOrthogonalMatrix(p, p) #axes around a random location
+  G0_other[, p] <- det(G0_other) * G0_other[,p]
+  G0stardifferent <- -JuppRmat(G0_other[,1], G0[,1]) %*% G0_other[,-1]
   badll <- sum(ulltape$forward(0, 
                                S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
-                               aremaining = a[-1], G0star = G0stardifferent, referencecoords = referencecoords)))
+                                                            aremaining = a[-1], 
+                                                            G0 = cbind(G0[,1], G0stardifferent),
+                                                            referencecoords = referencecoords,
+                                                            G01behaviour = "fixed")))
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  expect_warning({est1 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, G0star, xtol_rel = 1E-4, G0reference = referencecoords)}, "p!=3")
+  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "fixed")}, "p!=3")
   expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
-  axis_distance <- function(angle1, angle2 = 0){
-    diff <- abs(angle1 - angle2)
-    pmin(diff, pi - diff)
-  }
-  expect_equal(axis_distance(acos(colSums(est1$solution$G0star * G0star))), rep(0, ncol(G0star)), tolerance = 1E-1, ignore_attr = TRUE)
+  expect_equal(axis_distance(acos(colSums(est1$solution$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
   set.seed(13)
-  pre <- prelim_ad(y_ld[, 1:p], xs, xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
-  badG0star <- getHstar(pre$solution$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
-  expect_warning({est2 <- optim_constV(y_ld[, 1:p], xs, xe, pre$solution, k = 10, a = rep(1, p), G0star = -badG0star, xtol_rel = 1E-4, G0reference = referencecoords)}, "p!=3")
+  pre <- prelim_ad(y_ld[, 1:p], x$xs, x$xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
+  expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$solution, k = 10, a = rep(1, p),
+                                       G0 = cbind(G0[,1], -JuppRmat(G0_other[,1], G0[,1]) %*% G0_other[,-1]), 
+                                       G0reference = referencecoords, G01behaviour = "fixed")}, "p!=3")
   expect_equal(est2$solution, est1$solution, tolerance = 1E-3)
 })
 
+test_that("MLE with G01 free", {
+  rmnlink_cann__place_in_env(4, 5, 4)
+  omegapar <- as_mnlink_Omega(paramobj)
+  set.seed(4)
+  x <- rcovars(1000, qs, qe)
+  set.seed(5)
+  G0 <- mclust::randomOrthogonalMatrix(p, p) #axes around a random location
+  G0[, p] <- det(G0) * G0[,p]
+  
+  # simulate observations
+  set.seed(6)
+  k <- 30
+  a <- c(1, seq(5, 0.2, length.out = p-1))
+  a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
+  y_ld <- rS2S_constV(x$xs, x$xe, mnparam = omegapar, k, a, G0)
+  
+  # check ull_S2S_constV in C++
+  ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mnlink_Omega_vec(omegapar), k = k,
+                               a1 = a[1], aremaining = a[-1], G0 = G0)
+  expect_equal(ldCpp, y_ld[, p+1])
+  
+  
+  #check tape:
+  set.seed(7)
+  referencecoords <- mclust::randomOrthogonalMatrix(p, p)
+  referencecoords[, p] <- det(referencecoords) * referencecoords[,p]
+  vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+                                            aremaining = a[-1],
+                                            G0 = G0, 
+                                            referencecoords = referencecoords,
+                                            G01behaviour = "free")
+  expect_warning({ulltape <- tape_ull_S2S_constV_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
+                                                       a1 = a[1], aremaining = a[-1],
+                                                       G0 = G0,
+                                                       p, qe,
+                                                       yx = cbind(y_ld[, 1:p], x$xs, x$xe), 
+                                                       referencecoords,
+                                                       G01behaviour = "free")}, "p!=3")
+  expect_equal(ulltape$xtape, vecparams)
+  expect_equal(ulltape$forward(0, ulltape$xtape), y_ld[, p+1])
+  
+  exactll <- sum(ulltape$forward(0, ulltape$xtape))
+  
+  set.seed(18)
+  G0_other <- mclust::randomOrthogonalMatrix(p, p) #axes around a random location
+  G0_other[, p] <- det(G0_other) * G0_other[,p]
+  badll <- sum(ulltape$forward(0, 
+                               S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+                                                            aremaining = a[-1], 
+                                                            G0 = G0_other,
+                                                            referencecoords = referencecoords,
+                                                            G01behaviour = "free")))
+  expect_lt(badll, exactll)
+  
+  ## now try optimisation starting at true values ##
+  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "free")}, "p!=3")
+  expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
+  expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
+  # check Gstar by checking angle between estimated and true axes
+  expect_equal(axis_distance(acos(colSums(est1$solution$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
+  
+  ## now starting optimisation away from starting parameters ##
+  bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
+  set.seed(13)
+  pre <- prelim_ad(y_ld[, 1:p], x$xs, x$xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
+  expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$solution, k = 10, a = rep(1, p),
+                                       G0 = G0_other, 
+                                       G0reference = referencecoords, G01behaviour = "free")}, "p!=3")
+  expect_equal(est2$solution, est1$solution, tolerance = 1E-3)
+})
 
 test_that("Cayley transform and vectorisation works", {
   p <- 3

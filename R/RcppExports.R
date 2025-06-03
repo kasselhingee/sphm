@@ -62,8 +62,8 @@ S2S_constV_nota1_fromvecparamsR <- function(mainvec, p, qs, qe) {
 #' @param rG0 specifies the axes relative to referencecoords. That is `referencecoords * rG0` give the axes G0 of the SvMF at the base point.
 NULL
 
-ull_S2S_constV_forR <- function(y, xs, xe, omvec, k, a1, aremaining, Kstar, referencecoords) {
-    .Call(`_sphm_ull_S2S_constV_forR`, y, xs, xe, omvec, k, a1, aremaining, Kstar, referencecoords)
+ull_S2S_constV_forR <- function(y, xs, xe, omvec, k, a1, aremaining, rG0, referencecoords) {
+    .Call(`_sphm_ull_S2S_constV_forR`, y, xs, xe, omvec, k, a1, aremaining, rG0, referencecoords)
 }
 
 tape_ull_S2S_constV_nota1 <- function(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords) {

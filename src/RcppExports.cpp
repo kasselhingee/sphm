@@ -156,8 +156,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // ull_S2S_constV_forR
-veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 Kstar, matd referencecoords);
-RcppExport SEXP _sphm_ull_S2S_constV_forR(SEXP ySEXP, SEXP xsSEXP, SEXP xeSEXP, SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP KstarSEXP, SEXP referencecoordsSEXP) {
+veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 rG0, matd referencecoords);
+RcppExport SEXP _sphm_ull_S2S_constV_forR(SEXP ySEXP, SEXP xsSEXP, SEXP xeSEXP, SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP rG0SEXP, SEXP referencecoordsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -168,9 +168,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
     Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
     Rcpp::traits::input_parameter< veca1 >::type aremaining(aremainingSEXP);
-    Rcpp::traits::input_parameter< mata1 >::type Kstar(KstarSEXP);
+    Rcpp::traits::input_parameter< mata1 >::type rG0(rG0SEXP);
     Rcpp::traits::input_parameter< matd >::type referencecoords(referencecoordsSEXP);
-    rcpp_result_gen = Rcpp::wrap(ull_S2S_constV_forR(y, xs, xe, omvec, k, a1, aremaining, Kstar, referencecoords));
+    rcpp_result_gen = Rcpp::wrap(ull_S2S_constV_forR(y, xs, xe, omvec, k, a1, aremaining, rG0, referencecoords));
     return rcpp_result_gen;
 END_RCPP
 }

@@ -11,7 +11,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
   //check that ncol(y) == p
   if (y.cols() != p){Rcpp::stop("width of y does not equal length of p1");}
   //check that referencecoords are orthonormal (wont be taped as uses purely matd objects)
-  if ((referencecoords.transpose() * referencecoords - matd::Identity(referencecoords.rows(), referencecoords.rows())).norm() < 1E-8){
+  if ((referencecoords.transpose() * referencecoords - matd::Identity(referencecoords.rows(), referencecoords.rows())).norm() > 1E-8){
     Rcpp::stop("referencecoords columns are not an orthonormal basis");
   }
 
@@ -28,7 +28,8 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
   //rG0 is provided in coordinate system given by referencecoords
   //to get G0 in the canonical reference system of p1 etc, use referencecoords * G0
   //then to parallel transport G0 to p1, use JuppRmat
-  mata1 G0star = JuppRmat(rG0.col(0), om_projected.p1) * referencecoords.cast<a1type>() * (rG0.rightCols(rG0.cols() - 1));
+  mata1 G0 = referencecoords.cast<a1type>() * rG0;
+  mata1 G0star = JuppRmat(G0.col(0), om_projected.p1) * G0.rightCols(G0.cols() - 1);
   mata1 G(p, p);
   veca1 a(p);
   a(0) = a1;
@@ -155,12 +156,13 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
   Rcpp::Rcout << Kstar << std::endl;
   a1type detKstar = Kstar.determinant();
   if (std::abs(CppAD::Value(detKstar) + 1.0) < 1e-8) {Rcpp::stop("Kstar has a determinant very close to -1, please change the sign of one of G0star's columns");}
-  
   veca1 vecCayaxes = vectorizeLowerTriangle(inverseCayleyTransform(Kstar)); 
+
+  // put everything into a vector
   veca1 result(omvec.size() + 1 + aremaining.size() - 1 + vecCayaxes.size());
   result.segment(0, omvec.size()) = omvec;
   result(omvec.size()) = k;
-  result.segment(omvec.size() + 1, aremaining.size() - 1) = aremaining.tail(aremaining.size() - 1).array().log();
+  result.segment(omvec.size() + 1, aremaining.size() - 1) = aremaining.tail(aremaining.size() - 1).array().log(); //log the a
   result.segment(omvec.size() + 1 + aremaining.size() - 1, vecCayaxes.size()) = vecCayaxes;
   return result;
 }

@@ -24,16 +24,13 @@
 #' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
 #' No standardisation is performed.
 #' @export
-optim_constV <- function(y, xs, xe, mean, k, a, G0star, xtol_rel = 1E-5, verbose = 0, G0reference = diag(p), ...){
+optim_constV <- function(y, xs, xe, mean, k, a, G0, xtol_rel = 1E-5, verbose = 0, G0reference = diag(p), G01behaviour = "p1", ...){
   p <- ncol(y)
   qs <- ncol(xs)
   qe <- ncol(xe)
   # checks
   om0 <- as_mnlink_Omega(mean)
   mnlink_Omega_check(om0)
-  if (!isTRUE(all.equal(cbind(om0$p1, G0star) %*% t(cbind(om0$p1, G0star)), diag(1, p), check.attributes = FALSE))){ # p1 orthogonal to Vstar
-    stop("Gstar is not orthogonal to p1.")
-  }
   stopifnot(length(a) == p)
   a1 = a[1]
   aremaining = a[-1]
@@ -43,20 +40,24 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0star, xtol_rel = 1E-5, verbose
     mean = om0,
     k = k, 
     a = a, 
-    G0star = G0star
+    G0 = G0
   )
   
   # estimation prep
   dims_in <- c(p, length(om0$qe1))
   omvec0 <- mnlink_Omega_vec(om0)
   ulltape <- tape_ull_S2S_constV_nota1(omvec = omvec0, k = k,
-                                       a1 = a1, aremaining = aremaining, G0star = G0star,
+                                       a1 = a1, 
+                                       aremaining = aremaining,
+                                       G0 = G0,
                                        p = p, qe = qe, 
                                        yx = cbind(y, xs, xe),
-                                       referencecoords = G0reference)
+                                       referencecoords = G0reference,
+                                       G01behaviour = G01behaviour)
   ulltape <- scorematchingad::avgrange(ulltape)
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  x0 <- ulltape$xtape
   
   # check Jacobians of constraints when constraints satisfied
   Jac_eq <- matrix(constraint_tape$Jacobian(omvec0), byrow = TRUE, ncol = length(omvec0))
@@ -80,7 +81,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0star, xtol_rel = 1E-5, verbose
   
   # Optimisation
   est <- nloptr::nloptr(
-    x0 = S2S_constV_nota1_tovecparams(omvec = omvec0, k = k, aremaining = aremaining, G0star = G0star, referencecoords = G0reference),
+    x0 = x0,
     eval_f = function(theta){-ulltape$eval(theta, a1)},
     eval_grad_f = function(theta){-ulltape$Jac(theta, a1)},
     lb = lb,
@@ -94,28 +95,29 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0star, xtol_rel = 1E-5, verbose
     opts = combined_opts
   )
   
-  # estimation for p!=3 (alternating between k and others) ## NOT COMPLETE
-  
   if (!(est$status %in% c(0, 1, 2, 3, 4))){warning("Optimistation did not finish properly.")}
-  estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, p, qs, qe, referencecoords = G0reference)
+  estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, p, qs, qe, 
+                                                  referencecoords = G0reference,
+                                                  G01behaviour = G01behaviour,
+                                                  G01 = initial$G0[,1])
   
   # project Omega to satisfy orthogonality constraint
   est_om <- Omega_proj(mnlink_Omega_unvec(estparamlist$omvec, p, qe = qe, check = FALSE))
   
   #make first element of each vector positive
-  estparamlist$G0star <- topos1strow(estparamlist$G0star)
+  estparamlist$G0[,-1] <- topos1strow(estparamlist$G0[,-1])
   
   # make sure aremaining is in decreasing order
   aord <- order(estparamlist$aremaining, decreasing = TRUE)
   estparamlist$aremaining <- estparamlist$aremaining[aord]
-  estparamlist$G0star <- estparamlist$G0star[, aord]
+  estparamlist$G0[,-1] <- estparamlist$G0[,-1][, aord]
   
   
   outsolution <- list(
     mean = est_om,
     k = estparamlist$k,
     a = c(a1, estparamlist$aremaining),
-    G0star = estparamlist$G0star
+    G0 = estparamlist$G0
   )
   
   return(list(
@@ -125,4 +127,16 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0star, xtol_rel = 1E-5, verbose
   ))
 }
 
-
+#' Function for simulating data given mean link and SvMF parameters
+rS2S_constV <- function(xs, xe, mnparam, k, a, G0){
+  ymean <- mnlink(xs = xs, xe = xe, param = mnparam)
+  
+  # simulate noise
+  y_ld <- t(apply(ymean, 1, function(mn){
+    G <- cbind(mn, -JuppRmat(G0[,1], mn) %*% G0[,-1])
+    obs <- rSvMF(1, SvMFcann(k, a, G))
+    ld <- uldSvMF_cann(obs, k = k, a = a, G = G)
+    return(c(obs, ld))
+  }))
+  return(y_ld)
+}

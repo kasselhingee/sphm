@@ -127,17 +127,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // S2S_constV_nota1_tovecparams
-veca1 S2S_constV_nota1_tovecparams(veca1& omvec, a1type k, veca1 aremaining, mata1 G0star, matd referencecoords);
-RcppExport SEXP _sphm_S2S_constV_nota1_tovecparams(SEXP omvecSEXP, SEXP kSEXP, SEXP aremainingSEXP, SEXP G0starSEXP, SEXP referencecoordsSEXP) {
+veca1 S2S_constV_nota1_tovecparams(veca1& omvec, a1type k, veca1 aremaining, mata1 G0, matd referencecoords, std::string G01behaviour);
+RcppExport SEXP _sphm_S2S_constV_nota1_tovecparams(SEXP omvecSEXP, SEXP kSEXP, SEXP aremainingSEXP, SEXP G0SEXP, SEXP referencecoordsSEXP, SEXP G01behaviourSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< veca1& >::type omvec(omvecSEXP);
     Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
     Rcpp::traits::input_parameter< veca1 >::type aremaining(aremainingSEXP);
-    Rcpp::traits::input_parameter< mata1 >::type G0star(G0starSEXP);
+    Rcpp::traits::input_parameter< mata1 >::type G0(G0SEXP);
     Rcpp::traits::input_parameter< matd >::type referencecoords(referencecoordsSEXP);
-    rcpp_result_gen = Rcpp::wrap(S2S_constV_nota1_tovecparams(omvec, k, aremaining, G0star, referencecoords));
+    Rcpp::traits::input_parameter< std::string >::type G01behaviour(G01behaviourSEXP);
+    rcpp_result_gen = Rcpp::wrap(S2S_constV_nota1_tovecparams(omvec, k, aremaining, G0, referencecoords, G01behaviour));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -175,8 +176,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // tape_ull_S2S_constV_nota1
-pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0star, vecd& p_in, vecd& qe_in, matd& yx, matd referencecoords);
-RcppExport SEXP _sphm_tape_ull_S2S_constV_nota1(SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP G0starSEXP, SEXP p_inSEXP, SEXP qe_inSEXP, SEXP yxSEXP, SEXP referencecoordsSEXP) {
+pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0star, vecd& p_in, vecd& qe_in, matd& yx, matd referencecoords, std::string G01behaviour);
+RcppExport SEXP _sphm_tape_ull_S2S_constV_nota1(SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP G0starSEXP, SEXP p_inSEXP, SEXP qe_inSEXP, SEXP yxSEXP, SEXP referencecoordsSEXP, SEXP G01behaviourSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -189,7 +190,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< vecd& >::type qe_in(qe_inSEXP);
     Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
     Rcpp::traits::input_parameter< matd >::type referencecoords(referencecoordsSEXP);
-    rcpp_result_gen = Rcpp::wrap(tape_ull_S2S_constV_nota1(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords));
+    Rcpp::traits::input_parameter< std::string >::type G01behaviour(G01behaviourSEXP);
+    rcpp_result_gen = Rcpp::wrap(tape_ull_S2S_constV_nota1(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -360,10 +362,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_inverseCayleyTransform", (DL_FUNC) &_sphm_inverseCayleyTransform, 1},
     {"_sphm_vectorizeLowerTriangle", (DL_FUNC) &_sphm_vectorizeLowerTriangle, 1},
     {"_sphm_inverseVectorizeLowerTriangle", (DL_FUNC) &_sphm_inverseVectorizeLowerTriangle, 1},
-    {"_sphm_S2S_constV_nota1_tovecparams", (DL_FUNC) &_sphm_S2S_constV_nota1_tovecparams, 5},
+    {"_sphm_S2S_constV_nota1_tovecparams", (DL_FUNC) &_sphm_S2S_constV_nota1_tovecparams, 6},
     {"_sphm_S2S_constV_nota1_fromvecparamsR", (DL_FUNC) &_sphm_S2S_constV_nota1_fromvecparamsR, 5},
     {"_sphm_ull_S2S_constV_forR", (DL_FUNC) &_sphm_ull_S2S_constV_forR, 8},
-    {"_sphm_tape_ull_S2S_constV_nota1", (DL_FUNC) &_sphm_tape_ull_S2S_constV_nota1, 9},
+    {"_sphm_tape_ull_S2S_constV_nota1", (DL_FUNC) &_sphm_tape_ull_S2S_constV_nota1, 10},
     {"_sphm_mnlink_cpp", (DL_FUNC) &_sphm_mnlink_cpp, 4},
     {"_sphm_prelimobj_cpp", (DL_FUNC) &_sphm_prelimobj_cpp, 4},
     {"_sphm_tape_besselImixed", (DL_FUNC) &_sphm_tape_besselImixed, 5},

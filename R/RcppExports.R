@@ -50,9 +50,10 @@ inverseVectorizeLowerTriangle <- function(vec) {
     .Call(`_sphm_inverseVectorizeLowerTriangle`, vec)
 }
 
+#' @param G0 are the orientation axes of SvMF in cannonical coordinate (p x p matrix). Ideally G0 is close to the referencecoords axes. G0 must be a rotation matrix (det > 0) so that the Cayley transform representation works.
 #' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms. It is best if referencecoords is close to the best G0 (so rG0 is close the identity) and it will fail if `G01` is the antepode of `referencoords[,1]`.
-S2S_constV_nota1_tovecparams <- function(omvec, k, aremaining, G0star, referencecoords) {
-    .Call(`_sphm_S2S_constV_nota1_tovecparams`, omvec, k, aremaining, G0star, referencecoords)
+S2S_constV_nota1_tovecparams <- function(omvec, k, aremaining, G0, referencecoords, G01behaviour) {
+    .Call(`_sphm_S2S_constV_nota1_tovecparams`, omvec, k, aremaining, G0, referencecoords, G01behaviour)
 }
 
 S2S_constV_nota1_fromvecparamsR <- function(mainvec, p, qs, qe, referencecoords) {
@@ -63,8 +64,8 @@ ull_S2S_constV_forR <- function(y, xs, xe, omvec, k, a1, aremaining, G0) {
     .Call(`_sphm_ull_S2S_constV_forR`, y, xs, xe, omvec, k, a1, aremaining, G0)
 }
 
-tape_ull_S2S_constV_nota1 <- function(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords) {
-    .Call(`_sphm_tape_ull_S2S_constV_nota1`, omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords)
+tape_ull_S2S_constV_nota1 <- function(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour) {
+    .Call(`_sphm_tape_ull_S2S_constV_nota1`, omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour)
 }
 
 mnlink_cpp <- function(xs, xe, vec, p) {

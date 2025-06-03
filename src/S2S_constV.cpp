@@ -124,33 +124,40 @@ mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
 }
 
 // aremaining becomes log(1/a) with the first element dropped
-// G0star are the orientation axes of SvMF in cannonical coordinate (p x p-1 matrix). These axes must be orthogonal to p1. It is converted to a p-1 x p-1 skew-symmetrix matrix
-// ideally G0star is close to the referencecoords axes
+//' @param G0 are the orientation axes of SvMF in cannonical coordinate (p x p matrix). Ideally G0 is close to the referencecoords axes. G0 must be a rotation matrix (det > 0) so that the Cayley transform representation works.
 //' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms. It is best if referencecoords is close to the best G0 (so rG0 is close the identity) and it will fail if `G01` is the antepode of `referencoords[,1]`.
 // [[Rcpp::export]]
-veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 G0star, matd referencecoords){
+veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 G0, matd referencecoords, std::string G01behaviour){
   int p = aremaining.size() + 1;
+  // check G01behaviour
+  if ((G01behaviour != "p1") && (G01behaviour != "fixed") && (G01behaviour != "free")){Rcpp::stop("G01behaviour not understood");}
 
-  //check G0star
-  if (G0star.cols() != p-1){Rcpp::stop("G0star should have p-1 columns");}
-  if (G0star.rows() != p){Rcpp::stop("G0star should have p columns");}
-  if ((omvec.segment(0, p).transpose() * G0star).norm() > 1e-8){Rcpp::stop("G0star columns should be orthogonal to p1.");}
+  //check G0
+  if (G0.cols() != p){Rcpp::stop("G0 should have p columns");}
+  if (G0.rows() != p){Rcpp::stop("G0 should have p columns");}
+  if ((G0.transpose() * G0 - mata1::Identity(p,p)).norm() > 1e-8){Rcpp::stop("G0 columns should be orthonormal.");}
+  if (CppAD::Value(G0.determinant()) < 0.) {Rcpp::stop("G0 has a negative determinant, please change the sign of one of G0's columns so that it is a rotation");}
+  if (G01behaviour == "p1"){ if ((G0.col(0) - omvec.segment(0,p)).norm() > 1e-8){Rcpp::stop("G01 should be equal to p1");} }
   
   //check that referencecoords are orthonormal (wont be taped as uses purely matd objects)
   if ((referencecoords.transpose() * referencecoords - matd::Identity(referencecoords.rows(), referencecoords.rows())).norm() > 1E-8){
     Rcpp::stop("referencecoords columns are not an orthonormal basis");
   }
 
-  //convert G0star to referencecoords
-  G0star = referencecoords.cast<a1type>().transpose() * G0star;
-  //parallel transport along p1 to referencecoords[,1] so that first row of G0star is zeros
-  G0star = JuppRmat(referencecoords.transpose() * omvec.segment(0,p), veca1::Unit(p,0)) * G0star;
-  //drop first row of zeros
-  mata1 Kstar(p-1,p-1);
-  Kstar = G0star.bottomRows(p-1);
-  a1type detKstar = Kstar.determinant();
-  if (std::abs(CppAD::Value(detKstar) + 1.0) < 1e-8) {Rcpp::stop("Kstar has a determinant very close to -1, please change the sign of one of G0star's columns");}
-  veca1 vecCayaxes = vectorizeLowerTriangle(inverseCayleyTransform(Kstar)); 
+  //convert G0 to referencecoords
+  G0 = referencecoords.cast<a1type>().transpose() * G0;
+  mata1 rotmat; //rot matrix to represent using a Cayley transform
+  //if G01 is fixed or p1 then get a p-1 x p-1 matrix reprensenting the remaining free columns
+  if ((G01behaviour == "p1") || (G01behaviour == "fixed")){
+    //parallel transport along p1 to referencecoords[,1] so that first row of G0star is zeros
+    mata1 G0star = JuppRmat(G0.col(0), veca1::Unit(p,0)) * G0.rightCols(p-1);
+    //drop first row of zeros
+    rotmat = G0star.bottomRows(p-1);
+  } else if (G01behaviour == "free") {
+    rotmat = G0;
+  }
+  if (CppAD::Value(rotmat.determinant()) < 0.) {Rcpp::stop("Determinant is negative. Please change the sign of one of G0's columns.");}
+  veca1 vecCayaxes = vectorizeLowerTriangle(inverseCayleyTransform(rotmat)); 
 
   // put everything into a vector
   veca1 result(omvec.size() + 1 + aremaining.size() - 1 + vecCayaxes.size());
@@ -209,7 +216,7 @@ Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs,
 
 
 //G0star are the orientation axes of SvMF in cannonical coordinate (p x p-1) matrix
-pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0star, vecd & p_in, vecd & qe_in, matd & yx, matd referencecoords){
+pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0star, vecd & p_in, vecd & qe_in, matd & yx, matd referencecoords, std::string G01behaviour){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qe = int(qe_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qs = yx.cols() - qe - p; 
@@ -223,7 +230,7 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   mata1 xe = yx.rightCols(qe);
 
   // Get all parameters except a1 into a vector
-  veca1 mainvec = S2S_constV_nota1_tovecparams(omvec, k, aremaining, G0star, referencecoords);
+  veca1 mainvec = S2S_constV_nota1_tovecparams(omvec, k, aremaining, G0star, referencecoords, G01behaviour);
   veca1 a1vec(1);
   a1vec(0) = a1;
 

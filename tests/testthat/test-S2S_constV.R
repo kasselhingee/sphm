@@ -114,7 +114,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
-  set.seed(3)
+  set.seed(13)
   pre <- prelim_ad(y_ld[, 1:p], xs, xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
   badG0star <- getHstar(pre$solution$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], xs, xe, pre$solution, k = 10, a = rep(1, p), G0star = -badG0star, xtol_rel = 1E-4, G0reference = referencecoords)}, "p!=3")

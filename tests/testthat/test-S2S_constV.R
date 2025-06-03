@@ -46,9 +46,11 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   # generate noise
   # step 1: axes defined at P[, 1], orthogonal to P[, 1]
   set.seed(5)
-  Kstar <- mclust::randomOrthogonalMatrix(p-1, p-1)
-  Kstar[, 1] <- det(Kstar) * Kstar[,1]
-  Gstar <- getHstar(P[ ,1]) %*% Kstar
+  G0_other <- mclust::randomOrthogonalMatrix(p, p) #axes around any location
+  G0_other[, p] <- det(G0_other) * G0_other[,p]
+  # parallel transport to make them axes around P[,1]
+  G0 <- rotationmat_amaral(G0_other[,1], P[,1]) %*% G0_other
+  G0star <- G0[,-1]
   # step 2: assume concentration and scales are constant
   k <- 30
   a <- c(1, seq(5, 0.2, length.out = p-1))
@@ -57,7 +59,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   # then simulate from a SvMF, and evaluate density at the noise
   set.seed(6)
   y_ld <- t(apply(ymean, 1, function(mn){
-    G <- cbind(mn, rotationmat_amaral(P[,1], mn) %*% Gstar)
+    G <- cbind(mn, rotationmat_amaral(P[,1], mn) %*% G0star)
     obs <- rSvMF(1, SvMFcann(k, a, G))
     ld <- uldSvMF_cann(obs, k = k, a = a, G = G)
     return(c(obs, ld))
@@ -68,7 +70,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   
   # check ull_S2S_constV in C++
   ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], xs = xs, xe = xe, omvec = mnlink_Omega_vec(omegapar), k = k,
-                      a1 = a[1], aremaining = a[-1], rG0 = t(referencecoords) %*% cbind(omegapar$p1, Gstar), referencecoords = referencecoords)
+                      a1 = a[1], aremaining = a[-1], rG0 = t(referencecoords) %*% G0_other, referencecoords = referencecoords)
   expect_equal(ldCpp, y_ld[, p+1])
   
   # check vectorisation and reverse

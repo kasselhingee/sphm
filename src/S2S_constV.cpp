@@ -238,8 +238,8 @@ Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs,
 }
 
 
-//G0star are the orientation axes of SvMF in cannonical coordinate (p x p-1) matrix
-pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0star, vecd & p_in, vecd & qe_in, matd & yx, matd referencecoords, std::string G01behaviour){
+//G0 are the orientation axes of SvMF in cannonical coordinate (p x p) matrix
+pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0, vecd & p_in, vecd & qe_in, matd & yx, matd referencecoords, std::string G01behaviour){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qe = int(qe_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qs = yx.cols() - qe - p; 
@@ -252,26 +252,28 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   mata1 xs = yx.rightCols(qs + qe).leftCols(qs);
   mata1 xe = yx.rightCols(qe);
 
+  //for G01 fixed prepare G01 from input G0
+  vecd tapeG01(G0.rows());
+  for (int i = 0; i < G0.rows(); ++i) {
+    tapeG01(i) = CppAD::Value(G0(i, 0));
+  }
+
+
   // Get all parameters except a1 into a vector
-  veca1 mainvec = S2S_constV_nota1_tovecparams(omvec, k, aremaining, G0star, referencecoords, G01behaviour);
+  veca1 mainvec = S2S_constV_nota1_tovecparams(omvec, k, aremaining, G0, referencecoords, G01behaviour);
   veca1 a1vec(1);
   a1vec(0) = a1;
 
   // tape with main vector and a1 as a dynamic
   CppAD::Independent(mainvec, a1vec);
   // split mainvec into parts, overwriting passed arguments
-  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour);
+  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour, tapeG01);//final argument only used if G01behaviour == "fixed"
   omvec = std::get<0>(result);
   k = std::get<1>(result);
   aremaining = std::get<2>(result);
-  G0star = std::get<3>(result);
+  G0 = std::get<3>(result);
   
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
-
-  //identify G01 with p1 occurs in to/from vecparams too
-  mata1 G0(p,p);
-  G0.col(0) = om.p1;
-  G0.rightCols(p-1) = G0star;
 
   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, G0);
 

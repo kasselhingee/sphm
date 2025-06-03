@@ -55,8 +55,9 @@ test_that("to and from vecparams functions correctly", {
                list(omvec = mnlink_Omega_vec(omegapar),
                     k = k,
                     aremaining = a[-1],
-                    G0 = G01_p1), ignore_attr = TRUE)
+                    G0 = cbind(G01_p1[,1],-G01_p1[,-1])), ignore_attr = TRUE)
   veclength <- length(vecparams)
+  vecparams_p1 <- vecparams
   
   # G01 fixed
   vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
@@ -69,7 +70,8 @@ test_that("to and from vecparams functions correctly", {
                list(omvec = mnlink_Omega_vec(omegapar),
                     k = k,
                     aremaining = a[-1],
-                    G0 = G0), ignore_attr = TRUE)
+                    G0 = cbind(G0[,1],-G0[,-1])), ignore_attr = TRUE)
+  vecparams_fixed <- vecparams
   
   # G01 free
   vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
@@ -83,7 +85,11 @@ test_that("to and from vecparams functions correctly", {
                     k = k,
                     aremaining = a[-1],
                     G0 = G0), ignore_attr = TRUE)
+  vecparams_free <- vecparams
   
+  incommon <- 1:length((mnlink_Omega_vec(omegapar) + 1 + p-1))
+  expect_equal(vecparams_fixed[incommon], vecparams_p1[incommon])
+  expect_equal(vecparams_free[incommon], vecparams_p1[incommon])
 })
 
 test_that("maximum likelihood for parallel axes per geodesic path", {

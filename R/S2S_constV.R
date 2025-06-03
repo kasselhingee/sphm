@@ -24,14 +24,14 @@
 #' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
 #' No standardisation is performed.
 #' @export
-optim_constV <- function(y, xs, xe, mean, k, a, Gstar, xtol_rel = 1E-5, verbose = 0, ...){
+optim_constV <- function(y, xs, xe, mean, k, a, G0star, xtol_rel = 1E-5, verbose = 0, G0reference = diag(p), ...){
   p <- ncol(y)
   qs <- ncol(xs)
   qe <- ncol(xe)
   # checks
   om0 <- as_mnlink_Omega(mean)
   mnlink_Omega_check(om0)
-  if (!isTRUE(all.equal(cbind(om0$p1, Gstar) %*% t(cbind(om0$p1, Gstar)), diag(1, p), check.attributes = FALSE))){ # p1 orthogonal to Vstar
+  if (!isTRUE(all.equal(cbind(om0$p1, G0star) %*% t(cbind(om0$p1, G0star)), diag(1, p), check.attributes = FALSE))){ # p1 orthogonal to Vstar
     stop("Gstar is not orthogonal to p1.")
   }
   stopifnot(length(a) == p)
@@ -43,18 +43,17 @@ optim_constV <- function(y, xs, xe, mean, k, a, Gstar, xtol_rel = 1E-5, verbose 
     mean = om0,
     k = k, 
     a = a, 
-    Gstar = Gstar
+    G0star = G0star
   )
-  
-  Kstar <- t(getHstar(om0$p1)) %*% Gstar
-  Kstar[, 1] <- det(Kstar) * Kstar[,1] #because Cayley transform only works on det of +1
   
   # estimation prep
   dims_in <- c(p, length(om0$qe1))
   omvec0 <- mnlink_Omega_vec(om0)
   ulltape <- tape_ull_S2S_constV_nota1(omvec = omvec0, k = k,
-                                       a1 = a1, aremaining = aremaining, Kstar = Kstar,
-                                       p = p, qe = qe, cbind(y, xs, xe))
+                                       a1 = a1, aremaining = aremaining, G0star = G0star,
+                                       p = p, qe = qe, 
+                                       yx = cbind(y, xs, xe),
+                                       referencecoords = G0reference)
   ulltape <- scorematchingad::avgrange(ulltape)
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
@@ -81,7 +80,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, Gstar, xtol_rel = 1E-5, verbose 
   
   # Optimisation
   est <- nloptr::nloptr(
-    x0 = S2S_constV_nota1_tovecparams(omvec = omvec0, k = k, aremaining = aremaining, Kstar = Kstar),
+    x0 = S2S_constV_nota1_tovecparams(omvec = omvec0, k = k, aremaining = aremaining, G0star = G0star, referencecoords = G0reference),
     eval_f = function(theta){-ulltape$eval(theta, a1)},
     eval_grad_f = function(theta){-ulltape$Jac(theta, a1)},
     lb = lb,
@@ -98,28 +97,25 @@ optim_constV <- function(y, xs, xe, mean, k, a, Gstar, xtol_rel = 1E-5, verbose 
   # estimation for p!=3 (alternating between k and others) ## NOT COMPLETE
   
   if (!(est$status %in% c(0, 1, 2, 3, 4))){warning("Optimistation did not finish properly.")}
-  estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, p, qs, qe)
+  estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, p, qs, qe, referencecoords = G0reference)
   
   # project Omega to satisfy orthogonality constraint
   est_om <- Omega_proj(mnlink_Omega_unvec(estparamlist$omvec, p, qe = qe, check = FALSE))
   
-  # calculate Gstar now (because getHstar is sensitive to changes of basis A * H(p1) != H(A*p1))
-  Gstar <- getHstar(est_om$p1) %*% estparamlist$Kstar
-  
   #make first element of each vector positive
-  Gstar <- topos1strow(Gstar)
+  estparamlist$G0star <- topos1strow(estparamlist$G0star)
   
   # make sure aremaining is in decreasing order
   aord <- order(estparamlist$aremaining, decreasing = TRUE)
   estparamlist$aremaining <- estparamlist$aremaining[aord]
-  Gstar <- Gstar[, aord]
+  estparamlist$G0star <- estparamlist$G0star[, aord]
   
   
   outsolution <- list(
     mean = est_om,
     k = estparamlist$k,
     a = c(a1, estparamlist$aremaining),
-    Gstar = Gstar
+    G0star = estparamlist$G0star
   )
   
   return(list(

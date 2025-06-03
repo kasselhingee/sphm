@@ -76,17 +76,18 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   # check vectorisation and reverse
   vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                aremaining = a[-1], G0star = G0star, referencecoords = referencecoords)
-  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe),
+  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords),
                list(omvec = mnlink_Omega_vec(omegapar),
                     k = k,
                     aremaining = a[-1],
-                    Kstar = Kstar), ignore_attr = TRUE)
+                    G0star = G0star), ignore_attr = TRUE)
   
   #check tape:
   expect_warning({ulltape <- tape_ull_S2S_constV_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
-                            a1 = a[1], aremaining = a[-1], Kstar = Kstar,
+                            a1 = a[1], aremaining = a[-1], G0star = G0star,
                             p, qe,
-                            yx = cbind(y_ld[, 1:p], xs, xe))}, "p!=3")
+                            yx = cbind(y_ld[, 1:p], xs, xe), 
+                            referencecoords)}, "p!=3")
   expect_equal(ulltape$xtape, vecparams)
   expect_equal(ulltape$forward(0, ulltape$xtape), y_ld[, p+1])
   
@@ -95,13 +96,14 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   set.seed(7)
   Kstardifferent <- mclust::randomOrthogonalMatrix(p-1, p-1)
   Kstardifferent[, 1] <- det(Kstardifferent) * Kstardifferent[,1]
+  G0stardifferent <- t(rotationmat_amaral(omegapar$p1, nthpole(p))) %*% rbind(0, Kstardifferent)
   badll <- sum(ulltape$forward(0, 
                                S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
-                               aremaining = a[-1], Kstar = Kstardifferent)))
+                               aremaining = a[-1], G0star = G0stardifferent, referencecoords = referencecoords)))
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  expect_warning({est1 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, Gstar, xtol_rel = 1E-4)}, "p!=3")
+  expect_warning({est1 <- optim_constV(y_ld[, 1:p], xs, xe, omegapar, k, a, G0star, xtol_rel = 1E-4, G0reference = referencecoords)}, "p!=3")
   expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
@@ -109,15 +111,14 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
     diff <- abs(angle1 - angle2)
     pmin(diff, pi - diff)
   }
-  expect_equal(axis_distance(acos(colSums(est1$solution$Gstar * Gstar))), rep(0, ncol(Gstar)), tolerance = 1E-1, ignore_attr = TRUE)
-  
+  expect_equal(axis_distance(acos(colSums(est1$solution$G0star * G0star))), rep(0, ncol(G0star)), tolerance = 1E-1, ignore_attr = TRUE)
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
   set.seed(3)
   pre <- prelim_ad(y_ld[, 1:p], xs, xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
-  badGstar <- getHstar(pre$solution$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
-  expect_warning({est2 <- optim_constV(y_ld[, 1:p], xs, xe, pre$solution, k = 10, a = rep(1, p), Gstar = badGstar, xtol_rel = 1E-4)}, "p!=3")
+  badG0star <- getHstar(pre$solution$p1) %*% mclust::randomOrthogonalMatrix(p-1, p-1)
+  expect_warning({est2 <- optim_constV(y_ld[, 1:p], xs, xe, pre$solution, k = 10, a = rep(1, p), G0star = -badG0star, xtol_rel = 1E-4, G0reference = referencecoords)}, "p!=3")
   expect_equal(est2$solution, est1$solution, tolerance = 1E-3)
 })
 

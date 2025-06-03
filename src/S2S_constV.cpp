@@ -146,14 +146,11 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
 
   //convert G0star to referencecoords
   G0star = referencecoords.cast<a1type>().transpose() * G0star;
-  Rcpp::Rcout << "rG0star:" << std::endl << G0star << std::endl;
   //parallel transport along p1 to referencecoords[,1] so that first row of G0star is zeros
   G0star = JuppRmat(referencecoords.transpose() * omvec.segment(0,p), veca1::Unit(p,0)) * G0star;
-  Rcpp::Rcout << "rrG0star:" << std::endl << G0star << std::endl;
   //drop first row of zeros
   mata1 Kstar(p-1,p-1);
   Kstar = G0star.bottomRows(p-1);
-  Rcpp::Rcout << "Kstar:" << std::endl << Kstar << std::endl;
   a1type detKstar = Kstar.determinant();
   if (std::abs(CppAD::Value(detKstar) + 1.0) < 1e-8) {Rcpp::stop("Kstar has a determinant very close to -1, please change the sign of one of G0star's columns");}
   veca1 vecCayaxes = vectorizeLowerTriangle(inverseCayleyTransform(Kstar)); 
@@ -185,16 +182,12 @@ std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const vec
   //get back Kstart then G0star
   veca1 vecCayaxes = mainvec.segment(omvec.size() + 1 + aremaining.size() - 1, (p-1) * (p-2)/2);
   mata1 Kstar = cayleyTransform(inverseVectorizeLowerTriangle(vecCayaxes));
-  Rcpp::Rcout << "Kstar:" << std::endl << Kstar << std::endl;
   mata1 G0star = mata1::Zero(p, p-1);
   G0star.bottomRows(p-1) = Kstar;
-  Rcpp::Rcout << "rrG0star:" << std::endl << G0star << std::endl;
   //undo: parallel transport along p1 to referencecoords[,1] so that first row of G0star is zeros
   G0star = JuppRmat(referencecoords.transpose() * omvec.segment(0,p), veca1::Unit(p,0)).transpose() * G0star;
-  Rcpp::Rcout << "rG0star:" << std::endl << G0star << std::endl;
   //undo: convert G0star to referencecoords
   G0star = referencecoords.cast<a1type>() * G0star;
-  Rcpp::Rcout << "G0star:" << std::endl << G0star << std::endl;
   
   return std::make_tuple(omvec, k, aremaining, G0star);
 }

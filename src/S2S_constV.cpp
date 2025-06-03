@@ -170,8 +170,16 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
 
 // reverse function
 // without ce, would only need q = qs + qe to be passed in
-std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords) {
-  if (mainvec.size() != Omega_veclength(p, qs, qe) + 1 + (p-2) + ((p-2) * (p-1) / 2)  ) {
+//' @param G01 only for the G01behaviour == "fixed" situation is G01 needed to recover full parameter set
+std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, vecd G01 = vecd(0)) {
+  // check G01behaviour
+  if ((G01behaviour != "p1") && (G01behaviour != "fixed") && (G01behaviour != "free")){Rcpp::stop("G01behaviour not understood");}
+
+  //check length
+  int vecCay_length = 0;
+  if (G01behaviour == "free"){vecCay_length = ((p-1) * p / 2);}
+  else {vecCay_length = ((p-2) * (p-1) / 2);}
+  if (mainvec.size() != Omega_veclength(p, qs, qe) + 1 + (p-2) + vecCay_length) {
     Rcpp::stop("Input vector size does not match expected dimensions.");
   }
   
@@ -183,34 +191,49 @@ std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const vec
   aremaining[0] = CppAD::exp(-laremaining_m1.sum());
   aremaining.tail(aremaining.size() - 1) = laremaining_m1.array().exp();
 
-  //get back Kstart then G0star
-  veca1 vecCayaxes = mainvec.segment(omvec.size() + 1 + aremaining.size() - 1, (p-1) * (p-2)/2);
-  mata1 Kstar = cayleyTransform(inverseVectorizeLowerTriangle(vecCayaxes));
-  mata1 G0star = mata1::Zero(p, p-1);
-  G0star.bottomRows(p-1) = Kstar;
-  //undo: parallel transport along p1 to referencecoords[,1] so that first row of G0star is zeros
-  G0star = JuppRmat(referencecoords.transpose() * omvec.segment(0,p), veca1::Unit(p,0)).transpose() * G0star;
-  //undo: convert G0star to referencecoords
-  G0star = referencecoords.cast<a1type>() * G0star;
-  
-  return std::make_tuple(omvec, k, aremaining, G0star);
+  //get back rotmat from vecCay
+  veca1 vecCayaxes = mainvec.tail(vecCay_length);
+  mata1 rotmat = cayleyTransform(inverseVectorizeLowerTriangle(vecCayaxes));
+
+  // get back G0
+  mata1 G0;
+  //if G01 is fixed or p1 then get a p-1 x p-1 matrix reprensenting the remaining free columns
+  if (G01behaviour == "p1"){G0.col(0) = referencecoords.transpose() * omvec.segment(0,p);}
+  if (G01behaviour == "fixed"){G0.col(0) = referencecoords.transpose() * G01;}
+  if ((G01behaviour == "p1") || (G01behaviour == "fixed")){
+    mata1 G0star = mata1::Zero(p, p-1);
+    G0star.bottomRows(p-1) = rotmat;
+    //undo: parallel transport along p1 to referencecoords[,1] so that first row of G0star is zeros
+    G0star = JuppRmat(G0.col(0), veca1::Unit(p,0)).transpose() * G0star;
+    G0.rightCols(p-1) = G0star;
+  } else if (G01behaviour == "free") {
+    G0 = rotmat;
+  }
+  //undo: convert G0 to referencecoords
+  G0 = referencecoords.cast<a1type>() * G0;
+
+  return std::make_tuple(omvec, k, aremaining, G0);
 }
 
 //export the reverse function
 // [[Rcpp::export]]
-Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords) {
-  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords);
+Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, Rcpp::Nullable<vecd> G01 = R_NilValue) {
+  vecd G01_;
+  if (G01.isNotNull()){G01_ = Rcpp::as<vecd>(G01);}
+  else {G01_ = vecd();}
+
+  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour, G01_);
   veca1 omvec = std::get<0>(result);
   a1type k = std::get<1>(result);
   veca1 aremaining = std::get<2>(result);
-  mata1 G0star = std::get<3>(result);
+  mata1 G0 = std::get<3>(result);
   
   // Return as a list
   return Rcpp::List::create(
     Rcpp::Named("omvec") = omvec,
     Rcpp::Named("k") = k,
     Rcpp::Named("aremaining") = aremaining,
-    Rcpp::Named("G0star") = G0star
+    Rcpp::Named("G0") = G0
   );
 }
 
@@ -237,7 +260,7 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   // tape with main vector and a1 as a dynamic
   CppAD::Independent(mainvec, a1vec);
   // split mainvec into parts, overwriting passed arguments
-  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords);
+  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour);
   omvec = std::get<0>(result);
   k = std::get<1>(result);
   aremaining = std::get<2>(result);

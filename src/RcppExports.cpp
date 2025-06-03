@@ -143,8 +143,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // S2S_constV_nota1_fromvecparamsR
-Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1& mainvec, int p, int qs, int qe, matd referencecoords);
-RcppExport SEXP _sphm_S2S_constV_nota1_fromvecparamsR(SEXP mainvecSEXP, SEXP pSEXP, SEXP qsSEXP, SEXP qeSEXP, SEXP referencecoordsSEXP) {
+Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1& mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, Rcpp::Nullable<vecd> G01);
+RcppExport SEXP _sphm_S2S_constV_nota1_fromvecparamsR(SEXP mainvecSEXP, SEXP pSEXP, SEXP qsSEXP, SEXP qeSEXP, SEXP referencecoordsSEXP, SEXP G01behaviourSEXP, SEXP G01SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -153,7 +153,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type qs(qsSEXP);
     Rcpp::traits::input_parameter< int >::type qe(qeSEXP);
     Rcpp::traits::input_parameter< matd >::type referencecoords(referencecoordsSEXP);
-    rcpp_result_gen = Rcpp::wrap(S2S_constV_nota1_fromvecparamsR(mainvec, p, qs, qe, referencecoords));
+    Rcpp::traits::input_parameter< std::string >::type G01behaviour(G01behaviourSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<vecd> >::type G01(G01SEXP);
+    rcpp_result_gen = Rcpp::wrap(S2S_constV_nota1_fromvecparamsR(mainvec, p, qs, qe, referencecoords, G01behaviour, G01));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -363,7 +365,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_vectorizeLowerTriangle", (DL_FUNC) &_sphm_vectorizeLowerTriangle, 1},
     {"_sphm_inverseVectorizeLowerTriangle", (DL_FUNC) &_sphm_inverseVectorizeLowerTriangle, 1},
     {"_sphm_S2S_constV_nota1_tovecparams", (DL_FUNC) &_sphm_S2S_constV_nota1_tovecparams, 6},
-    {"_sphm_S2S_constV_nota1_fromvecparamsR", (DL_FUNC) &_sphm_S2S_constV_nota1_fromvecparamsR, 5},
+    {"_sphm_S2S_constV_nota1_fromvecparamsR", (DL_FUNC) &_sphm_S2S_constV_nota1_fromvecparamsR, 7},
     {"_sphm_ull_S2S_constV_forR", (DL_FUNC) &_sphm_ull_S2S_constV_forR, 8},
     {"_sphm_tape_ull_S2S_constV_nota1", (DL_FUNC) &_sphm_tape_ull_S2S_constV_nota1, 10},
     {"_sphm_mnlink_cpp", (DL_FUNC) &_sphm_mnlink_cpp, 4},

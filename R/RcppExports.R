@@ -34,6 +34,9 @@ alignedGcpp <- function(m, P) {
     .Call(`_sphm_alignedGcpp`, m, P)
 }
 
+#' @param G01 only for the G01behaviour == "fixed" situation is G01 needed to recover full parameter set
+NULL
+
 cayleyTransform <- function(A) {
     .Call(`_sphm_cayleyTransform`, A)
 }
@@ -56,8 +59,8 @@ S2S_constV_nota1_tovecparams <- function(omvec, k, aremaining, G0, referencecoor
     .Call(`_sphm_S2S_constV_nota1_tovecparams`, omvec, k, aremaining, G0, referencecoords, G01behaviour)
 }
 
-S2S_constV_nota1_fromvecparamsR <- function(mainvec, p, qs, qe, referencecoords) {
-    .Call(`_sphm_S2S_constV_nota1_fromvecparamsR`, mainvec, p, qs, qe, referencecoords)
+S2S_constV_nota1_fromvecparamsR <- function(mainvec, p, qs, qe, referencecoords, G01behaviour, G01 = NULL) {
+    .Call(`_sphm_S2S_constV_nota1_fromvecparamsR`, mainvec, p, qs, qe, referencecoords, G01behaviour, G01)
 }
 
 ull_S2S_constV_forR <- function(y, xs, xe, omvec, k, a1, aremaining, G0) {

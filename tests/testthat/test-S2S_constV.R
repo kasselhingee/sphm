@@ -65,15 +65,14 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
     return(c(obs, ld))
   }))
   
-  set.seed(7)
-  referencecoords <- mclust::randomOrthogonalMatrix(p, p)
-  
   # check ull_S2S_constV in C++
   ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], xs = xs, xe = xe, omvec = mnlink_Omega_vec(omegapar), k = k,
-                      a1 = a[1], aremaining = a[-1], rG0 = t(referencecoords) %*% G0_other, referencecoords = referencecoords)
+                      a1 = a[1], aremaining = a[-1], G0 = G0_other)
   expect_equal(ldCpp, y_ld[, p+1])
   
   # check vectorisation and reverse
+  set.seed(7)
+  referencecoords <- mclust::randomOrthogonalMatrix(p, p)
   vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                aremaining = a[-1], G0star = G0star, referencecoords = referencecoords)
   expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords),

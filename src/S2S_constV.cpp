@@ -3,17 +3,12 @@
 #include "uldSvMF.h"
 #include "utils.h"
 
-//rG0 specifies the axes of the SvMF according to the reference coords.
-//referencecoords * rG0 are back in the same coords as everything else
-//(referencecoords * rG0) are pararallel tranported so that the first column equals p1
-veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 rG0, matd referencecoords){
+//G0 specifies the axes of the SvMF.
+//G0star is pararallel tranported along G01 -> p1
+veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 G0){
   int p = om.p1.size();
   //check that ncol(y) == p
   if (y.cols() != p){Rcpp::stop("width of y does not equal length of p1");}
-  //check that referencecoords are orthonormal (wont be taped as uses purely matd objects)
-  if ((referencecoords.transpose() * referencecoords - matd::Identity(referencecoords.rows(), referencecoords.rows())).norm() > 1E-8){
-    Rcpp::stop("referencecoords columns are not an orthonormal basis");
-  }
 
   // project Omega matrix to satisfy orthogonality to p1 and q1
   mnlink_Omega_cpp<a1type> om_projected = Omega_proj_cpp(om);
@@ -25,10 +20,6 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
 
   //evaluate SvMF density of each observation
   veca1 ld(y.rows());
-  //rG0 is provided in coordinate system given by referencecoords
-  //to get G0 in the canonical reference system of p1 etc, use referencecoords * G0
-  //then to parallel transport G0 to p1, use JuppRmat
-  mata1 G0 = referencecoords.cast<a1type>() * rG0;
   mata1 G0star = JuppRmat(G0.col(0), om_projected.p1) * G0.rightCols(G0.cols() - 1);
   mata1 G(p, p);
   veca1 a(p);
@@ -45,9 +36,9 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
 
 
 
-veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 rG0, matd referencecoords){
+veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0){
    mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, y.cols(), xe.cols());
-   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, rG0, referencecoords);
+   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, G0);
    return ld;
 }
 
@@ -135,6 +126,7 @@ mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
 // aremaining becomes log(1/a) with the first element dropped
 // G0star are the orientation axes of SvMF in cannonical coordinate (p x p-1 matrix). These axes must be orthogonal to p1. It is converted to a p-1 x p-1 skew-symmetrix matrix
 // ideally G0star is close to the referencecoords axes
+//' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms. It is best if referencecoords is close to the best G0 (so rG0 is close the identity) and it will fail if `G01` is the antepode of `referencoords[,1]`.
 // [[Rcpp::export]]
 veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 G0star, matd referencecoords){
   int p = aremaining.size() + 1;
@@ -143,6 +135,11 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
   if (G0star.cols() != p-1){Rcpp::stop("G0star should have p-1 columns");}
   if (G0star.rows() != p){Rcpp::stop("G0star should have p columns");}
   if ((omvec.segment(0, p).transpose() * G0star).norm() > 1e-8){Rcpp::stop("G0star columns should be orthogonal to p1.");}
+  
+  //check that referencecoords are orthonormal (wont be taped as uses purely matd objects)
+  if ((referencecoords.transpose() * referencecoords - matd::Identity(referencecoords.rows(), referencecoords.rows())).norm() > 1E-8){
+    Rcpp::stop("referencecoords columns are not an orthonormal basis");
+  }
 
   //convert G0star to referencecoords
   G0star = referencecoords.cast<a1type>().transpose() * G0star;
@@ -242,11 +239,11 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
 
   //identify G01 with p1 occurs in to/from vecparams too
-  mata1 rG0(p,p);
-  rG0.col(0) = referencecoords.transpose() * om.p1;
-  rG0.rightCols(p-1) = referencecoords.cast<a1type>().transpose() * G0star;
+  mata1 G0(p,p);
+  G0.col(0) = om.p1;
+  G0.rightCols(p-1) = G0star;
 
-  veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, rG0, referencecoords);
+  veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, G0);
 
   CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
   tape.Dependent(mainvec, ld);

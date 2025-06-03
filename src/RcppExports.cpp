@@ -157,8 +157,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // ull_S2S_constV_forR
-veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 rG0, matd referencecoords);
-RcppExport SEXP _sphm_ull_S2S_constV_forR(SEXP ySEXP, SEXP xsSEXP, SEXP xeSEXP, SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP rG0SEXP, SEXP referencecoordsSEXP) {
+veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0);
+RcppExport SEXP _sphm_ull_S2S_constV_forR(SEXP ySEXP, SEXP xsSEXP, SEXP xeSEXP, SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP G0SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -169,9 +169,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
     Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
     Rcpp::traits::input_parameter< veca1 >::type aremaining(aremainingSEXP);
-    Rcpp::traits::input_parameter< mata1 >::type rG0(rG0SEXP);
-    Rcpp::traits::input_parameter< matd >::type referencecoords(referencecoordsSEXP);
-    rcpp_result_gen = Rcpp::wrap(ull_S2S_constV_forR(y, xs, xe, omvec, k, a1, aremaining, rG0, referencecoords));
+    Rcpp::traits::input_parameter< mata1 >::type G0(G0SEXP);
+    rcpp_result_gen = Rcpp::wrap(ull_S2S_constV_forR(y, xs, xe, omvec, k, a1, aremaining, G0));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -363,7 +362,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_inverseVectorizeLowerTriangle", (DL_FUNC) &_sphm_inverseVectorizeLowerTriangle, 1},
     {"_sphm_S2S_constV_nota1_tovecparams", (DL_FUNC) &_sphm_S2S_constV_nota1_tovecparams, 5},
     {"_sphm_S2S_constV_nota1_fromvecparamsR", (DL_FUNC) &_sphm_S2S_constV_nota1_fromvecparamsR, 5},
-    {"_sphm_ull_S2S_constV_forR", (DL_FUNC) &_sphm_ull_S2S_constV_forR, 9},
+    {"_sphm_ull_S2S_constV_forR", (DL_FUNC) &_sphm_ull_S2S_constV_forR, 8},
     {"_sphm_tape_ull_S2S_constV_nota1", (DL_FUNC) &_sphm_tape_ull_S2S_constV_nota1, 9},
     {"_sphm_mnlink_cpp", (DL_FUNC) &_sphm_mnlink_cpp, 4},
     {"_sphm_prelimobj_cpp", (DL_FUNC) &_sphm_prelimobj_cpp, 4},

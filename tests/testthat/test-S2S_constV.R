@@ -59,7 +59,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   # then simulate from a SvMF, and evaluate density at the noise
   set.seed(6)
   y_ld <- t(apply(ymean, 1, function(mn){
-    G <- cbind(mn, rotationmat_amaral(P[,1], mn) %*% G0star)
+    G <- cbind(mn, JuppRmat(P[,1], mn) %*% G0star)
     obs <- rSvMF(1, SvMFcann(k, a, G))
     ld <- uldSvMF_cann(obs, k = k, a = a, G = G)
     return(c(obs, ld))

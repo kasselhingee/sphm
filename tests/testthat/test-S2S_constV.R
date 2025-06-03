@@ -75,7 +75,7 @@ test_that("maximum likelihood for parallel axes per geodesic path", {
   
   # check vectorisation and reverse
   vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
-                               aremaining = a[-1], Kstar = Kstar)
+                               aremaining = a[-1], G0star = G0star, referencecoords = referencecoords)
   expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe),
                list(omvec = mnlink_Omega_vec(omegapar),
                     k = k,

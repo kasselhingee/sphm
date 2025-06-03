@@ -4,7 +4,7 @@
 #include "utils.h"
 
 //G0 specifies the axes of the SvMF.
-//G0star is pararallel tranported along G01 -> p1
+//G0star is pararallel transported along G01 -> predicted mean
 veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 G0){
   int p = om.p1.size();
   //check that ncol(y) == p
@@ -20,7 +20,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
 
   //evaluate SvMF density of each observation
   veca1 ld(y.rows());
-  mata1 G0star = JuppRmat(G0.col(0), om_projected.p1) * G0.rightCols(G0.cols() - 1);
+  mata1 G0star = G0.rightCols(G0.cols() - 1);
   mata1 G(p, p);
   veca1 a(p);
   a(0) = a1;
@@ -28,7 +28,7 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
   a.segment(1, p-1) = aremaining;
   for (int i = 0; i < y.rows(); ++i){
     G.col(0) = ypred.row(i);
-    G.block(0, 1, p, p-1) = JuppRmat(om_projected.p1, ypred.row(i)) * G0star;
+    G.block(0, 1, p, p-1) = JuppRmat(G0.col(0), ypred.row(i)) * G0star;
     ld(i) = uldSvMF_cann(y.row(i), k, a, G)(0);
   }
   return ld;

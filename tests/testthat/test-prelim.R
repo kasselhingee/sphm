@@ -267,7 +267,7 @@ test_that("prelim() destandardises variables correctly for Shogo", {
   res2 <- prelim(y, xs = xs, xe = xe[, -1], type = "Shogo", start = res$est)
   standardisedsolution <- mnlink_Omega_vec(res$solution)
   estimatedvalues <- !grepl("(^qe|^ce)", names(standardisedsolution))
-  expect_equal(res2$opt$x0, standardisedsolution[estimatedvalues])
+  expect_equal(res2$opt$x0, standardisedsolution[estimatedvalues], ignore_attr = TRUE)
   
 })
 

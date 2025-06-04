@@ -18,16 +18,17 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_q
     stopifnot(length(om0$qe1) == 0)
   }
 
+  # Prepare objective tapes
   dims_in <- c(p, length(om0$qe1))
-  vec_om0 <- mnlink_Omega_vec(om0)
+  om0vec <- mnlink_Omega_vec(om0)
   # Prepare objective tape.
-  obj_tape <- tape_namedfun("prelimobj_cpp", vec_om0, vector(mode = "numeric"), dims_in, cbind(y,xs,xe), check_for_nan = FALSE)
-  obj_tape <- scorematchingad::avgrange(obj_tape) #Average of mu.y.
-  constraint_tape <- tape_namedfun("Omega_constraints_wrap", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  objtape <- tape_namedfun("prelimobj_cpp", om0vec, vector(mode = "numeric"), dims_in, cbind(y,xs,xe), check_for_nan = FALSE)
+  objtape <- scorematchingad::avgrange(objtape) #objtape initially returns a value for each measurement. Average here to get average over all data.
+  constraint_tape <- tape_namedfun("Omega_constraints_wrap", om0vec, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", om0vec, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   
-  # fix qe1 to the starting values if qe1 exists
-  # use the starting parameters om0 to check as their form is more constrained by the Omega class than xe
+  # fix mean link parameters depending on arguments
+  # use the starting parameters om0 to detect whether we have xs and xe as their form is more predictable due to the Omega class
   omfixed <- lapply(om0, function(x) x * 0)
   if (fix_qe1 && (length(om0$qe1) > 0)){
     # if shogo and Euc, fix some elements
@@ -41,26 +42,27 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_q
     omfixed$qs1 <- omfixed$qs1 + 1
   }
   
-  # update tapes based on omfixed
+  # update constraint tapes based on omfixed
   isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
-  obj_tape <- scorematchingad::fixindependent(obj_tape, vec_om0, isfixed)
-  constraint_tape <- scorematchingad::fixindependent(constraint_tape, vec_om0, isfixed)
-  ineqconstraint_tape <- scorematchingad::fixindependent(ineqconstraint_tape, vec_om0, isfixed)
+  constraint_tape <- scorematchingad::fixindependent(constraint_tape, om0vec, isfixed)
+  ineqconstraint_tape <- scorematchingad::fixindependent(ineqconstraint_tape, om0vec, isfixed)
   # drop constraint returns that are constant:
   keep <- which(vapply((1:constraint_tape$range)-1, function(i){!constraint_tape$parameter(i)}, FUN.VALUE = FALSE))
   constraint_tape <- scorematchingad::keeprange(constraint_tape, keep)
   
-  # drop fixed values from x0
-  x0 <- mnlink_Omega_vec(om0)[!isfixed]
+  # update objtape based on fixed values
+  objtape <- scorematchingad::fixindependent(objtape, objtape$xtape, isfixed)
+  # using tapeing values as starting parameters
+  x0 <- objtape$xtape
   
   # check Jacobians of constraints are non-singular for the starting parameters.
   # For pathological params (e.g. the default starting params of no rotations), it can be zero.
   # If it is singular, perturb start very slightly
-  Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = length(x0))
+  Jac_eq <- matrix(constraint_tape$Jacobian(om0vec), byrow = TRUE, ncol = length(om0vec))
   if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){x0 <- x0 - 1E-4}
-  Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = length(x0))
+  Jac_eq <- matrix(constraint_tape$Jacobian(om0vec), byrow = TRUE, ncol = length(om0vec))
   stopifnot(all(abs(svd(Jac_eq)$d) > sqrt(.Machine$double.eps)))
-  Jac_ineq <- matrix(ineqconstraint_tape$Jacobian(x0), byrow = TRUE, ncol = length(x0))
+  Jac_ineq <- matrix(ineqconstraint_tape$Jacobian(om0vec), byrow = TRUE, ncol = length(om0vec))
   stopifnot(all(abs(svd(Jac_ineq)$d) > sqrt(.Machine$double.eps)))
 
   # prepare nloptr options
@@ -75,50 +77,43 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_q
   
   locopt <- nloptr::nloptr(
     x0 = x0,
-    eval_f = function(theta){-obj_tape$eval(theta, vector(mode = "numeric"))},
-    eval_grad_f = function(theta){-obj_tape$Jac(theta, vector(mode = "numeric"))},
-    eval_g_eq =  function(theta){constraint_tape$eval(theta, vector(mode = "numeric"))},
+    eval_f = function(theta){-objtape$forward(0, theta)},
+    eval_grad_f = function(theta){-objtape$Jacobian(theta)},
+    eval_g_eq =  function(theta){constraint_tape$forward(0, theta)},
     eval_jac_g_eq =  function(theta){
       Jac <- matrix(constraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))
-      # colnames(Jac) <- names(vec_om0)
+      # colnames(Jac) <- names(om0vec)
       # print(round(Jac, 3))
       # print(apply(Jac, 1, function(x)max(abs(x))))
       Jac
       },
-    # eval_g_ineq =  function(theta){ineqconstraint_tape$eval(theta, vector(mode = "numeric")) - ssqOmbuffer},
-    # eval_jac_g_ineq =  function(theta){
-    #   Jac <- matrix(ineqconstraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta))
-    #   # print(apply(Jac, 1, function(x)max(abs(x))))
-    #   Jac
-    #   },
     opts = combined_opts
   )
   if (!(locopt$status %in% 1:4)){warning(locopt$message)}
   
-  #output some diagnostics
-  locopt$solution_grad_f <- -obj_tape$Jac(locopt$solution, vector(mode = "numeric"))
-  names(locopt$solution_grad_f) <- names(x0)
+  #output some diagnostics - vector names would be nice here
+  locopt$solution_grad_f <- -objtape$Jacobian(locopt$solution)
   locopt$solution_jac_g_eq <- matrix(constraint_tape$Jacobian(locopt$solution),
                                      byrow = TRUE, ncol = length(locopt$solution))
-  colnames(locopt$solution_jac_g_eq) <- names(x0)
-  locopt$solution_Hes_f <- matrix(-obj_tape$Hessian0(locopt$solution),
-         nrow = obj_tape$domain,
+  locopt$solution_Hes_f <- matrix(-objtape$Hessian0(locopt$solution),
+         nrow = objtape$domain,
          byrow = TRUE)
-  colnames(locopt$solution_Hes_f) <- rownames(locopt$solution_Hes_f) <- names(x0)
-   
-  # sub in any fixed values
-  fullparam <- scorematchingad:::t_sfi2u(locopt$solution, mnlink_Omega_vec(om0), isfixed)
- 
-  #project results to have correct orthogonality
-  projresult <- Omega_proj(mnlink_Omega_unvec(fullparam, p, length(om0$qe1), check = FALSE))
-  # mnlink_Omega_check(projresult)
-  
+
   # remove the tapes from the return to save on memory
   locopt$eval_f <- locopt$eval_g_eq <- locopt$eval_g_ineq <- locopt$nloptr_environment <- NULL
+   
+  # insert any fixed values of mean parameters
+  fullparam <- scorematchingad:::t_sfi2u(locopt$solution, om0vec, isfixed)
+ 
+  #project mean pars to have correct orthogonality
+  projectedom <- Omega_proj(mnlink_Omega_unvec(fullparam, p, length(om0$qe1), check = FALSE))
+  try({mnlink_Omega_check(projectedom)})
+
   
   return(list(
-    solution = projresult,
-    loc_nloptr = locopt
+    solution = projectedom,
+    nlopt = locopt,
+    initial = om0
   ))
 }
 
@@ -139,7 +134,7 @@ vMF_SE <- function(y, xs = NULL, xe = NULL, k = NULL, param, type = "Kassel"){
   dims_in <- c(p, length(om$qe1))
   vec_om <- mnlink_Omega_vec(om)
   # Prepare objective tape.
-  obj_tape_long <- tape_namedfun("prelimobj_cpp", vec_om, vector(mode = "numeric"), dims_in, cbind(y,xs,xe), check_for_nan = FALSE)
+  objtape_long <- tape_namedfun("prelimobj_cpp", vec_om, vector(mode = "numeric"), dims_in, cbind(y,xs,xe), check_for_nan = FALSE)
   
   if ((!is.null(xe)) && (type == "Shogo")){
     # if shogo and Euc, fix some elements
@@ -147,13 +142,13 @@ vMF_SE <- function(y, xs = NULL, xe = NULL, k = NULL, param, type = "Kassel"){
     omfixed$qe1 <- omfixed$qe1 + 1
     omfixed$ce <- omfixed$ce + 1
     isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
-    obj_tape_long <- scorematchingad::fixindependent(obj_tape_long, vec_om, isfixed)
+    objtape_long <- scorematchingad::fixindependent(objtape_long, vec_om, isfixed)
     vec_om <- vec_om[!isfixed]
   }
   
   # Estimate concentration
   if (is.null(k)){
-    mu_y <- mean(obj_tape_long$eval(vec_om, vector(mode = "numeric"))) #average of mu.y
+    mu_y <- mean(objtape_long$eval(vec_om, vector(mode = "numeric"))) #average of mu.y
     res <- optimise(function(k){
       -lvMFnormconst(k, p) + k * mu_y #full vMF log-likelihood (standardised by number of observations)
     }, lower = 1E-8, upper = 1E5, maximum = TRUE)
@@ -165,19 +160,19 @@ vMF_SE <- function(y, xs = NULL, xe = NULL, k = NULL, param, type = "Kassel"){
   # And in MLE is equal to the expected double derivative of the log-likelihood
   # But I'm missing something because the covariance of the gradients gets scaled by k twice while the average hessian is scaled by k only once.
   # I think I need to project the gradients/hessians to the tangent of the parameter space: i.e. tangent to p1, qe1, qs1, and *somehow* Omega's special orthogonality constraints
-  grads <- matrix(obj_tape_long$Jacobian(vec_om), byrow = TRUE, ncol = obj_tape_long$domain) * k #each row is the gradient at a data point
+  grads <- matrix(objtape_long$Jacobian(vec_om), byrow = TRUE, ncol = objtape_long$domain) * k #each row is the gradient at a data point
   FisherI <- stats::cov(grads) #also called the 'variablility matrix'
   
   # Sensitivity Matrix
   # E(d^2(ll)/dtheta^2) under certain regularity conditions (passing derivatives outside an intergal) will be equal to d^2(E[ll])/dtheta^2
   # Here, I dont assume the regularity conditions:
-  jactape <- scorematchingad::tape_Jacobian(obj_tape_long) #rowwise fill of gradient of each data point
-  allhess <- matrix(jactape$Jacobian(vec_om), byrow = TRUE, ncol = obj_tape_long$domain^2)
-  sensitivitymat <- -matrix(colMeans(allhess), nrow = obj_tape_long$domain, ncol = obj_tape_long$domain) * k
+  jactape <- scorematchingad::tape_Jacobian(objtape_long) #rowwise fill of gradient of each data point
+  allhess <- matrix(jactape$Jacobian(vec_om), byrow = TRUE, ncol = objtape_long$domain^2)
+  sensitivitymat <- -matrix(colMeans(allhess), nrow = objtape_long$domain, ncol = objtape_long$domain) * k
   
   # method assuming that E(d^2(ll)/dtheta^2) = d^2(E[ll])/dtheta^2
-  obj_tape <- scorematchingad::avgrange(obj_tape_long) #Average of mu.y.
-  sensitivitymatb <- -matrix(obj_tape$Hessian0(vec_om), ncol = obj_tape$domain, nrow = obj_tape$domain) * k
+  objtape <- scorematchingad::avgrange(objtape_long) #Average of mu.y.
+  sensitivitymatb <- -matrix(objtape$Hessian0(vec_om), ncol = objtape$domain, nrow = objtape$domain) * k
   
   es <- eigen(sensitivitymat)
   

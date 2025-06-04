@@ -26,17 +26,31 @@
 #' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
 #' No standardisation is performed.
 #' @export
-optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01behaviour = "p1", ...){
-  p <- ncol(y)
-  qs <- ncol(xs)
-  qe <- ncol(xe)
-  # checks
+optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01behaviour = "p1", fix_qs1 = FALSE, fix_qe1 = FALSE, ssqOmbuffer = 2, ...){
   om0 <- as_mnlink_Omega(mean)
-  mnlink_Omega_check(om0)
+  # check inputs:
+  try(mnlink_Omega_check(om0))
+  p <- ncol(y)
+  stopifnot(p == length(om0$p1))
+  if (!is.null(xs)){
+    stopifnot(ncol(xs) == length(om0$qs1))
+  } else {
+    stopifnot(length(om0$qs1) == 0)
+  }
+  # check Euc info if Euc is part of the link
+  if (!is.null(xe)){
+    stopifnot(ncol(xe) == length(om0$qe1))
+  } else {
+    stopifnot(length(om0$qe1) == 0)
+  }
   stopifnot(length(a) == p)
   a1 = a[1]
   aremaining = a[-1]
   stopifnot(isTRUE(all.equal(prod(aremaining), 1)))
+
+  qs <- length(om0$qs1)
+  qe <- length(om0$qe1)
+
   
   initial <-  list(
     mean = om0,
@@ -45,10 +59,10 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
     G0 = G0
   )
   
-  # estimation prep
+  # Prepare objective tapes
   dims_in <- c(p, length(om0$qe1))
-  omvec0 <- mnlink_Omega_vec(om0)
-  ulltape <- tape_ull_S2S_constV_nota1(omvec = omvec0, k = k,
+  om0vec <- mnlink_Omega_vec(om0)
+  objtape <- tape_ull_S2S_constV_nota1(omvec = om0vec, k = k,
                                        a1 = a1, 
                                        aremaining = aremaining,
                                        G0 = G0,
@@ -56,15 +70,46 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
                                        yx = cbind(y, xs, xe),
                                        referencecoords = G0reference,
                                        G01behaviour = G01behaviour)
-  ulltape <- scorematchingad::avgrange(ulltape)
-  constraint_tape <- tape_namedfun("Omega_constraints_wrap", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", omvec0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  x0 <- ulltape$xtape
+  objtape <- scorematchingad::avgrange(objtape) #objtape initially returns a value for each measurement. Average here to get average over all data.
+  constraint_tape <- tape_namedfun("Omega_constraints_wrap", om0vec, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", om0vec, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+
+  # fix mean link parameters depending on arguments
+  # use the starting parameters om0 to detect whether we have xs and xe as their form is more predictable due to the Omega class
+  omfixed <- lapply(om0, function(x) x * 0)
+  if (fix_qe1 && (length(om0$qe1) > 0)){
+    # if shogo and Euc, fix some elements
+    omfixed$qe1 <- omfixed$qe1 + 1
+    omfixed$ce <- omfixed$ce + 1
+  }
   
-  # check Jacobians of constraints when constraints satisfied
-  Jac_eq <- matrix(constraint_tape$Jacobian(omvec0), byrow = TRUE, ncol = length(omvec0))
+  # fix qs1 to the starting values if qs1 exists
+  # use the starting parameters to check as their form is more constrained by the Omega class
+  if (fix_qs1 && (length(om0$qs1) > 0)){
+    omfixed$qs1 <- omfixed$qs1 + 1
+  }
+  
+  # update constraint tapes based on omfixed
+  isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
+  constraint_tape <- scorematchingad::fixindependent(constraint_tape, om0vec, isfixed)
+  ineqconstraint_tape <- scorematchingad::fixindependent(ineqconstraint_tape, om0vec, isfixed)
+  # drop constraint returns that are constant:
+  keep <- which(vapply((1:constraint_tape$range)-1, function(i){!constraint_tape$parameter(i)}, FUN.VALUE = FALSE))
+  constraint_tape <- scorematchingad::keeprange(constraint_tape, keep)
+  
+  # update objtape based on fixed values
+  objtape <- scorematchingad::fixindependent(objtape, objtape$xtape, c(isfixed, rep(0, length(objtape$xtape) - length(isfixed))))
+  # using tapeing values as starting parameters
+  x0 <- objtape$xtape
+
+  # check Jacobians of constraints are non-singular for the starting parameters.
+  # For pathological params (e.g. the default starting params of no rotations), it can be zero.
+  # If it is singular, perturb start very slightly
+  Jac_eq <- matrix(constraint_tape$Jacobian(om0vec), byrow = TRUE, ncol = length(om0vec))
+  if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){x0 <- x0 - 1E-4}
+  Jac_eq <- matrix(constraint_tape$Jacobian(om0vec), byrow = TRUE, ncol = length(om0vec))
   stopifnot(all(abs(svd(Jac_eq)$d) > sqrt(.Machine$double.eps))) 
-  Jac_ineq <- matrix(ineqconstraint_tape$Jacobian(omvec0), byrow = TRUE, ncol = length(omvec0))
+  Jac_ineq <- matrix(ineqconstraint_tape$Jacobian(om0vec), byrow = TRUE, ncol = length(om0vec))
   stopifnot(all(abs(svd(Jac_ineq)$d) > sqrt(.Machine$double.eps)))
 
   # prepare nloptr options
@@ -78,53 +123,78 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
   # lower bound for concentration k
-  lb <- rep(-Inf, ulltape$domain)
-  lb[length(omvec0) + 1] <- 0
+  lb <- rep(-Inf, objtape$domain)
+  lb[length(om0vec) + 1] <- 0
   
   # Optimisation
-  est <- nloptr::nloptr(
+  # current dynamic parameter values of tapes will be used
+  locopt <- nloptr::nloptr(
     x0 = x0,
-    eval_f = function(theta){-ulltape$eval(theta, a1)},
-    eval_grad_f = function(theta){-ulltape$Jac(theta, a1)},
+    eval_f = function(theta){-objtape$forward(0, theta)},
+    eval_grad_f = function(theta){-objtape$Jacobian(theta)},
     lb = lb,
-    eval_g_eq =  function(theta){constraint_tape$forward(0, theta[1:length(omvec0)])},
+    eval_g_eq =  function(theta){constraint_tape$forward(0, theta[1:length(om0vec)])},
     eval_jac_g_eq =  function(theta){
-      out <- cbind(matrix(constraint_tape$Jac(theta[1:length(omvec0)], vector(mode = "numeric")), byrow = TRUE, ncol = length(omvec0)),
-            matrix(0, nrow = constraint_tape$range, ncol = length(theta) - length(omvec0)))
-      if (any(is.nan(out))){browser()}
-      return(out)
+      Jac <- cbind(matrix(constraint_tape$Jacobian(theta[1:length(om0vec)]), byrow = TRUE, ncol = length(om0vec)),
+             matrix(0, nrow = constraint_tape$range, ncol = length(theta) - length(om0vec)))
+      # colnames(Jac) <- names(om0vec)
+      # print(round(Jac, 3))
+      # print(apply(Jac, 1, function(x)max(abs(x))))
+      Jac
     },
     opts = combined_opts
   )
+  if (!(locopt$status %in% 1:4)){warning(locopt$message)}
+
+  #output some diagnostics - vector names would be nice here
+  locopt$solution_grad_f <- -objtape$Jacobian(locopt$solution)
+  locopt$solution_jac_g_eq <- matrix(constraint_tape$Jacobian(locopt$solution),
+                                     byrow = TRUE, ncol = length(locopt$solution))
+  locopt$solution_Hes_f <- matrix(-objtape$Hessian0(locopt$solution),
+         nrow = objtape$domain,
+         byrow = TRUE)
+
+  # remove the tapes from the return to save on memory
+  locopt$eval_f <- locopt$eval_g_eq <- locopt$eval_g_ineq <- locopt$nloptr_environment <- NULL
+
+  # insert any fixed values of mean parameters
+  meanpars <- locopt$solution[1:(sum(!is.na(isfixed)))]
+  meanpars <- scorematchingad:::t_sfi2u(locopt$solution, om0vec, isfixed)
+  fullparam <- c(meanpars, locopt$solution[-(1:(sum(!is.na(isfixed))))])
+
   
-  if (!(est$status %in% c(0, 1, 2, 3, 4))){warning("Optimistation did not finish properly.")}
-  estparamlist <- S2S_constV_nota1_fromvecparamsR(est$solution, p, qs, qe, 
+  estparamlist <- S2S_constV_nota1_fromvecparamsR(fullparam, p, qs, qe, 
                                                   referencecoords = G0reference,
                                                   G01behaviour = G01behaviour,
                                                   G01 = initial$G0[,1])
   
-  # project Omega to satisfy orthogonality constraint
-  est_om <- Omega_proj(mnlink_Omega_unvec(estparamlist$omvec, p, qe = qe, check = FALSE))
-  
-  #make first element of each vector positive
-  estparamlist$G0[,-1] <- topos1strow(estparamlist$G0[,-1])
-  
+  #project mean pars to have correct orthogonality
+  projectedom <- Omega_proj(mnlink_Omega_unvec(estparamlist$omvec, p, length(om0$qe1), check = FALSE))
+  try({mnlink_Omega_check(projectedom)})
+
   # make sure aremaining is in decreasing order
   aord <- order(estparamlist$aremaining, decreasing = TRUE)
-  estparamlist$aremaining <- estparamlist$aremaining[aord]
+  aremaining <- estparamlist$aremaining[aord]
   estparamlist$G0[,-1] <- estparamlist$G0[,-1][, aord]
-  
+
+  #For axes G0 standardise the return by
+  # (1) make first element of each vector positive (except the first column)
+  G0 <- estparamlist$G0
+  G0[,-1] <- topos1strow(G0[,-1])
+  # (2) make rotation matrix by flipping final column according to determinant
+  if (det(G0) < 0){G0[,p] <- -G0[,p]}
   
   outsolution <- list(
     mean = est_om,
     k = estparamlist$k,
-    a = c(a1, estparamlist$aremaining),
-    G0 = estparamlist$G0
+    a = c(a1, aremaining),
+    G0 = G0
   )
   
+
   return(list(
     solution = outsolution,
-    nlopt = est,
+    nlopt = locopt,
     initial = initial
   ))
 }

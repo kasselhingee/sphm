@@ -1,4 +1,4 @@
-#' Homosckedastic SvMF Regression
+#' SvMF Regression with Parallel Transported Axes
 #' @description
 #' This function is designed to eventually be an internal function.
 #' No standardisation is performed.
@@ -15,16 +15,18 @@
 #' @param y Response data on a sphere
 #' @param xs Covariate data on a sphere
 #' @param xe Covariate data in Euclidean Space
-#' @param a1 The first element of the vector a, which is tuning parameter.
-#' @param aremaining The remaining vector a, used as a starting guess.
-#' @param mean Parameters for the mean link, used as a starting guess.
-#' @param Gstar starting guess of the axes at `p1`.
 #' @param k Starting concentration. I suspect lower means less chance of finding a local minimum.
+#' @param a The scaling vector `a`. `a[1]` is a fixed tuning parameter and the remainining is used as a starting guess.
+#' @param mean Parameters for the mean link, used as a starting guess.
+#' @param G0 A `p x p` orthonormal matrix specifying the starting guess of the axes of the SvMF distribution. G0 should have positive determinant because in the estimatino routine G0 or parts of G0 are representented using Cayley transforms.
+#' @param G0reference A `p x p` rotation matrix specifying a set of coordinates to represent G0 in for the estimation. Ideally the columns of `G0reference` will be close to the best `G0` because the Cayley transform representation has the best performance when applied to matrices close to the identity.
+#' @param G01behaviour "p1" identifies `G0[,1]` with `p1`. "fixed" fixes `G0[,1]` to its initial value. "free" allows `G0[,1]` to be estimated freely.
+#' @param ... Named optional arguments passed as a list to the `opts` argument of [`nloptr::nloptr()`].
 #' @details
 #' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
 #' No standardisation is performed.
 #' @export
-optim_constV <- function(y, xs, xe, mean, k, a, G0, xtol_rel = 1E-5, verbose = 0, G0reference = diag(p), G01behaviour = "p1", ...){
+optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01behaviour = "p1", ...){
   p <- ncol(y)
   qs <- ncol(xs)
   qe <- ncol(xe)

@@ -105,12 +105,10 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
   # check Jacobians of constraints are non-singular for the starting parameters.
   # For pathological params (e.g. the default starting params of no rotations), it can be zero.
   # If it is singular, perturb start very slightly
-  Jac_eq <- matrix(constraint_tape$Jacobian(om0vec), byrow = TRUE, ncol = length(om0vec))
-  if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){x0 <- x0 - 1E-4}
-  Jac_eq <- matrix(constraint_tape$Jacobian(om0vec), byrow = TRUE, ncol = length(om0vec))
+  Jac_eq <- matrix(constraint_tape$Jacobian(x0[1:constraint_tape$domain]), byrow = TRUE, ncol = constraint_tape$domain)
+  if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){x0[1:constraint_tape$domain] <- x0[1:constraint_tape$domain] - 1E-4}
+  Jac_eq <- matrix(constraint_tape$Jacobian(x0[1:constraint_tape$domain]), byrow = TRUE, ncol = constraint_tape$domain)
   stopifnot(all(abs(svd(Jac_eq)$d) > sqrt(.Machine$double.eps))) 
-  Jac_ineq <- matrix(ineqconstraint_tape$Jacobian(om0vec), byrow = TRUE, ncol = length(om0vec))
-  stopifnot(all(abs(svd(Jac_ineq)$d) > sqrt(.Machine$double.eps)))
 
   # prepare nloptr options
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",

@@ -337,7 +337,7 @@ test_that("Hessian eigenvalues match DoF", {
   #maybe more in mnlink_cpp()?
   #So far it is omitting the commutativity constraints on Omega
   #which have (p-1) * (p - 2) / 2 DoF
-  evals <- eigen(fit$loc_nloptr$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
+  evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
   
   DoF <- prelim_ad_DoF(p, qs, qe)
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + (p-1) * (p - 2) / 2)
@@ -405,7 +405,7 @@ test_that("Hessian eigenvalues match DoF for S2S", {
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
   
   fit <- prelim_ad(y, xs = xs, paramobj0 = as_mnlink_Omega(paramobj))
-  evals <- eigen(fit$loc_nloptr$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
+  evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
   DoF <- prelim_ad_DoF(p, qs, qe)
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + 0)
   expect_gt(min(evals), -sqrt(.Machine$double.eps))
@@ -427,7 +427,7 @@ test_that("Hessian eigenvalues match DoF for Euc2S", {
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
   
   fit <- prelim_ad(y, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
-  evals <- eigen(fit$loc_nloptr$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
+  evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
   DoF <- prelim_ad_DoF(p, qs, qe)
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + 0)
   expect_gt(min(evals), -sqrt(.Machine$double.eps))

@@ -118,9 +118,9 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", fix_qs1 = FALSE, st
   
   niceout <- list(
     est = est,
-    obj = out$loc_nloptr$objective,
+    obj = out$nlopt$objective,
     solution = out$solution, #non-standardised solution
-    opt = out$loc_nloptr,
+    opt = out$nlopt,
     y = destandardise_sph(y, attr(y, "std_rotation")),
     xs = if (!is.null(xs)){destandardise_sph(xs, attr(xs, "std_rotation"))},
     xe = if (!is.null(xe)){destandardise_Euc(xe, attr(xe, "std_center"), attr(xe, "std_rotation"))},

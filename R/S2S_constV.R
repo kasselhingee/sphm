@@ -131,10 +131,10 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
     eval_f = function(theta){-objtape$forward(0, theta)},
     eval_grad_f = function(theta){-objtape$Jacobian(theta)},
     lb = lb,
-    eval_g_eq =  function(theta){constraint_tape$forward(0, theta[1:length(om0vec)])},
+    eval_g_eq =  function(theta){constraint_tape$forward(0, theta[1:constraint_tape$domain])},
     eval_jac_g_eq =  function(theta){
-      Jac <- cbind(matrix(constraint_tape$Jacobian(theta[1:length(om0vec)]), byrow = TRUE, ncol = length(om0vec)),
-             matrix(0, nrow = constraint_tape$range, ncol = length(theta) - length(om0vec)))
+      Jac <- cbind(matrix(constraint_tape$Jacobian(theta[1:constraint_tape$domain]), byrow = TRUE, ncol = constraint_tape$domain),
+             matrix(0, nrow = constraint_tape$range, ncol = length(theta) - constraint_tape$domain))
       # colnames(Jac) <- names(om0vec)
       # print(round(Jac, 3))
       # print(apply(Jac, 1, function(x)max(abs(x))))
@@ -146,8 +146,8 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
 
   #output some diagnostics - vector names would be nice here
   locopt$solution_grad_f <- -objtape$Jacobian(locopt$solution)
-  locopt$solution_jac_g_eq <- matrix(constraint_tape$Jacobian(locopt$solution),
-                                     byrow = TRUE, ncol = length(locopt$solution))
+  locopt$solution_jac_g_eq <- matrix(constraint_tape$Jacobian(locopt$solution[1:constraint_tape$domain]),
+                                     byrow = TRUE, ncol = length(locopt$solution[1:constraint_tape$domain]))
   locopt$solution_Hes_f <- matrix(-objtape$Hessian0(locopt$solution),
          nrow = objtape$domain,
          byrow = TRUE)
@@ -157,7 +157,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
 
   # insert any fixed values of mean parameters
   meanpars <- locopt$solution[1:(sum(!is.na(isfixed)))]
-  meanpars <- scorematchingad:::t_sfi2u(locopt$solution, om0vec, isfixed)
+  meanpars <- scorematchingad:::t_sfi2u(meanpars, om0vec, isfixed)
   fullparam <- c(meanpars, locopt$solution[-(1:(sum(!is.na(isfixed))))])
 
   
@@ -183,7 +183,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
   if (det(G0) < 0){G0[,p] <- -G0[,p]}
   
   outsolution <- list(
-    mean = est_om,
+    mean = projectedom,
     k = estparamlist$k,
     a = c(a1, aremaining),
     G0 = G0

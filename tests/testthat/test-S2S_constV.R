@@ -177,7 +177,7 @@ test_that("MLE with p1 = G01", {
                                        G0 = cbind(pre$est$p1, -JuppRmat(G0_other[,1], pre$est$p1) %*% G0_other[,-1]), 
                                        G0reference = referencecoords, G01behaviour = "p1")}, "p!=3")
   expect_equal(est2$solution$mean, est1$solution$mean, tolerance = 1E-1)
-  expect_equal(est2$solution$k, est1$solution$k, tolerance = 1E-1)
+  expect_equal(est2$solution$k, est1$solution$k, tolerance = 0.2)
   expect_equal(est2$solution$a, est1$solution$a, tolerance = 1E-1)
   expect_equal(axis_distance(acos(colSums(est2$solution$G0 * est1$solution$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
 })

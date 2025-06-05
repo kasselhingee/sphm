@@ -2,21 +2,9 @@
 #' @param ssqOmbuffer The sum of squared singular values of Omega is allowed to go `ssqOmbuffer` above the limit given by singular values of 1 (or 2 if there are both Euclidean and spherical coordinates).
 prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_qe1 = FALSE, ssqOmbuffer = 2, ...){ #paramobj0 is the starting parameter object
   om0 <- as_mnlink_Omega(paramobj0)
-  # check inputs:
-  try(mnlink_Omega_check(om0))
   p <- ncol(y)
-  stopifnot(p == length(om0$p1))
-  if (!is.null(xs)){
-    stopifnot(ncol(xs) == length(om0$qs1))
-  } else {
-    stopifnot(length(om0$qs1) == 0)
-  }
-  # check Euc info if Euc is part of the link
-  if (!is.null(xe)){
-    stopifnot(ncol(xe) == length(om0$qe1))
-  } else {
-    stopifnot(length(om0$qe1) == 0)
-  }
+  # check inputs:
+  check_meanlink(y, xs, xe)
 
   # Prepare objective tapes
   dims_in <- c(p, length(om0$qe1))
@@ -174,4 +162,69 @@ vMF_SE <- function(y, xs = NULL, xe = NULL, k = NULL, param, type = "Kassel"){
   
   es <- eigen(sensitivitymat)
   
+}
+
+check_meanlink <- function(y, xs, xe, om0){
+  try(mnlink_Omega_check(om0))
+  p <- ncol(y)
+  stopifnot(p == length(om0$p1))
+  if (!is.null(xs)){
+    stopifnot(ncol(xs) == length(om0$qs1))
+  } else {
+    stopifnot(length(om0$qs1) == 0)
+  }
+  # check Euc info if Euc is part of the link
+  if (!is.null(xe)){
+    stopifnot(ncol(xe) == length(om0$qe1))
+  } else {
+    stopifnot(length(om0$qe1) == 0)
+  }
+}
+
+estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
+  dims_in <- c(length(om0$p1), length(om0$qe1))
+  om0vec <- mnlink_Omega_vec(om0)
+ 
+  # generate tapes 
+  constraint_tape <- tape_namedfun("Omega_constraints_wrap", om0vec, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+  ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", om0vec, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
+
+  # fix mean link parameters depending on arguments
+  # use the starting parameters om0 to detect whether we have xs and xe as their form is more predictable due to the Omega class
+  omfixed <- lapply(om0, function(x) x * 0)
+  if (fix_qe1 && (length(om0$qe1) > 0)){
+    # if shogo and Euc, fix some elements
+    omfixed$qe1 <- omfixed$qe1 + 1
+    omfixed$ce <- omfixed$ce + 1
+  }
+  
+  # fix qs1 to the starting values if qs1 exists
+  # use the starting parameters to check as their form is more constrained by the Omega class
+  if (fix_qs1 && (length(om0$qs1) > 0)){
+    omfixed$qs1 <- omfixed$qs1 + 1
+  }
+  
+  # update constraint tapes based on omfixed
+  isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
+  constraint_tape <- scorematchingad::fixindependent(constraint_tape, om0vec, isfixed)
+  ineqconstraint_tape <- scorematchingad::fixindependent(ineqconstraint_tape, om0vec, isfixed)
+  # drop constraint returns that are constant:
+  keep <- which(vapply((1:constraint_tape$range)-1, function(i){!constraint_tape$parameter(i)}, FUN.VALUE = FALSE))
+  constraint_tape <- scorematchingad::keeprange(constraint_tape, keep)
+  
+  # check Jacobians of constraints are non-singular for the starting parameters.
+  # For pathological params (e.g. the default starting params of no rotations), it can be zero.
+  # If it is singular, perturb start very slightly
+  x0 <- constraint_tape$xtape
+  Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = constraint_tape$domain)
+  if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){x0 <- x0 - 1E-4}
+  Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = constraint_tape$domain)
+  stopifnot(all(abs(svd(Jac_eq)$d) > sqrt(.Machine$double.eps))) 
+  
+  return(list(
+    om0vec = om0vec,
+    x0 = x0, #x0 may be perturbed to avoid singular Jac_eq 
+    isfixed = isfixed,
+    constraint_tape = constraint_tape,
+    ineqconstraint_tape = ineqconstraint_tape))
 }

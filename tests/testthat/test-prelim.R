@@ -15,6 +15,7 @@ test_that("vMF optimisation works with Euc covars", {
   # starting at the optimum
   tmp <- mobius_vMF(y, xe = x, start = paramobj, type = "Kassel", intercept = FALSE)
   expect_equal(tmp$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(tmp$k, 30, tolerance = 1E-1)
   
   # starting away from optimum, but still within constraints
   set.seed(14)
@@ -27,6 +28,7 @@ test_that("vMF optimisation works with Euc covars", {
     opt2$solution <- Omega_Euc_signswitch(opt2$est)
   }
   expect_equal(opt2$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(opt2$k, 30, tolerance = 1E-1)
 })
 
 test_that("mobius_vMF optimisation works with Sph covars",{
@@ -59,6 +61,7 @@ test_that("mobius_vMF optimisation works with Sph covars",{
   # starting at the optimum
   tmp <- mobius_vMF(y, xs = x, start = omegapar, type = "Kassel", intercept = FALSE)
   expect_equal(tmp$est, omegapar, tolerance = 0.05)
+  expect_equal(tmp$k, 30, tolerance = 1E-1)
   
   # starting away from optimum, but still within constraints
   set.seed(14)
@@ -67,6 +70,7 @@ test_that("mobius_vMF optimisation works with Sph covars",{
           B = diag(sort(runif(p-1), decreasing = TRUE))))
   opt2 <- mobius_vMF(y, xs = x, start = start, type = "Kassel", intercept = FALSE)
   expect_equal(opt2$est, omegapar, tolerance = 0.05)
+  expect_equal(opt2$k, 30, tolerance = 1E-1)
 })
 
 test_that("prelim optimisation works with Sph+Euc covars", {
@@ -91,6 +95,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
   # starting at the optimum
   tmp <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "Kassel", intercept = FALSE)
   expect_equal(tmp$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(tmp$k, 30, tolerance = 1E-1)
   # result should also satisfy the commutation constraint
   expect_silent(mnlink_Omega_check(tmp$est))
   expect_silent(mnlink_cann_check(as_mnlink_cann(tmp$est)))
@@ -108,6 +113,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
     opt2$est <- Euc_signswitch(opt2$est)
   }
   expect_equal(opt2$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(opt2$k, 30, tolerance = 1E-1)
   expect_silent(mnlink_Omega_check(opt2$est))
   expect_silent(mnlink_cann_check(as_mnlink_cann(opt2$est)))
 })
@@ -141,6 +147,7 @@ test_that("Shogo with Sph+Euc covars", {
   # starting at the optimum
   tmp <- mobius_vMF(y, xs = xs, xe = xe[,-1], start = paramobj, type = "Shogo", intercept = FALSE)
   expect_equal(tmp$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(tmp$k, 30, tolerance = 1E-1)
   expect_silent(mnlink_Omega_check(tmp$est))
   expect_silent(mnlink_cann_check(as_mnlink_cann(tmp$est)))
   
@@ -161,6 +168,7 @@ test_that("Shogo with Sph+Euc covars", {
     opt2$est <- Euc_signswitch(opt2$est)
   }
   expect_equal(opt2$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(opt2$k, 30, tolerance = 1E-1)
   expect_silent(mnlink_Omega_check(opt2$est))
   expect_silent(mnlink_cann_check(as_mnlink_cann(opt2$est)))
 })
@@ -260,12 +268,14 @@ test_that("mobius_vMF() performs correctly for Shogo", {
   refpar <- paramobj
   refpar$Qe <- rbind(refpar$Qe, 0)
   expect_equal(res$est, as_mnlink_Omega(refpar), tolerance = 0.05, ignore_attr = TRUE)
+  expect_equal(res$k, 30, tolerance = 1E-1)
   
   # the following checks the start standardisation of supplied starting parameters
   res2 <- mobius_vMF(y, xs = xs, xe = xe[, -1], type = "Shogo", start = res$est)
   standardisedsolution <- mnlink_Omega_vec(res$solution)
   estimatedvalues <- !grepl("(^qe|^ce)", names(standardisedsolution))
   expect_equal(res2$nlopt$x0, standardisedsolution[estimatedvalues], ignore_attr = TRUE)
+  expect_equal(res2$k, 30, tolerance = 1E-1)
 })
 
 test_that("mobius_vMF() performs correctly for Kassel", {
@@ -291,6 +301,7 @@ test_that("mobius_vMF() performs correctly for Kassel", {
   res <- mobius_vMF(y, xs = xs, xe = xe, type = "Kassel", intercept = FALSE, start = paramobj) 
   expect_equal(-mean(cos(res$dists)), res$obj)
   expect_equal(res$est, as_mnlink_Omega(paramobj), ignore_attr = TRUE, tolerance = 1E-1)
+  expect_equal(res$k, 30, tolerance = 1E-1)
 })
 
 test_that("Hessian eigenvalues match DoF", {

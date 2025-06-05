@@ -91,6 +91,13 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
   )
   if (!(nlopt$status %in% 1:4)){warning(nlopt$message)}
   
+  # Estimate concentration
+  # Note that the objective is average of y.ypred
+  res <- optimise(function(k){
+    -lvMFnormconst(k, p) + k * (-nlopt$objective) #full vMF log-likelihood (standardised by number of observations)
+  }, lower = 1E-8, upper = 1E5, maximum = TRUE)
+  k <- res$maximum
+  
   #output some diagnostics - vector names would be nice here
   nlopt$solution_grad_f <- -objtape$Jacobian(nlopt$solution)
   nlopt$solution_jac_g_eq <- matrix(conprep$constraint_tape$Jacobian(nlopt$solution),
@@ -129,6 +136,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
   
   niceout <- list(
     est = est,
+    k = k,
     obj = nlopt$objective,
     solution = projectedom, #non-standardised solution
     nlopt = nlopt,

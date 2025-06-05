@@ -43,7 +43,7 @@ prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", fix_qs1 = FALSE, st
   }
   
   # RUN
-  out <- prelim_ad(y = preplist$y, xs = preplist$xs, xe = preplist$xe, paramobj0 = preplist$start, fix_qs1 = fix_qs1, fix_qe1 = (type == "Shogo"), ssqOmbuffer = ssqOmbuffer, ...)
+  out <- mobius_vMF(y = preplist$y, xs = preplist$xs, xe = preplist$xe, paramobj0 = preplist$start, fix_qs1 = fix_qs1, fix_qe1 = (type == "Shogo"), ssqOmbuffer = ssqOmbuffer, ...)
   
   # Aspects of the fit that are invariant to coordinates used
   # distances in response space

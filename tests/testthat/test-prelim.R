@@ -13,7 +13,7 @@ test_that("prelim optimisation works with Euc covars", {
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- prelim_ad(y, xe = x, paramobj0 = as_mnlink_Omega(paramobj))
+  tmp <- mobius_vMF(y, xe = x, paramobj0 = as_mnlink_Omega(paramobj))
   expect_equal(tmp$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
   
   # starting away from optimum, but still within constraints
@@ -22,7 +22,7 @@ test_that("prelim optimisation works with Euc covars", {
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
                                        ce = 0))
-  opt2 <- prelim_ad(y, xe = x, paramobj0 = start)
+  opt2 <- mobius_vMF(y, xe = x, paramobj0 = start)
   if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$solution <- Omega_Euc_signswitch(opt2$solution)
   }
@@ -57,7 +57,7 @@ test_that("prelim optimisation works with Sph covars",{
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- prelim_ad(y, xs = x, paramobj0 = omegapar)
+  tmp <- mobius_vMF(y, xs = x, paramobj0 = omegapar)
   expect_equal(tmp$solution, omegapar, tolerance = 0.05)
   
   # starting away from optimum, but still within constraints
@@ -65,7 +65,7 @@ test_that("prelim optimisation works with Sph covars",{
   start <- as_mnlink_Omega(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
           Q = mclust::randomOrthogonalMatrix(qs, p),
           B = diag(sort(runif(p-1), decreasing = TRUE))))
-  opt2 <- prelim_ad(y, xs = x, paramobj0 = start)
+  opt2 <- mobius_vMF(y, xs = x, paramobj0 = start)
   expect_equal(opt2$solution, omegapar, tolerance = 0.05)
 })
 
@@ -89,7 +89,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
+  tmp <- mobius_vMF(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
   expect_equal(tmp$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
   # result should also satisfy the commutation constraint
   expect_silent(mnlink_Omega_check(tmp$solution))
@@ -103,7 +103,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
                                        ce = 1))
-  opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start)
+  opt2 <- mobius_vMF(y, xs = xs, xe = xe, paramobj0 = start)
   if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$solution <- Euc_signswitch(opt2$solution)
   }
@@ -139,7 +139,7 @@ test_that("Shogo with Sph+Euc covars", {
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj), fix_qe1 = TRUE)
+  tmp <- mobius_vMF(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj), fix_qe1 = TRUE)
   expect_equal(tmp$solution, as_mnlink_Omega(paramobj), tolerance = 0.05)
   expect_silent(mnlink_Omega_check(tmp$solution))
   expect_silent(mnlink_cann_check(as_mnlink_cann(tmp$solution)))
@@ -156,7 +156,7 @@ test_that("Shogo with Sph+Euc covars", {
   start$Omega <- cbind(start$Omega[,1:qs], 0, start$Omega[,qs + (1:qe)])
   start$qe1 <- c(1, rep(0, qe))
   start$ce <- 1
-  opt2 <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = start, fix_qe1 = TRUE)
+  opt2 <- mobius_vMF(y, xs = xs, xe = xe, paramobj0 = start, fix_qe1 = TRUE)
   if (sign(opt2$solution$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$solution <- Euc_signswitch(opt2$solution)
   }
@@ -311,7 +311,7 @@ test_that("Hessian eigenvalues match DoF", {
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
   
-  fit <- prelim_ad(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
+  fit <- mobius_vMF(y, xs = xs, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
 
   # In the below Hessian of `prelimobj_cpp()` only the constraints built into prelimobj_cpp are incorporated (all from `Omega_proj_cpp()`): 
   #p1 size, 
@@ -323,7 +323,7 @@ test_that("Hessian eigenvalues match DoF", {
   #which have (p-1) * (p - 2) / 2 DoF
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
   
-  DoF <- prelim_ad_DoF(p, qs, qe)
+  DoF <- mobius_vMF_DoF(p, qs, qe)
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + (p-1) * (p - 2) / 2)
   # there are slightly negative eigenvalues - which can only happen because some the constraints aren't incorporated into the calculation
   # expect_gt(min(evals), -sqrt(.Machine$double.eps))
@@ -356,20 +356,20 @@ test_that("DoF via cann params matches DoF via Omega", {
     -(qs>0)*(qe>0)*(p-1) * (p - 2) / 2 #commutative constraint on Omega
   }
   p <- 3; qs <- 3; qe <- 3
-  expect_equal(DoF_Omega2(p, qs, qe), prelim_ad_DoF(p, qs, qe))
-  expect_equal(DoF_Omega(p, qs, qe), prelim_ad_DoF(p, qs, qe))
+  expect_equal(DoF_Omega2(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
+  expect_equal(DoF_Omega(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
   
   p <- 3; qs <- 0; qe <- 5
-  expect_equal(DoF_Omega2(p, qs, qe), prelim_ad_DoF(p, qs, qe))
-  expect_equal(DoF_Omega(p, qs, qe), prelim_ad_DoF(p, qs, qe))
+  expect_equal(DoF_Omega2(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
+  expect_equal(DoF_Omega(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
   
   p <- 3; qs <- 7; qe <- 0
-  expect_equal(DoF_Omega2(p, qs, qe), prelim_ad_DoF(p, qs, qe))
-  expect_equal(DoF_Omega(p, qs, qe), prelim_ad_DoF(p, qs, qe))
+  expect_equal(DoF_Omega2(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
+  expect_equal(DoF_Omega(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
   
   p <- 5; qs <- 7; qe <- 5
-  expect_equal(DoF_Omega2(p, qs, qe), prelim_ad_DoF(p, qs, qe))
-  expect_equal(DoF_Omega(p, qs, qe), prelim_ad_DoF(p, qs, qe))
+  expect_equal(DoF_Omega2(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
+  expect_equal(DoF_Omega(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
 })
 
 test_that("Hessian eigenvalues match DoF for S2S", {
@@ -388,9 +388,9 @@ test_that("Hessian eigenvalues match DoF for S2S", {
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
   
-  fit <- prelim_ad(y, xs = xs, paramobj0 = as_mnlink_Omega(paramobj))
+  fit <- mobius_vMF(y, xs = xs, paramobj0 = as_mnlink_Omega(paramobj))
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
-  DoF <- prelim_ad_DoF(p, qs, qe)
+  DoF <- mobius_vMF_DoF(p, qs, qe)
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + 0)
   expect_gt(min(evals), -sqrt(.Machine$double.eps))
 })
@@ -410,9 +410,9 @@ test_that("Hessian eigenvalues match DoF for Euc2S", {
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
   
-  fit <- prelim_ad(y, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
+  fit <- mobius_vMF(y, xe = xe, paramobj0 = as_mnlink_Omega(paramobj))
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
-  DoF <- prelim_ad_DoF(p, qs, qe)
+  DoF <- mobius_vMF_DoF(p, qs, qe)
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + 0)
   expect_gt(min(evals), -sqrt(.Machine$double.eps))
 })

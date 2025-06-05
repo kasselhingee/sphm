@@ -172,7 +172,7 @@ test_that("MLE with p1 = G01", {
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
   set.seed(13)
-  pre <- prelim_ad(y_ld[, 1:p], x$xs, x$xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
+  pre <- mobius_vMF(y_ld[, 1:p], x$xs, x$xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$solution, k = 10, a = rep(1, p),
                                        G0 = cbind(pre$solution$p1, -JuppRmat(G0_other[,1], pre$solution$p1) %*% G0_other[,-1]), 
                                        G0reference = referencecoords, G01behaviour = "p1")}, "p!=3")
@@ -247,7 +247,7 @@ test_that("MLE with G01 fixed", {
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
   set.seed(13)
-  pre <- prelim_ad(y_ld[, 1:p], x$xs, x$xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
+  pre <- mobius_vMF(y_ld[, 1:p], x$xs, x$xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$solution, k = 10, a = rep(1, p),
                                        G0 = cbind(G0[,1], -JuppRmat(G0_other[,1], G0[,1]) %*% G0_other[,-1]), 
                                        G0reference = referencecoords, G01behaviour = "fixed")}, "p!=3")
@@ -318,7 +318,7 @@ test_that("MLE with G01 free", {
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
   set.seed(13)
-  pre <- prelim_ad(y_ld[, 1:p], x$xs, x$xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
+  pre <- mobius_vMF(y_ld[, 1:p], x$xs, x$xe, bad_om, xtol_rel = 1E-4) #doing this preliminary estimate reduces the iterations needed by optim_constV
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$solution, k = 10, a = rep(1, p),
                                        G0 = G0_other, 
                                        G0reference = referencecoords, G01behaviour = "free")}, "p!=3")

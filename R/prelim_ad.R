@@ -1,6 +1,6 @@
 
 #' @param ssqOmbuffer The sum of squared singular values of Omega is allowed to go `ssqOmbuffer` above the limit given by singular values of 1 (or 2 if there are both Euclidean and spherical coordinates).
-prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_qe1 = FALSE, ...){ #paramobj0 is the starting parameter object
+mobius_vMF <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_qe1 = FALSE, ...){ #paramobj0 is the starting parameter object
   om0 <- as_mnlink_Omega(paramobj0)
   p <- ncol(y)
   # check inputs:
@@ -74,7 +74,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_q
   ))
 }
 
-prelim_ad_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
+mobius_vMF_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
   DoF <- DoF_Stiefel(p, p) + #P
     DoF_Stiefel(qs, p) + #Qs
     DoF_Stiefel(qe, p) + #Qe

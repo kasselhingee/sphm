@@ -26,11 +26,27 @@
 #' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
 #' No standardisation is performed.
 #' @export
-optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01behaviour = "p1", fix_qs1 = FALSE, fix_qe1 = FALSE, ssqOmbuffer = 2, ...){
+optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), ...){
   om0 <- as_mnlink_Omega(mean)
   p <- ncol(y)
+  preplist <- list(y = y, xs = xs, xe = xe, start = start)
+  # if needed, add Euclidean covariates and update start accordingly
+  preplist <- addEuccovars(preplist, type = type, intercept = intercept)
+  # standardise y, xe and xe and update start accordingly. Dont standardise xe if intercept = FALSE
+  preplist <- standardise_data(preplist, intercept)
+  # If start not supplied, choose start close to identities since data standardised
+  preplist <- defaultstart(preplist, type)
+
+  # Check Shogo link initiated properly
+  if ((type == "Shogo") && (!is.null(preplist$xe))){
+    stopifnot(is_Shogo(preplist$start))
+    stopifnot(all(preplist$xe[, 1]^2 < sqrt(.Machine$double.eps)))
+  }
+
+  ### More detailed preparation ###
+  om0 <- as_mnlink_Omega(preplist$start)
   # check inputs:
-  check_meanlink(y, xs, xe, om0)
+  check_meanlink(preplist$y, preplist$xs, preplist$xe, om0)
   stopifnot(length(a) == p)
   a1 = a[1]
   aremaining = a[-1]
@@ -58,7 +74,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
                                        aremaining = aremaining,
                                        G0 = G0,
                                        p = p, qe = qe, 
-                                       yx = cbind(y, xs, xe),
+                                       yx = cbind(preplist$y, preplist$xs, preplist$xe),
                                        referencecoords = G0reference,
                                        G01behaviour = G01behaviour)
   objtape <- scorematchingad::avgrange(objtape) #objtape initially returns a value for each measurement. Average here to get average over all data.
@@ -131,27 +147,51 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
   aord <- order(estparamlist$aremaining, decreasing = TRUE)
   aremaining <- estparamlist$aremaining[aord]
   estparamlist$G0[,-1] <- estparamlist$G0[,-1][, aord]
+  
+  ### Making nicer return objects ###
+  # Aspects of the fit that are invariant to coordinates used
+  # distances in response space
+  pred <- mnlink(xs = preplist$xs, xe = preplist$xe, param = projectedom)
+  dists <- acos(rowSums(pred * preplist$y))
+  rresids_tmp <- rotatedresid(preplist$y, pred, nthpole(ncol(preplist$y)))
+  rresids <- rresids_tmp[, -1]
+  attr(rresids, "samehemisphere") <-  attr(rresids_tmp, "samehemisphere")
+  colnames(rresids) <- paste0("r", 1:ncol(rresids))
+  
+  ### revert estimated parameters and pred to pre-standardisation coordinates ###
+  est <- undo_recoordinate_Omega(projectedom, 
+                          yrot = attr(preplist$y, "std_rotation"), 
+                          xsrot = attr(preplist$xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
+                          xerot = attr(preplist$xe, "std_rotation"), 
+                          xecenter = attr(preplist$xe, "std_center"),
+                          onescovaridx = preplist$onescovaridx)
 
+  #put G0 into same coordinates as y
+  G0 <- t(attr(preplist$y, "std_rotation")) %*% G0
+  warning("test that this gives G01=p1 in identified case")
   #For axes G0 standardise the return by
   # (1) make first element of each vector positive (except the first column)
   G0 <- estparamlist$G0
   G0[,-1] <- topos1strow(G0[,-1])
   # (2) make rotation matrix by flipping final column according to determinant
   if (det(G0) < 0){G0[,p] <- -G0[,p]}
+  warning("test that residuals using the G0 axes are multivariate normal under high concentration")
   
-  outsolution <- list(
-    mean = projectedom,
+  niceout <- list(
+    mean = est,
     k = estparamlist$k,
     a = c(a1, aremaining),
-    G0 = G0
-  )
-  
-
-  return(list(
-    solution = outsolution,
+    G0 = G0,
+    obj = nlopt$objective,
     nlopt = nlopt,
-    initial = initial
-  ))
+    y = y,
+    xs = xs,
+    xe = if (!is.null(xe)){if (intercept){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))} else {xe}}, #this recovers any added covariates too
+    pred = destandardise_sph(pred, tG = attr(preplist$y, "std_rotation")),
+    rresids = rresids,
+    dists = dists
+  )
+  return(niceout)
 }
 
 #' Function for simulating data given mean link and SvMF parameters

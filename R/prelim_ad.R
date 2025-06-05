@@ -27,7 +27,7 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @param intercept `TRUE` to include a Euclidean intercept term using a covariate that is always `1`. This is needed for centering of Euclidean covariates, which is part of standardising the covariates. If `intercept = FALSE` then the Euclidean covariates will not be standardised.
 #' @export
-mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", fix_qs1 = FALSE, intercept = TRUE, ...){
+mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
   p <- ncol(y)
   preplist <- list(y = y, xs = xs, xe = xe, start = start)
   # if needed, add Euclidean covariates and update start accordingly
@@ -50,7 +50,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
   check_meanlink(preplist$y, preplist$xs, preplist$xe, om0)
 
   # Prepare constraint tape
-  conprep <- estprep_meanconstraints(om0, fix_qs1, fix_qe1 = (type == "Shogo"))
+  conprep <- estprep_meanconstraints(om0, fix_qs1, fix_qe1)
   # below updates om0vec with x0 values according to isfixed
   om0vec <- scorematchingad:::t_sfi2u(conprep$x0, conprep$om0vec, conprep$isfixed)
 
@@ -140,13 +140,6 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
     dists = dists
   )
   return(niceout)
-
-  
-  return(list(
-    solution = projectedom,
-    nlopt = nlopt,
-    initial = om0
-  ))
 }
 
 mobius_vMF_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){

@@ -83,7 +83,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
   
   # Optimisation
   # current dynamic parameter values of tapes will be used
-  locopt <- nloptr::nloptr(
+  nlopt <- nloptr::nloptr(
     x0 = x0,
     eval_f = function(theta){-objtape$forward(0, theta)},
     eval_grad_f = function(theta){-objtape$Jacobian(theta)},
@@ -99,23 +99,23 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
     },
     opts = combined_opts
   )
-  if (!(locopt$status %in% 1:4)){warning(locopt$message)}
+  if (!(nlopt$status %in% 1:4)){warning(nlopt$message)}
 
   #output some diagnostics - vector names would be nice here
-  locopt$solution_grad_f <- -objtape$Jacobian(locopt$solution)
-  locopt$solution_jac_g_eq <- matrix(conprep$constraint_tape$Jacobian(locopt$solution[1:conprep$constraint_tape$domain]),
-                                     byrow = TRUE, ncol = length(locopt$solution[1:conprep$constraint_tape$domain]))
-  locopt$solution_Hes_f <- matrix(-objtape$Hessian0(locopt$solution),
+  nlopt$solution_grad_f <- -objtape$Jacobian(nlopt$solution)
+  nlopt$solution_jac_g_eq <- matrix(conprep$constraint_tape$Jacobian(nlopt$solution[1:conprep$constraint_tape$domain]),
+                                     byrow = TRUE, ncol = length(nlopt$solution[1:conprep$constraint_tape$domain]))
+  nlopt$solution_Hes_f <- matrix(-objtape$Hessian0(nlopt$solution),
          nrow = objtape$domain,
          byrow = TRUE)
 
   # remove the tapes from the return to save on memory
-  locopt$eval_f <- locopt$eval_g_eq <- locopt$eval_g_ineq <- locopt$nloptr_environment <- NULL
+  nlopt$eval_f <- nlopt$eval_g_eq <- nlopt$eval_g_ineq <- nlopt$nloptr_environment <- NULL
 
   # insert any fixed values of mean parameters
-  meanpars <- locopt$solution[1:length(conprep$x0)]
+  meanpars <- nlopt$solution[1:length(conprep$x0)]
   meanpars <- scorematchingad:::t_sfi2u(meanpars, om0vec, conprep$isfixed)
-  fullparam <- c(meanpars, locopt$solution[-(1:length(conprep$x0))])
+  fullparam <- c(meanpars, nlopt$solution[-(1:length(conprep$x0))])
 
   
   estparamlist <- S2S_constV_nota1_fromvecparamsR(fullparam, p, qs, qe, 
@@ -149,7 +149,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
 
   return(list(
     solution = outsolution,
-    nlopt = locopt,
+    nlopt = nlopt,
     initial = initial
   ))
 }

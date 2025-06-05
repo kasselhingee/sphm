@@ -1,6 +1,6 @@
 
 #' @param ssqOmbuffer The sum of squared singular values of Omega is allowed to go `ssqOmbuffer` above the limit given by singular values of 1 (or 2 if there are both Euclidean and spherical coordinates).
-prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_qe1 = FALSE, ssqOmbuffer = 2, ...){ #paramobj0 is the starting parameter object
+prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_qe1 = FALSE, ...){ #paramobj0 is the starting parameter object
   om0 <- as_mnlink_Omega(paramobj0)
   p <- ncol(y)
   # check inputs:
@@ -32,7 +32,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_q
   
   # Optimisation
   # current dynamic parameter values of tapes will be used
-  locopt <- nloptr::nloptr(
+  nlopt <- nloptr::nloptr(
     x0 = x0,
     eval_f = function(theta){-objtape$forward(0, theta)},
     eval_grad_f = function(theta){-objtape$Jacobian(theta)},
@@ -46,21 +46,21 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_q
       },
     opts = combined_opts
   )
-  if (!(locopt$status %in% 1:4)){warning(locopt$message)}
+  if (!(nlopt$status %in% 1:4)){warning(nlopt$message)}
   
   #output some diagnostics - vector names would be nice here
-  locopt$solution_grad_f <- -objtape$Jacobian(locopt$solution)
-  locopt$solution_jac_g_eq <- matrix(conprep$constraint_tape$Jacobian(locopt$solution),
-                                     byrow = TRUE, ncol = length(locopt$solution))
-  locopt$solution_Hes_f <- matrix(-objtape$Hessian0(locopt$solution),
+  nlopt$solution_grad_f <- -objtape$Jacobian(nlopt$solution)
+  nlopt$solution_jac_g_eq <- matrix(conprep$constraint_tape$Jacobian(nlopt$solution),
+                                     byrow = TRUE, ncol = length(nlopt$solution))
+  nlopt$solution_Hes_f <- matrix(-objtape$Hessian0(nlopt$solution),
          nrow = objtape$domain,
          byrow = TRUE)
 
   # remove the tapes from the return to save on memory
-  locopt$eval_f <- locopt$eval_g_eq <- locopt$eval_g_ineq <- locopt$nloptr_environment <- NULL
+  nlopt$eval_f <- nlopt$eval_g_eq <- <- nlopt$nloptr_environment <- NULL
    
   # insert any fixed values of mean parameters
-  fullparam <- scorematchingad:::t_sfi2u(locopt$solution, om0vec, conprep$isfixed)
+  fullparam <- scorematchingad:::t_sfi2u(nlopt$solution, om0vec, conprep$isfixed)
  
   #project mean pars to have correct orthogonality
   projectedom <- Omega_proj(mnlink_Omega_unvec(fullparam, p, length(om0$qe1), check = FALSE))
@@ -69,7 +69,7 @@ prelim_ad <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_q
   
   return(list(
     solution = projectedom,
-    nlopt = locopt,
+    nlopt = nlopt,
     initial = om0
   ))
 }
@@ -158,7 +158,6 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
  
   # generate tapes 
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", om0vec, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
-  ineqconstraint_tape <- tape_namedfun("Omega_ineqconstraints", om0vec, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
 
   # fix mean link parameters depending on arguments
   # use the starting parameters om0 to detect whether we have xs and xe as their form is more predictable due to the Omega class
@@ -178,7 +177,6 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
   # update constraint tapes based on omfixed
   isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
   constraint_tape <- scorematchingad::fixindependent(constraint_tape, om0vec, isfixed)
-  ineqconstraint_tape <- scorematchingad::fixindependent(ineqconstraint_tape, om0vec, isfixed)
   # drop constraint returns that are constant:
   keep <- which(vapply((1:constraint_tape$range)-1, function(i){!constraint_tape$parameter(i)}, FUN.VALUE = FALSE))
   constraint_tape <- scorematchingad::keeprange(constraint_tape, keep)
@@ -196,6 +194,6 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
     om0vec = om0vec,
     x0 = x0, #x0 may be perturbed to avoid singular Jac_eq 
     isfixed = isfixed,
-    constraint_tape = constraint_tape,
-    ineqconstraint_tape = ineqconstraint_tape))
+    constraint_tape = constraint_tape
+    ))
 }

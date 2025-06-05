@@ -23,7 +23,6 @@ addEuccovars <- function(preplist, type, intercept){
         preplist$start <- as_mnlink_cann(preplist$start)
         # if start is wrong dimension add a row of zeros
         if (dim(preplist$start)["qe"] != ncol(preplist$xe)){
-          browser()
           stopifnot(dim(preplist$start)["qe"] == ncol(preplist$xe) - 1)
           preplist$start$Qe <- rbind(preplist$start$Qe, ones = 0)
         }

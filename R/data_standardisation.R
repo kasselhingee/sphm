@@ -125,6 +125,7 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
     if ((length(onescovaridx) == 0) || !is.finite(onescovaridx)){
       stop("Please specify the index corresponding to the 1s covariate.")
     }
+    if ((onescovaridx < 1) || (onescovaridx > qe)){stop("onescovardix is outside the range possible Euc covariate indexes")}
     # xecenter shouldn't shift the 1s covariate
     stopifnot(abs(xecenter[onescovaridx]) < .Machine$double.eps)
     # if qe1 is non-zero for the 1s covariate, then I dont know what it would mean
@@ -135,7 +136,9 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   
   # update for centering first
   omstd$ce <- om$ce + drop(omstd$qe1 %*% xecenter) 
-  omstd$Omega[, qs + onescovaridx] <- om$Omega[, qs + onescovaridx, drop = FALSE] + om$Omega[,seq.int(qs + 1, length.out = qe)] %*% xecenter
+  if ((onescovaridx > 0) && (onescovaridx < qe)){
+    omstd$Omega[, qs + onescovaridx] <- om$Omega[, qs + onescovaridx, drop = FALSE] + om$Omega[,seq.int(qs + 1, length.out = qe)] %*% xecenter
+  }
   # Here unclear how to update qe1 based on centering if qe1[onescovaridx] is non-zero
   
   # update based on rotations xsrot and xerot
@@ -167,6 +170,7 @@ undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   
   # if xecenter non-zero, check onescovaridx
   if (any(abs(xecenter) > .Machine$double.eps)){
+    if ((onescovaridx < 1) || (onescovaridx > qe)){stop("onescovardix is outside the range possible Euc covariate indexes")}
     # xecenter shouldn't shift the 1s covariate
     stopifnot(abs(xecenter[onescovaridx]) < .Machine$double.eps)
     # if qe1 is non-zero for the 1s covariate, then I dont know what it would mean
@@ -185,7 +189,9 @@ undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   
   # use the above calculated qe1 and Omega to get Omega 
   om$ce <- om$ce - drop(om$qe1 %*% xecenter) 
-  om$Omega[, qs + onescovaridx] <- om$Omega[, qs + onescovaridx, drop = FALSE] - om$Omega[,seq.int(qs + 1, length.out = qe)] %*% xecenter
+  if ((onescovaridx > 0) && (onescovaridx < qe)){
+    om$Omega[, qs + onescovaridx] <- om$Omega[, qs + onescovaridx, drop = FALSE] - om$Omega[,seq.int(qs + 1, length.out = qe)] %*% xecenter
+  }
   
   return(om)
 }

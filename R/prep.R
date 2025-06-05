@@ -4,7 +4,9 @@ addEuccovars <- function(preplist, type, intercept){
   # if Shogo add a zeros covariate
   if ((type == "Shogo") && (!is.null(preplist$xe))){
     if (!is.null(preplist$xe)){
-      preplist$xe <- cbind("dummyzero" = 0, preplist$xe)
+      if (any(preplist$xe[,1]^2 > .Machine$double.eps)){
+        preplist$xe <- cbind("dummyzero" = 0, preplist$xe)
+      }
     }
     if (!is.null(preplist$start)){stopifnot(is_Shogo(preplist$start))}
   }

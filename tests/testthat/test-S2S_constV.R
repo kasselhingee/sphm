@@ -163,11 +163,12 @@ test_that("MLE with p1 = G01", {
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "p1")}, "p!=3")
-  expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
-  expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
+  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "p1", 
+                                       type = "Kassel", intercept = FALSE)}, "p!=3")
+  expect_equal(est1$mean, omegapar, tolerance = 1E-1)
+  expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
-  expect_equal(axis_distance(acos(colSums(est1$solution$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
+  expect_equal(axis_distance(acos(colSums(est1$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
@@ -175,7 +176,8 @@ test_that("MLE with p1 = G01", {
   pre <- mobius_vMF(y_ld[, 1:p], x$xs, x$xe, start = bad_om, xtol_rel = 1E-4, type = "Kassel", intercept = FALSE) #doing this preliminary estimate reduces the iterations needed by optim_constV
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$est, k = 10, a = rep(1, p),
                                        G0 = cbind(pre$est$p1, -JuppRmat(G0_other[,1], pre$est$p1) %*% G0_other[,-1]), 
-                                       G0reference = referencecoords, G01behaviour = "p1")}, "p!=3")
+                                       G0reference = referencecoords, G01behaviour = "p1",
+                                       type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est2$solution$mean, est1$solution$mean, tolerance = 1E-1)
   expect_equal(est2$solution$k, est1$solution$k, tolerance = 0.2)
   expect_equal(est2$solution$a, est1$solution$a, tolerance = 1E-1)
@@ -238,7 +240,8 @@ test_that("MLE with G01 fixed", {
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "fixed")}, "p!=3")
+  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "fixed",
+                                       type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
@@ -250,7 +253,8 @@ test_that("MLE with G01 fixed", {
   pre <- mobius_vMF(y_ld[, 1:p], x$xs, x$xe, start = bad_om, xtol_rel = 1E-4, type = "Kassel", intercept = FALSE) #doing this preliminary estimate reduces the iterations needed by optim_constV
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$est, k = 10, a = rep(1, p),
                                        G0 = cbind(G0[,1], -JuppRmat(G0_other[,1], G0[,1]) %*% G0_other[,-1]), 
-                                       G0reference = referencecoords, G01behaviour = "fixed")}, "p!=3")
+                                       G0reference = referencecoords, G01behaviour = "fixed",
+                                       type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est2$solution, est1$solution, tolerance = 1E-3)
 })
 
@@ -309,7 +313,8 @@ test_that("MLE with G01 free", {
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "free")}, "p!=3")
+  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "free",
+                                       type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
@@ -321,7 +326,8 @@ test_that("MLE with G01 free", {
   pre <- mobius_vMF(y_ld[, 1:p], x$xs, x$xe, start = bad_om, xtol_rel = 1E-4, type = "Kassel", intercept = FALSE) #doing this preliminary estimate reduces the iterations needed by optim_constV
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$est, k = 10, a = rep(1, p),
                                        G0 = G0_other, 
-                                       G0reference = referencecoords, G01behaviour = "free")}, "p!=3")
+                                       G0reference = referencecoords, G01behaviour = "free",
+                                       type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est2$solution, est1$solution, tolerance = 1E-3)
 })
 

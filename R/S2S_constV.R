@@ -26,14 +26,14 @@
 #' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
 #' No standardisation is performed.
 #' @export
-optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), ...){
-  om0 <- as_mnlink_Omega(mean)
+optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
   p <- ncol(y)
-  preplist <- list(y = y, xs = xs, xe = xe, start = start)
+  preplist <- list(y = y, xs = xs, xe = xe, start = mean)
   # if needed, add Euclidean covariates and update start accordingly
   preplist <- addEuccovars(preplist, type = type, intercept = intercept)
   # standardise y, xe and xe and update start accordingly. Dont standardise xe if intercept = FALSE
   preplist <- standardise_data(preplist, intercept)
+  G0 <- attr(preplist$y, "std_rotation") %*% G0 #update G0 too
   # If start not supplied, choose start close to identities since data standardised
   preplist <- defaultstart(preplist, type)
 
@@ -167,11 +167,10 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
                           onescovaridx = preplist$onescovaridx)
 
   #put G0 into same coordinates as y
+  G0 <- estparamlist$G0
   G0 <- t(attr(preplist$y, "std_rotation")) %*% G0
-  warning("test that this gives G01=p1 in identified case")
   #For axes G0 standardise the return by
   # (1) make first element of each vector positive (except the first column)
-  G0 <- estparamlist$G0
   G0[,-1] <- topos1strow(G0[,-1])
   # (2) make rotation matrix by flipping final column according to determinant
   if (det(G0) < 0){G0[,p] <- -G0[,p]}

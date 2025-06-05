@@ -57,7 +57,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, paramobj0, fix_qs1 = FALSE, fix_
          byrow = TRUE)
 
   # remove the tapes from the return to save on memory
-  nlopt$eval_f <- nlopt$eval_g_eq <- <- nlopt$nloptr_environment <- NULL
+  nlopt$eval_f <- nlopt$eval_g_eq <- nlopt$nloptr_environment <- NULL
    
   # insert any fixed values of mean parameters
   fullparam <- scorematchingad:::t_sfi2u(nlopt$solution, om0vec, conprep$isfixed)

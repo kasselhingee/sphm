@@ -67,7 +67,6 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
   # using tapeing values as starting parameters
   x0 <- objtape$xtape
 
-
   # prepare nloptr options
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",
                        xtol_rel = 1E-10, #1E-04,

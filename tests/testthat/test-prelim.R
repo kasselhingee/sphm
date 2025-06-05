@@ -252,7 +252,7 @@ test_that("mobius_vMF() performs correctly for Shogo", {
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
   colnames(y) <- paste0("y", 1:ncol(y))
   
-  # apply prelim as if directly on raw data (drop first column of zeros to account for user-friendly use of Shogo in prelim())
+  # apply mobius_vMF as if directly on raw data (drop first column of zeros to account for user-friendly use of Shogo in mobius_vMF())
   res <- mobius_vMF(y, xs = xs, xe = xe[, -1], type = "Shogo") 
   expect_equal(res$xe[,-(ncol(xe) + 1)], xe) #expect returned xe to include an intercept term
   expect_equal(-mean(cos(res$dists)), res$obj)
@@ -287,7 +287,7 @@ test_that("mobius_vMF() performs correctly for Kassel", {
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
   colnames(y) <- paste0("y", 1:ncol(y))
   
-  # apply prelim as if directly on raw data (drop first column of zeros to account for user-friendly use of Shogo in prelim())
+  # apply mobius_vMF as if directly on raw data (drop first column of zeros to account for user-friendly use of Shogo in mobius_vMF())
   res <- mobius_vMF(y, xs = xs, xe = xe, type = "Kassel", intercept = FALSE, start = paramobj) 
   expect_equal(-mean(cos(res$dists)), res$obj)
   expect_equal(res$est, as_mnlink_Omega(paramobj), ignore_attr = TRUE, tolerance = 1E-1)

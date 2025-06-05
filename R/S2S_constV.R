@@ -153,10 +153,8 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
   # distances in response space
   pred <- mnlink(xs = preplist$xs, xe = preplist$xe, param = projectedom)
   dists <- acos(rowSums(pred * preplist$y))
-  rresids_tmp <- rotatedresid(preplist$y, pred, nthpole(ncol(preplist$y)))
-  rresids <- rresids_tmp[, -1]
-  attr(rresids, "samehemisphere") <-  attr(rresids_tmp, "samehemisphere")
-  colnames(rresids) <- paste0("r", 1:ncol(rresids))
+  # get residuals as coordinates wrt G0. So under high concentration these residuals follow something multivariate normal.
+  rresids <- resid_SvMF_partransport(preplist$y, pred, estparamlist$k, c(a1, estparamlist$aremaining), estparamlist$G0)
   
   ### revert estimated parameters and pred to pre-standardisation coordinates ###
   est <- undo_recoordinate_Omega(projectedom, 
@@ -174,7 +172,6 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
   G0[,-1] <- topos1strow(G0[,-1])
   # (2) make rotation matrix by flipping final column according to determinant
   if (det(G0) < 0){G0[,p] <- -G0[,p]}
-  warning("test that residuals using the G0 axes are multivariate normal under high concentration")
   
   niceout <- list(
     mean = est,

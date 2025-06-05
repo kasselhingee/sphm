@@ -169,6 +169,8 @@ test_that("MLE with p1 = G01", {
   expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
   expect_equal(axis_distance(acos(colSums(est1$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
+  # residuals should be close to MVN with covariance given by a
+  # But the difference can still be detected at k = 30 when n = 1000 (see unit test of resid_SvMF_partransport below to see how large k might need to be)
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
@@ -242,10 +244,10 @@ test_that("MLE with G01 fixed", {
   ## now try optimisation starting at true values ##
   expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "fixed",
                                        type = "Kassel", intercept = FALSE)}, "p!=3")
-  expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
-  expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
+  expect_equal(est1$mean, omegapar, tolerance = 1E-1)
+  expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
-  expect_equal(axis_distance(acos(colSums(est1$solution$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
+  expect_equal(axis_distance(acos(colSums(est1$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
@@ -255,7 +257,9 @@ test_that("MLE with G01 fixed", {
                                        G0 = cbind(G0[,1], -JuppRmat(G0_other[,1], G0[,1]) %*% G0_other[,-1]), 
                                        G0reference = referencecoords, G01behaviour = "fixed",
                                        type = "Kassel", intercept = FALSE)}, "p!=3")
-  expect_equal(est2$solution, est1$solution, tolerance = 1E-3)
+  expect_equal(est2$mean, est1$mean, tolerance = 1E-2)
+  expect_equal(est2[c("k", "a")], est1[c("k", "a")], tolerance = 1E-1)
+  expect_equal(axis_distance(acos(colSums(est2$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
 })
 
 test_that("MLE with G01 free", {
@@ -315,10 +319,10 @@ test_that("MLE with G01 free", {
   ## now try optimisation starting at true values ##
   expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "free",
                                        type = "Kassel", intercept = FALSE)}, "p!=3")
-  expect_equal(est1$solution$mean, omegapar, tolerance = 1E-1)
-  expect_equal(est1$solution[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
+  expect_equal(est1$mean, omegapar, tolerance = 1E-1)
+  expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
-  expect_equal(axis_distance(acos(colSums(est1$solution$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
+  expect_equal(axis_distance(acos(colSums(est1$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
@@ -328,7 +332,9 @@ test_that("MLE with G01 free", {
                                        G0 = G0_other, 
                                        G0reference = referencecoords, G01behaviour = "free",
                                        type = "Kassel", intercept = FALSE)}, "p!=3")
-  expect_equal(est2$solution, est1$solution, tolerance = 1E-3)
+  expect_equal(est2$mean, est1$mean, tolerance = 1E-2)
+  expect_equal(est2[c("k", "a")], est1[c("k", "a")], tolerance = 1E-1)
+  expect_equal(axis_distance(acos(colSums(est2$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
 })
 
 test_that("Cayley transform and vectorisation works", {
@@ -343,3 +349,29 @@ test_that("Cayley transform and vectorisation works", {
   expect_equal(vectorizeLowerTriangle(A), A[lower.tri(A)])
   expect_equal(inverseVectorizeLowerTriangle(vectorizeLowerTriangle(A)), A)
 })
+
+test_that("Under high concentration, standardised residuals are the correct MVN", {
+  rmnlink_cann__place_in_env(4, 5, 4)
+  omegapar <- as_mnlink_Omega(paramobj)
+  set.seed(4)
+  x <- rcovars(1000, qs, qe)
+  set.seed(5)
+  G0 <- mclust::randomOrthogonalMatrix(p, p) #axes around a random location
+  G0[, p] <- det(G0) * G0[,p]
+  
+  # simulate observations
+  set.seed(6)
+  k <- 500
+  a <- c(1, seq(5, 0.2, length.out = p-1))
+  a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
+  y_ld <- rS2S_constV(x$xs, x$xe, mnparam = omegapar, k, a, G0)
+  
+  exactresids <- resid_SvMF_partransport(y_ld[, 1:p], mnlink(xs = x$xs, xe = x$xe, param = omegapar), k, a, G0)
+  expect_gt(ks.test(rowSums(exactresids^2), "pchisq", df = ncol(est1$rresids))$p.value, 0.05)
+  
+  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = G0, G01behaviour = "fixed",
+                                       type = "Kassel", intercept = FALSE)}, "p!=3")
+  
+  expect_gt(ks.test(rowSums(est1$rresids^2), "pchisq", df = ncol(est1$rresids))$p.value, 0.05)
+})
+

@@ -180,10 +180,10 @@ test_that("MLE with p1 = G01", {
                                        G0 = cbind(pre$est$p1, -JuppRmat(G0_other[,1], pre$est$p1) %*% G0_other[,-1]), 
                                        G0reference = referencecoords, G01behaviour = "p1",
                                        type = "Kassel", intercept = FALSE)}, "p!=3")
-  expect_equal(est2$solution$mean, est1$solution$mean, tolerance = 1E-1)
-  expect_equal(est2$solution$k, est1$solution$k, tolerance = 0.2)
-  expect_equal(est2$solution$a, est1$solution$a, tolerance = 1E-1)
-  expect_equal(axis_distance(acos(colSums(est2$solution$G0 * est1$solution$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
+  expect_equal(est2$mean, est1$mean, tolerance = 1E-1)
+  expect_equal(est2$k, est1$k, tolerance = 0.2)
+  expect_equal(est2$a, est1$a, tolerance = 1E-1)
+  expect_equal(axis_distance(acos(colSums(est2$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
 })
 
 test_that("MLE with G01 fixed", {
@@ -367,7 +367,7 @@ test_that("Under high concentration, standardised residuals are the correct MVN"
   y_ld <- rS2S_constV(x$xs, x$xe, mnparam = omegapar, k, a, G0)
   
   exactresids <- resid_SvMF_partransport(y_ld[, 1:p], mnlink(xs = x$xs, xe = x$xe, param = omegapar), k, a, G0)
-  expect_gt(ks.test(rowSums(exactresids^2), "pchisq", df = ncol(est1$rresids))$p.value, 0.05)
+  expect_gt(ks.test(rowSums(exactresids^2), "pchisq", df = ncol(exactresids))$p.value, 0.05)
   
   expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = G0, G01behaviour = "fixed",
                                        type = "Kassel", intercept = FALSE)}, "p!=3")

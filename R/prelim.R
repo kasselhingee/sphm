@@ -28,103 +28,49 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' @param intercept `TRUE` to include a Euclidean intercept term using a covariate that is always `1`. This is needed for centering of Euclidean covariates, which is part of standardising the covariates. If `intercept = FALSE` then the Euclidean covariates will not be standardised.
 #' @export
 prelim <- function(y, xs = NULL, xe = NULL, type = "Kassel", fix_qs1 = FALSE, start = NULL, intercept = TRUE, ssqOmbuffer = 2, ...){
-  # if Shogo add a zeros covariate too
-  if ((type == "Shogo") && (!is.null(xe))){
-    if (!is.null(xe)){
-      xe <- cbind("dummyzero" = 0, xe)
-    }
-    if (!is.null(start)){stopifnot(is_Shogo(start))}
-  }
-  
-  onescovaridx <- NA_integer_
-  if (intercept && !is.null(xe)){
-    # search for 1s covariate, otherwise add it to end
-    constxe <- (apply(xe, 2, sd) < sqrt(.Machine$double.eps))
-    onescovaridx <- which(abs(colMeans(xe[,constxe, drop = FALSE]) - 1) < .Machine$double.eps)
-    if (length(onescovaridx) == 0){
-      xe <- cbind(xe, "ones" = 1)
-      onescovaridx <- ncol(xe)
-      if (!is.null(start)){
-        start <- as_mnlink_cann(start)
-        # if start is wrong dimension add a row of zeros
-        if (dim(start)["qe"] != ncol(xe)){
-          browser()
-          stopifnot(dim(start)["qe"] == ncol(xe) - 1)
-          start$Qe <- rbind(start$Qe, ones = 0)
-        }
-      }
-    }
-    if (length(onescovaridx) > 1){onescovaridx <- onescovaridx[1]}
-  }
-  
-  # standardise inputs
-  y <- standardise_sph(y)
-  if (!is.null(xs)){xs <- standardise_sph(xs)}
-  if (!is.null(xe) && intercept){xe <- standardise_Euc(xe)}
-  
-  # update starting coordinates if provided
-  if (!is.null(start)){
-    start <- recoordinate_Omega(as_mnlink_Omega(start), 
-                                yrot = attr(y, "std_rotation"), 
-                                xsrot = attr(xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
-                                xerot = attr(xe, "std_rotation"), 
-                                xecenter = attr(xe, "std_center"),
-                                onescovaridx = onescovaridx)
-  }
+  preplist <- list(y = y, xs = xs, xe = xe, start = start)
+  # if needed, add Euclidean covariates and update start accordingly
+  preplist <- addEuccovars(preplist, type = type, intercept = intercept)
+  # standardise y, xe and xe and update start accordingly. Dont standardise xe if intercept = FALSE
+  preplist <- standardise_data(preplist, intercept)
+  # If start not supplied, choose start close to identities since data standardised
+  preplist <- defaultstart(preplist, type)
 
-  # If start not supplied, choose start close to identities
-  if (is.null(start)){
-    p <- ncol(y)
-    if (!is.null(xe)){stopifnot(ncol(xe) >= p)}
-    if (!is.null(xs)){stopifnot(ncol(xs) >= p)}
-    start <- mnlink_cann(
-                P = diag(p),
-                Bs = if (!is.null(xs)){diag(0.9, p-1)},
-                Qs = if (!is.null(xs)){diag(1, ncol(xs), p)},
-                Be = if (!is.null(xe)){diag(0.9, p-1)},
-                Qe = if (!is.null(xe)){diag(1, ncol(xe), p)},
-                ce = if (!is.null(xe)){1}
-    )
-    if ((type == "Kassel") && !is.null(xe)){ #default to be larger an all values of -xe
-      start$ce[1] <- max(-xe)  +  0.1*IQR(xe)
-    }
-  }
-  
   # Check Shogo link initiated properly
-  if ((type == "Shogo") && (!is.null(xe))){
-    stopifnot(is_Shogo(start))
-    stopifnot(all(xe[, 1]^2 < sqrt(.Machine$double.eps)))
+  if ((type == "Shogo") && (!is.null(preplist$xe))){
+    stopifnot(is_Shogo(preplist$start))
+    stopifnot(all(preplist$xe[, 1]^2 < sqrt(.Machine$double.eps)))
   }
   
   # RUN
-  out <- prelim_ad(y = y, xs = xs, xe = xe, paramobj0 = start, fix_qs1 = fix_qs1, fix_qe1 = (type == "Shogo"), ssqOmbuffer = ssqOmbuffer, ...)
+  out <- prelim_ad(y = preplist$y, xs = preplist$xs, xe = preplist$xe, paramobj0 = preplist$start, fix_qs1 = fix_qs1, fix_qe1 = (type == "Shogo"), ssqOmbuffer = ssqOmbuffer, ...)
   
   # Aspects of the fit that are invariant to coordinates used
   # distances in response space
-  pred <- mnlink(xs = xs, xe = xe, param = out$solution)
-  dists <- acos(rowSums(pred * y))
-  rresids_tmp <- rotatedresid(y, pred, nthpole(ncol(y)))
+  pred <- mnlink(xs = preplist$xs, xe = preplist$xe, param = out$solution)
+  dists <- acos(rowSums(pred * preplist$y))
+  rresids_tmp <- rotatedresid(preplist$y, pred, nthpole(ncol(preplist$y)))
   rresids <- rresids_tmp[, -1]
   attr(rresids, "samehemisphere") <-  attr(rresids_tmp, "samehemisphere")
   colnames(rresids) <- paste0("r", 1:ncol(rresids))
   
-  # revert estimated parameters and pred to pre-standardisation coordinates
+  ### revert estimated parameters and pred to pre-standardisation coordinates ###
   est <- undo_recoordinate_Omega(as_mnlink_Omega(out$solution), 
-                          yrot = attr(y, "std_rotation"), 
-                          xsrot = attr(xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
-                          xerot = attr(xe, "std_rotation"), 
-                          xecenter = attr(xe, "std_center"),
-                          onescovaridx = onescovaridx)
+                          yrot = attr(preplist$y, "std_rotation"), 
+                          xsrot = attr(preplist$xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
+                          xerot = attr(preplist$xe, "std_rotation"), 
+                          xecenter = attr(preplist$xe, "std_center"),
+                          onescovaridx = preplist$onescovaridx)
   
   niceout <- list(
     est = est,
     obj = out$nlopt$objective,
     solution = out$solution, #non-standardised solution
     opt = out$nlopt,
-    y = destandardise_sph(y, attr(y, "std_rotation")),
-    xs = if (!is.null(xs)){destandardise_sph(xs, attr(xs, "std_rotation"))},
-    xe = if (!is.null(xe)){destandardise_Euc(xe, attr(xe, "std_center"), attr(xe, "std_rotation"))},
-    pred = destandardise_sph(pred, tG = attr(y, "std_rotation")),
+    y = y,
+    xs = xs,
+    xe = if (!is.null(xe)){if (intercept){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))} else {xe}}, #this recovers any added covariates too
+    pred = destandardise_sph(pred, tG = attr(preplist$y, "std_rotation")),
     rresids = rresids,
     dists = dists
   )

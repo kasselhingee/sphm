@@ -109,7 +109,7 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
                                xsrot = diag(length(param$qs1)),
                                xerot = diag(length(param$qe1)), 
                                xecenter = rep(0, length(param$qe1)),
-                               onescovaridx = 1){
+                               onescovaridx = 0){
   stopifnot(inherits(param, "mnlink_Omega"))
   # in case arguments passed are NULL set to default
   if (is.null(yrot)){yrot <- diag(length(param$p1))}
@@ -154,7 +154,7 @@ undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
                                     xsrot = diag(length(param$qs1)),
                                     xerot = diag(length(param$qe1)), 
                                     xecenter = rep(0, length(param$qe1)),
-                                    onescovaridx = 1){
+                                    onescovaridx = 0){
   stopifnot(inherits(param, "mnlink_Omega"))
   # in case arguments passed are NULL set to default
   if (is.null(yrot)){yrot <- diag(length(param$p1))}
@@ -189,3 +189,38 @@ undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   
   return(om)
 }
+
+# for a list list(y = y, xs = xs, xe = xe, start = start, onescovaridx), do standardisation and update start accordingly
+# if intercept is FALSE dont standardise xe
+standardise_data <- function(preplist, intercept){
+  # standardise inputs
+  preplist$y <- standardise_sph(preplist$y)
+  if (!is.null(preplist$xs)){preplist$xs <- standardise_sph(preplist$xs)}
+  if (!is.null(preplist$xe) && intercept){preplist$xe <- standardise_Euc(preplist$xe)}
+  
+  # update starting coordinates if provided
+  if (!is.null(preplist$start)){
+    preplist$start <- recoordinate_Omega(as_mnlink_Omega(preplist$start), 
+                                yrot = attr(preplist$y, "std_rotation"), 
+                                xsrot = attr(preplist$xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
+                                xerot = attr(preplist$xe, "std_rotation"), 
+                                xecenter = attr(preplist$xe, "std_center"),
+                                onescovaridx = preplist$onescovaridx)
+  }
+  return(preplist)
+}
+
+# I dont think I use this function at all
+destandardise_data <- function(preplist, intercept){
+  preplist$y = destandardise_sph(preplist$y, attr(preplist$y, "std_rotation"))
+  preplist$xs = if (!is.null(preplist$xs)){destandardise_sph(preplist$xs, attr(preplist$xs, "std_rotation"))}
+  preplist$xe = if (!is.null(preplist$xe)){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))}
+  preplist$start <- undo_recoordinate_Omega(as_mnlink_Omega(preplist$start), 
+                          yrot = attr(preplist$y, "std_rotation"), 
+                          xsrot = attr(preplist$xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
+                          xerot = attr(preplist$xe, "std_rotation"), 
+                          xecenter = attr(preplist$xe, "std_center"),
+                          onescovaridx = preplist$onescovaridx)
+  return(preplist)
+}
+

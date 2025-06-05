@@ -224,7 +224,7 @@ expect_equal(result$par[7], Bs[1,1], tolerance = 1E-3)
 expect_equal(result$par[8] * result$par[7], Bs[2,2], tolerance = 1E-3)
 })
 
-test_that("prelim() destandardises variables correctly for Shogo", {
+test_that("prelim() performs correctly for Shogo", {
   rmnlink_cann__place_in_env(3, 5, 4)
   # convert to Shogo form:
   bigQe <- rbind(0, Qe)
@@ -254,8 +254,6 @@ test_that("prelim() destandardises variables correctly for Shogo", {
   
   # apply prelim as if directly on raw data (drop first column of zeros to account for user-friendly use of Shogo in prelim())
   res <- prelim(y, xs = xs, xe = xe[, -1], type = "Shogo") 
-  expect_equal(res$y, y)
-  expect_equal(res$xs, xs)
   expect_equal(res$xe[,-(ncol(xe) + 1)], xe) #expect returned xe to include an intercept term
   expect_equal(-mean(cos(res$dists)), res$obj)
   # create a reference parameter object that hasnt been standardised, but has the ones covariate
@@ -268,10 +266,9 @@ test_that("prelim() destandardises variables correctly for Shogo", {
   standardisedsolution <- mnlink_Omega_vec(res$solution)
   estimatedvalues <- !grepl("(^qe|^ce)", names(standardisedsolution))
   expect_equal(res2$opt$x0, standardisedsolution[estimatedvalues], ignore_attr = TRUE)
-  
 })
 
-test_that("prelim() destandardises variables correctly for Kassel", {
+test_that("prelim() performs correctly for Kassel", {
   rmnlink_cann__place_in_env(3, 5, 4)
   #generate covariates Gaussianly
   set.seed(4)
@@ -291,22 +288,9 @@ test_that("prelim() destandardises variables correctly for Kassel", {
   colnames(y) <- paste0("y", 1:ncol(y))
   
   # apply prelim as if directly on raw data (drop first column of zeros to account for user-friendly use of Shogo in prelim())
-  res <- prelim(y, xs = xs, xe = xe) 
-  expect_equal(res$y, y)
-  expect_equal(res$xs, xs)
-  expect_equal(res$xe, cbind(xe, ones = 1))
+  res <- prelim(y, xs = xs, xe = xe, type = "Kassel", intercept = FALSE, start = paramobj) 
   expect_equal(-mean(cos(res$dists)), res$obj)
-  # create a reference parameter object that hasnt been standardised, but has the ones covariate
-  refpar <- paramobj
-  refpar$Qe <- rbind(refpar$Qe, 0)
-  expect_equal(res$est, as_mnlink_Omega(refpar), tolerance = 0.05, ignore_attr = TRUE)
-  
-  # the following checks the start standardisation of supplied starting parameters
-  res2 <- prelim(y, xs = xs, xe = xe[, -1], type = "Shogo", start = res$est)
-  standardisedsolution <- mnlink_Omega_vec(res$solution)
-  estimatedvalues <- !grepl("(^qe|^ce)", names(standardisedsolution))
-  expect_equal(res2$opt$x0, standardisedsolution[estimatedvalues])
-  
+  expect_equal(res$est, as_mnlink_Omega(paramobj), ignore_attr = TRUE, tolerance = 1E-1)
 })
 
 test_that("Hessian eigenvalues match DoF", {

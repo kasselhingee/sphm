@@ -26,54 +26,14 @@
 #' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
 #' No standardisation is performed.
 #' @export
-optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = G0, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, prelimfirst = FALSE, ...){
+optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
   initial <-  list(
     mean = mean,
     k = k, 
     a = a, 
     G0 = G0
   )
-  
-  ### Preliminary fit ###
-  if (prelimfirst){
-    prelim <-  mobius_vMF(y = y, xs = xs, xe = xe, 
-               start = mean, 
-               type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1, intercept = intercept, ...)
-    # update starting values accordingly
-    mean <- as_mnlink_Omega(prelim$est)
-    k <- prelim$k
-    browser()
-    # if starting G0 supplied and G01behaviour = "p1" then must rotate G0 to have first column of p1
-    if (!is.null(G0) && (G01behaviour == "p1")){
-      G0 <- cbind(prelim$est$p1, -JuppRmat(G0[,1], prelim$est$p1) %*% G0[,-1])
-    }
-    # if G0 not supplied, or partially supplied, estimate it here using moments
-    if (is.null(G0) && (G01behaviour == "fixed")){stop("G0 must be supplied if G01behaviour == 'fixed'")}
-    # first get G01
-    p <- ncol(y)
-    if (is.null(G0) && (G01behaviour %in% c("p1", "free"))){
-      G0 <- matrix(NA, p, p)
-      G0[,1] <- prelim$est$p1
-    }
-    if (any(is.na(G0)) && (G01behaviour == "fixed")){
-      G0[,1] <- G0[,1]/vnorm(G0[,1])
-    }
-    if (any(is.na(G0))){
-      # residuals rotated to G01
-      rresid <- rotatedresid(y, prelim$pred, base = G0[,1])
-      moments <- eigen(t(rresid) %*% rresid, symmetric = TRUE)  #t() %*% () quickly calculates the sum of projection matrices of rows of y
-      G0[,-1] <- moments$vectors[,-p]
-      G0[, p] <- det(G0) * G0[,p] #make G0 a rotation matrix
-    }
-  }
-  
-  prelim <- list(
-    mean = mean,
-    k = k,
-    a = a,
-    G0 = G0
-  )
-  
+
   p <- ncol(y)
   preplist <- list(y = y, xs = xs, xe = xe, start = mean)
   # if needed, add Euclidean covariates and update start accordingly
@@ -81,6 +41,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = G0, G01
   # standardise y, xe and xe and update start accordingly. Dont standardise xe if intercept = FALSE
   preplist <- standardise_data(preplist, intercept)
   if (!is.null(G0)){preplist$G0 <- attr(preplist$y, "std_rotation") %*% G0} #update G0 too
+  if (!is.null(G0reference)){preplist$G0reference <- attr(preplist$y, "std_rotation") %*% G0reference} #update G0 too
   # If start not supplied, choose start close to identities since data standardised
   preplist <- defaultstart(preplist, type)
   if (!is.null(a)){preplist$a <- a}
@@ -96,10 +57,13 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = G0, G01
   om0 <- as_mnlink_Omega(preplist$start)
   # check inputs:
   check_meanlink(preplist$y, preplist$xs, preplist$xe, om0)
-  stopifnot(length(a) == p)
-  a1 = a[1]
-  aremaining = a[-1]
+  stopifnot(length(preplist$a) == p)
+  a1 = preplist$a[1]
+  aremaining = preplist$a[-1]
   stopifnot(isTRUE(all.equal(prod(aremaining), 1)))
+  if (is.null(preplist$G0reference)){
+    G0reference <- preplist$G0
+  }
 
   qs <- length(om0$qs1)
   qe <- length(om0$qe1)
@@ -111,10 +75,10 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = G0, G01
   om0vec <- scorematchingad:::t_sfi2u(conprep$x0, conprep$om0vec, conprep$isfixed)
   
   # Prepare objective tape
-  objtape <- tape_ull_S2S_constV_nota1(omvec = om0vec, k = k,
+  objtape <- tape_ull_S2S_constV_nota1(omvec = om0vec, k = preplist$k,
                                        a1 = a1, 
                                        aremaining = aremaining,
-                                       G0 = G0,
+                                       G0 = preplist$G0,
                                        p = p, qe = qe, 
                                        yx = cbind(preplist$y, preplist$xs, preplist$xe),
                                        referencecoords = G0reference,
@@ -228,10 +192,50 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = G0, G01
     pred = destandardise_sph(pred, tG = attr(preplist$y, "std_rotation")),
     rresids = rresids,
     dists = dists,
-    initial = initial,
-    prelim
+    initial = initial
   )
   return(niceout)
+}
+
+mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean, G0 = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
+  prelim <- mobius_vMF(y = y, xs = xs, xe = xe, 
+             start = mean, 
+             type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1, intercept = intercept, ...)
+  # update starting values accordingly
+  mean <- as_mnlink_Omega(prelim$est)
+  k <- prelim$k
+  p <- ncol(y)
+  
+  # get/choose G01 depending on behaviour
+  G01 <- switch(G01behaviour,
+         p1 = prelim$est$p1,
+         free = if(is.null(G0)){prelim$est$p1}else{G0[,1]},
+         fixed = G0[,1])
+  # get rotated residuals
+  rresid <- rotatedresid(y, prelim$pred, base = G01)
+  if (!is.null(G0) && all(!is.na(G0))){
+    if (G01behaviour == "p1"){
+      G0 <- cbind(G01, -JuppRmat(G0[,1], G01) %*% G0[,-1])
+    }
+    # if G0 fully supplied just use rresid to approximate scales a using the high concentration approximation
+    aremaining <- apply(rresid %*% G0[,-1], 2, sd) #these are approximately a_i/(a1 * sqrt(k)). Because prod(a_i) = 1, will need to normalise by a scalar so dont need a1 or k to get aremaining
+    aremaining <- aremaining/prod(aremaining)^(1/(p-1))
+  } else {
+    # estimate both the axes and the scales from rresid
+    moments <- eigen(t(rresid) %*% rresid, symmetric = TRUE)  #t() %*% () quickly calculates the sum of projection matrices of rows of y
+    G0[,-1] <- cbind(G01, moments$vectors[,-p])
+    G0[, p] <- det(G0) * G0[,p] #make G0 a rotation matrix
+    aremaining <- sqrt(moments$values[,-p])
+    aremaining <- aremaining/prod(aremaining)^(1/(p-1))
+  }
+
+  prelim <- list(
+    mean = mean,
+    k = k,
+    a = c(1, aremaining),
+    G0 = G0
+  )
+  return(prelim)
 }
 
 #' Function for simulating data given mean link and SvMF parameters

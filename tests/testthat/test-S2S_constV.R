@@ -326,6 +326,7 @@ test_that("MLE with G01 free", {
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
+  mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "Kassel", intercept = FALSE)
   set.seed(13)
   pre <- mobius_vMF(y_ld[, 1:p], x$xs, x$xe, start = bad_om, xtol_rel = 1E-4, type = "Kassel", intercept = FALSE) #doing this preliminary estimate reduces the iterations needed by optim_constV
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$est, k = 10, a = rep(1, p),

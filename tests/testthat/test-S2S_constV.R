@@ -326,13 +326,11 @@ test_that("MLE with G01 free", {
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
-  mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "Kassel", intercept = FALSE)
-  set.seed(13)
-  pre <- mobius_vMF(y_ld[, 1:p], x$xs, x$xe, start = bad_om, xtol_rel = 1E-4, type = "Kassel", intercept = FALSE) #doing this preliminary estimate reduces the iterations needed by optim_constV
-  expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$est, k = 10, a = rep(1, p),
-                                       G0 = G0_other, 
-                                       G0reference = referencecoords, G01behaviour = "free",
-                                       type = "Kassel", intercept = FALSE, prelimfirst = TRUE)}, "p!=3")
+  preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "Kassel", intercept = FALSE)
+  expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, 
+                                       mean = preest$mean, k = preest$k, a = preest$a, G0 = preest$G0,
+                                       G01behaviour = "free",
+                                       type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est2$mean, est1$mean, tolerance = 1E-2)
   expect_equal(est2[c("k", "a")], est1[c("k", "a")], tolerance = 1E-1)
   expect_equal(axis_distance(acos(colSums(est2$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)

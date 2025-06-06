@@ -223,9 +223,9 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean, G0 = NULL, G01behav
   } else {
     # estimate both the axes and the scales from rresid
     moments <- eigen(t(rresid) %*% rresid, symmetric = TRUE)  #t() %*% () quickly calculates the sum of projection matrices of rows of y
-    G0[,-1] <- cbind(G01, moments$vectors[,-p])
+    G0 <- cbind(G01, moments$vectors[,-p])
     G0[, p] <- det(G0) * G0[,p] #make G0 a rotation matrix
-    aremaining <- sqrt(moments$values[,-p])
+    aremaining <- sqrt(moments$values[-p])
     aremaining <- aremaining/prod(aremaining)^(1/(p-1))
   }
 

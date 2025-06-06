@@ -174,11 +174,10 @@ test_that("MLE with p1 = G01", {
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
-  set.seed(13)
-  pre <- mobius_vMF(y_ld[, 1:p], x$xs, x$xe, start = bad_om, xtol_rel = 1E-4, type = "Kassel", intercept = FALSE) #doing this preliminary estimate reduces the iterations needed by optim_constV
-  expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$est, k = 10, a = rep(1, p),
-                                       G0 = cbind(pre$est$p1, -JuppRmat(G0_other[,1], pre$est$p1) %*% G0_other[,-1]), 
-                                       G0reference = referencecoords, G01behaviour = "p1",
+  preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "Kassel", G01behaviour = "p1", intercept = FALSE)
+  expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, 
+                                       mean = preest$mean, k = preest$k, a = preest$a, G0 = preest$G0,
+                                       G01behaviour = "p1",
                                        type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est2$mean, est1$mean, tolerance = 1E-1)
   expect_equal(est2$k, est1$k, tolerance = 0.2)
@@ -251,15 +250,14 @@ test_that("MLE with G01 fixed", {
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
-  set.seed(13)
-  pre <- mobius_vMF(y_ld[, 1:p], x$xs, x$xe, start = bad_om, xtol_rel = 1E-4, type = "Kassel", intercept = FALSE) #doing this preliminary estimate reduces the iterations needed by optim_constV
-  expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$est, k = 10, a = rep(1, p),
-                                       G0 = cbind(G0[,1], -JuppRmat(G0_other[,1], G0[,1]) %*% G0_other[,-1]), 
-                                       G0reference = referencecoords, G01behaviour = "fixed",
+  preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "Kassel", G0 = cbind(G0[,1], matrix(NA, p, p-1)), G01behaviour = "fixed", intercept = FALSE)
+  expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, 
+                                       mean = preest$mean, k = preest$k, a = preest$a, G0 = preest$G0,
+                                       G01behaviour = "fixed",
                                        type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est2$mean, est1$mean, tolerance = 1E-2)
   expect_equal(est2[c("k", "a")], est1[c("k", "a")], tolerance = 1E-1)
-  expect_equal(axis_distance(acos(colSums(est2$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
+  expect_equal(est2$G0, est1$G0, tolerance = 1E-2, ignore_attr = TRUE)
 })
 
 test_that("MLE with G01 free", {
@@ -326,7 +324,7 @@ test_that("MLE with G01 free", {
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
-  preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "Kassel", intercept = FALSE)
+  preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "Kassel", intercept = FALSE, G01behaviour = "free")
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, 
                                        mean = preest$mean, k = preest$k, a = preest$a, G0 = preest$G0,
                                        G01behaviour = "free",

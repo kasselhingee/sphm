@@ -207,6 +207,7 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean, G0 = NULL, G01behav
   p <- ncol(y)
   
   # get/choose G01 depending on behaviour
+  if (G01behaviour == "fixed" && is.null(G0)){stop("At least the first column of G0 must be supplied when G01behaviour = 'fixed'.")}
   G01 <- switch(G01behaviour,
          p1 = prelim$est$p1,
          free = if(is.null(G0)){prelim$est$p1}else{G0[,1]},

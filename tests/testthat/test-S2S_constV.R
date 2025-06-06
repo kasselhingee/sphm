@@ -183,6 +183,11 @@ test_that("MLE with p1 = G01", {
   expect_equal(est2$k, est1$k, tolerance = 0.2)
   expect_equal(est2$a, est1$a, tolerance = 1E-1)
   expect_equal(axis_distance(acos(colSums(est2$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
+  
+  # from default starts with prelim estimate
+  est3 <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe, 
+                       G01behaviour = "p1",
+                       type = "Kassel", intercept = FALSE)
 })
 
 test_that("MLE with G01 fixed", {
@@ -258,6 +263,12 @@ test_that("MLE with G01 fixed", {
   expect_equal(est2$mean, est1$mean, tolerance = 1E-2)
   expect_equal(est2[c("k", "a")], est1[c("k", "a")], tolerance = 1E-1)
   expect_equal(est2$G0, est1$G0, tolerance = 1E-2, ignore_attr = TRUE)
+  
+  # from default starts with prelim estimate
+  est3 <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe, 
+                      G0 = cbind(G0[,1], matrix(NA, p, p-1)),
+                      G01behaviour = "p1",
+                      type = "Kassel", intercept = FALSE)
 })
 
 test_that("MLE with G01 free", {

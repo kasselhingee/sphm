@@ -26,6 +26,24 @@
 #' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
 #' No standardisation is performed.
 #' @export
+mobius_SvMF <- function(y, xs, xe, mean = NULL, k = NULL, a = NULL, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
+  preest <- mobius_SvMF_partransport_prelim(y, xs, xe, 
+                                            mean = mean,
+                                            G0 = G0, G01behaviour = G01behaviour, 
+                                            type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
+                                            intercept = intercept, ...)
+  finalest <- optim_constV(y, xs, xe, 
+                           mean = preest$mean,
+                           k = if(!is.null(k)){k}else{preest$k},
+                           a = if(!is.null(a)){a}else{preest$a},
+                           G0 = preest$G0, 
+                           G0reference = if(!is.null(G0reference)){G0reference}else{preest$G0reference},
+                           G01behaviour = G01behaviour, 
+                           type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
+                           intercept = intercept, ...)
+  return(c(finalest, list(preest = preest)))
+}
+
 optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
   initial <-  list(
     mean = mean,

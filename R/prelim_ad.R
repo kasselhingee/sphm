@@ -50,7 +50,6 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
   check_meanlink(preplist$y, preplist$xs, preplist$xe, om0)
 
   # Prepare constraint tape
-  browser()
   conprep <- estprep_meanconstraints(om0, fix_qs1, fix_qe1)
   # below updates om0vec with x0 values according to isfixed
   om0vec <- scorematchingad:::t_sfi2u(conprep$x0, conprep$om0vec, conprep$isfixed)

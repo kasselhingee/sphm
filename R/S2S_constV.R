@@ -119,7 +119,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   
   # lower bound for concentration k
   lb <- rep(-Inf, objtape$domain)
-  lb[length(om0vec) + 1] <- 0
+  lb[length(conprep$x0) + 1] <- 0
   
   # Optimisation
   # current dynamic parameter values of tapes will be used

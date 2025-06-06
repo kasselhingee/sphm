@@ -188,6 +188,10 @@ test_that("MLE with p1 = G01", {
   est3 <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe, 
                        G01behaviour = "p1",
                        type = "Kassel", intercept = FALSE)
+  expect_equal(est3$mean, est1$mean, tolerance = 1E-1)
+  expect_equal(est3$k, est1$k, tolerance = 0.2)
+  expect_equal(est3$a, est1$a, tolerance = 1E-1)
+  expect_equal(axis_distance(acos(colSums(est3$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
 })
 
 test_that("MLE with G01 fixed", {

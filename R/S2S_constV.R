@@ -26,16 +26,65 @@
 #' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
 #' No standardisation is performed.
 #' @export
-optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
+optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = G0, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, prelimfirst = FALSE, ...){
+  initial <-  list(
+    mean = mean,
+    k = k, 
+    a = a, 
+    G0 = G0
+  )
+  
+  ### Preliminary fit ###
+  if (prelimfirst){
+    prelim <-  mobius_vMF(y = y, xs = xs, xe = xe, 
+               start = mean, 
+               type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1, intercept = intercept, ...)
+    # update starting values accordingly
+    mean <- as_mnlink_Omega(prelim$est)
+    k <- prelim$k
+    browser()
+    # if starting G0 supplied and G01behaviour = "p1" then must rotate G0 to have first column of p1
+    if (!is.null(G0) && (G01behaviour == "p1")){
+      G0 <- cbind(prelim$est$p1, -JuppRmat(G0[,1], prelim$est$p1) %*% G0[,-1])
+    }
+    # if G0 not supplied, or partially supplied, estimate it here using moments
+    if (is.null(G0) && (G01behaviour == "fixed")){stop("G0 must be supplied if G01behaviour == 'fixed'")}
+    # first get G01
+    p <- ncol(y)
+    if (is.null(G0) && (G01behaviour %in% c("p1", "free"))){
+      G0 <- matrix(NA, p, p)
+      G0[,1] <- prelim$est$p1
+    }
+    if (any(is.na(G0)) && (G01behaviour == "fixed")){
+      G0[,1] <- G0[,1]/vnorm(G0[,1])
+    }
+    if (any(is.na(G0))){
+      # residuals rotated to G01
+      rresid <- rotatedresid(y, prelim$pred, base = G0[,1])
+      moments <- eigen(t(rresid) %*% rresid, symmetric = TRUE)  #t() %*% () quickly calculates the sum of projection matrices of rows of y
+      G0[,-1] <- moments$vectors[,-p]
+      G0[, p] <- det(G0) * G0[,p] #make G0 a rotation matrix
+    }
+  }
+  
+  prelim <- list(
+    mean = mean,
+    k = k,
+    a = a,
+    G0 = G0
+  )
+  
   p <- ncol(y)
   preplist <- list(y = y, xs = xs, xe = xe, start = mean)
   # if needed, add Euclidean covariates and update start accordingly
   preplist <- addEuccovars(preplist, type = type, intercept = intercept)
   # standardise y, xe and xe and update start accordingly. Dont standardise xe if intercept = FALSE
   preplist <- standardise_data(preplist, intercept)
-  G0 <- attr(preplist$y, "std_rotation") %*% G0 #update G0 too
+  if (!is.null(G0)){preplist$G0 <- attr(preplist$y, "std_rotation") %*% G0} #update G0 too
   # If start not supplied, choose start close to identities since data standardised
   preplist <- defaultstart(preplist, type)
+  if (!is.null(a)){preplist$a <- a}
+  if (!is.null(k)){preplist$k <- k}
 
   # Check Shogo link initiated properly
   if ((type == "Shogo") && (!is.null(preplist$xe))){
@@ -55,13 +104,6 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
   qs <- length(om0$qs1)
   qe <- length(om0$qe1)
 
-  
-  initial <-  list(
-    mean = om0,
-    k = k, 
-    a = a, 
-    G0 = G0
-  )
 
   # Prepare constraint tape
   conprep <- estprep_meanconstraints(om0, fix_qs1, fix_qe1)
@@ -137,7 +179,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
   estparamlist <- S2S_constV_nota1_fromvecparamsR(fullparam, p, qs, qe, 
                                                   referencecoords = G0reference,
                                                   G01behaviour = G01behaviour,
-                                                  G01 = initial$G0[,1])
+                                                  G01 = preplist$G0[,1])
   
   #project mean pars to have correct orthogonality
   projectedom <- Omega_proj(mnlink_Omega_unvec(estparamlist$omvec, p, length(om0$qe1), check = FALSE))
@@ -185,7 +227,9 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0, G0reference = diag(p), G01be
     xe = if (!is.null(xe)){if (intercept){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))} else {xe}}, #this recovers any added covariates too
     pred = destandardise_sph(pred, tG = attr(preplist$y, "std_rotation")),
     rresids = rresids,
-    dists = dists
+    dists = dists,
+    initial = initial,
+    prelim
   )
   return(niceout)
 }

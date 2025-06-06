@@ -331,7 +331,7 @@ test_that("MLE with G01 free", {
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, pre$est, k = 10, a = rep(1, p),
                                        G0 = G0_other, 
                                        G0reference = referencecoords, G01behaviour = "free",
-                                       type = "Kassel", intercept = FALSE)}, "p!=3")
+                                       type = "Kassel", intercept = FALSE, prelimfirst = TRUE)}, "p!=3")
   expect_equal(est2$mean, est1$mean, tolerance = 1E-2)
   expect_equal(est2[c("k", "a")], est1[c("k", "a")], tolerance = 1E-1)
   expect_equal(axis_distance(acos(colSums(est2$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)

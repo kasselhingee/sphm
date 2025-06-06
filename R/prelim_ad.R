@@ -150,13 +150,12 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
   return(niceout)
 }
 
-mobius_vMF_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
+mobius_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
   DoF <- DoF_Stiefel(p, p) + #P
     DoF_Stiefel(qs, p) + #Qs
     DoF_Stiefel(qe, p) + #Qe
     (qs>0)*(p-1) + #Bs
-    (qe>0)*(p-1) + #Be
-    (qe>0) #ce  
+    (qe>0)*(p-1) #Be
 }
 
 # Standard errors using the Fisher Information Matrix

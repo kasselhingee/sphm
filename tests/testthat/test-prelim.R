@@ -334,7 +334,7 @@ test_that("Hessian eigenvalues match DoF", {
   #which have (p-1) * (p - 2) / 2 DoF
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
   
-  DoF <- mobius_vMF_DoF(p, qs, qe)
+  DoF <- mobius_DoF(p, qs, qe)
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + (p-1) * (p - 2) / 2)
   # there are slightly negative eigenvalues - which can only happen because some the constraints aren't incorporated into the calculation
   # expect_gt(min(evals), -sqrt(.Machine$double.eps))
@@ -367,20 +367,20 @@ test_that("DoF via cann params matches DoF via Omega", {
     -(qs>0)*(qe>0)*(p-1) * (p - 2) / 2 #commutative constraint on Omega
   }
   p <- 3; qs <- 3; qe <- 3
-  expect_equal(DoF_Omega2(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
-  expect_equal(DoF_Omega(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
+  expect_equal(DoF_Omega2(p, qs, qe), mobius_DoF(p, qs, qe))
+  expect_equal(DoF_Omega(p, qs, qe), mobius_DoF(p, qs, qe))
   
   p <- 3; qs <- 0; qe <- 5
-  expect_equal(DoF_Omega2(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
-  expect_equal(DoF_Omega(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
+  expect_equal(DoF_Omega2(p, qs, qe), mobius_DoF(p, qs, qe))
+  expect_equal(DoF_Omega(p, qs, qe), mobius_DoF(p, qs, qe))
   
   p <- 3; qs <- 7; qe <- 0
-  expect_equal(DoF_Omega2(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
-  expect_equal(DoF_Omega(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
+  expect_equal(DoF_Omega2(p, qs, qe), mobius_DoF(p, qs, qe))
+  expect_equal(DoF_Omega(p, qs, qe), mobius_DoF(p, qs, qe))
   
   p <- 5; qs <- 7; qe <- 5
-  expect_equal(DoF_Omega2(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
-  expect_equal(DoF_Omega(p, qs, qe), mobius_vMF_DoF(p, qs, qe))
+  expect_equal(DoF_Omega2(p, qs, qe), mobius_DoF(p, qs, qe))
+  expect_equal(DoF_Omega(p, qs, qe), mobius_DoF(p, qs, qe))
 })
 
 test_that("Hessian eigenvalues match DoF for S2S", {
@@ -401,7 +401,7 @@ test_that("Hessian eigenvalues match DoF for S2S", {
   
   fit <- mobius_vMF(y, xs = xs, start = paramobj, type = "Kassel", intercept = FALSE)
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
-  DoF <- mobius_vMF_DoF(p, qs, qe)
+  DoF <- mobius_DoF(p, qs, qe)
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + 0)
   expect_gt(min(evals), -sqrt(.Machine$double.eps))
 })
@@ -423,7 +423,7 @@ test_that("Hessian eigenvalues match DoF for Euc2S", {
   
   fit <- mobius_vMF(y, xe = xe, start =  paramobj, type = "Kassel", intercept = FALSE)
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
-  DoF <- mobius_vMF_DoF(p, qs, qe)
+  DoF <- mobius_DoF(p, qs, qe)
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + 0)
   expect_gt(min(evals), -sqrt(.Machine$double.eps))
 })

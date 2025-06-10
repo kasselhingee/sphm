@@ -338,6 +338,22 @@ test_that("Hessian eigenvalues match DoF", {
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + (p-1) * (p - 2) / 2)
   # there are slightly negative eigenvalues - which can only happen because some the constraints aren't incorporated into the calculation
   # expect_gt(min(evals), -sqrt(.Machine$double.eps))
+  
+  # fix_qe1 = TRUE
+  fit <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "Kassel", intercept = FALSE, fix_qe1 = TRUE)
+  evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
+  DoF <- mobius_DoF(p, qs, qe, fix_qe1 = TRUE)
+  expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + (p-1) * (p - 2) / 2)
+  # fix_qs1 = TRUE
+  fit <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "Kassel", intercept = FALSE, fix_qs1 = TRUE)
+  evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
+  DoF <- mobius_DoF(p, qs, qe, fix_qs1 = TRUE)
+  expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + (p-1) * (p - 2) / 2)
+  # fix_qs1 = TRUE and fix_qe1=TRUE
+  fit <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "Kassel", intercept = FALSE, fix_qe1 = TRUE, fix_qs1 = TRUE)
+  evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
+  DoF <- mobius_DoF(p, qs, qe, fix_qe1=TRUE, fix_qs1 = TRUE)
+  expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + (p-1) * (p - 2) / 2)
 })
 
 test_that("DoF via cann params matches DoF via Omega", {
@@ -404,6 +420,12 @@ test_that("Hessian eigenvalues match DoF for S2S", {
   DoF <- mobius_DoF(p, qs, qe)
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + 0)
   expect_gt(min(evals), -sqrt(.Machine$double.eps))
+  
+  #fix_qe1 = TRUE
+  fit <- mobius_vMF(y, xs = xs, start = paramobj, type = "Kassel", intercept = FALSE, fix_qs1 = TRUE)
+  evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
+  DoF <- mobius_DoF(p, qs, qe, fix_qs1 = TRUE)
+  expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + 0)
 })
 
 test_that("Hessian eigenvalues match DoF for Euc2S", {
@@ -427,3 +449,4 @@ test_that("Hessian eigenvalues match DoF for Euc2S", {
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), DoF + 0)
   expect_gt(min(evals), -sqrt(.Machine$double.eps))
 })
+

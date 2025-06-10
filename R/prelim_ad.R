@@ -152,8 +152,8 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
 
 mobius_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
   DoF <- DoF_Stiefel(p, p) + #P
-    DoF_Stiefel(qs, p-fix_qs1) + #Qs
-    DoF_Stiefel(qe, p-fix_qe1) + #Qe
+    DoF_Stiefel(qs-fix_qs1, p-fix_qs1) + #Qs
+    DoF_Stiefel(qe-fix_qe1, p-fix_qe1) + #Qe
     (qs>0)*(p-1) + #Bs
     (qe>0)*(p-1) + #Be
     1*((qe>0) & (!fix_qe1)) #ce

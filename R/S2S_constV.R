@@ -37,7 +37,7 @@ mobius_SvMF <- function(y, xs, xe, mean = NULL, k = NULL, a = NULL, G0 = NULL, G
                            k = if(!is.null(k)){k}else{preest$k},
                            a = if(!is.null(a)){a}else{preest$a},
                            G0 = preest$G0, 
-                           G0reference = if(!is.null(G0reference)){G0reference}else{preest$G0reference},
+                           G0reference = if(!is.null(G0reference)){G0reference}else{preest$G0},
                            G01behaviour = G01behaviour, 
                            type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
                            intercept = intercept, ...)
@@ -215,7 +215,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   return(niceout)
 }
 
-mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean, G0 = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
+mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
   prelim <- mobius_vMF(y = y, xs = xs, xe = xe, 
              start = mean, 
              type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1, intercept = intercept, ...)
@@ -252,7 +252,8 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean, G0 = NULL, G01behav
     mean = mean,
     k = k,
     a = c(1, aremaining),
-    G0 = G0
+    G0 = G0,
+    nlopt = prelim$nlopt
   )
   return(prelim)
 }

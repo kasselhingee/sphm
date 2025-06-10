@@ -81,8 +81,10 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   stopifnot(isTRUE(all.equal(prod(aremaining), 1)))
   if (is.null(preplist$G0reference)){
     G0reference <- preplist$G0
+  } else {
+    G0reference <- preplist$G0reference
   }
-
+   
   qs <- length(om0$qs1)
   qe <- length(om0$qe1)
 
@@ -93,6 +95,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   om0vec <- scorematchingad:::t_sfi2u(conprep$x0, conprep$om0vec, conprep$isfixed)
   
   # Prepare objective tape
+  print(G0reference)
   objtape <- tape_ull_S2S_constV_nota1(omvec = om0vec, k = preplist$k,
                                        a1 = a1, 
                                        aremaining = aremaining,

@@ -185,9 +185,9 @@ test_that("MLE with p1 = G01", {
   expect_equal(axis_distance(acos(colSums(est2$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
   
   # from default starts with prelim estimate
-  est3 <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe, 
+  expect_warning({est3 <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe,
                        G01behaviour = "p1",
-                       type = "Kassel", intercept = FALSE)
+                       type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est3$mean, est1$mean, tolerance = 1E-1)
   expect_equal(est3$k, est1$k, tolerance = 0.2)
   expect_equal(est3$a, est1$a, tolerance = 1E-1)
@@ -255,7 +255,7 @@ test_that("MLE with G01 fixed", {
   expect_equal(est1$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
-  expect_equal(axis_distance(acos(colSums(est1$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
+  expect_equal(axis_distance(acos(colSums(est1$G0 * G0)-1E-15)), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
@@ -271,8 +271,12 @@ test_that("MLE with G01 fixed", {
   # from default starts with prelim estimate
   est3 <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe, 
                       G0 = cbind(G0[,1], matrix(NA, p, p-1)),
-                      G01behaviour = "p1",
+                      G01behaviour = "fixed",
                       type = "Kassel", intercept = FALSE)
+  expect_equal(est3$mean, est1$mean, tolerance = 1E-1)
+  expect_equal(est3$k, est1$k, tolerance = 0.2)
+  expect_equal(est3$a, est1$a, tolerance = 1E-1)
+  expect_equal(axis_distance(acos(colSums(est3$G0 * est1$G0) - 1E-15)), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
 })
 
 test_that("MLE with G01 free", {
@@ -384,6 +388,6 @@ test_that("Under high concentration, standardised residuals are the correct MVN"
   expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = G0, G01behaviour = "fixed",
                                        type = "Kassel", intercept = FALSE)}, "p!=3")
   
-  expect_gt(ks.test(rowSums(est1$rresids^2), "pchisq", df = ncol(est1$rresids))$p.value, 0.05)
+  expect_gt(ks.test(rowSums(est1$rresids_std^2), "pchisq", df = ncol(est1$rresids_std))$p.value, 0.05)
 })
 

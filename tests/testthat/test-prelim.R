@@ -279,7 +279,7 @@ test_that("mobius_vMF() performs correctly for Shogo", {
 })
 
 test_that("mobius_vMF() performs correctly for Kassel", {
-  rmnlink_cann__place_in_env(3, 5, 4)
+  rmnlink_cann__place_in_env(4, 5, 4)
   #generate covariates Gaussianly
   set.seed(4)
   xe <- matrix(rnorm(1000*qe), nrow = 1000)

@@ -272,7 +272,7 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
   Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = constraint_tape$domain)
   if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){
     x0[(length(x0) - (length(omfixed$qe1) + length(omfixed$qs1))) : length(x0)] <- 
-      x0[(length(x0) - (length(omfixed$qe1) + length(omfixed$qs1))) : length(x0)] + 0.1
+      x0[(length(x0) - (length(omfixed$qe1) + length(omfixed$qs1))) : length(x0)] + 0.001
     }
   Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = constraint_tape$domain)
   if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){

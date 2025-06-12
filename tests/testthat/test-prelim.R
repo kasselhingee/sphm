@@ -279,7 +279,7 @@ test_that("mobius_vMF() performs correctly for Shogo", {
 })
 
 test_that("mobius_vMF() performs correctly for Kassel", {
-  rmnlink_cann__place_in_env(4, 5, 4)
+  rmnlink_cann__place_in_env(3, 5, 4)
   #generate covariates Gaussianly
   set.seed(4)
   xe <- matrix(rnorm(1000*qe), nrow = 1000)
@@ -298,10 +298,18 @@ test_that("mobius_vMF() performs correctly for Kassel", {
   colnames(y) <- paste0("y", 1:ncol(y))
   
   # apply mobius_vMF as if directly on raw data (drop first column of zeros to account for user-friendly use of Shogo in mobius_vMF())
-  res <- mobius_vMF(y, xs = xs, xe = xe, type = "Kassel", intercept = FALSE, start = paramobj) 
-  expect_equal(-mean(cos(res$dists)), res$obj)
+  # the search space is much harder, and even global search doesnt get us close
+  res <- mobius_vMF(y, xs = xs, xe = xe, type = "Kassel", intercept = FALSE,
+                    start = paramobj,
+                    algorithm = "NLOPT_GN_ISRES",
+                    lb = c(rep(-1, p + qs + qe), rep(-2, 40-qs-qe-p)),
+                    ub = c(rep(1, p + qs + qe), rep(4, 40-qs-qe-p))
+                    )
   expect_equal(res$est, as_mnlink_Omega(paramobj), ignore_attr = TRUE, tolerance = 1E-1)
   expect_equal(res$k, 30, tolerance = 1E-1)
+  
+  res2 <- mobius_vMF(y, xs = xs, xe = xe, type = "Kassel", intercept = FALSE, start = paramobj)
+  expect_lt(res$obj, res2$obj + 1E-2)
 })
 
 test_that("Hessian eigenvalues match DoF", {

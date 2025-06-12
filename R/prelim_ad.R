@@ -27,7 +27,7 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @param intercept `TRUE` to include a Euclidean intercept term using a covariate that is always `1`. This is needed for centering of Euclidean covariates, which is part of standardising the covariates. If `intercept = FALSE` then the Euclidean covariates will not be standardised.
 #' @export
-mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
+mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, lb = NULL, ub = NULL, ...){
   p <- ncol(y)
   preplist <- list(y = y, xs = xs, xe = xe, start = start)
   # if needed, add Euclidean covariates and update start accordingly
@@ -87,7 +87,9 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
       # print(apply(Jac, 1, function(x)max(abs(x))))
       Jac
       },
-    opts = combined_opts
+    opts = combined_opts,
+    lb = lb,
+    ub = ub
   )
   if (!(nlopt$status %in% 1:4)){warning(nlopt$message)}
   

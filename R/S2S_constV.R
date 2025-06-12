@@ -268,7 +268,6 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G
     aremaining <- aremaining/prod(aremaining)^(1/(p-1))
   }
 
-  browser()
   prelim <- list(
     mean = mean,
     k = k,

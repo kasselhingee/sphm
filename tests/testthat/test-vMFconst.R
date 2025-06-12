@@ -26,6 +26,7 @@ test_that("my implementation of the series for besselI works", {
 test_that("besselImixed() evaluation works", {
   expect_equal(besselImixed(12, 5, 15, 10, log_result = FALSE), besselItrunc(12, 5, 10, log_result = FALSE))
   expect_equal(besselImixed(18, 5, 15, 10, log_result = TRUE), besselIasym(18, 5, 10, log_result = TRUE))
+  expect_equal(besselImixed(pi/4, 5, 15, 10, log_result = TRUE), besselItrunc(pi/4, 5, 10, log_result = TRUE))
 })
 
 test_that("differentiation of besselImixed() works and allows x below and above threshold", {
@@ -51,6 +52,7 @@ test_that("evaluation of lvMFnormconst_approx() runs and is close to lvMFnormcon
   expect_equal(lvMFnormconst_approx(9 , 4), lvMFnormconst(9 , 4))
   expect_equal(lvMFnormconst_approx(11, 4), lvMFnormconst(11, 4))
   expect_equal(lvMFnormconst_approx(15, 4), lvMFnormconst(15, 4))
+  expect_equal(lvMFnormconst_approx(pi/4 , 4), lvMFnormconst(pi/4, 4))
   
   # for p = 5, much less exact
   expect_equal(lvMFnormconst_approx(9 , 5), lvMFnormconst(9 , 5), tolerance = 1E-1)

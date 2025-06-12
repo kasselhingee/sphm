@@ -13,7 +13,6 @@
 //' @param nu is such that nu + 1 = d/2, where d is the ambient dimension of the sphere.
 // [[Rcpp::export]]
 a1type besselIasym(const a1type& x, const double & nu, int order, bool log_result = true) {
-  Rcpp::Rcout << "Using besselIasym()" << std::endl;
   // Constants
   a1type pi = CppAD::atan(1.0) * 4.0;
   a1type pi2 = 2.0 * pi;
@@ -54,7 +53,6 @@ a1type besselIasym(const a1type& x, const double & nu, int order, bool log_resul
 //' @param order Maximum order of series to compute
 // [[Rcpp::export]]
 a1type besselItrunc(const a1type& x, const double & nu, int order, bool log_result = true) {
-  Rcpp::Rcout << "Using besselItrunc()" << std::endl;
     a1type sum = 0.0;
     a1type x2 = x / 2.0;
     double gamma_val, ifact;
@@ -79,8 +77,6 @@ a1type besselItrunc(const a1type& x, const double & nu, int order, bool log_resu
 a1type besselImixed(const a1type & x, const double & nu, double threshold, int order, bool log_result) {
   // CppAD::CondExpLe returns one of two T‐typed branches
   // depending on x <= threshold
-  Rcpp::Rcout << "x: " << x << std::endl;
-  Rcpp::Rcout << "threshold: " << a1type(threshold) << std::endl;
   a1type thresh = threshold;
   return CppAD::CondExpLe(
     x,                          // condition: x <= threshold?

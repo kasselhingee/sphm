@@ -180,7 +180,11 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   pred <- mnlink(xs = preplist$xs, xe = preplist$xe, param = projectedom)
   dists <- acos(rowSums(pred * preplist$y))
   # get residuals as coordinates wrt G0. So under high concentration these residuals follow something multivariate normal.
-  rresids <- resid_SvMF_partransport(preplist$y, pred, estparamlist$k, c(a1, estparamlist$aremaining), estparamlist$G0)
+  rresids_std <- resid_SvMF_partransport(preplist$y, pred, estparamlist$k, c(a1, estparamlist$aremaining), estparamlist$G0)
+  rresids_tmp <- rotatedresid(preplist$y, pred, nthpole(ncol(preplist$y)))
+  rresids <- rresids_tmp[, -1]
+  attr(rresids, "samehemisphere") <-  attr(rresids_tmp, "samehemisphere")
+  colnames(rresids) <- paste0("r", 1:ncol(rresids))
   
   ### revert estimated parameters and pred to pre-standardisation coordinates ###
   est <- undo_recoordinate_Omega(projectedom, 
@@ -198,6 +202,17 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   G0[,-1] <- topos1strow(G0[,-1])
   # (2) make rotation matrix by flipping final column according to determinant
   if (det(G0) < 0){G0[,p] <- -G0[,p]}
+  # DoF
+  DoF <- mobius_DoF(p, length(est$qs1), length(est$qe1), fix_qs1 = fix_qs1, fix_qe1 = fix_qe1) + 
+    1 + #concentration
+    (p-1)-1 + #aremaining given that prod(aremaining) = 1
+    if (G01behaviour == "free"){ #G0 freedom
+      DoF_Stiefel(p,p)
+    } else {
+      DoF_Stiefel(p-1, p-1)
+    }
+  # AIC
+  AIC = 2*DoF + 2 * nlopt$obj * nrow(y)
   
   niceout <- list(
     mean = est,
@@ -211,7 +226,10 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
     xe = if (!is.null(xe)){if (intercept){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))} else {xe}}, #this recovers any added covariates too
     pred = destandardise_sph(pred, tG = attr(preplist$y, "std_rotation")),
     rresids = rresids,
+    rresids_std = rresids_std,
     dists = dists,
+    DoF = DoF,
+    AIC = AIC,
     initial = initial
   )
   return(niceout)
@@ -250,6 +268,7 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G
     aremaining <- aremaining/prod(aremaining)^(1/(p-1))
   }
 
+  browser()
   prelim <- list(
     mean = mean,
     k = k,

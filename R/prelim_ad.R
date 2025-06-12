@@ -134,6 +134,12 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
                           xecenter = attr(preplist$xe, "std_center"),
                           onescovaridx = preplist$onescovaridx)
   
+  # DoF
+  DoF <- mobius_DoF(p, length(est$qs1), length(est$qe1), fix_qs1 = fix_qs1, fix_qe1 = fix_qe1) + 
+    1 #concentration
+  # AIC using result from concentration search
+  AIC <- 2*DoF - 2 * res$objective * nrow(y)
+  
   niceout <- list(
     est = est,
     k = k,
@@ -145,7 +151,9 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
     xe = if (!is.null(xe)){if (intercept){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))} else {xe}}, #this recovers any added covariates too
     pred = destandardise_sph(pred, tG = attr(preplist$y, "std_rotation")),
     rresids = rresids,
-    dists = dists
+    dists = dists,
+    DoF = DoF,
+    AIC = AIC
   )
   return(niceout)
 }
@@ -259,12 +267,17 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
   
   # check Jacobians of constraints are non-singular for the starting parameters.
   # For pathological params (e.g. the default starting params of no rotations), it can be zero.
-  # If it is singular, perturb start very slightly
+  # If it is singular, perturb starting omega very slightly
   x0 <- constraint_tape$xtape
   Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = constraint_tape$domain)
-  if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){x0 <- x0 - 1E-4}
+  if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){
+    x0[(length(x0) - (length(omfixed$qe1) + length(omfixed$qs1))) : length(x0)] <- 
+      x0[(length(x0) - (length(omfixed$qe1) + length(omfixed$qs1))) : length(x0)] + 0.1
+    }
   Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = constraint_tape$domain)
-  stopifnot(all(abs(svd(Jac_eq)$d) > sqrt(.Machine$double.eps))) 
+  if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){
+    warning("Initial parameters lead to a singular constraint Jacobian")
+  }
   
   return(list(
     om0vec = om0vec,

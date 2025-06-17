@@ -84,10 +84,6 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   } else {
     G0reference <- preplist$G0reference
   }
-  if (isTRUE(preplist$k > 700)){
-    warning("initial concentration too high to compute vMF normalising constant. Setting initial concentration to 700")
-    preplist$k <- 700
-  }
    
   qs <- length(om0$qs1)
   qe <- length(om0$qe1)

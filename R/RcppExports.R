@@ -145,7 +145,7 @@ besselItrunc <- function(x, nu, order, log_result = TRUE) {
 }
 
 #' Helper function lvMFnormconst_approx
-#' For p == 3 using an exact formula
+#' For p == 3 use an exact formula up until kappa = 700, there after use the asymptotic formula (with order 15)
 #' Otherwise uses *approximations* of the modified Bessel function of the first order.
 #' The normalising constant is \eqn{(2 * \pi)^{p/2} besselI(k, p/2 - 1)/k^{p/2 -1}}
 #' where \eqn{p} is the dimension of the ambient space of the sphere (i.e. vectors have \eqn{p} entries)

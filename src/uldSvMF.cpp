@@ -88,7 +88,7 @@ a1type besselImixed(const a1type & x, const double & nu, double threshold, int o
 
 
 //' Helper function lvMFnormconst_approx
-//' For p == 3 using an exact formula
+//' For p == 3 use an exact formula up until kappa = 700, there after use the asymptotic formula (with order 15)
 //' Otherwise uses *approximations* of the modified Bessel function of the first order.
 //' The normalising constant is \eqn{(2 * \pi)^{p/2} besselI(k, p/2 - 1)/k^{p/2 -1}}
 //' where \eqn{p} is the dimension of the ambient space of the sphere (i.e. vectors have \eqn{p} entries)
@@ -98,10 +98,18 @@ a1type besselImixed(const a1type & x, const double & nu, double threshold, int o
 //' and in each regime the series order used is 15.
 // [[Rcpp::export]]
 a1type lvMFnormconst_approx(a1type kappa, int p) {
+  double nu = p/2 - 1.0;
   if (p == 3) {
-    return CppAD::log(2 * M_PI) + CppAD::log(CppAD::exp(kappa) - CppAD::exp(-kappa)) - CppAD::log(kappa);
+    a1type thresh = 700;
+    a1type out;
+    out = CppAD::CondExpLe(
+      kappa, 
+      thresh,               // compare against this
+      CppAD::log(2 * M_PI) + CppAD::log(CppAD::exp(kappa) - CppAD::exp(-kappa)) - CppAD::log(kappa),   // if true
+      (p/2) * CppAD::log(2 * M_PI) + besselIasym(kappa, nu, 15, true) - nu * CppAD::log(kappa)     // if false
+    );
+    return out;
   } else {
-    double nu = p/2 - 1.0;
     a1type log_bIval = besselImixed(kappa, nu, 10, 15, true);
     a1type out = (p/2) * CppAD::log(2 * M_PI) + log_bIval - nu * CppAD::log(kappa);
     return(out);

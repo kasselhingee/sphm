@@ -214,6 +214,14 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   # AIC
   AIC = 2*DoF + 2 * nlopt$obj * nrow(y)
   
+  if (p==3) {
+    if (abs(estparamlist$k - 700) < 10){
+    warning("Estimated concentration is very close to 700, which is where the vMF normalising constant is computed using an asymptotic approximation.")
+    } else if (estparamlist$k > 700){
+      warning("Concentration higher than 700 - the vMF normalising constant has been computed using an asymptotic approximation.")
+    }
+  }
+  
   niceout <- list(
     mean = est,
     k = estparamlist$k,

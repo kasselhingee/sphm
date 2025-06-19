@@ -60,9 +60,13 @@ test_that("evaluation of lvMFnormconst_approx() runs and is close to lvMFnormcon
   expect_equal(lvMFnormconst_approx(15, 5), lvMFnormconst(15, 5), tolerance = 1E-1)
 })
 
-test_that("lvMFnormconst_approx() is close to lvMFnormconst() for concentrations below and above threshold", {
+test_that("p=3 lvMFnormconst_approx() is close to lvMFnormconst()", {
+  expect_true(is.finite(lvMFnormconst_approx(1E-15, 3)))
+  expect_equal(lvMFnormconst_approx(1E-15, 3), lvMFnormconst(1E-15, 3))
+  expect_equal(lvMFnormconst_approx(1E-10, 3), lvMFnormconst(1E-10, 3))
+  expect_equal(lvMFnormconst_approx(0.1, 3), lvMFnormconst(0.1, 3))
   expect_equal(lvMFnormconst_approx(300, 3), lvMFnormconst(300, 3))
   expect_equal(lvMFnormconst_approx(700, 3), lvMFnormconst(700, 3))
-  expect_equal(lvMFnormconst_approx(900, 3), lvMFnormconst(900, 3), tolerance = 1E-2)
-  expect_equal(lvMFnormconst_approx(1200, 3), lvMFnormconst(1200, 3), tolerance = 1E-3)
+  expect_equal(lvMFnormconst_approx(900, 3), lvMFnormconst(900, 3))
+  expect_equal(lvMFnormconst_approx(1200, 3), lvMFnormconst(1200, 3))
 })

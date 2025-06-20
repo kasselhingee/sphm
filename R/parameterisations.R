@@ -242,7 +242,6 @@ mnlink_cann_check <- function(obj){
     row(obj$Bs)!=col(obj$Bs)
     stopifnot(max(abs(obj$Bs[row(obj$Bs)!=col(obj$Bs)]), 0) < sqrt(.Machine$double.eps))
     stopifnot(max(abs(t(obj$Qs) %*% obj$Qs - diag(1, ncol(obj$Qs)))) < sqrt(.Machine$double.eps))
-    if (any(diag(obj$Bs) > 1)){warning("Elements of Bs are larger than 1")}
     if (any(diag(obj$Bs) < 0)){warning("Elements of Bs are negative")}
   } else {
     stopifnot(is.null(obj$Bs))
@@ -259,7 +258,6 @@ mnlink_cann_check <- function(obj){
     stopifnot(max(abs(t(obj$Qe) %*% obj$Qe - diag(1, ncol(obj$Qe)))) < sqrt(.Machine$double.eps))
     stopifnot(is.vector(obj$ce))
     stopifnot(length(obj$ce) == 1)
-    if (any(diag(obj$Be) > 1)){warning("Elements of Be are larger than 1")}
     if (any(diag(obj$Be) < 0)){warning("Elements of Be are negative")}
   } else {
     stopifnot(is.null(obj$Be))
@@ -296,12 +294,6 @@ mnlink_Omega_check <- function(obj){
                paste0(names(vals)[!good], ": ", format(sqrt(vals[!good]), digits = 2), collapse = ", ") #sqrt here converts squared sizes to actual sizes
     ))
   }
-  
-  # sum of squared singular values is sum(Bs^2 + Be^2).
-  # If all of Bs and Be are less than or equal to 1 then sum of squared singular values is less than 2*(p-1) if there are both Spherical and Euclidean covariates 
-  singularvalssumsquared <- sum(diag(t(obj$Omega) %*% obj$Omega))
-  if (singularvalssumsquared > ((length(obj$qe1) > 0) + (length(obj$qs1)>0)) * (nrow(obj$Omega) - 1)){warning(sprintf("The sum of squared singular values of Omega is %0.2f, which means that there are scales in either Be or Bs that are greater than 1.", singularvalssumsquared))}
-  
   return(NULL)
 }
 mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothness

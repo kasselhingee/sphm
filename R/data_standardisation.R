@@ -44,7 +44,7 @@ standardise_mat <- function(y){
   }
   Ghat <- cbind(mn, eigen(projmom2)$vectors[, 1:(p-1)])
   # standardise Ghat by first making rows positive
-  Ghat[,-1] <- topos1strow(Ghat[,-1])
+  Ghat[,-1] <- toBigPosEl(Ghat[,-1])
   # make sure that Ghat is a rotation matrix, by making sure determinant is 1
   if (det(Ghat) < 0){Ghat[, p] <- -Ghat[, p]}
   return(Ghat)

@@ -200,7 +200,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   G0 <- t(attr(preplist$y, "std_rotation")) %*% G0
   #For axes G0 standardise the return by
   # (1) make first element of each vector positive (except the first column)
-  G0[,-1] <- topos1strow(G0[,-1])
+  G0[,-1] <- toBigPosEl(G0[,-1])
   # (2) make rotation matrix by flipping final column according to determinant
   if (det(G0) < 0){G0[,p] <- -G0[,p]}
   # DoF

@@ -164,6 +164,8 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
 }
 
 mobius_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
+  if (qs == 0){fix_qs1 <- FALSE} #ignore fix_qs1
+  if (qe == 0){fix_qe1 <- FALSE} #ignore fix_qs1
   DoF <- DoF_Stiefel(p, p) + #P
     DoF_Stiefel(qs-fix_qs1, p-fix_qs1) + #Qs
     DoF_Stiefel(qe-fix_qe1, p-fix_qe1) + #Qe
@@ -273,11 +275,16 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
   # check Jacobians of constraints are non-singular for the starting parameters.
   # For pathological params (e.g. the default starting params of no rotations), it can be zero.
   # If it is singular, perturb starting omega very slightly
-  x0 <- constraint_tape$xtape
+  x0 <- om0vec[!isfixed]
   Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = constraint_tape$domain)
   if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){
-    x0[(length(x0) - (length(omfixed$qe1) + length(omfixed$qs1))) : length(x0)] <- 
-      x0[(length(x0) - (length(omfixed$qe1) + length(omfixed$qs1))) : length(x0)] + 0.001
+    # modify Qs and Qe so that they dont individually form orthogonal vectors
+    cann <- as_mnlink_cann(om0)
+    scalemodifier <- max(abs(rbind(cann$Qs, cann$Qe)))/1E3
+    cann$Qs[,-1] <- cann$Qs[,-1] + scalemodifier*savednoisemat[1:nrow(cann$Qs), 1:(ncol(cann$Qs)-1)]
+    cann$Qe[,-1] <- cann$Qe[,-1] + scalemodifier*savednoisemat[1:nrow(cann$Qe), 1:(ncol(cann$Qe)-1)]
+    om0new <- as_mnlink_Omega(cann)
+    x0 <- mnlink_Omega_vec(om0new)[!isfixed]
     }
   Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = constraint_tape$domain)
   if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){
@@ -291,3 +298,4 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
     constraint_tape = constraint_tape
     ))
 }
+

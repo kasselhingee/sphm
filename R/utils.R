@@ -19,9 +19,22 @@ cayley <- function(x){
 
 nthpole <- function(p){c(1, rep(0, p-1))}
 
-#' Standardise sign of columns of a matrix to have positive first element
+#' Standardise sign of columns of a matrix to have positive first element, or unchanged sign if 0 first element
 topos1strow <- function(mat){
-  mat <- t(t(mat) * sign(mat[1, ]))
+  neg <- mat[1, ] < -.Machine$double.eps #only negative values found
+  sgn <- rep(1, length(neg))
+  sgn[neg] <- -1
+  mat <- t(t(mat) * sgn)
+  return(mat)
+}
+
+#' Standardise signs of columns so that largest (absolute value) element is positive in each column, or unchanged if all elements are 0.
+#' This should not change the signs of diagonal elements in diagonal matrices.
+#' As less sensitive to zeros in the first row than topos1strow
+toBigPosEl <- function(mat){
+  maxidx <- apply(abs(mat), 2, which.max)
+  neg <- mat[cbind(maxidx, 1:length(maxidx))] < -.Machine$double.eps #only negative values found
+  mat[,neg] <- -mat[,neg]
   return(mat)
 }
 

@@ -8,7 +8,9 @@ rotatedresid <- function(y, ypred, base, path = "geo"){
   # rotate them
   transportmat <- switch(path, Jupp = JuppRmat, geo = rotationmat_amaral, Amaral = rotationmat_amaral, Absil = partransportmat)
   rresids <- t(sapply(1:nrow(y), function(i){
-    transportmat(ypred[i, ], base) %*%  cresids[i, ]
+    tmat <- transportmat(ypred[i, ], base)
+    if (!all(is.finite(tmat))){warning("A predicted mean is at the antipode of the rotated residual base location")}
+    tmat %*%  cresids[i, ]
   }))
   attr(rresids, "samehemisphere") <- attr(cresids, "samehemisphere")
   return(rresids)

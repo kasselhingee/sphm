@@ -102,6 +102,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
   
   #output some diagnostics - vector names would be nice here
   nlopt$solution_grad_f <- -objtape$Jacobian(nlopt$solution)
+  nlopt$solution_g_eq <- conprep$constraint_tape$forward(0, nlopt$solution)
   nlopt$solution_jac_g_eq <- matrix(conprep$constraint_tape$Jacobian(nlopt$solution),
                                      byrow = TRUE, ncol = length(nlopt$solution))
   nlopt$solution_Hes_f <- matrix(-objtape$Hessian0(nlopt$solution),

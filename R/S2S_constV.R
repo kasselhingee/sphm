@@ -145,6 +145,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
 
   #output some diagnostics - vector names would be nice here
   nlopt$solution_grad_f <- -objtape$Jacobian(nlopt$solution)
+  nlopt$solution_g_eq <- conprep$constraint_tape$forward(0, nlopt$solution[1:conprep$constraint_tape$domain])
   nlopt$solution_jac_g_eq <- matrix(conprep$constraint_tape$Jacobian(nlopt$solution[1:conprep$constraint_tape$domain]),
                                      byrow = TRUE, ncol = length(nlopt$solution[1:conprep$constraint_tape$domain]))
   nlopt$solution_Hes_f <- matrix(-objtape$Hessian0(nlopt$solution),

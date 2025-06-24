@@ -48,11 +48,11 @@ partransportmat <- function(start, end){
   out <- diag(length(start)) - sin(alpha) * start %*% t(u) + (cos(alpha) - 1) * u %*% t(u)
 }
 
-resid_SvMF_partransport <- function(y, ypred, k, a, G0){
+resid_SvMF_partransport <- function(y, ypred, k, a, G0, scale = TRUE){
   rresids_tmp <- rotatedresid(y, ypred, G0[,1])
   rresids_tmp <- rresids_tmp %*% G0
-  rresids <- rresids_tmp[, -1]
-  rresids_std <- sqrt(k) * rresids %*% diag(a[1]/a[-1])
+  rresids_std <- rresids_tmp[, -1]
+  if (scale){rresids_std <- sqrt(k) * rresids_std %*% diag(a[1]/a[-1])}
   attr(rresids_std, "samehemisphere") <-  attr(rresids_tmp, "samehemisphere")
   colnames(rresids_std) <- paste0("r", 1:ncol(rresids_std))
   return(rresids_std)

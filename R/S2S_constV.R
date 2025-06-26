@@ -129,18 +129,13 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   # current dynamic parameter values of tapes will be used
   nlopt <- nloptr::nloptr(
     x0 = x0,
-    eval_f = function(theta){-objtape$forward(0, theta)},
-    eval_grad_f = function(theta){-objtape$Jacobian(theta)},
+    eval_f = function(theta){list(objective = -objtape$forward(0, theta), gradient = -objtape$Jacobian(theta))},
     lb = lb,
-    eval_g_eq =  function(theta){conprep$constraint_tape$forward(0, theta[1:conprep$constraint_tape$domain])},
-    eval_jac_g_eq =  function(theta){
-      Jac <- cbind(matrix(conprep$constraint_tape$Jacobian(theta[1:conprep$constraint_tape$domain]), byrow = TRUE, ncol = conprep$constraint_tape$domain),
+    eval_g_eq =  function(theta){list(
+      constraints = conprep$constraint_tape$forward(0, theta[1:conprep$constraint_tape$domain]),
+      jacobian = cbind(matrix(conprep$constraint_tape$Jacobian(theta[1:conprep$constraint_tape$domain]), byrow = TRUE, ncol = conprep$constraint_tape$domain),
              matrix(0, nrow = conprep$constraint_tape$range, ncol = length(theta) - conprep$constraint_tape$domain))
-      # colnames(Jac) <- names(om0vec)
-      # print(round(Jac, 3))
-      # print(apply(Jac, 1, function(x)max(abs(x))))
-      Jac
-    },
+    )},
     opts = combined_opts
   )
   if (!(nlopt$status %in% 1:4)){warning(nlopt$message)}

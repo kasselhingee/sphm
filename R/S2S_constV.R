@@ -95,7 +95,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   om0vec <- scorematchingad:::t_sfi2u(conprep$x0, conprep$om0vec, conprep$isfixed)
   
   # Prepare objective tape
-  objtape <- tape_ull_S2S_constV_nota1(omvec = om0vec, k = preplist$k,
+  objtape_ind <- tape_ull_S2S_constV_nota1(omvec = om0vec, k = preplist$k,
                                        a1 = a1, 
                                        aremaining = aremaining,
                                        G0 = preplist$G0,
@@ -103,9 +103,11 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
                                        yx = cbind(preplist$y, preplist$xs, preplist$xe),
                                        referencecoords = G0reference,
                                        G01behaviour = G01behaviour)
-  objtape <- scorematchingad::avgrange(objtape) #objtape initially returns a value for each measurement. Average here to get average over all data.
   # update objtape based on fixed values
-  objtape <- scorematchingad::fixindependent(objtape, objtape$xtape, c(conprep$isfixed, rep(0, length(objtape$xtape) - length(conprep$isfixed))))
+  objtape_ind <- scorematchingad::fixindependent(objtape_ind, objtape_ind$xtape, c(conprep$isfixed, rep(0, length(objtape_ind$xtape) - length(conprep$isfixed))))
+ 
+  #objtape initially returns a value for each measurement. Average here to get average over all data.
+  objtape <- scorematchingad::avgrange(objtape_ind)
   # using tapeing values as starting parameters
   x0 <- objtape$xtape
 
@@ -151,6 +153,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   nlopt$solution_Hes_f <- matrix(-objtape$Hessian0(nlopt$solution),
          nrow = objtape$domain,
          byrow = TRUE)
+  nlopt$ldens <- drop(objtape_ind$forward(0,nlopt$solution))
 
   # remove the tapes from the return to save on memory
   nlopt$eval_f <- nlopt$eval_g_eq <- nlopt$eval_g_ineq <- nlopt$nloptr_environment <- NULL

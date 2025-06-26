@@ -44,7 +44,7 @@ mobius_SvMF <- function(y, xs, xe, mean = NULL, k = NULL, a = NULL, G0 = NULL, G
   return(c(finalest, list(preest = preest)))
 }
 
-optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
+optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, lb = NULL, ub = NULL, ...){
   initial <-  list(
     mean = mean,
     k = k, 
@@ -121,9 +121,12 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   ellipsis_args <- list(...)
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
-  # lower bound for concentration k
-  lb <- rep(-Inf, objtape$domain)
-  lb[length(conprep$x0) + 1] <- 0
+  # set lower bound for concentration k, unless lb passed manually
+  if (is.null(lb)){
+    lb <- rep(-Inf, objtape$domain)
+    lb[length(conprep$x0) + 1] <- 0
+  }
+
   
   # Optimisation
   # current dynamic parameter values of tapes will be used
@@ -131,6 +134,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
     x0 = x0,
     eval_f = function(theta){list(objective = -objtape$forward(0, theta), gradient = -objtape$Jacobian(theta))},
     lb = lb,
+    ub = ub,
     eval_g_eq =  function(theta){list(
       constraints = conprep$constraint_tape$forward(0, theta[1:conprep$constraint_tape$domain]),
       jacobian = cbind(matrix(conprep$constraint_tape$Jacobian(theta[1:conprep$constraint_tape$domain]), byrow = TRUE, ncol = conprep$constraint_tape$domain),
@@ -217,6 +221,13 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
     if (estparamlist$k < 1E-15){
     	warning("Estimated concentration is very small and computation of the vMF normalising constant may be breaking down.")
     }
+  }
+  
+  #Scealy and Wood (2019) Proposition 1 check for unimodality
+  if (a1 >= 1-sqrt(.Machine$double.eps)){
+    if (aremaining[1] < a1){warning("Estimated a_2 is smaller than a_1 and SvMF may be multimodal.")}
+    shapecalc <- a1*(p-1)*((aremaining[1]/a1)^2 - 1)
+    if (estparamlist$k < shapecalc){warning("Estimated concentration is small for the estimated scales a. The estimated SvMF may be multimodal.")}
   }
   
   niceout <- list(

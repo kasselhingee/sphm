@@ -73,11 +73,17 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
   ellipsis_args <- list(...)
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
   
+  # activate a progress bar
+  pb <- progress::progress_bar$new(total = combined_opts$maxeval + 5, format = ":bar :percent :current :tick_rate elapsed::elapsedfull eta::eta")
+  
   # Optimisation
   # current dynamic parameter values of tapes will be used
   nlopt <- nloptr::nloptr(
     x0 = x0,
-    eval_f = function(theta){list(objective = -objtape$forward(0, theta), gradient = -objtape$Jacobian(theta))},
+    eval_f = function(theta){
+      if (!pb$finished) pb$tick()
+      list(objective = -objtape$forward(0, theta), gradient = -objtape$Jacobian(theta))
+      },
     eval_g_eq =  function(theta){
       list(constraints = conprep$constraint_tape$forward(0, theta),
            jacobian = matrix(conprep$constraint_tape$Jacobian(theta), byrow = TRUE, ncol = length(theta)))},

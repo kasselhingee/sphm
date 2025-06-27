@@ -127,12 +127,18 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
     lb[length(conprep$x0) + 1] <- 0
   }
 
+  # activate a progress bar
+  pb <- progress::progress_bar$new(total = combined_opts$maxeval + 5, format = ":bar :percent :current :tick_rate elapsed::elapsedfull eta::eta")
+  
   
   # Optimisation
   # current dynamic parameter values of tapes will be used
   nlopt <- nloptr::nloptr(
     x0 = x0,
-    eval_f = function(theta){list(objective = -objtape$forward(0, theta), gradient = -objtape$Jacobian(theta))},
+    eval_f = function(theta){
+      if (!pb$finished) pb$tick()
+      list(objective = -objtape$forward(0, theta), gradient = -objtape$Jacobian(theta))
+      },
     lb = lb,
     ub = ub,
     eval_g_eq =  function(theta){list(

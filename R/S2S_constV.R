@@ -233,7 +233,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   if (a1 >= 1-sqrt(.Machine$double.eps)){
     if (aremaining[1] < a1){warning("Estimated a_2 is smaller than a_1 and SvMF may be multimodal.")}
     shapecalc <- a1*(p-1)*((aremaining[1]/a1)^2 - 1)
-    if (estparamlist$k < shapecalc){warning("Estimated concentration is small for the estimated scales a. The estimated SvMF may be multimodal.")}
+    if (estparamlist$k < shapecalc){warning("Estimated concentration is small for the estimated scales a so the estimated SvMF may be multimodal.")}
   }
   
   niceout <- list(

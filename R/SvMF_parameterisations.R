@@ -27,6 +27,7 @@ SvMFcann_check <- function(obj){
   `a product` = (prod(a[-1]) - 1)^2 < sqrt(.Machine$double.eps),
   `Gamma orthogonal` = (t(G) %*% G - diag(1, ncol(G)))^2 <  sqrt(.Machine$double.eps)
   )
+  SvMF_unimodalcriterion(obj)
   if (any(!checks)){
     stop(sprintf("Parameters fail SvMF checks: %s", paste(names(checks)[!checks], collapse = ", ")))
   }
@@ -92,4 +93,16 @@ getHstar <- function(m){
 
 getH <- function(m){
   cbind(m, getHstar(m))
+}
+
+#Scealy and Wood (2019) Proposition 1 check for unimodality
+SvMF_unimodalcriterion <- function(cannparam){
+  a1 <- cannparam$a[1]
+  a2 <- cannparam$a[2]
+  shapecalc <- a1*(length(cannparam$a)-1)*((a2/a1)^2 - 1)
+  if (a1 >= 1-sqrt(.Machine$double.eps)){
+    if (a2 < a1){warning("a2 is smaller than a1 and SvMF may be multimodal.")}
+    if (cannparam$k < shapecalc){warning("Given the axial scales, concentration is small so the SvMF may be multimodal.")}
+  }
+  invisible(shapecalc)
 }

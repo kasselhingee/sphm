@@ -51,6 +51,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
     a = a, 
     G0 = G0
   )
+  SvMFcann_check(SvMFcann(k = initial$k, a = initial$a, G = initial$G0))
 
   p <- ncol(y)
   preplist <- list(y = y, xs = xs, xe = xe, start = mean)
@@ -230,11 +231,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   }
   
   #Scealy and Wood (2019) Proposition 1 check for unimodality
-  if (a1 >= 1-sqrt(.Machine$double.eps)){
-    if (aremaining[1] < a1){warning("Estimated a_2 is smaller than a_1 and SvMF may be multimodal.")}
-    shapecalc <- a1*(p-1)*((aremaining[1]/a1)^2 - 1)
-    if (estparamlist$k < shapecalc){warning("Estimated concentration is small for the estimated scales a so the estimated SvMF may be multimodal.")}
-  }
+  SvMFcann_check(SvMFcann(k = estparamlist$k, a = c(a1, aremaining), G = G0))
   
   niceout <- list(
     mean = est,
@@ -313,3 +310,4 @@ rS2S_constV <- function(xs, xe, mnparam, k, a, G0){
   }))
   return(y_ld)
 }
+

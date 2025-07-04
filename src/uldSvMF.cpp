@@ -20,25 +20,24 @@ a1type besselIasym(const a1type& x, const double & nu, int order, bool log_resul
   // Precompute 8*x for efficiency
   a1type x8 = 8.0 * x;
   
-  // Compute the asymptotic series for f(x, nu) up to order
-  a1type d = 0.0; // Initialize d
+  a1type sum = 0.0; //-1 + 0th term for f(z) in first equation in help to use log1p below
+  a1type term = 1.0; //0th multiplicative term for f(z) in first equation in help
+  a1type mu = 4.0 * nu * nu;
   if (order >= 1) {
-    for (int k = order; k >= 1; --k) {
-      // mu = (2*(nu-k)+1)*(2*(nu+k)-1)
-      a1type term1 = 2.0 * (nu - k) + 1.0;
-      a1type term2 = 2.0 * (nu + k) - 1.0;
-      a1type mu = term1 * term2;
-      d = (1.0 - d) * mu / (k * x8);
+    for (int k = 1; k <= order; ++k) {
+      term = term * (mu - (2*k-1) * (2*k-1))/(x8*k) * (-1.0);
+      sum = sum + term;
     }
   }
+  
   
   // Compute the result
   if (log_result) {
     // log(f) = log1p(-d)
-    a1type log_f = CppAD::log1p(-d);
+    a1type log_f = CppAD::log1p(sum);
     return x + log_f - 0.5 * CppAD::log(pi2 * x);
   } else {
-    a1type f = 1.0 - d;
+    a1type f = 1.0 + sum;
     a1type scaling_factor = CppAD::exp(x);
     return scaling_factor * f / CppAD::sqrt(pi2 * x);
   }
@@ -102,7 +101,7 @@ a1type lvMFnormconst_approx(a1type kappa, int p) {
     return CppAD::log(2 * M_PI) + kappa + CppAD::log(1 - CppAD::exp(-2*kappa)) - CppAD::log(kappa);
   } else {
     double nu = p/2 - 1.0;
-    a1type log_bIval = besselImixed(kappa, nu, 10, 15, true);
+    a1type log_bIval = besselImixed(kappa, nu, 10, 30, true);
     a1type out = (p/2) * CppAD::log(2 * M_PI) + log_bIval - nu * CppAD::log(kappa);
     return(out);
   }

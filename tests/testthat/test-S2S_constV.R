@@ -279,8 +279,8 @@ test_that("MLE with G01 fixed", {
   expect_equal(axis_distance(acos(colSums(est3$G0 * est1$G0) - 1E-15)), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
 })
 
-test_that("MLE with G01 free", {
-  rmnlink_cann__place_in_env(4, 5, 4)
+test_that("MLE with G01 free, p=5", {
+  rmnlink_cann__place_in_env(5, 5, 6)
   omegapar <- as_mnlink_Omega(paramobj)
   set.seed(4)
   x <- rcovars(1000, qs, qe)
@@ -342,7 +342,8 @@ test_that("MLE with G01 free", {
   # check Gstar by checking angle between estimated and true axes
   expect_equal(axis_distance(acos(colSums(est1$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
   # check likelihood returns
-  externalll <- colSums(dS2S_constV(y_ld[, 1:p], x$xs, x$xe, est1$mean, est1$k, est1$a, est1$G0))
+  expect_warning(externalll <- colSums(dS2S_constV(y_ld[, 1:p], x$xs, x$xe, est1$mean, est1$k, est1$a, est1$G0)),
+                               "differs from.*besselI")
   expect_equal(externalll[["Cpp"]], est1$lLik)
   
   ## now starting optimisation away from starting parameters ##

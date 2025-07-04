@@ -301,8 +301,6 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G
     aremaining <- aremaining/prod(aremaining)^(1/(p-1))
   }
   
-  warning("concentration and related parameters should probably be optimised separately again at the end using R's accurate vMF normalising constant")
-
   prelim <- list(
     mean = mean,
     k = k,

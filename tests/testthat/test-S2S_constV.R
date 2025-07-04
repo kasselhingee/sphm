@@ -290,9 +290,10 @@ test_that("MLE with G01 free", {
   
   # simulate observations
   set.seed(6)
-  k <- 30
-  a <- c(1, seq(5, 0.2, length.out = p-1))
+  k <- 10
+  a <- c(1, seq(0.8, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
+  SvMFcann_check(SvMFcann(k, a, G0))
   y_ld <- rS2S_constV(x$xs, x$xe, mnparam = omegapar, k, a, G0)
   
   # check ull_S2S_constV in C++
@@ -340,6 +341,9 @@ test_that("MLE with G01 free", {
   expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
   expect_equal(axis_distance(acos(colSums(est1$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
+  # check likelihood returns
+  externalll <- colSums(dS2S_constV(y_ld[, 1:p], x$xs, x$xe, est1$mean, est1$k, est1$a, est1$G0))
+  expect_equal(externalll[["Cpp"]], est1$lLik)
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))

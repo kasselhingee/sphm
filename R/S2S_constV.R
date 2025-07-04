@@ -249,6 +249,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
     dists = dists,
     DoF = DoF,
     AIC = AIC,
+    lLik = -nlopt$obj * nrow(y),
     initial = initial
   )
   return(niceout)
@@ -311,3 +312,26 @@ rS2S_constV <- function(xs, xe, mnparam, k, a, G0){
   return(y_ld)
 }
 
+dS2S_constV <- function(y, xs, xe, mean, k, a, G0){
+  ymean <- mnlink(xs = xs, xe = xe, param = mean)
+  
+  ld <- lapply(1:nrow(y), function(idx){
+    mn <- ymean[idx,]
+    obs <- y[idx,]
+    G <- cbind(mn, -JuppRmat(G0[,1], mn) %*% G0[,-1])
+    ld <- uldSvMF_cann(matrix(obs, nrow=1), k = k, a = a, G = G)
+    ld2 <- SvMF_ll_cann(matrix(obs, nrow=1), SvMFcann(k = k, a = a, G = G))
+    return(c(Cpp = ld, R = ld2))
+  })
+  ld3 <- ull_S2S_constV_forR(y, 
+                      xs = if(is.null(xs)){matrix(nrow = nrow(y), ncol = 0)}else{xs},
+                      xe = if(is.null(xe)){matrix(nrow = nrow(y), ncol = 0)}else{xe},
+                      omvec = mnlink_Omega_vec(as_mnlink_Omega(mean)),
+                      k = k,
+                      a1 = a[1],
+                      aremaining = a[-1],
+                      G0 = G0)
+  ld <- do.call(rbind, ld)
+  ld <- cbind(ld, Cpp2 = ld3)
+  return(ld)
+}

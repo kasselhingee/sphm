@@ -142,7 +142,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
     1 #concentration
   # AIC using result from concentration search
   AIC <- 2*DoF - 2 * res$objective * nrow(y)
-  Lik <- res$objective * nrow(y)
+  lLik <- res$objective * nrow(y)
   
   niceout <- list(
     est = est,
@@ -158,7 +158,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
     dists = dists,
     DoF = DoF,
     AIC = AIC,
-    Lik = Lik
+    lLik = lLik
   )
   return(niceout)
 }

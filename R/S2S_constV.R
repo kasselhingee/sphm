@@ -358,15 +358,13 @@ undo_partransport <- function(y, ymean, G01){
 # log-density of each row of y according to a mobius_SvMF regression model
 dS2S_constV <- function(y, xs, xe, mean, k, a, G0){
   ymean <- mnlink(xs = xs, xe = xe, param = mean)
-  if (ncol(y) !=3){
-    diff <- lvMFnormconst_approx(k, ncol(y)) - lvMFnormconst(k, ncol(y))
-    warning(sprintf("Cpp approximation of vMF normalising constant differs from base::besselI() by %f.", diff))
-  }
+  diff <- lvMFnormconst_approx(k, ncol(y)) - lvMFnormconst(k, ncol(y))
   
   #rotate all observations so that ymean --> G0[,1]
   yrot <- undo_partransport(y, ymean, G01 = G0[,1])
   ldCpp <- uldSvMF_cann(yrot, k = k, a = a, G = G0)
   ldR <- SvMF_ll_cann(yrot, SvMFcann(k = k, a = a, G = G0))
   ld <- cbind(Cpp = ldCpp, R = ldR)
+  attr(ld, "error") <- diff
   return(ld)
 }

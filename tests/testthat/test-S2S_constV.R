@@ -344,7 +344,7 @@ test_that("MLE with G01 free, p=5", {
   # check likelihood returns
   expect_warning(externalll <- colSums(dS2S_constV(y_ld[, 1:p], x$xs, x$xe, est1$mean, est1$k, est1$a, est1$G0)),
                                "differs from.*besselI")
-  expect_equal(externalll[["Cpp"]], est1$lLik)
+  expect_equal(externalll[["R"]], est1$lLik)
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))

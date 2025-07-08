@@ -507,6 +507,8 @@ xe <- s4df_north %>%
          Latitude, Longitude,
          fdip30) %>%
   mutate(fstrikedip = fstrike * fdip30) %>%
+  mutate(Longitude2 = Longitude^2) %>%
+  mutate(Longitudefdip30 = Longitude * fdip30) %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>

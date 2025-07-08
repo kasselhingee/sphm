@@ -671,7 +671,7 @@ mod_SvMF$DoF
 #| fig.height: 13
 get_predobspairsdf(mod_SvMF) %>%
   ggplot() +
-  facet_grid(vars(pair1, pair2)) +
+  facet_grid(vars(pair1), vars(pair2)) +
   geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B), col = "grey",
                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
   geom_point(aes(x=p_A, y=p_B, col = Longitude, shape = as.factor(fdip)), size = 1) +

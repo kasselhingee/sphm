@@ -1,0 +1,839 @@
+---
+title: "Regions 1-4 Shallow Mobius Regression"
+author: "Kassel Hingee"
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    fig-width: 6.5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+library(ggplot2)
+library(dplyr)
+library(GGally)
+library(patchwork)
+library(sphm)
+packageVersion("sphm")
+```
+
+# Raw Data
+This data is copied directly from Hejrani et al (2017) Table 1.
+
+```{r}
+raw=read.table(file="./papua20240709.csv",
+               header=T,sep=",", numerals = "warn.loss",
+               colClasses = c(Origin.Time = "character"))
+head(raw) %>%
+  mutate(Origin.Time = paste0(substr(`Origin.Time`, 1, 6),"..")) %>%
+  rename(Lon = Longitude,
+         Lat = Latitude) %>%
+  knitr::kable() %>%
+  kableExtra::kable_styling(font_size = 8)
+```
+
+In this raw data:
+
++ `Origin.Time`. Hejrani references the GCMT project for origin times. Though not explicitly in Hejrani et al (2017), it seems this column is the format that GCMT uses for modern earthquakes, which is XYYYYMMDDhhmmZ where X is the type of data used, Z is for distinguishing events at the same time (day?) and the stuff in between ti time.
++ `Number` relates uniquely to increasing origin time.
++ `Lon` and `Lat` are the Longitude and Latitude of the earthquake
++ `Depth` is the depth (in kilometres) of the earthquake
++ `M**` are scaled elements of the earthquake moment tensors where `r`, `t`, `f` represent basis directions.
++ `Mw * 10^Exp` is a magnitude.
++ `Dcper` is related to how close the earthquake is a to a pure double-couple.
+
+For later lets record the names of the `M**` columns in the same order as the symmetric-matrix vectorisation function `vech`:
+
+```{r}
+elementnames <- c("Mrr", "Mrt", "Mrf",
+                  "Mtt", "Mtf",
+                  "Mff")
+```
+
+# Transform to $S^4$
+## Enforce Trace=0 and Scale=1
+The moment tensors have traces that nearly 0.
+
+```{r}
+traces <- rowSums(raw[, c("Mrr", "Mtt", "Mff")])
+traces %>%
+  tibble::enframe(value = "trace") %>%
+  ggplot() +
+  geom_histogram(aes(x = trace)) +
+  geom_rug(aes(x = trace))
+```
+
+Here I'll make the trace exactly zero.
+
+```{r}
+stddf <- raw %>%
+  mutate(Mff = -Mrr - Mtt)
+```
+
+Now we scale the moment tensors to have a Frobenius norm of 1. The function `gettr2()` below is fast way to compute the square of the Frobenius norm without winding the 6 `M**` columns up into individual 3 x 3 matrices.
+```{r tr2}
+gettr2 <- function(ms){
+  I2 <- ms[, 1] * ms[, 4] + ms[, 4] * ms[, 6] + ms[,1] * ms[,6] -
+    ms[, 2]^2 - ms[, 5]^2 - ms[,3]^2
+  I1 <- ms[, 1] + ms[, 4] + ms[, 6] #trace
+  tr2 <- I1^2 - 2*I2
+  return(tr2)
+}
+Fnorm <- sqrt(gettr2(stddf[, elementnames]))
+stddf <- stddf %>%
+  mutate(Fnorm = Fnorm) %>%
+  mutate(across(starts_with("M"), ~.x/Fnorm))
+```
+
+Lets verify the result of these transformations on the first earthquake.
+
+```{r}
+elementvalues <- unlist(stddf[1, elementnames])
+tmpM <- matrix(NA, 3, 3)
+tmpM[lower.tri(tmpM, diag = TRUE)] <- elementvalues
+tmpM[upper.tri(tmpM)] <- t(tmpM)[upper.tri(tmpM)]
+colnames(tmpM) <- rownames(tmpM) <- c("r", "t", "f")
+
+elementvalues
+tmpM
+sqrt(sum(tmpM^2))
+sum(diag(tmpM))
+```
+
+The trace and norm are exactly 0 and 1 as desired.
+
+## Moment Tensors as Unit Vectors in $R^5$
+The diagonal elements must sum to zero, which puts them on a plane through the origin.
+I'll use the Helmert submatrix to express these diagonal elements with respect to an orthonormal basis on this plane. The plane is two dimensions, so I'll call these new coordinates `s1` and `s2`.
+
+```{r}
+H <- rbind(c(1,-1, 0), c(1,1,-2))
+H <- H/sqrt(rowSums(H^2))
+diagproj <- t(H %*% t(stddf[, c("Mrr", "Mtt", "Mff")]))
+colnames(diagproj) <- c("s1", "s2")
+```
+
+I'll scale the off diagonal elements by $\sqrt{2}$ because off-diagonal elements are counted twice in the Frobenius norm.
+
+```{r}
+offdiag <- stddf %>%
+  mutate(sMrt = sqrt(2) * Mrt,
+         sMrf = sqrt(2) * Mrf,
+         sMtf = sqrt(2) * Mtf) %>%
+  select(sMrt, sMrf, sMtf)
+```
+
+Combined these are unit vectors in $R^5$
+```{r}
+sqrt(rowSums(cbind(diagproj, offdiag)^2))
+```
+
+Lets combine back into full data frame
+```{r}
+s4df <- bind_cols(diagproj, offdiag, raw)
+```
+
+# Hejrani et al (2017)'s Regions
+Here I have captured the regions from Fig 16 of Hejrani et al (2017) by visual assessment.
+```{r}
+library(sf)
+ptmatrix <- function(xmin, xmax, ymin, ymax){
+  matrix(c(xmin, ymax,   
+           xmax, ymax,
+           xmax, ymin,
+           xmin, ymin,
+           xmin, ymax), byrow = TRUE, ncol = 2)
+}
+
+regions <- st_sfc(st_polygon(list(ptmatrix(141, 144, -4, -2))),
+                  st_polygon(list(ptmatrix(144, 147.3, -4, -2))),
+                  st_polygon(list(ptmatrix(147.3, 150.3, -4, -2.5))),
+                  st_polygon(list(ptmatrix(150.3, 152.5, -4.1, -3))),
+                  st_polygon(list(ptmatrix(146.1, 151.5, -7.1, -5.7))),
+                  st_polygon(list(ptmatrix(151.5, 153.5, -6.8, -4.7))),
+                  st_polygon(list(ptmatrix(153.5, 156.7, -8.5, -5))),
+                  st_polygon(list(ptmatrix(156.7, 159, -10, -8))),
+       crs = 4326)
+regions <- st_sf(region = factor(1:8, ordered = TRUE), geom = regions)
+```
+
+# Keep Only Shallow Earthquakes in Regions 1-4
+Convert data into an `sf` object. Assuming that the longitude and latitude are using the GPS coordinate system.
+
+```{r}
+s4df <- sf::st_as_sf(s4df, coords = c("Longitude", "Latitude"), remove = FALSE)
+sf::st_crs(s4df) <- 4326
+s4df <- st_intersection(s4df, regions) 
+s4df <- mutate(s4df, region = as.factor(region))
+s4df_north <- s4df %>% 
+  filter(region %in% 1:4) %>%
+  filter(Depth <= 20)
+```
+
+# Fig of earthquake locations, NGT and BSSL
+
+
+Plate information was obtained from github `https://github.com/fraxen/tectonicplates`.
+
+```{r}
+#| eval: false
+tmp <- paste0("https://github.com/fraxen/tectonicplates/raw/refs/heads/master/PB2002_boundaries.", c("dbf", "prj", "sbn", "sbx", "shp", "shp.xml", "shx")) |>
+  lapply(function(x){download.file(x, basename(x))})
+```
+
+```{r}
+library(sf)
+tecbound <- st_read("PB2002_boundaries.shp")
+mat <- st_intersects(tecbound, st_as_sfc(st_bbox(s4df)))
+tecbound <- tecbound[apply(mat, 1, any), ]
+tecbound <- tecbound %>%
+  mutate(NiceName = case_match(
+    Name,
+    "CL\\WL" ~ "NGT",
+    "NB\\WL" ~ "NGT",
+    "NB-SB" ~ "BSSL",
+    "NB-MN" ~ "BSSL",
+    "MN-SB" ~ "BSSL",
+    "NB-SB" ~ "BSSL",
+    .default = "Other"
+  ))
+
+centroids <- tecbound %>%
+  st_crop(xmin = 141.0, xmax = 153, ymin = -4.5, ymax = -2) %>%
+  # filter(NiceName != "Other") %>%
+  group_by(NiceName, Name) %>%
+  summarize() %>%
+  mutate(centroid = st_centroid(geometry)) %>%
+  mutate(cenX = st_coordinates(centroid)[, "X"],
+         cenY = st_coordinates(centroid)[, "Y"])
+```
+
+The below plots the earthquake location along with the fault locations.
+
+```{r}
+library("rnaturalearth")
+world <- ne_countries(scale = "medium", returnclass = "sf")
+```
+
+Below is a plot of all earthquake locations in the data.
+
+```{r}
+ggplot(s4df) +
+  geom_sf(data = world) +
+  geom_sf(aes(col = Depth), shape = 4) +
+  geom_sf(data = tecbound, aes(lty = NiceName=="Other"), show.legend = FALSE) +
+  # geom_text(aes(x = cenX, y = cenY, label = Name), data = centroids, size = 3) +
+  scale_color_viridis_c() +
+  geom_sf(data = regions, fill = NA, col = "red") +
+  theme_bw() +
+  theme(axis.title = element_blank()) +
+  coord_sf(xlim = c(141.0, 158.4), ylim = c(-10.0, -2.4))
+```
+
+Now I will plot only the earthquakes we use in this analysis, which are only the earthquakes in the northern four regions.
+
+## Figure for Paper
+
+```{r}
+#| fig.width: 8
+#| fig.height: 2
+ggplot() +
+  geom_sf(data = world) +
+  geom_point(data = s4df_north, aes(x = Longitude, y = Latitude), position = position_jitter(width = 0.05, height = 0.05, seed = 1)) +
+  geom_sf(data = tecbound %>% filter(NiceName == "Other"), lty = "dotted", col = "grey", show.legend = FALSE) +
+  geom_sf(data = tecbound %>% filter(NiceName !="Other"), aes(lty = NiceName), show.legend = FALSE) +
+  geom_sf(data = regions %>% filter(region %in% 1:4), fill = NA, mapping = aes(col = region), show.legend = FALSE) +
+  scale_linetype_manual(values = c(NGT = "dashed", BSSL = "solid", Other = "dotted")) +
+  theme_bw() +
+  theme(axis.title = element_blank()) +
+  coord_sf(xlim = c(141.0, 153), ylim = c(-4.5, -2))
+```
+
+Caption: Earthquake locations near Papua New Guinea associated with the New Guinea Trench (dashed line) and Bismarck Sea Seismic Lineation (solid line).
+
+Some jitter has been introduced because
+`r s4df_north %>% select(Latitude, Longitude) %>% duplicated() %>% sum()` are colocated.
+
+# Closest faults to earthquake
+For each earthquake we find the distance to the NGT and BSSL, and also the strike (up to $\pm \pi$) of the faults at this closest point.
+
+## Distance to NGT and BSSL
+```{r}
+dist_NGT <- tecbound %>%
+  filter(NiceName == "NGT") %>%
+  st_union() %>%
+  st_distance(s4df_north) %>%
+  drop() %>%
+  units::drop_units()
+dist_BSSL <- tecbound %>%
+  filter(NiceName == "BSSL") %>%
+  st_union() %>%
+  st_distance(s4df_north) %>%
+  drop() %>%
+  units::drop_units()
+s4df_north <- s4df_north %>%
+  mutate(dist_NGT = dist_NGT,
+         dist_BSSL = dist_BSSL)
+```
+
+## Strike of NGT and BSSL
+The strike (up to $\pm \pi$) of the faults at the closest point to each earthquake.
+
+First need to split the faults into segments
+```{r}
+tecbound_interest <- tecbound %>%
+  filter(NiceName != "Other")
+teccoords <- tecbound_interest %>%
+  st_coordinates()
+strike <- teccoords %>%
+  as_data_frame() %>%
+  tibble::rowid_to_column() %>%
+  st_as_sf(coords = c("X", "Y"), crs = st_crs(tecbound)) %>%
+  lwgeom::st_geod_azimuth() %>%
+  units::drop_units()
+# make strike between 0 and 2pi
+strike[which(strike < 0)] <- strike[which(strike < 0)] + 2*pi
+# get segments as sf objects
+segs <- cbind(teccoords[-nrow(teccoords), c("X", "Y")], teccoords[-1, c("X", "Y")]) %>%
+  apply(1, function(vec){
+    st_linestring(matrix(vec, 2, 2, byrow = TRUE))
+  }, simplify = FALSE) %>%
+  st_as_sfc(crs = st_crs(tecbound))
+segs <- st_sf(strike = strike, fault = teccoords[-nrow(teccoords), "L1"], geometry = segs)
+# remove the bearings corresponding to jumping between faults
+segs <- segs[teccoords[-nrow(teccoords), "L1"] - teccoords[-1, "L1"] >= -0.5, ]
+
+# L1 refers to the feature so can get back to plate names etc
+segs$FaultName <- tecbound_interest$Name[segs$fault]
+segs$NiceName <- tecbound_interest$NiceName[segs$fault]
+```
+
+For NGT, the fault plane is such that strike is about $3\pi/4$. For BSSL, the fault plane is vertical so strike may as well be below $\pi$. Thus both strikes should be less than $\pi$.
+
+```{r}
+segs <- segs %>%
+   mutate(strike = case_when(strike > pi ~ strike - pi,
+                             TRUE ~ strike))
+
+segs %>%
+  ggplot() +
+  geom_freqpoly(aes(x = strike, col = NiceName)) +
+  geom_rug(aes(x = strike, col = NiceName))
+```
+
+```{r}
+#| fig.width: 8
+#| fig.height: 2
+segs %>%
+  # mutate(strike = cut(strike, c(0, pi/4, 3*pi/4, pi))) %>%
+  mutate(strike = cut(strike, c(0,1.7,2.5, pi), include.lowest = TRUE)) %>%
+  ggplot() +
+  geom_sf(aes(col = strike), linewidth = 2) +
+  # scale_color_viridis_d() +
+  coord_sf(xlim = c(141.0, 153), ylim = c(-4.5, -2))
+```
+
+Find closest segment to each earthquake and use that for strike.
+
+For all earthquakes, strike of closest to NGT
+```{r}
+segssub <- segs %>% filter(NiceName == "NGT")
+segidx <- st_nearest_feature(s4df_north, segssub)
+strike_NGT <- segssub$strike[segidx, drop = TRUE]
+```
+
+For all earthquakes, strike of closest to BSSL
+```{r}
+segssub <- segs %>% filter(NiceName == "BSSL")
+segidx <- st_nearest_feature(s4df_north, segssub)
+strike_BSSL <- segssub$strike[segidx, drop = TRUE]
+s4df_north <- bind_cols(s4df_north,
+                        strike_NGT = strike_NGT,
+                        strike_BSSL = strike_BSSL)
+```
+
+# Associate strike and dip of closest fault with earthquake 
+```{r}
+s4df_north <- s4df_north %>%
+  mutate(fault = case_when(dist_NGT < dist_BSSL ~ "NGT",
+                           TRUE ~ "BSSL")) %>%
+  mutate(fstrike = case_when(fault == "NGT" ~ strike_NGT,
+                             fault == "BSSL" ~ strike_BSSL)) %>%
+  mutate(fdip = case_when(fault == "NGT" ~ 30,
+                             fault == "BSSL" ~ 90))
+```
+
+Lets plot to see if the assignments are correct
+
+```{r}
+#| fig.width: 8
+#| fig.height: 2
+segs %>%
+  mutate(strike = cut(strike, c(0,1.7,2.5, pi), include.lowest = TRUE)) %>%
+  ggplot() +
+  geom_sf(aes(col = strike), linewidth = 2) +
+  geom_point(data = s4df_north %>%
+    mutate(fstrike = cut(fstrike, c(0,1.7,2.5, pi), include.lowest = TRUE)),
+    aes(x = Longitude, y = Latitude, col = fstrike)) +
+  coord_sf(xlim = c(141.0, 153), ylim = c(-4.5, -2))
+```
+
+Strike looks correct.
+
+```{r}
+#| fig.width: 8
+#| fig.height: 2
+ggplot() +
+  geom_sf(data = world) +
+  geom_point(data = s4df_north, aes(x = Longitude, y = Latitude, col = as.factor(fdip))) +
+  geom_sf(data = tecbound, aes(lty = NiceName), show.legend = FALSE) +
+  scale_linetype_manual(values = c(NGT = "dashed", BSSL = "solid", Other = "dotted")) +
+  theme_bw() +
+  theme(axis.title = element_blank()) +
+  coord_sf(xlim = c(141.0, 153), ylim = c(-4.5, -2))
+```
+
+# Look for Outliers
+Below are some functions that make plotting using GGally easier.
+
+```{r}
+# Create data for the unit circle
+theta <- seq(0, 2 * pi, length.out = 100)
+circle_df <- data.frame(x = cos(theta), y = sin(theta))
+custom_points <- function(data, mapping, ...) {
+  ggplot(data, mapping) +
+    geom_point(...) +
+    geom_path(data = circle_df, aes(x = x, y = y), inherit.aes = FALSE, color = "grey") +
+    coord_fixed()
+}
+custom_points_wlabels <- function(data, mapping, ...){
+  custom_points(data, mapping, ...) +
+    ggrepel::geom_text_repel(aes(label = Number), data = function(x) {filter(x, !is.na(outlier))}, min.segment.length = 0.01)
+}
+```
+
+I'll rotate the earthquake data so it easier to view.
+
+```{r}
+ystd <- s4df_north %>%
+  st_drop_geometry() %>%
+  select(s1, s2, sMrt, sMrf, sMtf) %>% 
+  as.matrix() %>% 
+  sphm:::standardise_sph()
+colnames(ystd) <- paste0("Y", 1:5)
+```
+
+## vs Assigned Fault
+```{r}
+#| fig.width: 20
+#| fig.height: 20
+bind_cols(ystd, s4df_north) %>%
+  mutate(outlier = case_when(Number %in% c(182, 306,  61, 112, 288) ~ TRUE, TRUE ~ NA_integer_)) %>%
+  select(starts_with("Y"), fault, outlier, Number) %>%
+  GGally::ggpairs(mapping = aes(col = fault, shape = fault), columns = 1:5, upper = list(continuous = custom_points_wlabels), lower = NULL, diag = NULL)
+```
+
+These plots, particularly Y3 vs Y1 suggest that there are three earthquakes (Number 61, 112 and 288) assigned to the BSSL that are actually much more like the NGT earthquakes.
+There are also two earthquakes, 182 and 306 assigned to NGT that are actually more like the BSSL earthquakes.
+
+## vs Strike
+```{r}
+#| fig.width: 20
+#| fig.height: 20
+bind_cols(ystd, s4df_north) %>%
+  mutate(outlier = case_when(Number %in% c(182, 306,  61, 112, 288) ~ TRUE, TRUE ~ NA_integer_)) %>%
+  # mutate(fstrike = cut(fstrike, c(0,1.7,2.5, pi), include.lowest = TRUE)) %>%
+  select(starts_with("Y"), fstrike, outlier, Number, Longitude, fault) %>%
+  GGally::ggpairs(mapping = aes(col = fstrike, shape = Longitude > 149, group = fault), columns = 1:5, upper = list(continuous = custom_points_wlabels), lower = NULL, diag = NULL) +
+  scale_color_viridis_c(end = 0.9)
+```
+
+The strike of earthquake Number 306 appears to be an outlier according to this plot.
+
+# Correct 5 outlying earthquakes
+Below is a plot of earthquake locations and the identified outliers.
+
+```{r}
+#| fig.width: 8
+#| fig.height: 2
+s4df_north %>%
+  mutate(outlier = Number %in% c(182, 306,    61, 112, 288)) %>%
+  ggplot() +
+  geom_sf(data = world) +
+  geom_point(aes(x = Longitude, y = Latitude, col = fault)) +
+  ggrepel::geom_label_repel(mapping = aes(x = Longitude, y = Latitude, label = Number), data = function(x) {filter(x, outlier)}, min.segment.length = 0.01) +
+  geom_sf(data = tecbound, aes(lty = NiceName), show.legend = FALSE) +
+  scale_linetype_manual(values = c(NGT = "dashed", BSSL = "solid", Other = "dotted")) +
+  theme_bw() +
+  theme(axis.title = element_blank()) +
+  coord_sf(xlim = c(141.0, 153), ylim = c(-4.5, -2))
+```
+
+Earthquakes 112, 288 and 182 all appear close to both NGT and BSSL, and thus it would make sense that these earthquakes were not necessarily generated by the stresses associated with their nearest fault.
+
+It is less plausible that earthquakes 61 and 306 were generated by the BSSL and NGT stresses respectively, yet the earthquake moment tensors suggests that this was the case.
+
+Here I'll reassign 112, 288 and 182, and remove 61 and 306.
+
+Here we reassign these earthquakes and record the change in a new column `outlier`.
+
+```{r}
+s4df_north <- s4df_north %>%
+  mutate(fault = case_when(Number %in% c(182, 306) ~ "NGT",
+                             Number %in% c(61, 112, 288) ~ "BSSL",
+                             TRUE ~ fault
+                             )) %>%
+  mutate(outlier = case_when(Number %in% c(182, 306) ~ "to NGT",
+                 Number %in% c(61, 112, 288) ~ "to BSSL",
+                 TRUE ~ NA_character_)) %>%
+  mutate(outlier = as.factor(outlier)) %>%
+  mutate(fstrike = case_when(fault == "NGT" ~ strike_NGT,
+                             fault == "BSSL" ~ strike_BSSL)) %>%
+  mutate(fdip = case_when(fault == "NGT" ~ 30,
+                             fault == "BSSL" ~ 90)) %>%
+  filter(!(Number %in% c(306, 61)))
+```
+
+# Build covariates
+Since dip has only two values 30 or 90, use it has a categorical variable.
+Scale and center all Euclidean covariates to have mean 0 and sd of 1.
+
+```{r}
+xe <- s4df_north %>%
+  st_drop_geometry() %>%
+  mutate(fdip30 = fdip < 35) %>%
+  select(fstrike,
+         Latitude, Longitude,
+         fdip30) %>%
+  mutate(fstrikedip = fstrike * fdip30) %>%
+  as.matrix()
+xestd <- xe %>%
+  scale() |>
+  as_tibble()
+```
+
+# vMF Regression
+## Default start
+```{r}
+mod_vMF <- mobius_vMF(s4df_north %>% 
+                        select(s1, s2, sMrt, sMrf, sMtf) %>% 
+                        st_drop_geometry() %>% 
+                        as.matrix(),
+                      xs = NULL, 
+                      xe = xestd %>% as.matrix(),
+                      type = "Shogo")
+mod_vMF$k
+mod_vMF$AIC
+mod_vMF$DoF
+```
+
+## Random Starts
+Here I tried 100 different starting points for the vMF regression. Below is a frequency polygon plot of the AIC all 100 estimates.
+
+```{r}
+restarts <- pbapply::pblapply(1:100, function(seed){
+  # randomly generates a Kassel-form link
+  start <- sphm:::rmnlink_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)
+  # convert to Shogo form:
+  set.seed(seed+1)
+  Qe <- mclust::randomOrthogonalMatrix(ncol(xestd)+1, 5-1)
+  bigQe <- cbind(0, rbind(0, Qe))
+  bigQe[, 1] <- 0
+  bigQe[1,1] <- 1
+  start$Qe <- bigQe
+  start$ce <- 1
+  mobius_vMF(s4df_north %>% 
+                          select(s1, s2, sMrt, sMrf, sMtf) %>% 
+                          st_drop_geometry() %>% 
+                          as.matrix(),
+                        xs = NULL, 
+                        xe = xestd %>% as.matrix(),
+                        type = "Shogo",
+                        start = start)
+}, cl = 2)
+lapply(restarts, "[[", "AIC") %>%
+  unlist() %>%
+  tibble::enframe("seed", "AIC") %>%
+  ggplot()+
+  geom_freqpoly(aes(x = AIC), bins = 30) +
+  geom_vline(xintercept = mod_vMF$AIC, col = "blue") +
+  geom_rug(aes(x = AIC))
+```
+
+I'll use the best model found.
+
+```{r}
+idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
+mod_vMF <- restarts[[idx]]
+mod_vMF$k
+mod_vMF$AIC
+mod_vMF$DoF
+```
+
+## Fig of predictions and observations
+```{r predplotting}
+get_predobspairsdf <- function(mod){
+  ystd <- standardise_sph(mod$y)
+  colnames(ystd) <- paste0("Y", 1:ncol(ystd))
+  predstd <- standardise_sph(mod$pred, attr(ystd, "std_rotation"))
+  colnames(predstd) <- paste0("p_Y", 1:ncol(predstd))
+  predsobs <- bind_cols(predstd,
+                        ystd,
+                        s4df_north)
+  colpairs <- combn(paste0("Y",1:5), 2, simplify = FALSE)
+  pair_dfs <- lapply(colpairs, function(pair) {
+    predsobs %>%
+      select(everything(), -starts_with("Y"), -starts_with("p_Y"), all_of(pair),all_of(paste0("p_", pair))) %>%
+      rename(A = last_col(3), B = last_col(2), p_A = last_col(1), p_B = last_col(0)) %>%
+      mutate(pair1=pair[1],
+             pair2=pair[2],
+             pair = paste(pair, collapse = "-"))
+  })
+  pairsdf <- bind_rows(pair_dfs)
+  pairsdf
+}
+get_predobspairsdf_nat <- function(mod){
+predsobs <- bind_cols(as_tibble(mod$pred)  %>% rename_with(~ paste0("p_", .)),
+                      s4df_north)
+colpairs <- combn(c("s1", "s2", "sMrt", "sMrf", "sMtf"), 2, simplify = FALSE)
+pair_dfs <- lapply(colpairs, function(pair) {
+  predsobs %>%
+    select(everything(), -starts_with("s"), -starts_with("p_s"), all_of(pair),all_of(paste0("p_", pair))) %>%
+    rename(A = last_col(3), B = last_col(2), p_A = last_col(1), p_B = last_col(0)) %>%
+    mutate(pair1=pair[1],
+           pair2=pair[2],
+           pair = paste(pair, collapse = "-")) %>%
+    mutate(pair1 = factor(pair1, levels = c("s1", "s2", "sMrt", "sMrf", "sMtf"), ordered = TRUE)) %>%
+    mutate(pair2 = factor(pair2, levels = c("s1", "s2", "sMrt", "sMrf", "sMtf"), ordered = TRUE))
+})
+pairsdf <- bind_rows(pair_dfs)
+pairsdf
+}
+pairsplot <- function(df){
+  df %>%
+    ggplot() +
+    facet_grid(vars(pair1), vars(pair2)) +
+    # geom_segment(aes(x=A, y=B, xend=p_A, yend=p_B, col = region),
+    #              arrow = grid::arrow(length = unit(0.01, "npc"))) +
+    geom_segment(aes(x=A, y=B, xend=p_A, yend=p_B), lty = "11", col = "grey",
+                  arrow = grid::arrow(length = unit(0.01, "npc"))) +
+    geom_point(aes(x=A, y=B, col = region), size = 1, shape = 1) +
+    geom_point(aes(x=p_A, y=p_B, col = region), shape = 3, size = 0.5) +
+    geom_path(data = circle_df, aes(x = x, y = y), inherit.aes = FALSE, color = "grey") +
+    coord_fixed() +
+    theme_void()
+}
+```
+
+```{r}
+#| fig.width: 12
+#| fig.height: 10
+get_predobspairsdf(mod_vMF) %>%
+  pairsplot()
+```
+
+## Residuals
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+mod_vMF$rresids %>%
+  as_tibble() %>%
+  bind_cols(s4df_north) %>%
+  select(matches("^r.$"), fault, outlier, Number) %>%
+  GGally::ggpairs(mapping = aes(col = fault, shape = fault), 1:4,
+                  upper = list(continuous = custom_points_wlabels),
+                  diag = NULL,
+                  lower = NULL
+                  )
+```
+
+# SvMF Regression
+```{r}
+mod_SvMF <- mobius_SvMF(s4df_north %>% 
+                        select(s1, s2, sMrt, sMrf, sMtf) %>% 
+                        st_drop_geometry() %>% 
+                        as.matrix(),
+                      xs = NULL, 
+                      xe = xestd %>% as.matrix(),
+                      type = "Shogo",
+                      G01behaviour = "free",
+                      mean = mod_vMF$est)
+mod_SvMF$k
+mod_SvMF$AIC
+mod_SvMF$a
+mod_SvMF$DoF
+```
+
+## Fig of predictions and observations
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+get_predobspairsdf(mod_SvMF) %>%
+  ggplot() +
+  facet_grid(vars(pair1, pair2)) +
+  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B), col = "grey",
+                arrow = grid::arrow(length = unit(0.02, "npc"))) +
+  geom_point(aes(x=p_A, y=p_B, col = Longitude, shape = as.factor(fdip)), size = 1) +
+  geom_path(data = circle_df, aes(x = x, y = y), inherit.aes = FALSE, color = "grey") +
+  scale_color_viridis_c() +
+  coord_fixed() +
+  theme_void()
+```
+
+```{r}
+p1 <- get_predobspairsdf(mod_SvMF) %>%
+  filter(pair1 %in% paste0("Y", 1:3), pair2 %in% paste0("Y", 1:3)) %>%
+  ggplot() +
+  facet_wrap(vars(pair1, pair2), ncol = 3) +
+  # geom_segment(aes(x=A, y=B, xend=p_A, yend=p_B, col = region),
+  #              arrow = grid::arrow(length = unit(0.01, "npc"))) +
+  # geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B), col = "grey",
+                # arrow = grid::arrow(length = unit(0.02, "npc"))) +
+  geom_point(aes(x=A, y=B, col = Longitude, shape = as.factor(fdip)), size = 1) +
+  geom_path(data = circle_df, aes(x = x, y = y), inherit.aes = FALSE, color = "grey") +
+  scale_color_viridis_c() +
+  coord_fixed() +
+  theme_void()
+p2 <- get_predobspairsdf(mod_SvMF) %>%
+  filter(pair1 %in% paste0("Y", 1:3), pair2 %in% paste0("Y", 1:3)) %>%
+  ggplot() +
+  facet_wrap(vars(pair1, pair2), ncol = 3) +
+  # geom_segment(aes(x=A, y=B, xend=p_A, yend=p_B, col = region),
+  #              arrow = grid::arrow(length = unit(0.01, "npc"))) +
+  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B), col = "grey",
+                arrow = grid::arrow(length = unit(0.02, "npc"))) +
+  geom_point(aes(x=p_A, y=p_B, col = Longitude, shape = as.factor(fdip)), size = 1) +
+  geom_path(data = circle_df, aes(x = x, y = y), inherit.aes = FALSE, color = "grey") +
+  scale_color_viridis_c() +
+  coord_fixed() +
+  theme_void()
+p1/p2 + plot_layout(guides = "collect")
+```
+
+Caption: Top: Normalised earthquake moment tensors after a standardising rotation.
+Bottom: Predicted mean earthquake moment tensors by the mobius scaled von-mises regression.
+The first three coordinates plotted here capture most of the variation of the data. 
+A plot with final two coordinates of $\mathbb{R}^5$ is in the supplement.
+Grey arrows: from predicted mean to corresponding observed earthquake moment tensor.
+
+## Residuals
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+mod_SvMF$rresids %>%
+  as_tibble() %>%
+  bind_cols(s4df_north) %>%
+  select(matches("^r.$"), Longitude, fdip, outlier, Number) %>%
+  GGally::ggpairs(mapping = aes(col = Longitude, shape = as.factor(fdip)), 1:4,
+                  upper = list(continuous = custom_points_wlabels),
+                  diag = NULL,
+                  lower = NULL
+                  ) +
+  scale_color_viridis_c()
+```
+
+```{r}
+bind_cols(rdist = mod_SvMF$dists, s4df_north) %>%
+  ggplot(aes(x=rdist, shape = as.factor(fdip), y = Longitude, col = Longitude)) +
+  geom_point() +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           data = function(x) {filter(x, !is.na(outlier))}, min.segment.length = 0.01) +
+  scale_color_viridis_c()
+```
+
+
+## Bootstrap Regions for `a`
+```{r}
+Bests <- pbapply::pblapply(1:1000, function(seed){
+  set.seed(seed)
+  y <- sphm:::rS2S_constV(xs = NULL, 
+                   xe = mod_SvMF$xe,
+                   mnparam = mod_SvMF$mean,
+                   k = mod_SvMF$k,
+                   a = mod_SvMF$a,
+                   G0 = mod_SvMF$G0)[,-6]
+  newmod <- mobius_SvMF(y,
+                      xs = NULL, 
+                      xe = mod_vMF$xe,
+                      type = "Shogo",
+                      G01behaviour = "free",
+                      mean = mod_SvMF$mean,
+                      k = mod_SvMF$k,
+                      a = mod_SvMF$a,
+                      G0 = mod_SvMF$G0)
+  return(newmod[c("mean", "k", "a", "G0")])
+}, cl = 2)
+```
+
+
+```{r}
+Bests_a <- lapply(Bests, "[[", "a") %>%
+  simplify2array() %>%
+  t()
+summary(Bests_a)
+```
+
+a2 stays a long way from 1 and a5 is always smaller than 0.6.
+
+# Likelihood Ratio Test of vMF vs SvMF
+```{r}
+getlikR <- function(y){
+  mod1 <- mobius_vMF(y,
+                     xs = NULL, 
+                     xe = mod_vMF$xe,
+                     type = "Shogo",
+                     start = mod_vMF$est)
+  mod2 <- mobius_SvMF(y,
+                      xs = NULL, 
+                      xe = mod_vMF$xe,
+                      type = "Shogo",
+                      G01behaviour = "free",
+                      mean = mod_SvMF$mean,
+                      k = mod_SvMF$k,
+                      a = mod_SvMF$a,
+                      G0 = mod_SvMF$G0)
+  lLik1 <- sphm:::dS2S_constV(mod1$y, xs = NULL, xe =mod1$xe,
+              mean = mod1$est,
+              k = mod1$k,
+              a = rep(1, 5),
+              G0 = mod2$G0) %>%
+    colSums()
+  lLik2 <- sphm:::dS2S_constV(mod2$y, xs = NULL, xe =mod2$xe,
+              mean = mod2$mean,
+              k = mod2$k,
+              a = mod2$a,
+              G0 = mod2$G0) %>%
+    colSums()
+
+  # I'm going to use the R version because it will calculate things more accurately
+  list(likR = -2* (lLik1[["R"]] - lLik2[["R"]]),
+       vMF = mod1,
+       SvMF = mod2)
+}
+null_likRs <- pbapply::pblapply(1:1000, function(seed){
+  set.seed(seed)
+  y_ld <- sphm:::rS2S_constV(xs = NULL, 
+                   xe = mod_vMF$xe,
+                   mnparam = mod_vMF$est,
+                   k = mod_vMF$k,
+                   a = rep(1, 5),
+                   G0 = diag(1,5))
+  sum(y_ld[,6])
+  y <- y_ld[,-6]
+  getlikR(y)
+})
+obs <- getlikR(s4df_north %>% 
+                        select(s1, s2, sMrt, sMrf, sMtf) %>% 
+                        st_drop_geometry() %>% 
+                        as.matrix())
+```
+
+P-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
+
+```{r}
+mean(obs$likR < lapply(null_likRs, "[[", "likR") %>% unlist())
+```
+
+The likelihood ratio is larger than any simulated data from the null (vMF model) achieves. Suggesting the data does not come from the vMF model.

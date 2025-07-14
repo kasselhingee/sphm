@@ -3,8 +3,12 @@
 #' @param mu Mean
 #' @param G The orientation paramter matrix Gamma, which has the mean as the first column.
 #' @details
-#' `SvMF_mom_axes` follows Scealy and Wood (2019) Section 4.1.1
 #' Both `SvMF_mom_axes()` and `SvMF_prelim_scales()` ignore the component of `y` parallel to `mu`
+#' @name SvMF_prelim
+NULL
+
+#' @describeIn SvMF_prelim `SvMF_mom_axes` follows Scealy and Wood (2019) Section 4.1.1 description
+#' @export
 SvMF_mom_axes <- function(y, mu){
   projmat <- diag(length(mu)) - mu %*% t(mu)
   projy <- y %*% t(projmat)
@@ -16,7 +20,8 @@ SvMF_mom_axes <- function(y, mu){
   return(Gest)
 }
 
-#' `SvMF_prelim_scales` follows Scealy and Wood (2019) Proposition 2
+#' @describeIn SvMF_prelim `SvMF_prelim_scales()` follows Scealy and Wood (2019) Proposition 2
+#' @export
 SvMF_prelim_scales <- function(y, G){
   # rotate y to star coordinates, where the columns of G are the basis coordinates
   # G^T . G = I. So G^T . y does this transformation

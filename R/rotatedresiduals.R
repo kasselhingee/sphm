@@ -48,7 +48,7 @@ partransportmat <- function(start, end){
   out <- diag(length(start)) - sin(alpha) * start %*% t(u) + (cos(alpha) - 1) * u %*% t(u)
 }
 
-resid_SvMF_partransport <- function(y, ypred, k, a, G0, scale = TRUE){
+resid_SvMF_partransport <- function(y, ypred, k = NULL, a = NULL, G0, scale = TRUE){
   rresids_std <- rresids_tmp <- rotatedresid(y, ypred, G0[,1])
   rresids_std <- rresids_std %*% G0
   rresids_std <- rresids_std[, -1]

@@ -201,7 +201,8 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   
   dists <- acos(rowSums(pred * preplist$y))
   # get residuals as coordinates wrt G0. So under high concentration these residuals follow something multivariate normal.
-  rresids_std <- resid_SvMF_partransport(preplist$y, pred, estparamlist$k, c(a1, estparamlist$aremaining), estparamlist$G0)
+  rresids_std <- resid_SvMF_partransport(preplist$y, pred, estparamlist$k, c(a1, estparamlist$aremaining), estparamlist$G0, scale = TRUE)
+  rresids_G0 <- resid_SvMF_partransport(preplist$y, pred, G0 = estparamlist$G0, scale = FALSE)
   rresids_tmp <- rotatedresid(preplist$y, pred, nthpole(ncol(preplist$y)))
   rresids <- rresids_tmp[, -1]
   attr(rresids, "samehemisphere") <-  attr(rresids_tmp, "samehemisphere")

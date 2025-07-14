@@ -202,11 +202,11 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   dists <- acos(rowSums(pred * preplist$y))
   # get residuals as coordinates wrt G0. So under high concentration these residuals follow something multivariate normal.
   rresids_std <- resid_SvMF_partransport(preplist$y, pred, estparamlist$k, c(a1, estparamlist$aremaining), estparamlist$G0, scale = TRUE)
-  rresids_G0 <- resid_SvMF_partransport(preplist$y, pred, G0 = estparamlist$G0, scale = FALSE)
-  rresids_tmp <- rotatedresid(preplist$y, pred, nthpole(ncol(preplist$y)))
-  rresids <- rresids_tmp[, -1]
-  attr(rresids, "samehemisphere") <-  attr(rresids_tmp, "samehemisphere")
-  colnames(rresids) <- paste0("r", 1:ncol(rresids))
+  rresids_G0 <- resid_SvMF_partransport(preplist$y, pred, G0 = estparamlist$G0, scale = FALSE) # par transport to G01, coords G0
+  rresids_I_tmp <- rotatedresid(preplist$y, pred, nthpole(ncol(preplist$y))) # par transport to nthpole, coords cannonical
+  rresids_I <- rresids_I_tmp[, -1]
+  attr(rresids_I, "samehemisphere") <-  attr(rresids_I_tmp, "samehemisphere")
+  colnames(rresids_I) <- paste0("r", 1:ncol(rresids_I))
   
 
   
@@ -258,7 +258,9 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
     xs = xs,
     xe = if (!is.null(xe)){if (intercept){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))} else {xe}}, #this recovers any added covariates too
     pred = destandardise_sph(pred, tG = attr(preplist$y, "std_rotation")),
-    rresids = rresids,
+    rresids = rresids_I,
+    rresids_I = rresids_I,
+    rresids_G0 = rresids_G0,
     rresids_std = rresids_std,
     dists = dists,
     DoF = DoF,

@@ -286,19 +286,16 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G
   # get rotated residuals
   rresid <- rotatedresid(y, prelim$pred, base = G01)
   if (!is.null(G0) && all(!is.na(G0))){
+    # if G0 fully supplied just use rresid to approximate scales a using the high concentration approximation
     if (G01behaviour == "p1"){
       G0 <- cbind(G01, -JuppRmat(G0[,1], G01) %*% G0[,-1])
     }
-    # if G0 fully supplied just use rresid to approximate scales a using the high concentration approximation
-    aremaining <- apply(rresid %*% G0[,-1], 2, sd) #these are approximately a_i/(a1 * sqrt(k)). Because prod(a_i) = 1, will need to normalise by a scalar so dont need a1 or k to get aremaining
-    aremaining <- aremaining/prod(aremaining)^(1/(p-1))
+    aremaining <- SvMF_prelim_scales(rresid, G0)
   } else {
-    # estimate both the axes and the scales from rresid
-    moments <- eigen(t(rresid) %*% rresid, symmetric = TRUE)  #t() %*% () quickly calculates the sum of projection matrices of rows of y
-    G0 <- cbind(G01, moments$vectors[,-p])
-    G0[, p] <- det(G0) * G0[,p] #make G0 a rotation matrix
-    aremaining <- sqrt(moments$values[-p])
-    aremaining <- aremaining/prod(aremaining)^(1/(p-1))
+    # axes:
+    G0 <- SvMF_mom_axes(rresid, G01)
+    # estimate the scales
+    aremaining <- SvMF_prelim_scales(rresid, G0)
   }
   
   prelim <- list(

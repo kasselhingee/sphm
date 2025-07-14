@@ -495,6 +495,20 @@ s4df_north <- s4df_north %>%
   filter(!(Number %in% c(306, 61)))
 ```
 
+```{r}
+ggplot() +
+  geom_sf(data = world) +
+  geom_point(data = s4df_north, aes(x = Longitude, y = Latitude, col = fstrike), position = position_jitter(width = 0.05, height = 0.05, seed = 1)) +
+  geom_sf(data = tecbound %>% filter(NiceName == "Other"), lty = "dotted", col = "grey", show.legend = FALSE) +
+  geom_sf(data = tecbound %>% filter(NiceName !="Other"), aes(lty = NiceName), show.legend = FALSE) +
+  geom_sf(data = regions %>% filter(region %in% 1:4), fill = NA, show.legend = FALSE) +
+  scale_linetype_manual(values = c(NGT = "dashed", BSSL = "solid", Other = "dotted")) +
+  theme_bw() +
+  theme(axis.title = element_blank()) +
+  coord_sf(xlim = c(141.0, 153), ylim = c(-4.5, -2)) +
+  scale_color_viridis_c()
+```
+
 # Build covariates
 Since dip has only two values 30 or 90, use it has a categorical variable.
 Scale and center all Euclidean covariates to have mean 0 and sd of 1.
@@ -744,7 +758,7 @@ bind_cols(rdist = mod_SvMF$dists, s4df_north) %>%
 ```
 
 
-## Bootstrap Regions for `a`
+## Parametric Bootstrap Regions for `a`
 ```{r}
 Bests <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
@@ -772,10 +786,19 @@ Bests <- pbapply::pblapply(1:1000, function(seed){
 Bests_a <- lapply(Bests, "[[", "a") %>%
   simplify2array() %>%
   t()
+colnames(Bests_a) <- paste0("a", 1:5)
 summary(Bests_a)
 ```
 
+### 95% CI for a
+```{r}
+apply(Bests_a[,-1], 2, quantile, probs = c(0.025, 0.975)) %>%
+  round(2)
+```
+
 a2 stays a long way from 1 and a5 is always smaller than 0.6.
+
+Seems a bit dodgy to do this for ordered variables.
 
 # Likelihood Ratio Test of vMF vs SvMF
 ```{r}

@@ -38,6 +38,20 @@ toBigPosEl <- function(mat){
   return(mat)
 }
 
+#' From orthogonal matrix to rotation matrix
+#' by switching sign of final column to make determinant positive
+toRot <- function(mat){
+  mat[,ncol(mat)] <- sign(det(mat)) * mat[,ncol(mat)] #make mat a rotation matrix
+  return(mat)
+}
+
+#' Applies toBigPosEl() and toRot, not doing any sign switchin on the first column
+toBigPosElRot_keepfirst <- function(mat){
+  mat[,-1] <- toBigPosEl(mat[,-1]) # make Gamma consistentish signs, and a rotation matrix
+  mat <- toRot(mat)
+  return(mat)
+}
+
 # gives the degree of freedom of an object with n rows and p columns (i.e. p orthonormal vectors in n space)
 # This formula is from wikipedia and (2.1) of Edelman et al 1998.
 DoF_Stiefel <- function(n, p){

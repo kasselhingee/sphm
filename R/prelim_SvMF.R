@@ -4,6 +4,7 @@
 #' @param G The orientation paramter matrix Gamma, which has the mean as the first column.
 #' @details
 #' `SvMF_mom_axes` follows Scealy and Wood (2019) Section 4.1.1
+#' Both `SvMF_mom_axes()` and `SvMF_prelim_scales()` ignore the component of `y` parallel to `mu`
 SvMF_mom_axes <- function(y, mu){
   projmat <- diag(length(mu)) - mu %*% t(mu)
   projy <- y %*% t(projmat)

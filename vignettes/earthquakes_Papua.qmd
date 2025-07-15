@@ -625,7 +625,7 @@ cann$Be
 cann$Be %*% t(cann$Qe[,-1])
 ```
 
-## Predictions
+# Predictions
 ```{r}
 get_predobspairsdf <- function(mod, extra = NULL){
   # standard rotations
@@ -678,7 +678,7 @@ get_predobspairsdf(mod_SvMF, s4df_clean) %>%
   ggtitle("Prediction Highlighted")
 ```
 
-## Paper Plot
+# Paper Plot
 ```{r}
 #| fig.width: 8
 #| fig.height: 6
@@ -717,74 +717,89 @@ Arrows: represent residuals and point from mean earthquake moment tensor to the 
 Blue x: The location of the first column of $B_0$.
 Grey circle boundary: intersection of $S^4$ with the plane given by the pair of axes.
 
-## Residuals
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-mod_SvMF$rresids %>%
-  as_tibble() %>%
-  bind_cols(s4df_north) %>%
-  select(matches("^r.$"), Longitude, fdip, outlier, Number) %>%
-  GGally::ggpairs(mapping = aes(col = Longitude, shape = as.factor(fdip)), 1:4,
-                  upper = list(continuous = custom_points_wlabels),
-                  diag = NULL,
-                  lower = NULL
-                  ) +
-  scale_color_viridis_c()
-```
+# Residuals
+Here we present the residuals more thorougly.
+## Paired Plots
+
+Here we plot the the residuals against each of the axes defined by $\Gamma_0$. We can see the ellipsiodal nature of Scaled von Mises Fisher residuals.
 
 ```{r}
-bind_cols(rdist = mod_SvMF$dists, s4df_north) %>%
-  ggplot(aes(x=rdist, shape = as.factor(fdip), y = Longitude, col = Longitude)) +
+#| fig.width: 8
+#| fig.height: 7
+circle_df_long <- circle_df_long %>%
+  mutate(across(starts_with("pair"), ~gsub("Y", "r", .x)))
+mod_SvMF$rresids_G0 %>%
+  as_tibble() %>%
+  bind_cols(s4df_clean) %>%
+  pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean, 
+                  aes(z = Longitude, fill = after_stat(value)),
+                  bins = 10) +
+  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
+  scale_fill_viridis_c(name = "Longitude") +
+  scale_color_viridis_c(name = "Longitude")
+```
+
+Here the same residuals are transformed using the estimated concentration and Scale von Mises Fisher scales so that at high-concentrations the residuals should be close to a standard multivariate Normal.
+
+```{r}
+#| fig.width: 6
+#| fig.height: 5
+mod_SvMF$rresids_std %>%
+  as_tibble() %>%
+  bind_cols(s4df_clean) %>%
+  pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
+  ggplot(mapping = aes(x=A, y=B)) + 
+  facet_wrap(vars(pair2, pair1)) +
+  theme(strip.text.y = element_text(angle = 90),
+        strip.placement = "outside",
+        axis.title = element_blank(),
+        strip.background = element_blank()) +
+  geom_hline(yintercept = 0, lty = "dashed") +
+  geom_vline(xintercept = 0, lty = "dashed") +
+  geom_point(size = 1) +
+  scale_fill_viridis_c() +
+  coord_fixed()
+```
+
+## Residual Distance by Covariate
+```{r}
+p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
+  ggplot(aes(x=rdist, y = Longitude)) +
   geom_point() +
   ggrepel::geom_label_repel(aes(label = Number),
                            size = 2,
-                           data = function(x) {filter(x, !is.na(outlier))}, min.segment.length = 0.01) +
-  scale_color_viridis_c()
+                           data = function(x) {filter(x, !is.na(outlier))}, min.segment.length = 0.01)
+
+p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
+  ggplot(aes(x=rdist, y = fstrike)) +
+  geom_point() +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           data = function(x) {filter(x, !is.na(outlier))}, min.segment.length = 0.01)
+p1 + p2
 ```
 
+Left panel: There is some suggestion of increasing residual size with longitude, except that two earthquakes on the top left and bottom right might suggest otherwise.
+Right panel: No indication that fault strike is related to residual size.
+The possible outlier Earthquake 93 does not have an outlying residual.
 
-## Parametric Bootstrap Regions for `a`
+## Residual per G0 Axis by Covariate
 ```{r}
-Bests <- pbapply::pblapply(1:1000, function(seed){
-  set.seed(seed)
-  y <- sphm:::rS2S_constV(xs = NULL, 
-                   xe = mod_SvMF$xe,
-                   mnparam = mod_SvMF$mean,
-                   k = mod_SvMF$k,
-                   a = mod_SvMF$a,
-                   G0 = mod_SvMF$G0)[,-6]
-  newmod <- mobius_SvMF(y,
-                      xs = NULL, 
-                      xe = mod_vMF$xe,
-                      type = "Shogo",
-                      G01behaviour = "free",
-                      mean = mod_SvMF$mean,
-                      k = mod_SvMF$k,
-                      a = mod_SvMF$a,
-                      G0 = mod_SvMF$G0)
-  return(newmod[c("mean", "k", "a", "G0")])
-}, cl = 2)
+bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
+  st_drop_geometry() %>%
+  tidyr::pivot_longer(matches("^r.$"), names_to = "raxis", values_to = "value") %>%
+  tidyr::pivot_longer(c(Longitude, fstrike), names_to = "covariate", values_to = "cvalue") %>%
+  ggplot(aes(x = cvalue, y = value)) +
+  facet_grid(rows = vars(raxis), cols = vars(covariate), scales = "free") +
+  geom_hline(yintercept = 0, col = "blue", lty = "dashed") +
+  geom_smooth(method = "loess", formula = 'y ~ x') +
+  geom_point()
 ```
 
+The residuals appear to be be centered on zero.
 
-```{r}
-Bests_a <- lapply(Bests, "[[", "a") %>%
-  simplify2array() %>%
-  t()
-colnames(Bests_a) <- paste0("a", 1:5)
-summary(Bests_a)
-```
-
-### 95% CI for a
-```{r}
-apply(Bests_a[,-1], 2, quantile, probs = c(0.025, 0.975)) %>%
-  round(2)
-```
-
-a2 stays a long way from 1 and a5 is always smaller than 0.6.
-
-Seems a bit dodgy to do this for ordered variables.
 
 # Likelihood Ratio Test of vMF vs SvMF
 ```{r}
@@ -833,7 +848,7 @@ null_likRs <- pbapply::pblapply(1:1000, function(seed){
   y <- y_ld[,-6]
   getlikR(y)
 })
-obs <- getlikR(s4df_north %>% 
+obs <- getlikR(s4df_clean %>% 
                         select(s1, s2, sMrt, sMrf, sMtf) %>% 
                         st_drop_geometry() %>% 
                         as.matrix())
@@ -846,3 +861,47 @@ mean(obs$likR < lapply(null_likRs, "[[", "likR") %>% unlist())
 ```
 
 The likelihood ratio is larger than any simulated data from the null (vMF model) achieves. Suggesting the data does not come from the vMF model.
+
+# Parametric Bootstrap Regions for `a`
+Since a vMF model is rejected, lets look at CI that for the fitted SvMF.
+
+```{r}
+Bests <- pbapply::pblapply(1:1000, function(seed){
+  set.seed(seed)
+  y <- sphm:::rS2S_constV(xs = NULL, 
+                   xe = mod_SvMF$xe,
+                   mnparam = mod_SvMF$mean,
+                   k = mod_SvMF$k,
+                   a = mod_SvMF$a,
+                   G0 = mod_SvMF$G0)[,-6]
+  newmod <- mobius_SvMF(y,
+                      xs = NULL, 
+                      xe = mod_vMF$xe,
+                      type = "Shogo",
+                      G01behaviour = "free",
+                      mean = mod_SvMF$mean,
+                      k = mod_SvMF$k,
+                      a = mod_SvMF$a,
+                      G0 = mod_SvMF$G0)
+  return(newmod[c("mean", "k", "a", "G0")])
+}, cl = 2)
+```
+
+
+```{r}
+Bests_a <- lapply(Bests, "[[", "a") %>%
+  simplify2array() %>%
+  t()
+colnames(Bests_a) <- paste0("a", 1:5)
+summary(Bests_a)
+```
+
+### 95% CI for a
+```{r}
+apply(Bests_a[,-1], 2, quantile, probs = c(0.025, 0.975)) %>%
+  round(2)
+```
+
+a2 stays a long way from 1 and a5 is always smaller than 0.6.
+
+

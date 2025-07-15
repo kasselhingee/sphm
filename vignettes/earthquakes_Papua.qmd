@@ -158,7 +158,7 @@ regions <- st_sfc(st_polygon(list(ptmatrix(141, 144, -4, -2))),
 regions <- st_sf(region = factor(1:8, ordered = TRUE), geom = regions)
 ```
 
-# Keep Only Shallow Earthquakes in Regions 1-4
+# Keep Only Shallow Eartquakes in Regions 2-4
 Convert data into an `sf` object. Assuming that the longitude and latitude are using the GPS coordinate system.
 
 ```{r}
@@ -166,14 +166,12 @@ s4df <- sf::st_as_sf(s4df, coords = c("Longitude", "Latitude"), remove = FALSE)
 sf::st_crs(s4df) <- 4326
 s4df <- st_intersection(s4df, regions) 
 s4df <- mutate(s4df, region = as.factor(region))
-s4df_north <- s4df %>% 
-  filter(region %in% 1:4) %>%
+s4df <- s4df %>% 
+  filter(region %in% 2:4) %>%
   filter(Depth <= 20)
 ```
 
 # Fig of earthquake locations, NGT and BSSL
-
-
 Plate information was obtained from github `https://github.com/fraxen/tectonicplates`.
 
 ```{r}
@@ -190,8 +188,6 @@ tecbound <- tecbound[apply(mat, 1, any), ]
 tecbound <- tecbound %>%
   mutate(NiceName = case_match(
     Name,
-    "CL\\WL" ~ "NGT",
-    "NB\\WL" ~ "NGT",
     "NB-SB" ~ "BSSL",
     "NB-MN" ~ "BSSL",
     "MN-SB" ~ "BSSL",
@@ -209,85 +205,59 @@ centroids <- tecbound %>%
          cenY = st_coordinates(centroid)[, "Y"])
 ```
 
-The below plots the earthquake location along with the fault locations.
 
 ```{r}
 library("rnaturalearth")
 world <- ne_countries(scale = "medium", returnclass = "sf")
 ```
 
-Below is a plot of all earthquake locations in the data.
+Now I will plot the earthquakes we use in this analysis.
 
 ```{r}
-ggplot(s4df) +
-  geom_sf(data = world) +
-  geom_sf(aes(col = Depth), shape = 4) +
-  geom_sf(data = tecbound, aes(lty = NiceName=="Other"), show.legend = FALSE) +
-  # geom_text(aes(x = cenX, y = cenY, label = Name), data = centroids, size = 3) +
-  scale_color_viridis_c() +
-  geom_sf(data = regions, fill = NA, col = "red") +
-  theme_bw() +
-  theme(axis.title = element_blank()) +
-  coord_sf(xlim = c(141.0, 158.4), ylim = c(-10.0, -2.4))
-```
-
-Now I will plot only the earthquakes we use in this analysis, which are only the earthquakes in the northern four regions.
-
-## Figure for Paper
-
-```{r}
-#| fig.width: 8
+#| fig.width: 7
 #| fig.height: 2
 ggplot() +
   geom_sf(data = world) +
-  geom_point(data = s4df_north, aes(x = Longitude, y = Latitude), position = position_jitter(width = 0.05, height = 0.05, seed = 1)) +
-  geom_sf(data = tecbound %>% filter(NiceName == "Other"), lty = "dotted", col = "grey", show.legend = FALSE) +
+  geom_point(data = s4df, aes(x = Longitude, y = Latitude), position = position_jitter(width = 0.05, height = 0.05, seed = 1)) +
   geom_sf(data = tecbound %>% filter(NiceName !="Other"), aes(lty = NiceName), show.legend = FALSE) +
-  geom_sf(data = regions %>% filter(region %in% 1:4), fill = NA, mapping = aes(col = region), show.legend = FALSE) +
+  geom_sf(data = regions %>% filter(region %in% 2:4), fill = NA, show.legend = FALSE) +
   scale_linetype_manual(values = c(NGT = "dashed", BSSL = "solid", Other = "dotted")) +
   theme_bw() +
   theme(axis.title = element_blank()) +
-  coord_sf(xlim = c(141.0, 153), ylim = c(-4.5, -2))
+  coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
 ```
 
-Caption: Earthquake locations near Papua New Guinea associated with the New Guinea Trench (dashed line) and Bismarck Sea Seismic Lineation (solid line).
-
+Caption: Shallow earthquake locations near the Bismarck Sea Seismic Lineation (solid line).
 Some jitter has been introduced because
-`r s4df_north %>% select(Latitude, Longitude) %>% duplicated() %>% sum()` are colocated.
+`r s4df %>% select(Latitude, Longitude) %>% duplicated() %>% sum()` are colocated.
 
-# Closest faults to earthquake
-For each earthquake we find the distance to the NGT and BSSL, and also the strike (up to $\pm \pi$) of the faults at this closest point.
+# Fault distance and strike
+For each earthquake we find the distance to the BSSL and also the strike (up to $\pm \pi$) of the fault at this closest point.
+For BSSL, the fault plane is vertical so strike may as well be below $\pi$.
 
 ## Distance to NGT and BSSL
 ```{r}
-dist_NGT <- tecbound %>%
-  filter(NiceName == "NGT") %>%
-  st_union() %>%
-  st_distance(s4df_north) %>%
-  drop() %>%
-  units::drop_units()
 dist_BSSL <- tecbound %>%
   filter(NiceName == "BSSL") %>%
   st_union() %>%
-  st_distance(s4df_north) %>%
+  st_distance(s4df) %>%
   drop() %>%
   units::drop_units()
-s4df_north <- s4df_north %>%
-  mutate(dist_NGT = dist_NGT,
-         dist_BSSL = dist_BSSL)
+s4df <- s4df %>%
+  mutate(dist = dist_BSSL)
 ```
 
-## Strike of NGT and BSSL
+## Strike of BSSL
 The strike (up to $\pm \pi$) of the faults at the closest point to each earthquake.
 
 First need to split the faults into segments
 ```{r}
 tecbound_interest <- tecbound %>%
-  filter(NiceName != "Other")
+  filter(NiceName == "BSSL")
 teccoords <- tecbound_interest %>%
   st_coordinates()
 strike <- teccoords %>%
-  as_data_frame() %>%
+  as_tibble() %>%
   tibble::rowid_to_column() %>%
   st_as_sf(coords = c("X", "Y"), crs = st_crs(tecbound)) %>%
   lwgeom::st_geod_azimuth() %>%
@@ -309,74 +279,45 @@ segs$FaultName <- tecbound_interest$Name[segs$fault]
 segs$NiceName <- tecbound_interest$NiceName[segs$fault]
 ```
 
-For NGT, the fault plane is such that strike is about $3\pi/4$. For BSSL, the fault plane is vertical so strike may as well be below $\pi$. Thus both strikes should be less than $\pi$.
 
 ```{r}
 segs <- segs %>%
    mutate(strike = case_when(strike > pi ~ strike - pi,
                              TRUE ~ strike))
-
-segs %>%
-  ggplot() +
-  geom_freqpoly(aes(x = strike, col = NiceName)) +
-  geom_rug(aes(x = strike, col = NiceName))
 ```
 
 ```{r}
 #| fig.width: 8
 #| fig.height: 2
 segs %>%
-  # mutate(strike = cut(strike, c(0, pi/4, 3*pi/4, pi))) %>%
-  mutate(strike = cut(strike, c(0,1.7,2.5, pi), include.lowest = TRUE)) %>%
+  # mutate(strike = cut(strike, c(0,1.7,2.5, pi), include.lowest = TRUE)) %>%
   ggplot() +
   geom_sf(aes(col = strike), linewidth = 2) +
-  # scale_color_viridis_d() +
-  coord_sf(xlim = c(141.0, 153), ylim = c(-4.5, -2))
+  scale_color_viridis_c() +
+  coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
 ```
-
 Find closest segment to each earthquake and use that for strike.
-
-For all earthquakes, strike of closest to NGT
 ```{r}
-segssub <- segs %>% filter(NiceName == "NGT")
-segidx <- st_nearest_feature(s4df_north, segssub)
-strike_NGT <- segssub$strike[segidx, drop = TRUE]
+segidx <- st_nearest_feature(s4df, segs)
+strike_BSSL <- segs$strike[segidx, drop = TRUE]
+s4df <- bind_cols(s4df, fstrike = strike_BSSL)
 ```
 
-For all earthquakes, strike of closest to BSSL
-```{r}
-segssub <- segs %>% filter(NiceName == "BSSL")
-segidx <- st_nearest_feature(s4df_north, segssub)
-strike_BSSL <- segssub$strike[segidx, drop = TRUE]
-s4df_north <- bind_cols(s4df_north,
-                        strike_NGT = strike_NGT,
-                        strike_BSSL = strike_BSSL)
-```
-
-# Associate strike and dip of closest fault with earthquake 
-```{r}
-s4df_north <- s4df_north %>%
-  mutate(fault = case_when(dist_NGT < dist_BSSL ~ "NGT",
-                           TRUE ~ "BSSL")) %>%
-  mutate(fstrike = case_when(fault == "NGT" ~ strike_NGT,
-                             fault == "BSSL" ~ strike_BSSL)) %>%
-  mutate(fdip = case_when(fault == "NGT" ~ 30,
-                             fault == "BSSL" ~ 90))
-```
-
-Lets plot to see if the assignments are correct
+Below plots the assigned fault's strike (`fstrike`) closest to each earthquake
 
 ```{r}
 #| fig.width: 8
 #| fig.height: 2
 segs %>%
-  mutate(strike = cut(strike, c(0,1.7,2.5, pi), include.lowest = TRUE)) %>%
   ggplot() +
   geom_sf(aes(col = strike), linewidth = 2) +
-  geom_point(data = s4df_north %>%
-    mutate(fstrike = cut(fstrike, c(0,1.7,2.5, pi), include.lowest = TRUE)),
-    aes(x = Longitude, y = Latitude, col = fstrike)) +
-  coord_sf(xlim = c(141.0, 153), ylim = c(-4.5, -2))
+  geom_point(data = s4df,
+    aes(x = Longitude, y = Latitude, fill = fstrike), 
+    shape = 21,
+    show.legend = FALSE) +
+  scale_color_viridis_c(name = "Strike", limits = range(segs$strike)) +
+  scale_fill_viridis_c(name = "Strike", limits = range(segs$strike)) +
+  coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
 ```
 
 Strike looks correct.
@@ -386,12 +327,12 @@ Strike looks correct.
 #| fig.height: 2
 ggplot() +
   geom_sf(data = world) +
-  geom_point(data = s4df_north, aes(x = Longitude, y = Latitude, col = as.factor(fdip))) +
-  geom_sf(data = tecbound, aes(lty = NiceName), show.legend = FALSE) +
-  scale_linetype_manual(values = c(NGT = "dashed", BSSL = "solid", Other = "dotted")) +
+  geom_point(data = s4df, aes(x = Longitude, y = Latitude, col = dist/1000)) +
+  geom_sf(show.legend = FALSE, data = filter(tecbound, NiceName == "BSSL")) +
   theme_bw() +
+  scale_color_viridis_c(name = "Distance (km)", transform = "log10") +
   theme(axis.title = element_blank()) +
-  coord_sf(xlim = c(141.0, 153), ylim = c(-4.5, -2))
+  coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
 ```
 
 # Look for Outliers
@@ -416,7 +357,7 @@ custom_points_wlabels <- function(data, mapping, ...){
 I'll rotate the earthquake data so it easier to view.
 
 ```{r}
-ystd <- s4df_north %>%
+ystd <- s4df %>%
   st_drop_geometry() %>%
   select(s1, s2, sMrt, sMrf, sMtf) %>% 
   as.matrix() %>% 
@@ -428,7 +369,7 @@ colnames(ystd) <- paste0("Y", 1:5)
 ```{r}
 #| fig.width: 20
 #| fig.height: 20
-bind_cols(ystd, s4df_north) %>%
+bind_cols(ystd, s4df) %>%
   mutate(outlier = case_when(Number %in% c(182, 306,  61, 112, 288) ~ TRUE, TRUE ~ NA_integer_)) %>%
   select(starts_with("Y"), fault, outlier, Number) %>%
   GGally::ggpairs(mapping = aes(col = fault, shape = fault), columns = 1:5, upper = list(continuous = custom_points_wlabels), lower = NULL, diag = NULL)
@@ -441,11 +382,11 @@ There are also two earthquakes, 182 and 306 assigned to NGT that are actually mo
 ```{r}
 #| fig.width: 20
 #| fig.height: 20
-bind_cols(ystd, s4df_north) %>%
+bind_cols(ystd, s4df) %>%
   mutate(outlier = case_when(Number %in% c(182, 306,  61, 112, 288) ~ TRUE, TRUE ~ NA_integer_)) %>%
   # mutate(fstrike = cut(fstrike, c(0,1.7,2.5, pi), include.lowest = TRUE)) %>%
-  select(starts_with("Y"), fstrike, outlier, Number, Longitude, fault) %>%
-  GGally::ggpairs(mapping = aes(col = fstrike, shape = Longitude > 149, group = fault), columns = 1:5, upper = list(continuous = custom_points_wlabels), lower = NULL, diag = NULL) +
+  select(starts_with("Y"), fstrike, outlier, Number, Longitude) %>%
+  GGally::ggpairs(mapping = aes(col = fstrike, shape = Longitude > 148), columns = 1:5, upper = list(continuous = custom_points_wlabels), lower = NULL, diag = NULL) +
   scale_color_viridis_c(end = 0.9)
 ```
 

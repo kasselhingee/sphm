@@ -552,7 +552,7 @@ xestd <- xe %>%
 # vMF Regression
 ## Default start
 ```{r}
-mod_vMF <- mobius_vMF(sphdf_clean %>% 
+mod_vMF <- mobius_vMF(s4df_clean %>% 
                         select(s1, s2, sMrt, sMrf, sMtf) %>% 
                         st_drop_geometry() %>% 
                         as.matrix(),
@@ -568,6 +568,7 @@ mod_vMF$DoF
 Here I tried 100 different starting points for the vMF regression. Below is a frequency polygon plot of the AIC all 100 estimates.
 
 ```{r}
+#| eval: false
 restarts <- pbapply::pblapply(1:100, function(seed){
   # randomly generates a Kassel-form link
   start <- sphm:::rmnlink_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)
@@ -579,7 +580,7 @@ restarts <- pbapply::pblapply(1:100, function(seed){
   bigQe[1,1] <- 1
   start$Qe <- bigQe
   start$ce <- 1
-  mobius_vMF(sphdf_clean %>% 
+  mobius_vMF(s4df_clean %>% 
                           select(s1, s2, sMrt, sMrf, sMtf) %>% 
                           st_drop_geometry() %>% 
                           as.matrix(),
@@ -601,7 +602,7 @@ No better vMF model was found.
 
 # SvMF Regression
 ```{r}
-mod_SvMF <- mobius_SvMF(sphdf_clean %>% 
+mod_SvMF <- mobius_SvMF(s4df_clean %>% 
                         select(s1, s2, sMrt, sMrf, sMtf) %>% 
                         st_drop_geometry() %>% 
                         as.matrix(),
@@ -659,7 +660,7 @@ get_predobspairsdf <- function(mod, extra = NULL){
 ```{r}
 #| fig.width: 15
 #| fig.height: 13
-get_predobspairsdf(mod_SvMF, sphdf_clean) %>%
+get_predobspairsdf(mod_SvMF, s4df_clean) %>%
   pairedplotggprep() +
   geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
                alpha = 0.5,
@@ -679,33 +680,42 @@ get_predobspairsdf(mod_SvMF, sphdf_clean) %>%
 
 ## Paper Plot
 ```{r}
-p1 <- get_predobspairsdf(mod_SvMF, sphdf_clean) %>%
+#| fig.width: 8
+#| fig.height: 6
+p1 <- get_predobspairsdf(mod_SvMF, s4df_clean) %>%
   filter(pair %in% c("Y1-Y2", "Y2-Y3", "Y2-Y4")) %>%
   pairedplotggprep() +
   facet_wrap(vars(pair1, pair2), ncol = 3) +
   geom_point(aes(x=A, y=B, col = Longitude), size = 1) +
   scale_color_viridis_c()
-p2 <- get_predobspairsdf(mod_SvMF, sphdf_clean) %>%
+p2 <- get_predobspairsdf(mod_SvMF, s4df_clean) %>%
   filter(pair %in% c("Y1-Y2", "Y2-Y3", "Y2-Y4")) %>%
   pairedplotggprep() +
   facet_wrap(vars(pair1, pair2), ncol = 3) +
   geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
                alpha = 0.5,
                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_point(aes(x=p_A, y=p_B, col = Longitude), size = 2) +
-  geom_point(aes(x=A, y=B), size = 2, col = "blue",
+  geom_point(aes(x=p_A, y=p_B, fill = Longitude),
+             size = 1.5,
+             shape = 21) +
+  geom_point(aes(x=A, y=B), size = 1, col = "blue",
              shape = 4,
              data = ~(attr(get_predobspairsdf(mod_SvMF), "p1") %>% filter(pair %in% .x$pair))
              ) +
-  scale_color_viridis_c()
-p1/p2 + plot_layout(guides = "collect")
+  scale_color_viridis_c() +
+  scale_fill_viridis_c()
+(p1/p2 + plot_layout(guides = "collect"))
 ```
 
-Caption: Top: Normalised earthquake moment tensors after a standardising rotation.
-Bottom: Predicted mean earthquake moment tensors by the mobius scaled von-mises regression.
-The first three coordinates plotted here capture most of the variation of the data. 
-A plot with final two coordinates of $\mathbb{R}^5$ is in the supplement.
-Grey arrows: from predicted mean to corresponding observed earthquake moment tensor.
+Caption: 42 normalised earthquake moment tensors on $S^4$.
+Moment tensors are shown orthoganally projected onto pairs of axes that standardise the observed earthquake moments to have mean of (1,0,0,0,0) with axes of variation Y2, Y3, Y4 and Y5 ordered by decreasing variance.
+Plots of projections onto further pairs of axes are in SI.
+Top: Observed earthquake moment tensors.
+Bottom: Mean earthquake moment tensors according to our regression.
+Colour: Longitude of earthquakes.
+Arrows: represent residuals and point from mean earthquake moment tensor to the corresponding observed earthquake moment tensor.
+Blue x: The location of the first column of $B_0$.
+Grey circle boundary: intersection of $S^4$ with the plane given by the pair of axes.
 
 ## Residuals
 ```{r}

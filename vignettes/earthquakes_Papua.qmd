@@ -336,23 +336,46 @@ ggplot() +
 ```
 
 # Look for Outliers
-Below are some functions that make plotting using GGally easier.
+Below makes circles for plotting the edge of S^4 later.
 
 ```{r}
 # Create data for the unit circle
 theta <- seq(0, 2 * pi, length.out = 100)
 circle_df <- data.frame(x = cos(theta), y = sin(theta))
-custom_points <- function(data, mapping, ...) {
-  ggplot(data, mapping) +
-    geom_point(...) +
-    geom_path(data = circle_df, aes(x = x, y = y), inherit.aes = FALSE, color = "grey") +
-    coord_fixed()
-}
-custom_points_wlabels <- function(data, mapping, ...){
-  custom_points(data, mapping, ...) +
-    ggrepel::geom_text_repel(aes(label = Number), data = function(x) {filter(x, !is.na(outlier))}, min.segment.length = 0.01)
+colpairs <- combn(paste0("Y", 1:5), 2, simplify = FALSE)
+pair_dfs <- lapply(colpairs, function(pair) {
+  Aname <- pair[1]
+  Bname <- pair[2]
+  circle_df %>%
+    rename(A = x, B = y) %>%
+    mutate(pair1=Aname,
+           pair2=Bname,
+           pair = paste(pair, collapse = "-"))
+})
+circle_df_long <- bind_rows(pair_dfs)
+```
+
+And the following is useful for paired plotting of locations on S4:
+
+```{r}
+pivot_coordpairs <- function(df, coordnames = paste0("Y",1:5)){
+  colpairs <- combn(coordnames, 2, simplify = FALSE)
+  pair_dfs <- lapply(colpairs, function(pair) {
+    Aname <- pair[1]
+    Bname <- pair[2]
+    df %>%
+      # copy pair values
+      mutate(A = .data[[Aname]],
+             B = .data[[Bname]]) %>%
+      mutate(pair1=Aname,
+             pair2=Bname,
+             pair = paste(pair, collapse = "-"))
+  })
+  pairsdf <- bind_rows(pair_dfs)
+  pairsdf
 }
 ```
+
 
 I'll rotate the earthquake data so it easier to view.
 
@@ -365,20 +388,34 @@ ystd <- s4df %>%
 colnames(ystd) <- paste0("Y", 1:5)
 ```
 
-## vs Assigned Fault
-```{r}
-#| fig.width: 20
-#| fig.height: 20
-bind_cols(ystd, s4df) %>%
-  mutate(outlier = case_when(Number %in% c(182, 306,  61, 112, 288) ~ TRUE, TRUE ~ NA_integer_)) %>%
-  select(starts_with("Y"), fault, outlier, Number) %>%
-  GGally::ggpairs(mapping = aes(col = fault, shape = fault), columns = 1:5, upper = list(continuous = custom_points_wlabels), lower = NULL, diag = NULL)
-```
-
-These plots, particularly Y3 vs Y1 suggest that there are three earthquakes (Number 61, 112 and 288) assigned to the BSSL that are actually much more like the NGT earthquakes.
-There are also two earthquakes, 182 and 306 assigned to NGT that are actually more like the BSSL earthquakes.
 
 ## vs Strike
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+ystd %>%
+  as_tibble() %>%
+  bind_cols(s4df) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  ggplot(aes(x=A, y=B, z = fstrike)) +
+  facet_grid(vars(pair2), vars(pair1), switch = "both") +
+  geom_path(data = circle_df_long, mapping = aes(x=A,y=B), inherit.aes = FALSE, color = "grey") +
+  coord_fixed(xlim = c(-1,1), ylim = c(-1,1), expand = FALSE) +
+  theme_minimal() +
+  theme(strip.text.y = element_text(angle = 90),
+        strip.placement = "outside",
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_blank(), #element_line(arrow = grid::arrow(ends = "both", length = unit(0.1, "inches"))),
+        panel.grid = element_blank()) +
+  stat_summary_2d(fun = mean, 
+                  aes(fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c(name = "fstrike") +
+  geom_point(aes(fill = fstrike), size = 2, shape = 21)
+
+```
+
 ```{r}
 #| fig.width: 20
 #| fig.height: 20

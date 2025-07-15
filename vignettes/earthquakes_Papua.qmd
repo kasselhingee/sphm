@@ -374,10 +374,22 @@ pivot_coordpairs <- function(df, coordnames = paste0("Y",1:5)){
   pairsdf <- bind_rows(pair_dfs)
   pairsdf
 }
+ggplotprep <- function(df){
+  ggplot(data = df, mapping = aes(x=A, y=B)) +
+  facet_grid(vars(pair2), vars(pair1), switch = "both") +
+  geom_path(data = circle_df_long, mapping = aes(x=A,y=B), inherit.aes = FALSE, color = "grey") +
+  coord_fixed(xlim = c(-1.01,1.01), ylim = c(-1.01,1.01), expand = FALSE) +
+  theme_minimal() +
+  theme(strip.text.y = element_text(angle = 90),
+        strip.placement = "outside",
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_blank(), #element_line(arrow = grid::arrow(ends = "both", length = unit(0.1, "inches"))),
+        panel.grid = element_blank())
+}
 ```
 
 
-I'll rotate the earthquake data so it easier to view.
 
 ```{r}
 ystd <- s4df %>%
@@ -388,104 +400,96 @@ ystd <- s4df %>%
 colnames(ystd) <- paste0("Y", 1:5)
 ```
 
+For easy plotting below, I've recorded the outliers I found.
+```{r}
+outliers <- c(
+  "182" = "general",
+  "306" = "general",
+  "76" = "general",
+  "254" = "general",
+  "169" = "general",
+  "87" = "general",
+  "175" = "longitude",
+  "260" = "longitude"
+)
+outliers <- outliers %>%
+  tibble::enframe(name = "Number", value = "outlier") %>%
+  mutate(Number = as.integer(Number))
+```
 
-## vs Strike
+## vs Longitude
+In the below plot, moment tensors of earthquakes on $S^4$ are orthogonally projected onto pairs of axes.
+Point colour is given by earthquake longitude.
+Background colour is the average earthquake longitude for that part of projected $S^4$.
+
+The axes Y1 ... Y5 have been chosen so that the second moment of the data is the identity.
+
 ```{r}
 #| fig.width: 15
 #| fig.height: 13
-ystd %>%
-  as_tibble() %>%
-  bind_cols(s4df) %>%
+s4df %>%
+  st_drop_geometry() %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  left_join(outliers, by = "Number") %>%
   pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  ggplot(aes(x=A, y=B, z = fstrike)) +
-  facet_grid(vars(pair2), vars(pair1), switch = "both") +
-  geom_path(data = circle_df_long, mapping = aes(x=A,y=B), inherit.aes = FALSE, color = "grey") +
-  coord_fixed(xlim = c(-1,1), ylim = c(-1,1), expand = FALSE) +
-  theme_minimal() +
-  theme(strip.text.y = element_text(angle = 90),
-        strip.placement = "outside",
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.line = element_blank(), #element_line(arrow = grid::arrow(ends = "both", length = unit(0.1, "inches"))),
-        panel.grid = element_blank()) +
-  stat_summary_2d(fun = mean, 
-                  aes(fill = after_stat(value)),
+  ggplotprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = Longitude, fill = after_stat(value)),
                   bins = 10) +
-  scale_fill_viridis_c(name = "fstrike") +
-  geom_point(aes(fill = fstrike), size = 2, shape = 21)
-
+  scale_fill_viridis_c() +
+  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number,
+                                fontface = case_match(outlier, 
+                                                      "general" ~ "plain",
+                                                      "longitude" ~ "italic")
+                                ),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0)
 ```
+
+From these plots we can see 6 earthquakes very different to the rest in at least some of the coordinates Y1 - Y5.
+Earthquakes 182, 306, 76, 87 and 169 were outlying in Y1.
+Earthquake 254 is an outlier in Y5.
+
+Furthermore, earthquake 175 is an outlier because it has a high longitude, but is located among low longitude earthquakes.
+Earthquake 260 is similar.
+
+## vs Fault Strike
+In the below plot, moment tensors of earthquakes on $S^4$ are orthogonally projected onto pairs of axes.
+Point colour is given by fault strike.
+Background colour is the average fault strike for that part of projected $S^4$.
+
+The axes Y1 ... Y5 have been chosen so that the second moment of the data is the identity.
 
 ```{r}
-#| fig.width: 20
-#| fig.height: 20
-bind_cols(ystd, s4df) %>%
-  mutate(outlier = case_when(Number %in% c(182, 306,  61, 112, 288) ~ TRUE, TRUE ~ NA_integer_)) %>%
-  # mutate(fstrike = cut(fstrike, c(0,1.7,2.5, pi), include.lowest = TRUE)) %>%
-  select(starts_with("Y"), fstrike, outlier, Number, Longitude) %>%
-  GGally::ggpairs(mapping = aes(col = fstrike, shape = Longitude > 148), columns = 1:5, upper = list(continuous = custom_points_wlabels), lower = NULL, diag = NULL) +
-  scale_color_viridis_c(end = 0.9)
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  ggplotprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = Longitude, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c() +
+  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0)
 ```
 
-The strike of earthquake Number 306 appears to be an outlier according to this plot.
+Since removing the outliers identified by the Vs Longitude plot, Earthquake 93 is revealed as a possible outlier too. But we will leave it for this analysis.
 
-# Correct 5 outlying earthquakes
-Below is a plot of earthquake locations and the identified outliers.
-
-```{r}
-#| fig.width: 8
-#| fig.height: 2
-s4df_north %>%
-  mutate(outlier = Number %in% c(182, 306,    61, 112, 288)) %>%
-  ggplot() +
-  geom_sf(data = world) +
-  geom_point(aes(x = Longitude, y = Latitude, col = fault)) +
-  ggrepel::geom_label_repel(mapping = aes(x = Longitude, y = Latitude, label = Number), data = function(x) {filter(x, outlier)}, min.segment.length = 0.01) +
-  geom_sf(data = tecbound, aes(lty = NiceName), show.legend = FALSE) +
-  scale_linetype_manual(values = c(NGT = "dashed", BSSL = "solid", Other = "dotted")) +
-  theme_bw() +
-  theme(axis.title = element_blank()) +
-  coord_sf(xlim = c(141.0, 153), ylim = c(-4.5, -2))
-```
-
-Earthquakes 112, 288 and 182 all appear close to both NGT and BSSL, and thus it would make sense that these earthquakes were not necessarily generated by the stresses associated with their nearest fault.
-
-It is less plausible that earthquakes 61 and 306 were generated by the BSSL and NGT stresses respectively, yet the earthquake moment tensors suggests that this was the case.
-
-Here I'll reassign 112, 288 and 182, and remove 61 and 306.
-
-Here we reassign these earthquakes and record the change in a new column `outlier`.
-
-```{r}
-s4df_north <- s4df_north %>%
-  mutate(fault = case_when(Number %in% c(182, 306) ~ "NGT",
-                             Number %in% c(61, 112, 288) ~ "BSSL",
-                             TRUE ~ fault
-                             )) %>%
-  mutate(outlier = case_when(Number %in% c(182, 306) ~ "to NGT",
-                 Number %in% c(61, 112, 288) ~ "to BSSL",
-                 TRUE ~ NA_character_)) %>%
-  mutate(outlier = as.factor(outlier)) %>%
-  mutate(fstrike = case_when(fault == "NGT" ~ strike_NGT,
-                             fault == "BSSL" ~ strike_BSSL)) %>%
-  mutate(fdip = case_when(fault == "NGT" ~ 30,
-                             fault == "BSSL" ~ 90)) %>%
-  filter(!(Number %in% c(306, 61)))
-```
-
-```{r}
-ggplot() +
-  geom_sf(data = world) +
-  geom_point(data = s4df_north, aes(x = Longitude, y = Latitude, col = fstrike), position = position_jitter(width = 0.05, height = 0.05, seed = 1)) +
-  geom_sf(data = tecbound %>% filter(NiceName == "Other"), lty = "dotted", col = "grey", show.legend = FALSE) +
-  geom_sf(data = tecbound %>% filter(NiceName !="Other"), aes(lty = NiceName), show.legend = FALSE) +
-  geom_sf(data = regions %>% filter(region %in% 1:4), fill = NA, show.legend = FALSE) +
-  scale_linetype_manual(values = c(NGT = "dashed", BSSL = "solid", Other = "dotted")) +
-  theme_bw() +
-  theme(axis.title = element_blank()) +
-  coord_sf(xlim = c(141.0, 153), ylim = c(-4.5, -2)) +
-  scale_color_viridis_c()
-```
 
 # Build covariates
 Since dip has only two values 30 or 90, use it has a categorical variable.

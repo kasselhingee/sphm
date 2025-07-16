@@ -35,7 +35,9 @@ rotationmat_amaral  <- function(start, end){ #assumes a and b are unit vectors
   ab <- (end %*% start)[[1]]
   alpha <- acos(ab)
   cvec <- start - end*ab
-  cvec <- cvec/sqrt(cvec %*% cvec)[[1]]
+  if ((cvec %*% cvec)[[1]] > 0){
+    cvec <- cvec/sqrt(cvec %*% cvec)[[1]] #if statement here is useful when start==end
+  }
   A <- end%o%cvec - cvec%o%end
   Q = diag(length(end)) + sin(alpha)*A + (cos(alpha) - 1)*(end%o%end + cvec%o%cvec)
   return(Q)

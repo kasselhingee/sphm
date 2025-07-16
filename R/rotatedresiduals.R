@@ -34,10 +34,10 @@ JuppRmat <- function(y, base){
 rotationmat_amaral  <- function(start, end){ #assumes a and b are unit vectors
   ab <- (end %*% start)[[1]]
   alpha <- acos(ab)
-  c <- start - end*ab
-  c <- c/sqrt(c %*% c)[[1]]
-  A <- end%o%c - c%o%end
-  Q = diag(length(end)) + sin(alpha)*A + (cos(alpha) - 1)*(end%o%end + c%o%c)
+  cvec <- start - end*ab
+  cvec <- cvec/sqrt(cvec %*% cvec)[[1]]
+  A <- end%o%cvec - cvec%o%end
+  Q = diag(length(end)) + sin(alpha)*A + (cos(alpha) - 1)*(end%o%end + cvec%o%cvec)
   return(Q)
 }
 

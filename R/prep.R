@@ -17,7 +17,7 @@ addEuccovars <- function(preplist, type, intercept){
   if (intercept && !is.null(preplist$xe)){
     # search for 1s covariate, otherwise add it to end
     constxe <- (apply(preplist$xe, 2, sd) < sqrt(.Machine$double.eps))
-    onescovaridx <- which(abs(colMeans(preplist$xe[,constxe, drop = FALSE]) - 1) < .Machine$double.eps)
+    onescovaridx <- which(constxe)[which(abs(colMeans(preplist$xe[,constxe, drop = FALSE]) - 1) < .Machine$double.eps)]
     if (length(onescovaridx) == 0){
       preplist$xe <- cbind(preplist$xe, "ones" = 1)
       onescovaridx <- ncol(preplist$xe)

@@ -314,7 +314,12 @@ mobius_vFM_restart <- function(mod_vMF, preseed = 1){
     # convert qe1 to nth pole
     rotmat <- rotationmat_amaral(inparam$qe1, nthpole(dims[["qe"]]))
     # build Qe from deciding it is random in the space orthogonal to qe1
-    rotQe <- cbind(0, rbind(0, start$Qe[,-1]))
+    rotQe <- rbind(0, start$Qe)
+    if (ncol(rotQe) == dims["p"]){
+      rotQe <- cbind(0, rotQe[,-1, drop = FALSE])
+    } else if (ncol(rotQe) == dims["p"] - 1) { #case when qe=p and fix_qe1=TRUE
+      rotQe <- cbind(0, rotQe)
+    }
     rotQe[1,1] <- 1
     start$Qe <- t(rotmat) %*% rotQe
     # put inparam$qe1 back in case inparam$qe1 = - nthpole(dims[["qe"]]) and rotmat is then a reflection not a rotation
@@ -323,10 +328,15 @@ mobius_vFM_restart <- function(mod_vMF, preseed = 1){
   if (dims[["qs"]] > 0 & mod_vMF$linktype$fix_qs1){
     # convert qs1 to nth pole
     rotmat <- rotationmat_amaral(inparam$qs1, nthpole(dims[["qs"]]))
-    rotQs <- cbind(0, rbind(0, start$Qs[,-1]))
+    rotQs <- rbind(0, start$Qs)
+    if (ncol(rotQs) == dims["p"]){
+      rotQs <- cbind(0, rotQs[,-1, drop = FALSE])
+    } else if (ncol(rotQs) == dims["p"] - 1) { #case when qs=p and fix_qs1=TRUE
+      rotQs <- cbind(0, rotQs)
+    }
     rotQs[1,1] <- 1
     start$Qs <- t(rotmat) %*% rotQs
-    # put inparam$qe1 back in case inparam$qe1 = - nthpole(dims[["qe"]]) and rotmat is then a reflection not a rotation
+    # put inparam$qs1 back in case inparam$qs1 = - nthpole(dims[["qs"]]) and rotmat is then a reflection not a rotation
     start$Qs[,1] <- inparam$qs1
   }
   start <- as_mnlink_Omega(start)

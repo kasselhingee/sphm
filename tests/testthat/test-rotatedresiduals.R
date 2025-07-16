@@ -33,4 +33,5 @@ test_that("rotationmat_amaral() is identity when start=end", {
   myvec <- rnorm(6)
   myvec <- myvec/sqrt(sum(myvec^2))
   expect_equal(rotationmat_amaral(myvec,myvec), diag(6))
+  expect_equal(rotationmat_amaral(myvec,-myvec), diag(6) - 2 * myvec %*% t(myvec))
 })

@@ -31,8 +31,11 @@ JuppRmat <- function(y, base){
 }
 
 # Rotation of tangent vectors from base to y
+# if -start = end then a reflection matrix in the `end` direction is created
 rotationmat_amaral  <- function(start, end){ #assumes a and b are unit vectors
   ab <- (end %*% start)[[1]]
+  if (ab > 1){ab <- min(ab, 1)}
+  if (ab < -1){ab <- max(ab, -1)}
   alpha <- acos(ab)
   cvec <- start - end*ab
   if ((cvec %*% cvec)[[1]] > 0){

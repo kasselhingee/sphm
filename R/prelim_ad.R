@@ -42,7 +42,6 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
     stopifnot(is_Shogo(preplist$start))
     stopifnot(all(preplist$xe[, 1]^2 < sqrt(.Machine$double.eps)))
   }
-  
 
   ### More detailed preparation ###
   om0 <- as_mnlink_Omega(preplist$start)
@@ -158,7 +157,9 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
     dists = dists,
     DoF = DoF,
     AIC = AIC,
-    lLik = lLik
+    lLik = lLik,
+    start = start,
+    linktype = list(type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1, intercept = intercept)
   )
   return(niceout)
 }
@@ -299,3 +300,21 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
     ))
 }
 
+
+mobius_vFM_restart <- function(mod_vMF, preseed = 1){
+  inparam <- as_mnlink_Omega(mod_vMF$est)
+  dims <- dim.mnlink_Omega(inparam)
+  starttmp <- rmnlink_cann(p = dims["p"], 
+                           qs = dims[["qs"]] - (dims[["qs"]] > 0 & mod_vMF$linktype$fix_qs1), 
+                           qe = dims[["qe"]] - (dims[["qe"]] > 0 & mod_vMF$linktype$fix_qe1), 
+                           preseed = preseed)
+  # for sitatuations with fixed elements, treat simulated matrices as part of the full matrix
+  if (dims[["qe"]] > 0 & mod_vMF$linktype$fix_qe1){
+    starttmp$ce <- inparam$ce
+    # convert qe1 to nth pole
+    rotmat <- rotationmat_amaral(inparam$qe1, nthpole(dims[["qe"]]))
+    length(inparam$qe1)
+    
+    dim(starttmp$Qe)
+  }
+}

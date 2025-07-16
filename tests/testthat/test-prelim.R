@@ -276,6 +276,16 @@ test_that("mobius_vMF() performs correctly for Shogo", {
   estimatedvalues <- !grepl("(^qe|^ce)", names(standardisedsolution))
   expect_equal(res2$nlopt$x0, standardisedsolution[estimatedvalues], ignore_attr = TRUE)
   expect_equal(res2$k, 30, tolerance = 1E-1)
+  
+  # check random start
+  res3 <- mobius_vFM_restart(res, preseed = 1)
+  expect_true(vnorm(res3$nlopt$x0 - res$nlopt$solution) > 1)
+  expect_true(vnorm(res3$nlopt$x0 - res$nlopt$x0) > 1)
+  expect_equal(res3$est, res$est, tolerance = 1E-5)
+  res4 <- mobius_vFM_restart(res, preseed = 1)
+  expect_equal(res4$nlopt$x0, res3$nlopt$x0)
+  res5 <- mobius_vFM_restart(res, preseed = 2)
+  expect_true(vnorm(res5$nlopt$x0 - res3$nlopt$x0) > 1)
 })
 
 test_that("mobius_vMF() performs correctly for Kassel", {
@@ -451,4 +461,3 @@ test_that("Hessian eigenvalues match DoF for Euc2S", {
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), fit$DoF-1 + 0)
   expect_gt(min(evals), -sqrt(.Machine$double.eps))
 })
-

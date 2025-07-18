@@ -9,7 +9,7 @@ format:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
 library(ggplot2)
 library(dplyr)
 library(GGally)
@@ -578,12 +578,13 @@ xe <- s4df_clean %>%
   select(fstrike,
          Latitude, 
          Longitude) %>%
-  mutate(Longitude2 = Longitude^2) %>%
+  # mutate(Longitude2 = Longitude^2) %>%
   mutate(L148 = Longitude < 148) %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>
   as_tibble()
+cor(xe)
 ```
 
 # vMF Regression
@@ -664,35 +665,6 @@ cann$Be %*% t(cann$Qe[,-1])
 cann$P
 ```
 
-What does Longitude +/- Longitude2 look like?
-Recalling these are standardised for the above scales.
-
-```{r}
-xe %>%
-  as_tibble() %>%
-  select(Longitude, Longitude2) %>%
-  mutate(`L + L^2` = Longitude + Longitude2,
-         `L - L^2` = Longitude - Longitude2) %>%
-  ggplot() + 
-  geom_point(aes(x = Longitude, y = Longitude2))
-xe %>%
-  as_tibble() %>%
-  select(Longitude, Longitude2) %>%
-  mutate(`L + L^2` = Longitude + Longitude2,
-         `L - L^2` = Longitude - Longitude2) %>%
-  ggplot() + 
-  geom_point(aes(x = Longitude, y = -`L - L^2`))
-xe %>%
-  as_tibble() %>%
-  select(Longitude, Longitude2) %>%
-  mutate(`L + L^2` = Longitude + Longitude2,
-         `L - L^2` = Longitude - Longitude2) %>%
-  ggplot() + 
-  geom_point(aes(x = Longitude, y = (`L + L^2`)))
-```
-
-How does Longitude2 vs Longitude look like a straight line!? At large values of 150ish, the square looks pretty straight?
-
 # Predictions
 ```{r}
 get_predobspairsdf <- function(mod,
@@ -747,13 +719,6 @@ get_predobspairsdf(mod_SvMF, s4df_clean) %>%
   ggtitle("Prediction Highlighted")
 ```
 
-Note that the earthquake with the biggest longitude has the smallest residual distance
-
-```{r}
-which.max(mod_SvMF$xe[, "Longitude"])
-which.min(mod_SvMF$dists)
-```
-
 # Predictions in Natural Coordinates
 
 ```{r}
@@ -786,8 +751,6 @@ get_predobspairsdf_nat <- function(mod,
 ```{r}
 #| fig.width: 15
 #| fig.height: 13
-circle_df_long <- circle_df_long %>%
-  mutate(across(starts_with("pair"), ~gsub("Y", "s", .x)))
 get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s"))) %>%
   pairedplotggprep() +
   geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
@@ -871,7 +834,7 @@ Here we plot the the residuals against each of the axes defined by $\Gamma_0$. W
 #| fig.width: 8
 #| fig.height: 7
 circle_df_long <- circle_df_long %>%
-  mutate(across(starts_with("pair"), ~gsub("s", "r", .x)))
+  mutate(across(starts_with("pair"), ~gsub("Y", "r", .x)))
 mod_SvMF$rresids_G0 %>%
   as_tibble() %>%
   bind_cols(s4df_clean) %>%
@@ -1091,8 +1054,7 @@ loocvmseSvMF <- function(mod){
 loocvmseSvMF(mod_SvMF)
 ```
 
-MSE here was huge (0.18). Probably because the estimation is so unstable doing a full mobius_SvMF() call each time.
-More stable is to only do the `optim_constV()` step. This reduced MSE to 0.17, which still isn't very good and is worse than the mean models below.
+More stable is to only do the `optim_constV()` step. MSE is slightly better than regions. But not heaps.
 
 
 # Discrete Mean Models

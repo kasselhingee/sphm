@@ -916,7 +916,7 @@ getlikR <- function(y){
                      xe = mod_vMF$xe,
                      type = "Shogo",
                      start = mod_vMF$est)
-  mod2 <- mobius_SvMF(y,
+  mod2 <- withCallingHandlers({mobius_SvMF(y,
                       xs = NULL, 
                       xe = mod_vMF$xe,
                       type = "Shogo",
@@ -924,7 +924,12 @@ getlikR <- function(y){
                       mean = mod_SvMF$mean,
                       k = mod_SvMF$k,
                       a = mod_SvMF$a,
-                      G0 = mod_SvMF$G0)
+                      G0 = mod_SvMF$G0)},
+        warning = function(w){
+        if (grepl("p!=3", conditionMessage(w))) {
+          invokeRestart("muffleWarning")
+        }
+      })
   lLik1 <- sphm:::dS2S_constV(mod1$y, xs = NULL, xe =mod1$xe,
               mean = mod1$est,
               k = mod1$k,
@@ -981,7 +986,7 @@ Bests <- pbapply::pblapply(1:1000, function(seed){
                    k = mod_SvMF$k,
                    a = mod_SvMF$a,
                    G0 = mod_SvMF$G0)[,-6]
-  newmod <- mobius_SvMF(y,
+  newmod <- withCallingHandlers({mobius_SvMF(y,
                       xs = NULL, 
                       xe = mod_vMF$xe,
                       type = "Shogo",
@@ -989,7 +994,12 @@ Bests <- pbapply::pblapply(1:1000, function(seed){
                       mean = mod_SvMF$mean,
                       k = mod_SvMF$k,
                       a = mod_SvMF$a,
-                      G0 = mod_SvMF$G0)
+                      G0 = mod_SvMF$G0)},
+          warning = function(w){
+        if (grepl("p!=3", conditionMessage(w))) {
+          invokeRestart("muffleWarning")
+        }
+      })
   return(newmod[c("mean", "k", "a", "G0")])
 }, cl = 2)
 ```
@@ -1099,7 +1109,7 @@ loocvmseRegionMeans <- function(mod){
                             Longitude = mod$Longitude[-idx],
                             breaks = mod$breaks)
     # prediction
-    region <- cut(Longitude[idx], breaks = newmod$breaks, dig.lab = 4)
+    region <- cut(mod$Longitude[idx], breaks = newmod$breaks, dig.lab = 4)
     pred <- newmod$means[[region]]
     obs <- unlist(as.vector(mod$y[idx,]))
     Euc <- sphm:::vnorm(drop(obs - pred))

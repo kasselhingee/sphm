@@ -583,9 +583,8 @@ xe <- s4df_clean %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>
-  as_tibble() %>%
-  mutate(Longitude2 = Longitude^2)
-cor(xestd)
+  as_tibble()
+cor(xe)
 ```
 
 # vMF Regression

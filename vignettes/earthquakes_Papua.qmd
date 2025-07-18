@@ -169,6 +169,7 @@ s4df <- mutate(s4df, region = as.factor(region))
 s4df <- s4df %>% 
   filter(region %in% 2:4) %>%
   filter(Depth <= 20)
+nrow(s4df)
 ```
 
 # Fig of earthquake locations, NGT and BSSL
@@ -342,7 +343,14 @@ Below makes circles for plotting the edge of S^4 later.
 # Create data for the unit circle
 theta <- seq(0, 2 * pi, length.out = 100)
 circle_df <- data.frame(x = cos(theta), y = sin(theta))
-colpairs <- combn(paste0("Y", 1:5), 2, simplify = FALSE)
+colpairs <- #combn(paste0("Y", 1:5), 2, simplify = FALSE)
+expand.grid(paste0("Y", 1:5), paste0("Y", 1:5)) %>%
+  filter(Var1 != Var2) %>%
+  mutate(Var1 = as.character(Var1), Var2 = as.character(Var2)) %>%
+  rowwise() %>%
+  mutate(pair = list(c(Var1, Var2))) %>%
+  select(pair) %>%
+  unlist(recursive = FALSE)
 pair_dfs <- lapply(colpairs, function(pair) {
   Aname <- pair[1]
   Bname <- pair[2]
@@ -358,8 +366,7 @@ circle_df_long <- bind_rows(pair_dfs)
 And the following is useful for paired plotting of locations on S4:
 
 ```{r}
-pivot_coordpairs <- function(df, coordnames = paste0("Y",1:5)){
-  colpairs <- combn(coordnames, 2, simplify = FALSE)
+pivot_coordpairs <- function(df, coordnames = paste0("Y",1:5), colpairs = colpairs <- combn(coordnames, 2, simplify = FALSE)){
   pair_dfs <- lapply(colpairs, function(pair) {
     Aname <- pair[1]
     Bname <- pair[2]
@@ -522,8 +529,38 @@ s4df %>%
 
 There could be two outliers with very low fault strike (dark blue) relative to other earthquakes, but fault strike doesn't seem to have as big an effect on moment tensors as longitude does.
 
+# Figure for Paper
+```{r}
+#| fig.width: 7
+#| fig.height: 2
+ggplot() +
+  geom_sf(data = world) +
+  geom_point(data = s4df %>% left_join(outliers, by = "Number"),
+             aes(x = Longitude, y = Latitude, shape = is.na(outlier)),
+             position = position_jitter(width = 0.05, height = 0.05, seed = 1),
+             show.legend = FALSE) +
+  scale_shape_manual(values = c(4, 16)) +
+  geom_sf(data = tecbound %>% filter(NiceName !="Other"), aes(lty = NiceName), show.legend = FALSE) +
+  # geom_sf(data = regions %>% filter(region %in% 2:4), fill = NA, show.legend = FALSE) +
+  scale_linetype_manual(values = c(NGT = "dashed", BSSL = "solid", Other = "dotted")) +
+  theme_bw() +
+  theme(axis.title = element_blank()) +
+  coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
+ggsave("earthquakelocations.pdf", width = 7, height = 2)
+```
 
 # Remove Outliers
+The outliers by region are:
+```{r}
+s4df %>%
+  left_join(outliers, by = "Number") %>%
+  filter(!is.na(outlier)) %>%
+  st_drop_geometry() %>%
+  select(Number, region) %>%
+  arrange(region)
+```
+
+
 ```{r}
 s4df_clean <- s4df %>%
   left_join(outliers, by = "Number") %>%
@@ -627,7 +664,9 @@ cann$Be %*% t(cann$Qe[,-1])
 
 # Predictions
 ```{r}
-get_predobspairsdf <- function(mod, extra = NULL){
+get_predobspairsdf <- function(mod,
+                               extra = NULL,
+                               colpairs = combn(paste0("Y",1:5), 2, simplify = FALSE)){
   # standard rotations
   ystd <- standardise_sph(mod$y)
   colnames(ystd) <- paste0("Y", 1:ncol(ystd))
@@ -637,12 +676,11 @@ get_predobspairsdf <- function(mod, extra = NULL){
   p1std <- standardise_sph(matrix(mod$mean$p1, nrow = 1), attr(ystd, "std_rotation"))
   colnames(p1std) <- paste0("Y", 1:ncol(ystd))
   p1pairs <- as_tibble(p1std) %>%
-    pivot_coordpairs()
+    pivot_coordpairs(colpairs = colpairs)
   
   predsobs <- bind_cols(predstd,
                         ystd,
                         extra)
-  colpairs <- combn(paste0("Y",1:5), 2, simplify = FALSE)
   pair_dfs <- lapply(colpairs, function(pair) {
     predsobs %>%
       select(everything(), -starts_with("Y"), -starts_with("p_Y"), all_of(pair),all_of(paste0("p_", pair))) %>%
@@ -678,20 +716,28 @@ get_predobspairsdf(mod_SvMF, s4df_clean) %>%
   ggtitle("Prediction Highlighted")
 ```
 
+Note that the earthquake with the biggest longitude has the smallest residual distance
+
+```{r}
+which.max(mod_SvMF$xe[, "Longitude"])
+which.min(mod_SvMF$dists)
+```
+
 # Paper Plot
 ```{r}
-#| fig.width: 8
-#| fig.height: 6
-p1 <- get_predobspairsdf(mod_SvMF, s4df_clean) %>%
-  filter(pair %in% c("Y1-Y2", "Y2-Y3", "Y2-Y4")) %>%
+obsplots <- lapply(c("Y1-Y2", "Y3-Y2", "Y4-Y2"), function(pair){
+  get_predobspairsdf(mod_SvMF, s4df_clean,
+                     colpairs = strsplit(pair, "-")) %>%
+    pairedplotggprep() +
+    geom_point(aes(x=A, y=B, col = Longitude), size = 1) +
+    scale_color_viridis_c() +
+    theme(plot.margin = unit(c(0,2,0,2), "mm"),
+          strip.text = element_text(margin = margin(0, 0, 0, 0)))
+})
+predplots <- lapply(c("Y1-Y2", "Y3-Y2", "Y4-Y2"), function(pair){
+  get_predobspairsdf(mod_SvMF, s4df_clean,
+                     colpairs = strsplit(pair, "-")) %>%
   pairedplotggprep() +
-  facet_wrap(vars(pair1, pair2), ncol = 3) +
-  geom_point(aes(x=A, y=B, col = Longitude), size = 1) +
-  scale_color_viridis_c()
-p2 <- get_predobspairsdf(mod_SvMF, s4df_clean) %>%
-  filter(pair %in% c("Y1-Y2", "Y2-Y3", "Y2-Y4")) %>%
-  pairedplotggprep() +
-  facet_wrap(vars(pair1, pair2), ncol = 3) +
   geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
                alpha = 0.5,
                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
@@ -700,12 +746,24 @@ p2 <- get_predobspairsdf(mod_SvMF, s4df_clean) %>%
              shape = 21) +
   geom_point(aes(x=A, y=B), size = 1, col = "blue",
              shape = 4,
-             data = ~(attr(get_predobspairsdf(mod_SvMF), "p1") %>% filter(pair %in% .x$pair))
+             data = ~(attr(get_predobspairsdf(mod_SvMF, colpairs = strsplit(pair, "-")), "p1"))
              ) +
   scale_color_viridis_c() +
-  scale_fill_viridis_c()
-(p1/p2 + plot_layout(guides = "collect"))
+  scale_fill_viridis_c() +
+  theme(plot.margin = unit(c(0,2,0,2), "mm"),
+          strip.text = element_text(margin = margin(0, 0, 0, 0)))
+})
+( (obsplots[[1]] + 
+     (obsplots[[2]]) + 
+     (obsplots[[3]]) )/
+  (predplots[[1]] + 
+     (predplots[[2]]) + 
+     (predplots[[3]])) ) + 
+  plot_layout(guides = "collect") + 
+  theme(legend.position = "bottom")
+ggsave("earthquake_results.pdf", width = 7, height = 4)
 ```
+
 
 Caption: 42 normalised earthquake moment tensors on $S^4$.
 Moment tensors are shown orthoganally projected onto pairs of axes that standardise the observed earthquake moments to have mean of (1,0,0,0,0) with axes of variation Y2, Y3, Y4 and Y5 ordered by decreasing variance.
@@ -719,6 +777,7 @@ Grey circle boundary: intersection of $S^4$ with the plane given by the pair of 
 
 # Residuals
 Here we present the residuals more thorougly.
+
 ## Paired Plots
 
 Here we plot the the residuals against each of the axes defined by $\Gamma_0$. We can see the ellipsiodal nature of Scaled von Mises Fisher residuals.

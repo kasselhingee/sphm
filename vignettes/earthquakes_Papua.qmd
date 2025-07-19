@@ -578,8 +578,8 @@ xe <- s4df_clean %>%
   select(fstrike,
          Latitude, 
          Longitude) %>%
-  # mutate(Longitude2 = Longitude^2) %>%
   mutate(L148 = Longitude < 148) %>%
+  mutate(Longitude.L148 = L148*Longitude) %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>

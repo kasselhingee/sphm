@@ -580,6 +580,7 @@ xe <- s4df_clean %>%
          Longitude) %>%
   mutate(L148 = Longitude < 148) %>%
   mutate(Longitude.L148 = L148*Longitude) %>%
+  select(-L148) %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>
@@ -606,7 +607,6 @@ mod_vMF$DoF
 Here I tried 100 different starting points for the vMF regression. Below is a frequency polygon plot of the AIC all 100 estimates.
 
 ```{r}
-#| eval: false
 restarts <- pbapply::pblapply(1:100, function(seed){
   # randomly generates a Kassel-form link
   start <- sphm:::rmnlink_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)

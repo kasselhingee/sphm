@@ -714,6 +714,49 @@ mod_SvMF$a
 mod_SvMF$DoF
 ```
 
+## Restarts
+```{r}
+restarts <- pbapply::pblapply(1:100, function(seed){
+  # randomly generates a Kassel-form link
+  start <- sphm:::rmnlink_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)
+  # convert to Shogo form:
+  set.seed(seed+1)
+  Qe <- mclust::randomOrthogonalMatrix(ncol(xestd)+1, 5-1)
+  bigQe <- cbind(0, rbind(0, Qe))
+  bigQe[, 1] <- 0
+  bigQe[1,1] <- 1
+  start$Qe <- bigQe
+  start$ce <- 1
+  mobius_SvMF(s4df_clean %>% 
+                          select(s1, s2, sMrt, sMrf, sMtf) %>% 
+                          st_drop_geometry() %>% 
+                          as.matrix(),
+                      xs = NULL, 
+                      xe = xestd %>% as.matrix(),
+                      type = "Shogo",
+                      G01behaviour = "free",
+                      mean = start)
+}, cl = 2)
+lapply(restarts, "[[", "AIC") %>%
+  unlist() %>%
+  tibble::enframe("seed", "AIC") %>%
+  ggplot()+
+  geom_freqpoly(aes(x = AIC), bins = 30) +
+  geom_vline(xintercept = mod_SvMF$AIC, col = "blue") +
+  geom_rug(aes(x = AIC))
+```
+
+```{r}
+idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
+mod_SvMF <- restarts[[idx]]
+mod_SvMF$k
+mod_SvMF$AIC
+mod_SvMF$a
+mod_SvMF$DoF
+```
+
+The best SvMF regression doesn't come from the best vMF regression!
+
 The AIC of the SvMF regression is better (smaller) than the AIC of the vMF regression.
 
 ```{r}
@@ -936,14 +979,14 @@ p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   geom_point() +
   ggrepel::geom_label_repel(aes(label = Number),
                            size = 2,
-                           data = function(x) {filter(x, !is.na(outlier))}, min.segment.length = 0.01)
+                           data = ~filter(.x, rdist > 0.55), min.segment.length = 0.01)
 
 p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(x=rdist, y = fstrike)) +
   geom_point() +
   ggrepel::geom_label_repel(aes(label = Number),
                            size = 2,
-                           data = function(x) {filter(x, !is.na(outlier))}, min.segment.length = 0.01)
+                           data = ~filter(.x, rdist > 0.55), min.segment.length = 0.01)
 p1 + p2
 ```
 

@@ -529,6 +529,65 @@ s4df %>%
 
 There could be two outliers with very low fault strike (dark blue) relative to other earthquakes, but fault strike doesn't seem to have as big an effect on moment tensors as longitude does.
 
+## Vs Depth
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = Depth, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c(name = "Depth") +
+  geom_point(aes(fill = Depth), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0)
+```
+
+
+
+## Vs Distance
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+tmpdf <- s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5))
+tmpdf %>%
+  filter(dist < 90000) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = dist, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c(name = "Distance") +
+  geom_point(aes(fill = dist), size = 2, shape = 21) +
+  geom_point(size = 2, shape = 4, data = tmpdf %>% filter(dist >= 90000)) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0)
+```
+
+
+
+
 # Figure for Paper
 ```{r}
 #| fig.width: 7

@@ -1025,6 +1025,11 @@ No better vMF model was found.
 
 # SvMF Regression
 ```{r}
+ymean <- s4df_clean %>% 
+  select(s1, s2, sMrt, sMrf, sMtf) %>% 
+  st_drop_geometry() %>% 
+  colMeans()
+ymean <- ymean/sphm:::vnorm(ymean)
 mod_SvMF <- mobius_SvMF(s4df_clean %>% 
                         select(s1, s2, sMrt, sMrf, sMtf) %>% 
                         st_drop_geometry() %>% 
@@ -1032,7 +1037,8 @@ mod_SvMF <- mobius_SvMF(s4df_clean %>%
                       xs = NULL, 
                       xe = xestd %>% as.matrix(),
                       type = "Shogo",
-                      G01behaviour = "free",
+                      G01behaviour = "fixed",
+                      G0 = cbind(ymean, NA, NA, NA, NA),
                       mean = mod_vMF$est)
 mod_SvMF$k
 mod_SvMF$AIC
@@ -1060,7 +1066,8 @@ restarts <- pbapply::pblapply(1:100, function(seed){
                       xs = NULL, 
                       xe = xestd %>% as.matrix(),
                       type = "Shogo",
-                      G01behaviour = "free",
+                      G01behaviour = "fixed",
+                      G0 = cbind(ymean, NA, NA, NA, NA),
                       mean = start)
 }, cl = 2)
 lapply(restarts, "[[", "AIC") %>%
@@ -1100,9 +1107,15 @@ cann$P
 ```{r}
 get_predobspairsdf <- function(mod,
                                extra = NULL,
-                               colpairs = combn(paste0("Y",1:5), 2, simplify = FALSE)){
+                               colpairs = combn(paste0("Y",1:5), 2, simplify = FALSE),
+                               useG0 = TRUE){
   # standard rotations
-  ystd <- standardise_sph(mod$y)
+  if (useG0){
+    ystd <- standardise_sph(mod$y, tG = t(mod$G0))
+  } else {
+    ystd <- standardise_sph(mod$y)
+  }
+  
   colnames(ystd) <- paste0("Y", 1:ncol(ystd))
   predstd <- standardise_sph(mod$pred, attr(ystd, "std_rotation"))
   colnames(predstd) <- paste0("p_Y", 1:ncol(predstd))
@@ -1193,16 +1206,6 @@ orientations <- G0pairs %>%
 #| fig.height: 13
 get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
   pairedplotggprep() +
-  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
-               data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G02"),
-               arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
-               data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G03"),
-               col = "grey",
-               arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
-               alpha = 0.5,
-                arrow = grid::arrow(length = unit(0.02, "npc"))) +
   geom_point(aes(x=p_A, y=p_B, col = Longitude), size = 2) +
   geom_point(aes(x=A, y=B), size = 2, col = "blue",
              data = attr(get_predobspairsdf(mod_SvMF), "p1")) +
@@ -1236,12 +1239,21 @@ get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, renam
                            label.padding = 0.1,
                            min.segment.length = 0,
                            data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2)) +
+  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+               data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G02"),
+               arrow = grid::arrow(length = unit(0.02, "npc"))) +
+  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+               data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G03"),
+               col = "grey",
+               arrow = grid::arrow(length = unit(0.02, "npc"))) +
+  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
+               alpha = 0.5,
+                arrow = grid::arrow(length = unit(0.02, "npc"))) +
   scale_color_viridis_c() +
   ggtitle("Prediction Highlighted")
 ```
 
 The model predictions do not get close to the antipode of p1 or the antipode of G01. This is good.
-However the orientation axes via parallel transport vary a lot across the earthquakes, and not in an intuitive way because of the location of G01 - this makes interpretation really hard.
 
 ```{r}
 #| fig.width: 15
@@ -1626,6 +1638,7 @@ p1 + p2
 ```
 
 These plots show very little association between longitude or fstrike and scaled residual distance.
+This is very good.
 
 
 

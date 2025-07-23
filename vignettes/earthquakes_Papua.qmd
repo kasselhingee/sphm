@@ -1454,7 +1454,7 @@ circle_df_long <- circle_df_long %>%
   mutate(across(starts_with("pair"), ~gsub("Y", "r", .x)))
 mod_SvMF$rresids_G0 %>%
   as_tibble() %>%
-  bind_cols(s4df_clean) %>%
+  bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
   bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
   pairedplotggprep() +
@@ -1465,6 +1465,12 @@ mod_SvMF$rresids_G0 %>%
                            size = 2,
                            col = "blue",
                            data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2), min.segment.length = 0.01) +
+  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                            data = ~filter(.x, rdist > 0.5),
+                            size = 2, 
+                            col = "black",
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
   geom_point(aes(fill = Longitude), size = 2, shape = 21) +
   scale_fill_viridis_c(name = "Longitude") +
   scale_color_viridis_c(name = "Longitude")
@@ -1477,7 +1483,7 @@ Here the same residuals are transformed using the estimated concentration and Sc
 #| fig.height: 5
 mod_SvMF$rresids_std %>%
   as_tibble() %>%
-  bind_cols(s4df_clean) %>%
+  bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
   pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
   ggplot(mapping = aes(x=A, y=B)) + 
   facet_wrap(vars(pair2, pair1)) +
@@ -1493,6 +1499,13 @@ mod_SvMF$rresids_std %>%
   ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
                             data = ~filter(.x, abs(A) > 2 | abs(B) > 2),
                             size = 2, 
+                            col = "blue",
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                            data = ~filter(.x, rdist > 0.5),
+                            size = 2, 
+                            col = "black",
                             label.padding = 0.1,
                             min.segment.length = 0)
 ```

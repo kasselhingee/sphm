@@ -973,56 +973,6 @@ xestd <- xe %>%
 cor(xestd)
 ```
 
-# vMF Regression
-## Default start
-```{r}
-mod_vMF <- mobius_vMF(s4df_clean %>% 
-                        select(s1, s2, sMrt, sMrf, sMtf) %>% 
-                        st_drop_geometry() %>% 
-                        as.matrix(),
-                      xs = NULL, 
-                      xe = xestd %>% as.matrix(),
-                      type = "Shogo")
-mod_vMF$k
-mod_vMF$AIC
-mod_vMF$DoF
-```
-
-## Random Starts
-Here I tried 100 different starting points for the vMF regression. Below is a frequency polygon plot of the AIC all 100 estimates.
-
-```{r}
-restarts <- pbapply::pblapply(1:100, function(seed){
-  # randomly generates a Kassel-form link
-  start <- sphm:::rmnlink_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)
-  # convert to Shogo form:
-  set.seed(seed+1)
-  Qe <- mclust::randomOrthogonalMatrix(ncol(xestd)+1, 5-1)
-  bigQe <- cbind(0, rbind(0, Qe))
-  bigQe[, 1] <- 0
-  bigQe[1,1] <- 1
-  start$Qe <- bigQe
-  start$ce <- 1
-  mobius_vMF(s4df_clean %>% 
-                          select(s1, s2, sMrt, sMrf, sMtf) %>% 
-                          st_drop_geometry() %>% 
-                          as.matrix(),
-                        xs = NULL, 
-                        xe = xestd %>% as.matrix(),
-                        type = "Shogo",
-                        start = start)
-}, cl = 2)
-lapply(restarts, "[[", "AIC") %>%
-  unlist() %>%
-  tibble::enframe("seed", "AIC") %>%
-  ggplot()+
-  geom_freqpoly(aes(x = AIC), bins = 30) +
-  geom_vline(xintercept = mod_vMF$AIC, col = "blue") +
-  geom_rug(aes(x = AIC))
-```
-
-No better vMF model was found.
-
 # SvMF Regression
 ```{r}
 ymean <- s4df_clean %>% 
@@ -1038,8 +988,7 @@ mod_SvMF <- mobius_SvMF(s4df_clean %>%
                       xe = xestd %>% as.matrix(),
                       type = "Shogo",
                       G01behaviour = "fixed",
-                      G0 = cbind(ymean, NA, NA, NA, NA),
-                      mean = mod_vMF$est)
+                      G0 = cbind(ymean, NA, NA, NA, NA))
 mod_SvMF$k
 mod_SvMF$AIC
 mod_SvMF$a
@@ -1103,7 +1052,8 @@ cann$Be %*% t(cann$Qe[,-1])
 cann$P
 ```
 
-# Predictions
+# Main Diagnostics Plots
+## Prediction Paired Plot
 ```{r}
 get_predobspairsdf <- function(mod,
                                extra = NULL,
@@ -1255,9 +1205,124 @@ get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, renam
 
 The model predictions do not get close to the antipode of p1 or the antipode of G01. This is good.
 
+## Residuals
+Here we plot the the residuals against each of the axes defined by $\Gamma_0$. We can see the ellipsiodal nature of Scaled von Mises Fisher residuals.
+
+```{r}
+#| fig.width: 8
+#| fig.height: 7
+circle_df_long <- circle_df_long %>%
+  mutate(across(starts_with("pair"), ~gsub("Y", "r", .x)))
+mod_SvMF$rresids_G0 %>%
+  as_tibble() %>%
+  bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
+  bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
+  pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean, 
+                  aes(z = Longitude, fill = after_stat(value)),
+                  bins = 10) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           col = "blue",
+                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2), min.segment.length = 0.01) +
+  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                            data = ~filter(.x, rdist > 0.5),
+                            size = 2, 
+                            col = "black",
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
+  scale_fill_viridis_c(name = "Longitude") +
+  scale_color_viridis_c(name = "Longitude")
+```
+
+## Standardised Residuals
+Below the same residuals are transformed using the estimated concentration and Scale von Mises Fisher scales so that at high-concentrations the residuals should be close to a standard multivariate Normal.
+
+```{r}
+#| fig.width: 6
+#| fig.height: 5
+mod_SvMF$rresids_std %>%
+  as_tibble() %>%
+  bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
+  pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
+  ggplot(mapping = aes(x=A, y=B)) + 
+  facet_wrap(vars(pair2, pair1)) +
+  theme(strip.text.y = element_text(angle = 90),
+        strip.placement = "outside",
+        axis.title = element_blank(),
+        strip.background = element_blank()) +
+  geom_hline(yintercept = 0, lty = "dashed") +
+  geom_vline(xintercept = 0, lty = "dashed") +
+  geom_point(size = 1) +
+  scale_fill_viridis_c() +
+  coord_fixed() +
+  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                            data = ~filter(.x, abs(A) > 2 | abs(B) > 2),
+                            size = 2, 
+                            col = "blue",
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                            data = ~filter(.x, rdist > 0.5),
+                            size = 2, 
+                            col = "black",
+                            label.padding = 0.1,
+                            min.segment.length = 0)
+```
+
+## Standardised Residual Distance
+```{r}
+stdrdist <- sqrt(rowSums(mod_SvMF$rresids_std^2))
+stdrdist[!attr(mod_SvMF$rresids_std, "samehemisphere")] <- NA_real_
+p1 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
+  ggplot(aes(x=srdist, y = Longitude)) +
+  geom_point() +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           data = ~filter(.x, rdist > 0.5), min.segment.length = 0.01) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           col = "blue",
+                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
+
+p2 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
+  ggplot(aes(x=srdist, y = fstrike)) +
+  geom_point() +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           data = ~filter(.x, rdist > 0.5), min.segment.length = 0.01) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           col = "blue",
+                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
+p1 + p2
+```
+
+These plots show very little association between longitude or fstrike and scaled residual distance.
+This is very good.
+
+## Residual Mean by Covariates
+```{r}
+bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
+  st_drop_geometry() %>%
+  tidyr::pivot_longer(matches("^r.$"), names_to = "raxis", values_to = "value") %>%
+  tidyr::pivot_longer(c(Longitude, fstrike, dist), names_to = "covariate", values_to = "cvalue") %>%
+  ggplot(aes(x = cvalue, y = value)) +
+  facet_grid(rows = vars(raxis), cols = vars(covariate), scales = "free") +
+  geom_hline(yintercept = 0, col = "blue", lty = "dashed") +
+  geom_smooth(method = "loess", formula = 'y ~ x') +
+  geom_point()
+```
+
+
+# Predictions
 ```{r}
 #| fig.width: 15
 #| fig.height: 13
+circle_df_long <- circle_df_long %>%
+  mutate(across(starts_with("pair"), ~gsub("r", "Y", .x)))
 get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
   pairedplotggprep() +
   geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
@@ -1492,93 +1557,7 @@ Arrows: represent residuals and point from mean earthquake moment tensor to the 
 Blue x: The location of the first column of $B_0$.
 Grey circle boundary: intersection of $S^4$ with the plane given by the pair of axes.
 
-# Residuals
-Here we present the residuals more thorougly.
-
-## Paired Plots
-
-Here we plot the the residuals against each of the axes defined by $\Gamma_0$. We can see the ellipsiodal nature of Scaled von Mises Fisher residuals.
-
-```{r}
-#| fig.width: 8
-#| fig.height: 7
-circle_df_long <- circle_df_long %>%
-  mutate(across(starts_with("pair"), ~gsub("Y", "r", .x)))
-mod_SvMF$rresids_G0 %>%
-  as_tibble() %>%
-  bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
-  bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
-  pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean, 
-                  aes(z = Longitude, fill = after_stat(value)),
-                  bins = 10) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2), min.segment.length = 0.01) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = ~filter(.x, rdist > 0.5),
-                            size = 2, 
-                            col = "black",
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
-  scale_fill_viridis_c(name = "Longitude") +
-  scale_color_viridis_c(name = "Longitude")
-```
-
-Here the same residuals are transformed using the estimated concentration and Scale von Mises Fisher scales so that at high-concentrations the residuals should be close to a standard multivariate Normal.
-
-```{r}
-#| fig.width: 6
-#| fig.height: 5
-mod_SvMF$rresids_std %>%
-  as_tibble() %>%
-  bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
-  pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
-  ggplot(mapping = aes(x=A, y=B)) + 
-  facet_wrap(vars(pair2, pair1)) +
-  theme(strip.text.y = element_text(angle = 90),
-        strip.placement = "outside",
-        axis.title = element_blank(),
-        strip.background = element_blank()) +
-  geom_hline(yintercept = 0, lty = "dashed") +
-  geom_vline(xintercept = 0, lty = "dashed") +
-  geom_point(size = 1) +
-  scale_fill_viridis_c() +
-  coord_fixed() +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = ~filter(.x, abs(A) > 2 | abs(B) > 2),
-                            size = 2, 
-                            col = "blue",
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = ~filter(.x, rdist > 0.5),
-                            size = 2, 
-                            col = "black",
-                            label.padding = 0.1,
-                            min.segment.length = 0)
-```
-
-Three earthquakes with very large residuals after standardisation: 89, 187, 209.
-
-```{r}
-outliers <- c("89" = "20250723modelresidual",
-  "187" = "20250723modelresidual",
-  "209" = "20250723modelresidual") %>%
-  tibble::enframe(name = "Number", value = "outlier") %>%
-  mutate(Number = as.integer(Number)) %>%
-  bind_rows(outliers) %>%
-  distinct()
-s4df_clean <- left_join(s4df_clean, outliers, by = "Number") %>%
-  mutate(outlier = case_when(!is.na(outlier.x) ~ outlier.x,
-                             !is.na(outlier.y) ~ outlier.y,
-                             TRUE ~ outlier.x))
-```
-
-## Residual Distance by Covariate
+# Residual Distance by Covariate (Unstandardised)
 ```{r}
 p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(x=rdist, y = Longitude)) +
@@ -1608,54 +1587,6 @@ Left panel: There is some suggestion of increasing residual size with longitude,
 Right panel: No indication that fault strike is related to residual size.
 The possible outlier Earthquake 93 does not have an outlying residual.
 
-
-## Scaled Residual Distance by Covariate
-```{r}
-stdrdist <- sqrt(rowSums(mod_SvMF$rresids_std^2))
-stdrdist[!attr(mod_SvMF$rresids_std, "samehemisphere")] <- NA_real_
-p1 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
-  ggplot(aes(x=srdist, y = Longitude)) +
-  geom_point() +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           data = ~filter(.x, rdist > 0.5), min.segment.length = 0.01) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
-
-p2 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
-  ggplot(aes(x=srdist, y = fstrike)) +
-  geom_point() +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           data = ~filter(.x, rdist > 0.5), min.segment.length = 0.01) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
-p1 + p2
-```
-
-These plots show very little association between longitude or fstrike and scaled residual distance.
-This is very good.
-
-
-
-## Residual per G0 Axis by Covariate
-```{r}
-bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
-  st_drop_geometry() %>%
-  tidyr::pivot_longer(matches("^r.$"), names_to = "raxis", values_to = "value") %>%
-  tidyr::pivot_longer(c(Longitude, fstrike, dist), names_to = "covariate", values_to = "cvalue") %>%
-  ggplot(aes(x = cvalue, y = value)) +
-  facet_grid(rows = vars(raxis), cols = vars(covariate), scales = "free") +
-  geom_hline(yintercept = 0, col = "blue", lty = "dashed") +
-  geom_smooth(method = "loess", formula = 'y ~ x') +
-  geom_point()
-```
-
-The residuals appear to be be centered on zero.
 
 
 # Likelihood Ratio Test of vMF vs SvMF

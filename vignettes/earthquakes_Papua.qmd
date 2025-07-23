@@ -714,7 +714,7 @@ mod_SvMF$a
 mod_SvMF$DoF
 ```
 
-## Restarts
+## Random Starts
 ```{r}
 restarts <- pbapply::pblapply(1:100, function(seed){
   # randomly generates a Kassel-form link
@@ -748,16 +748,19 @@ lapply(restarts, "[[", "AIC") %>%
 
 ```{r}
 idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
+all.equal(restarts[[idx]][c("mean", "k", "a", "G0", "AIC")], mod_SvMF[c("mean", "k", "a", "G0", "AIC")])
+```
+
+Real differences in estimates!
+
+```{r}
+idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
 mod_SvMF <- restarts[[idx]]
 mod_SvMF$k
 mod_SvMF$AIC
 mod_SvMF$a
 mod_SvMF$DoF
 ```
-
-The best SvMF regression doesn't come from the best vMF regression!
-
-The AIC of the SvMF regression is better (smaller) than the AIC of the vMF regression.
 
 ```{r}
 cann <- sphm:::as_mnlink_cann(mod_SvMF$mean)
@@ -782,6 +785,11 @@ get_predobspairsdf <- function(mod,
   colnames(p1std) <- paste0("Y", 1:ncol(ystd))
   p1pairs <- as_tibble(p1std) %>%
     pivot_coordpairs(colpairs = colpairs)
+  # apply to G01 too
+  G01std <- standardise_sph(matrix(mod$G0[,1], nrow = 1), attr(ystd, "std_rotation"))
+  colnames(G01std) <- paste0("Y", 1:ncol(ystd))
+  G01pairs <- as_tibble(G01std) %>%
+    pivot_coordpairs()
   
   predsobs <- bind_cols(predstd,
                         ystd,
@@ -796,6 +804,7 @@ get_predobspairsdf <- function(mod,
   })
   pairsdf <- bind_rows(pair_dfs)
   attr(pairsdf, "p1") <- p1pairs
+  attr(pairsdf, "G01") <- G01pairs
   pairsdf
 }
 ```
@@ -810,8 +819,13 @@ get_predobspairsdf(mod_SvMF, s4df_clean) %>%
                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
   geom_point(aes(x=p_A, y=p_B, col = Longitude), size = 2) +
   geom_point(aes(x=A, y=B), size = 2, col = "blue",
-             shape = 4,
              data = attr(get_predobspairsdf(mod_SvMF), "p1")) +
+  geom_point(aes(x=-A, y=-B), size = 2, col = "blue", shape = 21,
+             data = attr(get_predobspairsdf(mod_SvMF), "p1")) +
+  geom_point(aes(x=A, y=B), size = 2, col = "red",
+             data = attr(get_predobspairsdf(mod_SvMF), "G01")) +
+  geom_point(aes(x=-A, y=-B), size = 2, col = "red", shape = 21,
+             data = attr(get_predobspairsdf(mod_SvMF), "G01")) +
   ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
                             data = function(x) {x %>% filter(!is.na(outlier))},
                             size = 2, 
@@ -979,14 +993,14 @@ p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   geom_point() +
   ggrepel::geom_label_repel(aes(label = Number),
                            size = 2,
-                           data = ~filter(.x, rdist > 0.55), min.segment.length = 0.01)
+                           data = ~filter(.x, rdist > 0.45), min.segment.length = 0.01)
 
 p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(x=rdist, y = fstrike)) +
   geom_point() +
   ggrepel::geom_label_repel(aes(label = Number),
                            size = 2,
-                           data = ~filter(.x, rdist > 0.55), min.segment.length = 0.01)
+                           data = ~filter(.x, rdist > 0.45), min.segment.length = 0.01)
 p1 + p2
 ```
 

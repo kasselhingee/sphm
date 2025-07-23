@@ -368,7 +368,7 @@ circle_df_long <- bind_rows(pair_dfs)
 And the following is useful for paired plotting of locations on S4:
 
 ```{r}
-pivot_coordpairs <- function(df, coordnames = paste0("Y",1:5), colpairs = colpairs <- combn(coordnames, 2, simplify = FALSE)){
+pivot_coordpairs <- function(df, coordnames = paste0("Y",1:5), colpairs = combn(coordnames, 2, simplify = FALSE)){
   pair_dfs <- lapply(colpairs, function(pair) {
     Aname <- pair[1]
     Bname <- pair[2]
@@ -381,9 +381,20 @@ pivot_coordpairs <- function(df, coordnames = paste0("Y",1:5), colpairs = colpai
              pair = paste(pair, collapse = "-"))
   })
   pairsdf <- bind_rows(pair_dfs)
+  attr(pairsdf, "coordnames") <- coordnames
   pairsdf
 }
 pairedplotggprep <- function(df){
+  # rename circle_df_long to coordnames
+  dict <- attr(df, "coordnames")
+  names(dict) <-  paste0("Y", 1:length(dict))
+  circle_df_long <- circle_df_long %>%
+    mutate(
+      pair1 = dict[pair1],
+      pair2 = dict[pair2],
+      pair = paste0(pair1,"-",pair2))
+  
+  #now do plotting prep
   ggplot(data = df, mapping = aes(x=A, y=B)) +
   facet_grid(vars(pair2), vars(pair1), switch = "both") +
   geom_path(data = ~(circle_df_long %>% filter(pair %in% .x$pair)),
@@ -1058,7 +1069,7 @@ cann$P
 get_predobspairsdf <- function(mod,
                                extra = NULL,
                                colpairs = combn(paste0("Y",1:5), 2, simplify = FALSE),
-                               useG0 = TRUE){
+                               useG0 = FALSE){
   # standard rotations
   if (useG0){
     ystd <- standardise_sph(mod$y, tG = t(mod$G0))
@@ -1123,84 +1134,90 @@ get_predobspairsdf <- function(mod,
   attr(pairsdf, "p1") <- p1pairs
   attr(pairsdf, "G0") <- G0pairs
   attr(pairsdf, "Garrows") <- axisarrows_pairs
+  attr(pairsdf, "coordnames") <- paste0("Y",1:5)
   pairsdf
 }
 ```
 
 ```{r}
-names(mod_SvMF$a) <- paste0("G0", 1:length(mod_SvMF$a))
-tibble::enframe(mod_SvMF$a, name = "Axis", value = "scale")
-G0pairs <- get_predobspairsdf(mod_SvMF) %>%
-  attr("G0")
-orientations <- G0pairs %>%
-  left_join(tibble::enframe(mod_SvMF$a, name = "Axis", value = "scale"), by = "Axis") %>%
-  # mutate(across(c(A, B, starts_with("Y")), ~case_when(Axis != "G01" ~ .x * scale/20, TRUE ~ .x))) #scale axes by their estimated scale, except G01
-  group_by(pair) %>%
-  arrange(Axis) %>%
-  select(-starts_with("Y")) %>%
-  mutate(
-    Astart = first(A),
-    Bstart = first(B),
-    A = A - Astart,
-    B = B - Bstart) %>% #make everything vectors - works because projection orthogonal
-    # across(c(A, B), ~.x - first(.x))) %>% #make everything vectors - works because projection orthogonal
-  mutate(across(c(A, B), ~.x * scale/10)) %>% #scale axes by their estimated scale (G01 is 0 currently so scaling it does nothing)
-  filter(Axis != "G01") %>%
-  ungroup() %>%
-  # add G01 back into A B etc
-  mutate(A = A + Astart, B = B + Bstart)
+getG0arrows <- function(mod_SvMF){
+  names(mod_SvMF$a) <- paste0("G0", 1:length(mod_SvMF$a))
+  tibble::enframe(mod_SvMF$a, name = "Axis", value = "scale")
+  orientations <- get_predobspairsdf(mod_SvMF) %>%
+    attr("G0") %>%
+    left_join(tibble::enframe(mod_SvMF$a, name = "Axis", value = "scale"), by = "Axis") %>%
+    # mutate(across(c(A, B, starts_with("Y")), ~case_when(Axis != "G01" ~ .x * scale/20, TRUE ~ .x))) #scale axes by their estimated scale, except G01
+    group_by(pair) %>%
+    arrange(Axis) %>%
+    select(-starts_with("Y")) %>%
+    mutate(
+      Astart = first(A),
+      Bstart = first(B),
+      A = A - Astart,
+      B = B - Bstart) %>% #make everything vectors - works because projection orthogonal
+      # across(c(A, B), ~.x - first(.x))) %>% #make everything vectors - works because projection orthogonal
+    mutate(across(c(A, B), ~.x * scale/10)) %>% #scale axes by their estimated scale (G01 is 0 currently so scaling it does nothing)
+    filter(Axis != "G01") %>%
+    ungroup() %>%
+    # add G01 back into A B etc
+    mutate(A = A + Astart, B = B + Bstart)
+  return(orientations)
+}
 ```
 
 ```{r}
 #| fig.width: 15
 #| fig.height: 13
-get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
-  pairedplotggprep() +
-  geom_point(aes(x=p_A, y=p_B, col = Longitude), size = 2) +
-  geom_point(aes(x=A, y=B), size = 2, col = "blue",
-             data = attr(get_predobspairsdf(mod_SvMF), "p1")) +
-  geom_point(aes(x=-A, y=-B), size = 2, col = "blue", shape = 21,
-             data = attr(get_predobspairsdf(mod_SvMF), "p1")) +
-  geom_point(aes(x=A, y=B), size = 2, col = "red",
-             data = attr(get_predobspairsdf(mod_SvMF), "G0") %>% filter(Axis == "G01")) +
-  geom_segment(aes(x=Astart,y=Bstart, xend=A, yend=B),
-               data = orientations %>% filter(Axis == "G02"),
-               arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_segment(aes(x=Astart,y=Bstart, xend=A, yend=B),
-               col = "grey",
-               data = orientations %>% filter(Axis == "G03"),
-               arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_point(aes(x=-A, y=-B), size = 2, col = "red", shape = 21,
-             data = attr(get_predobspairsdf(mod_SvMF), "G0") %>% filter(Axis == "G01")) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            size = 2, 
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = ~filter(.x, rdist > 0.5),
-                            size = 2, 
-                            col = "black",
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           label.padding = 0.1,
-                           min.segment.length = 0,
-                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2)) +
-  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
-               data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G02"),
-               arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
-               data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G03"),
-               col = "grey",
-               arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
-               alpha = 0.5,
-                arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  scale_color_viridis_c() +
-  ggtitle("Prediction Highlighted")
+defaultplot_pred <- function(mod_SvMF, s4df_clean){
+  get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
+    pairedplotggprep() +
+    geom_point(aes(x=p_A, y=p_B, col = Longitude), size = 2) +
+    geom_point(aes(x=A, y=B), size = 2, col = "blue",
+               data = attr(get_predobspairsdf(mod_SvMF), "p1")) +
+    geom_point(aes(x=-A, y=-B), size = 2, col = "blue", shape = 21,
+               data = attr(get_predobspairsdf(mod_SvMF), "p1")) +
+    geom_point(aes(x=A, y=B), size = 2, col = "red",
+               data = attr(get_predobspairsdf(mod_SvMF), "G0") %>% filter(Axis == "G01")) +
+    geom_segment(aes(x=Astart,y=Bstart, xend=A, yend=B),
+                 data = getG0arrows(mod_SvMF) %>% filter(Axis == "G02"),
+                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
+    geom_segment(aes(x=Astart,y=Bstart, xend=A, yend=B),
+                 col = "grey",
+                 data = getG0arrows(mod_SvMF) %>% filter(Axis == "G03"),
+                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
+    geom_point(aes(x=-A, y=-B), size = 2, col = "red", shape = 21,
+               data = attr(get_predobspairsdf(mod_SvMF), "G0") %>% filter(Axis == "G01")) +
+    ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                              data = ~filter(.x, !is.na(outlier)),
+                              size = 2, 
+                              label.padding = 0.1,
+                              min.segment.length = 0) +
+    ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                              data = ~filter(.x, rdist > 0.5),
+                              size = 2, 
+                              col = "black",
+                              label.padding = 0.1,
+                              min.segment.length = 0) +
+    ggrepel::geom_label_repel(aes(label = Number),
+                             size = 2,
+                             col = "blue",
+                             label.padding = 0.1,
+                             min.segment.length = 0,
+                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2)) +
+    geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+                 data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G02"),
+                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
+    geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+                 data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G03"),
+                 col = "grey",
+                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
+    geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
+                 alpha = 0.5,
+                  arrow = grid::arrow(length = unit(0.02, "npc"))) +
+    scale_color_viridis_c() +
+    ggtitle("Prediction Highlighted")
+}
+defaultplot_pred(mod_SvMF, s4df_clean)
 ```
 
 The model predictions do not get close to the antipode of p1 or the antipode of G01. This is good.
@@ -1211,30 +1228,31 @@ Here we plot the the residuals against each of the axes defined by $\Gamma_0$. W
 ```{r}
 #| fig.width: 8
 #| fig.height: 7
-circle_df_long <- circle_df_long %>%
-  mutate(across(starts_with("pair"), ~gsub("Y", "r", .x)))
-mod_SvMF$rresids_G0 %>%
-  as_tibble() %>%
-  bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
-  bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
-  pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean, 
-                  aes(z = Longitude, fill = after_stat(value)),
-                  bins = 10) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2), min.segment.length = 0.01) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = ~filter(.x, rdist > 0.5),
-                            size = 2, 
-                            col = "black",
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
-  scale_fill_viridis_c(name = "Longitude") +
-  scale_color_viridis_c(name = "Longitude")
+defaultplot_resid <- function(mod_SvMF, s4df_clean){
+  mod_SvMF$rresids_G0 %>%
+    as_tibble() %>%
+    bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
+    bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
+    pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
+    pairedplotggprep() +
+    stat_summary_2d(fun = mean, 
+                    aes(z = Longitude, fill = after_stat(value)),
+                    bins = 10) +
+    ggrepel::geom_label_repel(aes(label = Number),
+                             size = 2,
+                             col = "blue",
+                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2), min.segment.length = 0.01) +
+    ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                              data = ~filter(.x, rdist > 0.5),
+                              size = 2, 
+                              col = "black",
+                              label.padding = 0.1,
+                              min.segment.length = 0) +
+    geom_point(aes(fill = Longitude), size = 2, shape = 21) +
+    scale_fill_viridis_c(name = "Longitude") +
+    scale_color_viridis_c(name = "Longitude")
+}
+defaultplot_resid(mod_SvMF, s4df_clean)
 ```
 
 ## Standardised Residuals
@@ -1243,6 +1261,7 @@ Below the same residuals are transformed using the estimated concentration and S
 ```{r}
 #| fig.width: 6
 #| fig.height: 5
+defaultplot_srresid <- function(mod_SvMF, s4df_clean){
 mod_SvMF$rresids_std %>%
   as_tibble() %>%
   bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
@@ -1270,10 +1289,13 @@ mod_SvMF$rresids_std %>%
                             col = "black",
                             label.padding = 0.1,
                             min.segment.length = 0)
+}
+defaultplot_srresid(mod_SvMF, s4df_clean)
 ```
 
 ## Standardised Residual Distance
 ```{r}
+defaultplot_srresid_dist <- function(mod_SvMF, s4df_clean){
 stdrdist <- sqrt(rowSums(mod_SvMF$rresids_std^2))
 stdrdist[!attr(mod_SvMF$rresids_std, "samehemisphere")] <- NA_real_
 p1 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
@@ -1298,6 +1320,8 @@ p2 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
                            col = "blue",
                            data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
 p1 + p2
+}
+defaultplot_srresid_dist(mod_SvMF, s4df_clean)
 ```
 
 These plots show very little association between longitude or fstrike and scaled residual distance.
@@ -1305,6 +1329,7 @@ This is very good.
 
 ## Residual Mean by Covariates
 ```{r}
+defaultplot_residbycovar <- function(mod_SvMF, s4df_clean){
 bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
   st_drop_geometry() %>%
   tidyr::pivot_longer(matches("^r.$"), names_to = "raxis", values_to = "value") %>%
@@ -1314,6 +1339,8 @@ bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
   geom_hline(yintercept = 0, col = "blue", lty = "dashed") +
   geom_smooth(method = "loess", formula = 'y ~ x') +
   geom_point()
+}
+defaultplot_residbycovar(mod_SvMF, s4df_clean)
 ```
 
 
@@ -1478,6 +1505,7 @@ get_predobspairsdf_nat <- function(mod,
   })
   pairsdf <- bind_rows(pair_dfs)
   attr(pairsdf, "p1") <- p1pairs
+  attr(pairsdf, "coordnames") <- c("s1", "s2", "sMrt", "sMrf", "sMtf")
   pairsdf
 }
 ```

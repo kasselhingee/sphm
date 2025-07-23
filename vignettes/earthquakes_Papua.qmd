@@ -1063,7 +1063,18 @@ cann$Be %*% t(cann$Qe[,-1])
 cann$P
 ```
 
-# Main Diagnostics Plots
+# Main Diagnostics
+## Singularity Angles
+Angle with p1:
+```{r}
+range(acos(mod_SvMF$pred %*% mod_SvMF$mean$p1))
+```
+
+Angle with G01:
+```{r}
+range(acos(mod_SvMF$pred %*% mod_SvMF$G0[,1]))
+```
+
 ## Prediction Paired Plot
 ```{r}
 get_predobspairsdf <- function(mod,
@@ -1168,25 +1179,9 @@ getG0arrows <- function(mod_SvMF){
 ```{r}
 #| fig.width: 15
 #| fig.height: 13
-defaultplot_pred <- function(mod_SvMF, s4df_clean){
-  get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
+defaultplot_pred <- function(mod_SvMF, s4df_clean, focusaxes = FALSE, focusresponse = FALSE){
+  plotobj <- get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
     pairedplotggprep() +
-    geom_point(aes(x=p_A, y=p_B, col = Longitude), size = 2) +
-    geom_point(aes(x=A, y=B), size = 2, col = "blue",
-               data = attr(get_predobspairsdf(mod_SvMF), "p1")) +
-    geom_point(aes(x=-A, y=-B), size = 2, col = "blue", shape = 21,
-               data = attr(get_predobspairsdf(mod_SvMF), "p1")) +
-    geom_point(aes(x=A, y=B), size = 2, col = "red",
-               data = attr(get_predobspairsdf(mod_SvMF), "G0") %>% filter(Axis == "G01")) +
-    geom_segment(aes(x=Astart,y=Bstart, xend=A, yend=B),
-                 data = getG0arrows(mod_SvMF) %>% filter(Axis == "G02"),
-                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
-    geom_segment(aes(x=Astart,y=Bstart, xend=A, yend=B),
-                 col = "grey",
-                 data = getG0arrows(mod_SvMF) %>% filter(Axis == "G03"),
-                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
-    geom_point(aes(x=-A, y=-B), size = 2, col = "red", shape = 21,
-               data = attr(get_predobspairsdf(mod_SvMF), "G0") %>% filter(Axis == "G01")) +
     ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
                               data = ~filter(.x, !is.na(outlier)),
                               size = 2, 
@@ -1203,21 +1198,66 @@ defaultplot_pred <- function(mod_SvMF, s4df_clean){
                              col = "blue",
                              label.padding = 0.1,
                              min.segment.length = 0,
-                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2)) +
-    geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
-                 data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G02"),
+                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2))
+  if (focusresponse){
+    plotobj <- plotobj +
+      geom_point(aes(x=A, y=B, col = Longitude), size = 2)
+  } else {
+    plotobj <- plotobj +
+      geom_point(aes(x=p_A, y=p_B, col = Longitude), size = 2)
+  }
+  if (!focusaxes){
+    plotobj <- plotobj %>%
+      addaxes(mod_SvMF, axiscolour = rep("grey", 4))
+  }
+  plotobj <- plotobj +
+    geom_point(aes(x=A, y=B), size = 2, col = "blue",
+               data = attr(get_predobspairsdf(mod_SvMF), "p1")) +
+    geom_point(aes(x=-A, y=-B), size = 2, col = "blue", shape = 21,
+               data = attr(get_predobspairsdf(mod_SvMF), "p1")) +
+    geom_point(aes(x=A, y=B), size = 2, col = "red",
+               data = attr(get_predobspairsdf(mod_SvMF), "G0") %>% filter(Axis == "G01")) +
+    geom_segment(aes(x=Astart,y=Bstart, xend=A, yend=B),
+                 data = getG0arrows(mod_SvMF) %>% filter(Axis == "G02"),
                  arrow = grid::arrow(length = unit(0.02, "npc"))) +
-    geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
-                 data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G03"),
+    geom_segment(aes(x=Astart,y=Bstart, xend=A, yend=B),
                  col = "grey",
+                 data = getG0arrows(mod_SvMF) %>% filter(Axis == "G03"),
                  arrow = grid::arrow(length = unit(0.02, "npc"))) +
+    geom_point(aes(x=-A, y=-B), size = 2, col = "red", shape = 21,
+               data = attr(get_predobspairsdf(mod_SvMF), "G0") %>% filter(Axis == "G01")) +
     geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
                  alpha = 0.5,
                   arrow = grid::arrow(length = unit(0.02, "npc"))) +
     scale_color_viridis_c() +
     ggtitle("Prediction Highlighted")
+  if (focusaxes){
+    plotobj <- plotobj %>%
+      addaxes(mod_SvMF, axiscolour = c("red", "green", "blue", "purple")) 
+  }
+  return(plotobj)
+}
+addaxes <- function(plotobj, mod_SvMF, axiscolour = c("red", "green", "blue", "purple")){
+  plotobj +
+    geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+                 data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G02"),
+                 col = axiscolour[1]) +
+                 # arrow = grid::arrow(length = unit(0.02, "npc"), type = "closed")) +
+    geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+                 data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G03"),
+                 col = axiscolour[2]) +
+                 # arrow = grid::arrow(length = unit(0.02, "npc"), type = "closed")) +
+    geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+                 data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G04"),
+                 col = axiscolour[3]) +
+                 # arrow = grid::arrow(length = unit(0.02, "npc"), type = "closed")) +
+    geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+                 data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G05"),
+                 col = axiscolour[4])
+                 # arrow = grid::arrow(length = unit(0.02, "npc"), type = "closed")) 
 }
 defaultplot_pred(mod_SvMF, s4df_clean)
+defaultplot_pred(mod_SvMF, s4df_clean, focusaxes = TRUE)
 ```
 
 The model predictions do not get close to the antipode of p1 or the antipode of G01. This is good.

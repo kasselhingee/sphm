@@ -962,7 +962,9 @@ xe <- s4df_clean %>%
   st_drop_geometry() %>%
   select(fstrike,
          Latitude, 
-         Longitude) %>%
+         Longitude,
+         dist,
+         Depth) %>%
   mutate(L148 = Longitude < 148) %>%
   mutate(Longitude.L148 = L148*Longitude) %>%
   select(-L148) %>%
@@ -1021,7 +1023,14 @@ lapply(restarts, "[[", "AIC") %>%
   geom_rug(aes(x = AIC))
 ```
 
-No better vMF model was found.
+A better vMF model was found.
+
+```{r}
+idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
+mod_vMF <- restarts[[idx]]
+mod_vMF$k
+mod_vMF$AIC
+```
 
 # SvMF Regression
 ```{r}
@@ -1039,6 +1048,8 @@ mod_SvMF$AIC
 mod_SvMF$a
 mod_SvMF$DoF
 ```
+
+SvMF estimation failed to find something good! But AIC is weirdly high.
 
 ## Random Starts
 ```{r}
@@ -1072,15 +1083,25 @@ lapply(restarts, "[[", "AIC") %>%
   geom_rug(aes(x = AIC))
 ```
 
+Extreme AIC that could be for a multimodal distribution, but only one situation with known unimodal AIC. The AIC of this unimodal model is slightly better than the AIC of the model with only fstrike, Latitude, Longitude, Longitude.L148.
+
 ```{r}
-idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
+unimodal_AIC <- lapply(restarts, function(mod){
+  tryCatch({
+    sphm:::SvMFcann(mod[["k"]], mod[["a"]], mod[["G0"]]) %>%
+      sphm:::SvMFcann_check()
+    mod$AIC
+  }, warning = function(w){return(NA_real_)})
+}) %>%
+  unlist()
+unimodal_AIC
+idx <- which.min(unimodal_AIC)
 all.equal(restarts[[idx]][c("mean", "k", "a", "G0", "AIC")], mod_SvMF[c("mean", "k", "a", "G0", "AIC")])
 ```
 
-No real differences in estimates!
+Use this better model.
 
 ```{r}
-idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
 mod_SvMF <- restarts[[idx]]
 mod_SvMF$k
 mod_SvMF$AIC
@@ -1138,7 +1159,7 @@ get_predobspairsdf <- function(mod,
 ```{r}
 #| fig.width: 15
 #| fig.height: 13
-get_predobspairsdf(mod_SvMF, s4df_clean) %>%
+get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists)) %>%
   pairedplotggprep() +
   geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
                alpha = 0.5,
@@ -1153,15 +1174,21 @@ get_predobspairsdf(mod_SvMF, s4df_clean) %>%
   geom_point(aes(x=-A, y=-B), size = 2, col = "red", shape = 21,
              data = attr(get_predobspairsdf(mod_SvMF), "G01")) +
   ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = function(x) {x %>% filter(!is.na(outlier))},
+                            data = ~filter(.x, !is.na(outlier)),
                             size = 2, 
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                            data = ~filter(.x, rdist > 0.45),
+                            size = 2, 
+                            col = "blue",
                             label.padding = 0.1,
                             min.segment.length = 0) +
   scale_color_viridis_c() +
   ggtitle("Prediction Highlighted")
 ```
 
-The model predictions do not get close to the antipode of p1 or the antipode of G01. This is good.
+The model predictions get very close to the antipode of G01. This is not good.
 
 ```{r}
 #| fig.width: 15
@@ -1348,7 +1375,7 @@ mod_SvMF$rresids_G0 %>%
   ggrepel::geom_label_repel(aes(label = Number),
                            size = 2,
                            col = "blue",
-                           data = ~filter(.x, stdr1 > 2 | stdr2 > 2 | stdr3 > 2 | stdr4 > 2), min.segment.length = 0.01) +
+                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2), min.segment.length = 0.01) +
   geom_point(aes(fill = Longitude), size = 2, shape = 21) +
   scale_fill_viridis_c(name = "Longitude") +
   scale_color_viridis_c(name = "Longitude")
@@ -1381,7 +1408,7 @@ mod_SvMF$rresids_std %>%
                             min.segment.length = 0)
 ```
 
-Three earthquakes with very large residuals after standardisation: 89, 187, 209.
+Doesnt seem to be as strong outliers as the model without distance and depth.
 
 ```{r}
 outliers <- c("89" = "20250723modelresidual",
@@ -1432,7 +1459,7 @@ The possible outlier Earthquake 93 does not have an outlying residual.
 bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
   st_drop_geometry() %>%
   tidyr::pivot_longer(matches("^r.$"), names_to = "raxis", values_to = "value") %>%
-  tidyr::pivot_longer(c(Longitude, fstrike), names_to = "covariate", values_to = "cvalue") %>%
+  tidyr::pivot_longer(c(Longitude, fstrike, dist), names_to = "covariate", values_to = "cvalue") %>%
   ggplot(aes(x = cvalue, y = value)) +
   facet_grid(rows = vars(raxis), cols = vars(covariate), scales = "free") +
   geom_hline(yintercept = 0, col = "blue", lty = "dashed") +

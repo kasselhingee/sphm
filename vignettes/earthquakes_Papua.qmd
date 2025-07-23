@@ -1604,7 +1604,7 @@ loocvmseSvMF <- function(mod){
 loocvmseSvMF(mod_SvMF)
 ```
 
-More stable is to only do the `optim_constV()` step. MSE is slightly better than regions. But not heaps.
+More stable is to only do the `optim_constV()` step. MSE here is worse than the regional means.
 
 
 # Discrete Mean Models

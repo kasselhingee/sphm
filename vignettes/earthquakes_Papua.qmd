@@ -1126,7 +1126,7 @@ get_predobspairsdf <- function(mod,
     pivot_coordpairs(colpairs = colpairs)
   # apply to G0 too
   # first get start and end location of pretty axes around G01
-  arrowends <- t(t(mod$G0[,-1] - mod$G0[,1]) * mod$a[-1]/20) + mod$G0[,1] # convert to difference, scale difference by scales a, add start back
+  arrowends <- t(t(mod$G0[,-1] - mod$G0[,1]) * mod$a[-1]/10) + mod$G0[,1] # convert to difference, scale difference by scales a, add start back
   colnames(arrowends) <- paste0("G0", 1+ (1:ncol(arrowends)))
   
   axisarrows <- apply(mod$pred, 1, function(pred){
@@ -1194,7 +1194,7 @@ orientations <- G0pairs %>%
     A = A - Astart,
     B = B - Bstart) %>% #make everything vectors - works because projection orthogonal
     # across(c(A, B), ~.x - first(.x))) %>% #make everything vectors - works because projection orthogonal
-  mutate(across(c(A, B), ~.x * scale/20)) %>% #scale axes by their estimated scale (G01 is 0 currently so scaling it does nothing)
+  mutate(across(c(A, B), ~.x * scale/10)) %>% #scale axes by their estimated scale (G01 is 0 currently so scaling it does nothing)
   filter(Axis != "G01") %>%
   ungroup() %>%
   # add G01 back into A B etc

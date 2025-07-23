@@ -337,6 +337,8 @@ ggplot() +
 ```
 
 # Look for Outliers
+Here I'll look for outliers, with the aim of obtaining a very clean data set for demonstration.
+
 Below makes circles for plotting the edge of S^4 later.
 
 ```{r}
@@ -427,7 +429,7 @@ outliers <- outliers %>%
   mutate(Number = as.integer(Number))
 ```
 
-## vs Longitude
+## Vs Longitude
 In the below plot, moment tensors of earthquakes on $S^4$ are orthogonally projected onto pairs of axes.
 Point colour is given by earthquake longitude.
 Background colour is the average earthquake longitude for that part of projected $S^4$.
@@ -476,10 +478,10 @@ s4df %>%
   st_drop_geometry() %>%
   left_join(outliers, by = "Number") %>%
   filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(Number == 93 ~ "maybeLongitude", TRUE ~ outlier)) %>%
   mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
   tidyr::unnest_wider(stdcoords, names_sep = "") %>%
   rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
   pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
   pairedplotggprep() +
   stat_summary_2d(fun = mean,
@@ -496,7 +498,61 @@ s4df %>%
 Since removing the outliers identified by the Vs Longitude plot, Earthquake 93 is revealed as a possible outlier too. But we will leave it for this analysis.
 There also appears to be a shift in earthquake moment tensors with longitude < 148 (blue) vs other earthquakes (green-yellow), which we will incorporate into regression later.
 
-## vs Fault Strike
+## Vs Distance
+```{r}
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  ggplot(aes(x = dist)) +
+  geom_histogram(bins = 15) +
+  geom_rug() +
+  ggrepel::geom_label_repel(aes(y = 0, label = Number),
+                            data = ~filter(.x, dist > 40000),
+                            label.padding = 0.1,
+                            min.segment.length = 0)
+```
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(dist > 90000 ~ "bigdistance", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = dist, fill = after_stat(value)),
+                  bins = 10,
+                  data = ~filter(.x, dist < 90000)) +
+  scale_fill_viridis_c(name = "Distance") +
+  geom_point(aes(fill = dist), size = 2, shape = 21,
+             data = ~filter(.x, dist < 90000)) +
+  geom_point(size = 2, shape = 4, 
+             data = ~filter(.x, dist >= 90000)) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0)
+```
+
+Consider two earthquakes with huge distance outliers:
+
+```{r}
+outliers <- c("92" = "distance",
+  "93" = "distance") %>%
+  tibble::enframe(name = "Number", value = "outlier") %>%
+  mutate(Number = as.integer(Number)) %>%
+  bind_rows(outliers)
+```
+
+## Vs Fault Strike
 In the below plot, moment tensors of earthquakes on $S^4$ are orthogonally projected onto pairs of axes.
 Point colour is given by fault strike.
 Background colour is the average fault strike for that part of projected $S^4$.
@@ -510,6 +566,7 @@ s4df %>%
   st_drop_geometry() %>%
   left_join(outliers, by = "Number") %>%
   filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(fstrike < 1 ~ "lowfstrike", TRUE ~ outlier)) %>%
   mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
   tidyr::unnest_wider(stdcoords, names_sep = "") %>%
   rename_with(~gsub("stdcoordsV", "Y", .)) %>%
@@ -527,7 +584,25 @@ s4df %>%
                             min.segment.length = 0)
 ```
 
-There could be two outliers with very low fault strike (dark blue) relative to other earthquakes, but fault strike doesn't seem to have as big an effect on moment tensors as longitude does.
+```{r}
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  ggplot() +
+  geom_histogram(aes(x = fstrike), bins = 15) +
+  geom_rug(aes(x = fstrike))
+```
+
+There could be two outliers with very low fault strike (54 and 305 - dark blue) relative to other earthquakes.
+
+```{r}
+outliers <- c("305" = "fstrike",
+  "54" = "fstrike") %>%
+  tibble::enframe(name = "Number", value = "outlier") %>%
+  mutate(Number = as.integer(Number)) %>%
+  bind_rows(outliers)
+```
 
 ## Vs Depth
 
@@ -538,6 +613,7 @@ s4df %>%
   st_drop_geometry() %>%
   left_join(outliers, by = "Number") %>%
   filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(Depth == 19 ~ "depth", TRUE ~ outlier)) %>%
   mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
   tidyr::unnest_wider(stdcoords, names_sep = "") %>%
   rename_with(~gsub("stdcoordsV", "Y", .)) %>%
@@ -555,36 +631,285 @@ s4df %>%
                             min.segment.length = 0)
 ```
 
+```{r}
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(Depth = as.factor(Depth)) %>%
+  select(Depth) %>%
+  summary()
+```
+
+The two very deep earthquakes could also be outliers.
+
+```{r}
+outliers <- c("308" = "Depth",
+  "229" = "Depth") %>%
+  tibble::enframe(name = "Number", value = "outlier") %>%
+  mutate(Number = as.integer(Number)) %>%
+  bind_rows(outliers)
+```
 
 
-## Vs Distance
+## Recheck Outlier Plots After Removal
 ```{r}
 #| fig.width: 15
 #| fig.height: 13
-tmpdf <- s4df %>%
+s4df %>%
   st_drop_geometry() %>%
   left_join(outliers, by = "Number") %>%
   filter(is.na(outlier)) %>%
   mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
   tidyr::unnest_wider(stdcoords, names_sep = "") %>%
   rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = Longitude, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c() +
+  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("Longitude")
+```
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(dist > 35000 ~ "bigdistance", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
   mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5))
-tmpdf %>%
-  filter(dist < 90000) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = dist, fill = after_stat(value)),
+                  bins = 10,
+                  data = ~filter(.x, dist < 35000)) +
+  scale_fill_viridis_c(name = "Distance") +
+  geom_point(aes(fill = dist), size = 2, shape = 21,
+             data = ~filter(.x, dist < 35000)) +
+  geom_point(size = 2, shape = 4, 
+             data = ~filter(.x, dist >= 35000)) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("Distance")
+```
+
+```{r}
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  ggplot(aes(x = dist)) +
+  geom_histogram(bins = 15) +
+  geom_rug() +
+  ggrepel::geom_label_repel(aes(y = 0, label = Number),
+                            data = ~filter(.x, dist > 40000),
+                            label.padding = 0.1,
+                            min.segment.length = 0)
+```
+
+Possibly more outliers: Number 103.
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(fstrike < 1.25 ~ "fstrike", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = fstrike, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c(name = "Fault Strike") +
+  geom_point(aes(fill = fstrike), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("fstrike")
+```
+
+Maybe another 2 fstrike outliers above.
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(Depth == 19 ~ "depth", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = Depth, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c(name = "Depth") +
+  geom_point(aes(fill = Depth), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("Depth")
+```
+
+Three more outliers
+
+```{r}
+outliers <- c("103" = "Distance",
+  "218" = "fstrike",
+  "153" = "fstrike") %>%
+  tibble::enframe(name = "Number", value = "outlier") %>%
+  mutate(Number = as.integer(Number)) %>%
+  bind_rows(outliers)
+```
+
+## Outlier Plots Again After Removal
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = Longitude, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c() +
+  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("Longitude")
+```
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(dist > 30000 ~ "bigdistance", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
   pairedplotggprep() +
   stat_summary_2d(fun = mean,
                     aes(z = dist, fill = after_stat(value)),
                   bins = 10) +
   scale_fill_viridis_c(name = "Distance") +
   geom_point(aes(fill = dist), size = 2, shape = 21) +
-  geom_point(size = 2, shape = 4, data = tmpdf %>% filter(dist >= 90000)) +
   ggrepel::geom_label_repel(aes(label = Number),
                             data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("Distance")
+```
+
+```{r}
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  ggplot(aes(x = dist)) +
+  geom_histogram(bins = 15) +
+  geom_rug() +
+  ggrepel::geom_label_repel(aes(y = 0, label = Number),
+                            data = ~filter(.x, dist > 30000),
                             label.padding = 0.1,
                             min.segment.length = 0)
 ```
 
+Maybe 9 and 94 are outliers too.
+
+```{r}
+outliers <- c("9" = "Distance",
+  "94" = "Distance") %>%
+  tibble::enframe(name = "Number", value = "outlier") %>%
+  mutate(Number = as.integer(Number)) %>%
+  bind_rows(outliers)
+```
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(fstrike < 1.25 ~ "fstrike", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = fstrike, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c(name = "Fault Strike") +
+  geom_point(aes(fill = fstrike), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("fstrike")
+```
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = Depth, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c(name = "Depth") +
+  geom_point(aes(fill = Depth), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("Depth")
+```
 
 
 
@@ -1026,6 +1351,7 @@ The residuals appear to be be centered on zero.
 
 # Likelihood Ratio Test of vMF vs SvMF
 ```{r}
+#| eval: false
 getlikR <- function(y){
   mod1 <- mobius_vMF(y,
                      xs = NULL, 
@@ -1085,6 +1411,7 @@ obs <- getlikR(s4df_clean %>%
 P-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
 
 ```{r}
+#| eval: false
 mean(obs$likR < lapply(null_likRs, "[[", "likR") %>% unlist())
 ```
 
@@ -1094,6 +1421,7 @@ The likelihood ratio is larger than any simulated data from the null (vMF model)
 Since a vMF model is rejected, lets look at CI that for the fitted SvMF.
 
 ```{r}
+#| eval: false
 Bests <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
   y <- sphm:::rS2S_constV(xs = NULL, 
@@ -1122,6 +1450,7 @@ Bests <- pbapply::pblapply(1:1000, function(seed){
 
 
 ```{r}
+#| eval: false
 Bests_a <- lapply(Bests, "[[", "a") %>%
   simplify2array() %>%
   t()
@@ -1131,6 +1460,7 @@ summary(Bests_a)
 
 ### 95% CI for a
 ```{r}
+#| eval: false
 apply(Bests_a[,-1], 2, quantile, probs = c(0.025, 0.975)) %>%
   round(2)
 ```

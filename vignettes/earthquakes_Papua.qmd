@@ -1333,12 +1333,13 @@ defaultplot_residbycovar <- function(mod_SvMF, s4df_clean){
 bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
   st_drop_geometry() %>%
   tidyr::pivot_longer(matches("^r.$"), names_to = "raxis", values_to = "value") %>%
-  tidyr::pivot_longer(c(Longitude, fstrike, dist), names_to = "covariate", values_to = "cvalue") %>%
+  tidyr::pivot_longer(c(Longitude, fstrike, dist, Depth), names_to = "covariate", values_to = "cvalue") %>%
   ggplot(aes(x = cvalue, y = value)) +
   facet_grid(rows = vars(raxis), cols = vars(covariate), scales = "free") +
   geom_hline(yintercept = 0, col = "blue", lty = "dashed") +
-  geom_smooth(method = "loess", formula = 'y ~ x') +
-  geom_point()
+  geom_smooth(method = "loess", formula = 'y ~ x', data = ~filter(.x, covariate != "Depth")) +
+  geom_point() +
+  stat_summary(fun.data = mean_se, geom = "errorbar", width = 1, col = "blue", data = ~filter(.x, covariate == "Depth"))
 }
 defaultplot_residbycovar(mod_SvMF, s4df_clean)
 ```

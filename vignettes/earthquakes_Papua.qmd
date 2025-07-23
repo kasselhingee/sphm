@@ -1112,6 +1112,33 @@ get_predobspairsdf <- function(mod,
   p1pairs <- as_tibble(p1std) %>%
     pivot_coordpairs(colpairs = colpairs)
   # apply to G0 too
+  # first get start and end location of pretty axes around G01
+  arrowends <- t(t(mod$G0[,-1] - mod$G0[,1]) * mod$a[-1]/20) + mod$G0[,1] # convert to difference, scale difference by scales a, add start back
+  colnames(arrowends) <- paste0("G0", 1+ (1:ncol(arrowends)))
+  
+  axisarrows <- apply(mod$pred, 1, function(pred){
+    # rotate (parallel transport) arrows to be around predicted mean, then rotate again for standardised coordinates
+    stdarrowends <- attr(ystd, "std_rotation") %*% sphm:::rotationmat_amaral(mod$G0[,1], pred) %*% arrowends
+    rownames(stdarrowends) <- paste0("Y", 1:ncol(ystd))
+    # include start location too
+    stdpred <- drop(attr(ystd, "std_rotation") %*% pred)
+    names(stdpred) <- paste0("start", rownames(stdarrowends))
+    as_tibble(t(stdarrowends), rownames = "Axis") %>%
+      bind_cols(t(stdpred))
+  }, simplify = FALSE) %>%
+    bind_rows()
+  # apply orthogonal projections
+  axisarrows_pairs <- lapply(colpairs, function(pair) {
+    axisarrows %>%
+      select(everything(), -starts_with("Y"), -starts_with("startY"), all_of(pair), all_of(paste0("start", pair))) %>%
+      rename(A = last_col(3), B = last_col(2), startA = last_col(1), startB = last_col(0)) %>%
+      mutate(pair1=pair[1],
+             pair2=pair[2],
+             pair = paste(pair, collapse = "-"))
+  }) %>%
+    bind_rows()
+
+  # old G0 axes
   G0std <- attr(ystd, "std_rotation") %*% mod$G0
   rownames(G0std) <- paste0("Y", 1:ncol(ystd))
   colnames(G0std) <- paste0("G0", 1:ncol(G0std))
@@ -1132,6 +1159,7 @@ get_predobspairsdf <- function(mod,
   pairsdf <- bind_rows(pair_dfs)
   attr(pairsdf, "p1") <- p1pairs
   attr(pairsdf, "G0") <- G0pairs
+  attr(pairsdf, "Garrows") <- axisarrows_pairs
   pairsdf
 }
 ```
@@ -1177,6 +1205,9 @@ get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, renam
              data = attr(get_predobspairsdf(mod_SvMF), "G0") %>% filter(Axis == "G01")) +
   geom_segment(aes(x=Astart,y=Bstart, xend=A, yend=B),
                data = orientations,
+               arrow = grid::arrow(length = unit(0.02, "npc"))) +
+  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+               data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G02"),
                arrow = grid::arrow(length = unit(0.02, "npc"))) +
   geom_point(aes(x=-A, y=-B), size = 2, col = "red", shape = 21,
              data = attr(get_predobspairsdf(mod_SvMF), "G0") %>% filter(Axis == "G01")) +

@@ -1193,6 +1193,13 @@ orientations <- G0pairs %>%
 #| fig.height: 13
 get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
   pairedplotggprep() +
+  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+               data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G02"),
+               arrow = grid::arrow(length = unit(0.02, "npc"))) +
+  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+               data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G03"),
+               col = "grey",
+               arrow = grid::arrow(length = unit(0.02, "npc"))) +
   geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
                alpha = 0.5,
                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
@@ -1209,13 +1216,6 @@ get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, renam
   geom_segment(aes(x=Astart,y=Bstart, xend=A, yend=B),
                col = "grey",
                data = orientations %>% filter(Axis == "G03"),
-               arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
-               data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G02"),
-               arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
-               data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G03"),
-               col = "grey",
                arrow = grid::arrow(length = unit(0.02, "npc"))) +
   geom_point(aes(x=-A, y=-B), size = 2, col = "red", shape = 21,
              data = attr(get_predobspairsdf(mod_SvMF), "G0") %>% filter(Axis == "G01")) +
@@ -1241,6 +1241,7 @@ get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, renam
 ```
 
 The model predictions do not get close to the antipode of p1 or the antipode of G01. This is good.
+However the orientation axes via parallel transport vary a lot across the earthquakes, and not in an intuitive way because of the location of G01 - this makes interpretation really hard.
 
 ```{r}
 #| fig.width: 15

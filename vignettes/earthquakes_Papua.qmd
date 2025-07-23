@@ -984,7 +984,7 @@ xestd <- xe %>%
 cor(xestd)
 ```
 
-# SvMF Regression
+# SvMF Regression: G01 = ymean
 ```{r}
 ymean <- s4df_clean %>% 
   select(s1, s2, sMrt, sMrf, sMtf) %>% 
@@ -1063,7 +1063,6 @@ cann$Be %*% t(cann$Qe[,-1])
 cann$P
 ```
 
-# Main Diagnostics
 ## Singularity Angles
 Angle with p1:
 ```{r}
@@ -1199,16 +1198,16 @@ defaultplot_pred <- function(mod_SvMF, s4df_clean, focusaxes = FALSE, focusrespo
                              label.padding = 0.1,
                              min.segment.length = 0,
                              data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2))
+  if (!focusaxes){
+    plotobj <- plotobj %>%
+      addaxes(mod_SvMF, axiscolour = rep("grey", 4), alpha = 0.5)
+  }
   if (focusresponse){
     plotobj <- plotobj +
       geom_point(aes(x=A, y=B, col = Longitude), size = 2)
   } else {
     plotobj <- plotobj +
       geom_point(aes(x=p_A, y=p_B, col = Longitude), size = 2)
-  }
-  if (!focusaxes){
-    plotobj <- plotobj %>%
-      addaxes(mod_SvMF, axiscolour = rep("grey", 4))
   }
   plotobj <- plotobj +
     geom_point(aes(x=A, y=B), size = 2, col = "blue",
@@ -1237,22 +1236,26 @@ defaultplot_pred <- function(mod_SvMF, s4df_clean, focusaxes = FALSE, focusrespo
   }
   return(plotobj)
 }
-addaxes <- function(plotobj, mod_SvMF, axiscolour = c("red", "green", "blue", "purple")){
+addaxes <- function(plotobj, mod_SvMF, axiscolour = c("red", "green", "blue", "purple"), alpha = 1){
   plotobj +
     geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
                  data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G02"),
+                 alpha = alpha,
                  col = axiscolour[1]) +
                  # arrow = grid::arrow(length = unit(0.02, "npc"), type = "closed")) +
     geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
                  data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G03"),
+                 alpha = alpha,
                  col = axiscolour[2]) +
                  # arrow = grid::arrow(length = unit(0.02, "npc"), type = "closed")) +
     geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
                  data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G04"),
+                 alpha = alpha,
                  col = axiscolour[3]) +
                  # arrow = grid::arrow(length = unit(0.02, "npc"), type = "closed")) +
     geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
                  data = attr(get_predobspairsdf(mod_SvMF), "Garrows") %>% filter(Axis == "G05"),
+                 alpha = alpha,
                  col = axiscolour[4])
                  # arrow = grid::arrow(length = unit(0.02, "npc"), type = "closed")) 
 }
@@ -1379,10 +1382,275 @@ bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
   geom_hline(yintercept = 0, col = "blue", lty = "dashed") +
   geom_smooth(method = "loess", formula = 'y ~ x', data = ~filter(.x, covariate != "Depth")) +
   geom_point() +
-  stat_summary(fun.data = mean_se, geom = "errorbar", width = 1, col = "blue", data = ~filter(.x, covariate == "Depth"))
+  stat_summary(fun.data = mean_se, geom = "errorbar", width = 1.5, col = "blue", data = ~filter(.x, covariate == "Depth"))
 }
 defaultplot_residbycovar(mod_SvMF, s4df_clean)
 ```
+
+
+
+## Conclusion
+
+# SvMF Regression: G01 = p1
+```{r}
+mod_SvMF <- mobius_SvMF(s4df_clean %>% 
+                        select(s1, s2, sMrt, sMrf, sMtf) %>% 
+                        st_drop_geometry() %>% 
+                        as.matrix(),
+                      xs = NULL, 
+                      xe = xestd %>% as.matrix(),
+                      type = "Shogo",
+                      G01behaviour = "p1")
+mod_SvMF$k
+mod_SvMF$AIC
+mod_SvMF$a
+mod_SvMF$DoF
+```
+
+## Random Starts
+```{r}
+restarts <- pbapply::pblapply(1:100, function(seed){
+  # randomly generates a Kassel-form link
+  start <- sphm:::rmnlink_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)
+  # convert to Shogo form:
+  set.seed(seed+1)
+  Qe <- mclust::randomOrthogonalMatrix(ncol(xestd)+1, 5-1)
+  bigQe <- cbind(0, rbind(0, Qe))
+  bigQe[, 1] <- 0
+  bigQe[1,1] <- 1
+  start$Qe <- bigQe
+  start$ce <- 1
+  mobius_SvMF(s4df_clean %>% 
+                          select(s1, s2, sMrt, sMrf, sMtf) %>% 
+                          st_drop_geometry() %>% 
+                          as.matrix(),
+                      xs = NULL, 
+                      xe = xestd %>% as.matrix(),
+                      type = "Shogo",
+                      G01behaviour = "p1",
+                      mean = start)
+}, cl = 2)
+lapply(restarts, "[[", "AIC") %>%
+  unlist() %>%
+  tibble::enframe("seed", "AIC") %>%
+  ggplot()+
+  geom_freqpoly(aes(x = AIC), bins = 30) +
+  geom_vline(xintercept = mod_SvMF$AIC, col = "blue") +
+  geom_rug(aes(x = AIC))
+```
+
+```{r}
+idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
+all.equal(restarts[[idx]][c("mean", "k", "a", "G0", "AIC")], mod_SvMF[c("mean", "k", "a", "G0", "AIC")])
+```
+
+No real differences in estimates!
+
+```{r}
+idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
+mod_SvMF <- restarts[[idx]]
+mod_SvMF$k
+mod_SvMF$AIC
+mod_SvMF$a
+mod_SvMF$DoF
+```
+
+```{r}
+cann <- sphm:::as_mnlink_cann(mod_SvMF$mean)
+cann$Be
+t(cann$Qe[,-1])
+cann$Be %*% t(cann$Qe[,-1])
+cann$P
+```
+
+## Singularity Angles
+Angle with p1:
+```{r}
+range(acos(mod_SvMF$pred %*% mod_SvMF$mean$p1))
+```
+
+Angle with G01:
+```{r}
+range(acos(mod_SvMF$pred %*% mod_SvMF$G0[,1]))
+```
+
+The model predictions do not get close to the antipode of p1 or the antipode of G01. This is good.
+
+## Prediction Paired Plot
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+defaultplot_pred(mod_SvMF, s4df_clean)
+defaultplot_pred(mod_SvMF, s4df_clean, focusaxes = TRUE)
+```
+
+
+## Residuals
+Here we plot the the residuals against each of the axes defined by $\Gamma_0$. We can see the ellipsiodal nature of Scaled von Mises Fisher residuals.
+
+```{r}
+#| fig.width: 8
+#| fig.height: 7
+defaultplot_resid(mod_SvMF, s4df_clean)
+```
+
+## Standardised Residuals
+Below the same residuals are transformed using the estimated concentration and Scale von Mises Fisher scales so that at high-concentrations the residuals should be close to a standard multivariate Normal.
+
+```{r}
+#| fig.width: 6
+#| fig.height: 5
+defaultplot_srresid(mod_SvMF, s4df_clean)
+```
+
+## Standardised Residual Distance
+```{r}
+defaultplot_srresid_dist(mod_SvMF, s4df_clean)
+```
+
+These plots show very little association between longitude or fstrike and scaled residual distance.
+This is very good.
+
+## Residual Mean by Covariates
+```{r}
+defaultplot_residbycovar(mod_SvMF, s4df_clean)
+```
+
+
+## Conclusion
+
+
+
+# SvMF Regression: G01 free
+```{r}
+mod_SvMF <- mobius_SvMF(s4df_clean %>% 
+                        select(s1, s2, sMrt, sMrf, sMtf) %>% 
+                        st_drop_geometry() %>% 
+                        as.matrix(),
+                      xs = NULL, 
+                      xe = xestd %>% as.matrix(),
+                      type = "Shogo",
+                      G01behaviour = "free")
+mod_SvMF$k
+mod_SvMF$AIC
+mod_SvMF$a
+mod_SvMF$DoF
+```
+
+## Random Starts
+```{r}
+restarts <- pbapply::pblapply(1:100, function(seed){
+  # randomly generates a Kassel-form link
+  start <- sphm:::rmnlink_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)
+  # convert to Shogo form:
+  set.seed(seed+1)
+  Qe <- mclust::randomOrthogonalMatrix(ncol(xestd)+1, 5-1)
+  bigQe <- cbind(0, rbind(0, Qe))
+  bigQe[, 1] <- 0
+  bigQe[1,1] <- 1
+  start$Qe <- bigQe
+  start$ce <- 1
+  mobius_SvMF(s4df_clean %>% 
+                          select(s1, s2, sMrt, sMrf, sMtf) %>% 
+                          st_drop_geometry() %>% 
+                          as.matrix(),
+                      xs = NULL, 
+                      xe = xestd %>% as.matrix(),
+                      type = "Shogo",
+                      G01behaviour = "free",
+                      mean = start)
+}, cl = 2)
+lapply(restarts, "[[", "AIC") %>%
+  unlist() %>%
+  tibble::enframe("seed", "AIC") %>%
+  ggplot()+
+  geom_freqpoly(aes(x = AIC), bins = 30) +
+  geom_vline(xintercept = mod_SvMF$AIC, col = "blue") +
+  geom_rug(aes(x = AIC))
+```
+
+```{r}
+idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
+all.equal(restarts[[idx]][c("mean", "k", "a", "G0", "AIC")], mod_SvMF[c("mean", "k", "a", "G0", "AIC")])
+```
+
+No real differences in estimates!
+
+```{r}
+idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
+mod_SvMF <- restarts[[idx]]
+mod_SvMF$k
+mod_SvMF$AIC
+mod_SvMF$a
+mod_SvMF$DoF
+```
+
+```{r}
+cann <- sphm:::as_mnlink_cann(mod_SvMF$mean)
+cann$Be
+t(cann$Qe[,-1])
+cann$Be %*% t(cann$Qe[,-1])
+cann$P
+```
+
+## Singularity Angles
+Angle with p1:
+```{r}
+range(acos(mod_SvMF$pred %*% mod_SvMF$mean$p1))
+```
+
+Angle with G01:
+```{r}
+range(acos(mod_SvMF$pred %*% mod_SvMF$G0[,1]))
+```
+
+The model predictions do not get close to the antipode of p1 or the antipode of G01. This is good.
+
+## Prediction Paired Plot
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+defaultplot_pred(mod_SvMF, s4df_clean)
+defaultplot_pred(mod_SvMF, s4df_clean, focusaxes = TRUE)
+```
+
+
+## Residuals
+Here we plot the the residuals against each of the axes defined by $\Gamma_0$. We can see the ellipsiodal nature of Scaled von Mises Fisher residuals.
+
+```{r}
+#| fig.width: 8
+#| fig.height: 7
+defaultplot_resid(mod_SvMF, s4df_clean)
+```
+
+## Standardised Residuals
+Below the same residuals are transformed using the estimated concentration and Scale von Mises Fisher scales so that at high-concentrations the residuals should be close to a standard multivariate Normal.
+
+```{r}
+#| fig.width: 6
+#| fig.height: 5
+defaultplot_srresid(mod_SvMF, s4df_clean)
+```
+
+## Standardised Residual Distance
+```{r}
+defaultplot_srresid_dist(mod_SvMF, s4df_clean)
+```
+
+These plots show very little association between longitude or fstrike and scaled residual distance.
+This is very good.
+
+## Residual Mean by Covariates
+```{r}
+defaultplot_residbycovar(mod_SvMF, s4df_clean)
+```
+
+
+## Conclusion
+
 
 
 # Predictions

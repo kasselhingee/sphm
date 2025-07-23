@@ -1388,8 +1388,9 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 ```
 
 
-
 ## Conclusion
+This model is good enough.
+Depth = 3 could be incorporated better.
 
 # SvMF Regression: G01 = p1
 ```{r}
@@ -1519,8 +1520,11 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
+This model is okay.
 
-
++ Axes for L < 148 tend to focus towards a point
++ Standardised residuals have one outlier.
++ Depth = 3 could be incorporated better.
 
 # SvMF Regression: G01 free
 ```{r}
@@ -1650,7 +1654,11 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
+This model is okay.
 
++ Axes for L < 148 tend to focus towards a point
++ Standardised residuals have three outliers.
++ Accounts for Depth = 3.
 
 
 # Predictions

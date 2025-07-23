@@ -644,8 +644,8 @@ s4df %>%
 The two very deep earthquakes could also be outliers.
 
 ```{r}
-outliers <- c("308" = "Depth",
-  "229" = "Depth") %>%
+outliers <- c("308" = "depth",
+  "229" = "depth") %>%
   tibble::enframe(name = "Number", value = "outlier") %>%
   mutate(Number = as.integer(Number)) %>%
   bind_rows(outliers)
@@ -780,7 +780,7 @@ s4df %>%
 Three more outliers
 
 ```{r}
-outliers <- c("103" = "Distance",
+outliers <- c("103" = "distance",
   "218" = "fstrike",
   "153" = "fstrike") %>%
   tibble::enframe(name = "Number", value = "outlier") %>%
@@ -855,8 +855,8 @@ s4df %>%
 Maybe 9 and 94 are outliers too.
 
 ```{r}
-outliers <- c("9" = "Distance",
-  "94" = "Distance") %>%
+outliers <- c("9" = "distance",
+  "94" = "distance") %>%
   tibble::enframe(name = "Number", value = "outlier") %>%
   mutate(Number = as.integer(Number)) %>%
   bind_rows(outliers)
@@ -940,7 +940,7 @@ s4df %>%
   left_join(outliers, by = "Number") %>%
   filter(!is.na(outlier)) %>%
   st_drop_geometry() %>%
-  select(Number, region) %>%
+  select(Number, region, outlier) %>%
   arrange(region)
 ```
 

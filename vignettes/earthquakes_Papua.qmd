@@ -950,6 +950,7 @@ s4df_clean <- s4df %>%
   left_join(outliers, by = "Number") %>%
   filter(is.na(outlier)) %>%
   mutate(outlier = case_when(Number == 93 ~ "possible", TRUE ~ outlier))
+nrow(s4df_clean)
 ```
 
 # Build covariates
@@ -969,7 +970,7 @@ xe <- s4df_clean %>%
 xestd <- xe %>%
   scale() |>
   as_tibble()
-cor(xe)
+cor(xestd)
 ```
 
 # vMF Regression
@@ -1076,7 +1077,7 @@ idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
 all.equal(restarts[[idx]][c("mean", "k", "a", "G0", "AIC")], mod_SvMF[c("mean", "k", "a", "G0", "AIC")])
 ```
 
-Real differences in estimates!
+No real differences in estimates!
 
 ```{r}
 idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
@@ -1159,6 +1160,65 @@ get_predobspairsdf(mod_SvMF, s4df_clean) %>%
   scale_color_viridis_c() +
   ggtitle("Prediction Highlighted")
 ```
+
+The model predictions do not get close to the antipode of p1 or the antipode of G01. This is good.
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+get_predobspairsdf(mod_SvMF, s4df_clean) %>%
+  pairedplotggprep() +
+  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = fstrike),
+               alpha = 0.5,
+                arrow = grid::arrow(length = unit(0.02, "npc"))) +
+  geom_point(aes(x=A, y=B, col = fstrike), size = 2) +
+  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                            data = function(x) {x %>% filter(!is.na(outlier))},
+                            size = 2, 
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  scale_color_viridis_c() +
+  ggtitle("fstrike: Response Highlighted")
+```
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+get_predobspairsdf(mod_SvMF, s4df_clean) %>%
+  pairedplotggprep() +
+  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = dist),
+               alpha = 0.5,
+                arrow = grid::arrow(length = unit(0.02, "npc"))) +
+  geom_point(aes(x=A, y=B, col = dist), size = 2) +
+  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                            data = function(x) {x %>% filter(!is.na(outlier))},
+                            size = 2, 
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  scale_color_viridis_c() +
+  ggtitle("dist: Response Highlighted")
+```
+
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+get_predobspairsdf(mod_SvMF, s4df_clean) %>%
+  pairedplotggprep() +
+  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Depth),
+               alpha = 0.5,
+                arrow = grid::arrow(length = unit(0.02, "npc"))) +
+  geom_point(aes(x=A, y=B, col = Depth), size = 2) +
+  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                            data = function(x) {x %>% filter(!is.na(outlier))},
+                            size = 2, 
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  scale_color_viridis_c() +
+  ggtitle("Depth: Response Highlighted")
+```
+
+
 
 # Predictions in Natural Coordinates
 
@@ -1279,11 +1339,16 @@ circle_df_long <- circle_df_long %>%
 mod_SvMF$rresids_G0 %>%
   as_tibble() %>%
   bind_cols(s4df_clean) %>%
+  bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
   pairedplotggprep() +
   stat_summary_2d(fun = mean, 
                   aes(z = Longitude, fill = after_stat(value)),
                   bins = 10) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           col = "blue",
+                           data = ~filter(.x, stdr1 > 2 | stdr2 > 2 | stdr3 > 2 | stdr4 > 2), min.segment.length = 0.01) +
   geom_point(aes(fill = Longitude), size = 2, shape = 21) +
   scale_fill_viridis_c(name = "Longitude") +
   scale_color_viridis_c(name = "Longitude")
@@ -1308,7 +1373,28 @@ mod_SvMF$rresids_std %>%
   geom_vline(xintercept = 0, lty = "dashed") +
   geom_point(size = 1) +
   scale_fill_viridis_c() +
-  coord_fixed()
+  coord_fixed() +
+  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
+                            data = ~filter(.x, abs(A) > 2 | abs(B) > 2),
+                            size = 2, 
+                            label.padding = 0.1,
+                            min.segment.length = 0)
+```
+
+Three earthquakes with very large residuals after standardisation: 89, 187, 209.
+
+```{r}
+outliers <- c("89" = "20250723modelresidual",
+  "187" = "20250723modelresidual",
+  "209" = "20250723modelresidual") %>%
+  tibble::enframe(name = "Number", value = "outlier") %>%
+  mutate(Number = as.integer(Number)) %>%
+  bind_rows(outliers) %>%
+  distinct()
+s4df_clean <- left_join(s4df_clean, outliers, by = "Number") %>%
+  mutate(outlier = case_when(!is.na(outlier.x) ~ outlier.x,
+                             !is.na(outlier.y) ~ outlier.y,
+                             TRUE ~ outlier.x))
 ```
 
 ## Residual Distance by Covariate
@@ -1318,14 +1404,22 @@ p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   geom_point() +
   ggrepel::geom_label_repel(aes(label = Number),
                            size = 2,
-                           data = ~filter(.x, rdist > 0.45), min.segment.length = 0.01)
+                           data = ~filter(.x, rdist > 0.45), min.segment.length = 0.01) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           col = "blue",
+                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
 
 p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(x=rdist, y = fstrike)) +
   geom_point() +
   ggrepel::geom_label_repel(aes(label = Number),
                            size = 2,
-                           data = ~filter(.x, rdist > 0.45), min.segment.length = 0.01)
+                           data = ~filter(.x, rdist > 0.45), min.segment.length = 0.01) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           col = "blue",
+                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
 p1 + p2
 ```
 

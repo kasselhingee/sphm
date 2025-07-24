@@ -971,13 +971,10 @@ Scale and center all Euclidean covariates to have mean 0 and sd of 1.
 ```{r}
 xe <- s4df_clean %>%
   st_drop_geometry() %>%
-  mutate(val = 1) %>%
-  tidyr::pivot_wider(names_from = Depth, values_from = val, values_fill = 0, names_prefix = "Depth") %>%
-  select(fstrike,
+  select(
          Latitude, 
-         Longitude,
-         dist,
-         starts_with("Depth"), -Depth3) %>%
+         Longitude
+         ) %>%
   mutate(L148 = Longitude < 148) %>%
   mutate(Longitude.L148 = L148*Longitude) %>%
   select(-L148) %>%
@@ -1391,8 +1388,8 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model looks okay. Optimisation hard.
-AIC only slightly better than strike + longitude + L148.Longitude model.
+Model looks good. AIC is on par with having fstrike, dist and Depth categorical, and better than just fstrike.
+
 
 # SvMF Regression: G01 = p1
 ```{r}
@@ -1518,7 +1515,13 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Bad model. Overfitting?
+
++ Optimisation hard
++ Antipode of p1 obtained - at L < 148.
+
+Model badish.
+
+AIC slightly worse than equivalent with fstrike.
 
 # SvMF Regression: G01 free
 ```{r}
@@ -1642,7 +1645,10 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Bad model. Overfitting?
++ AIC worse than equivalent model with fstrike
++ Obtains G01 antipode singularity
+
+Badish model.
 
 # Predictions
 ```{r}

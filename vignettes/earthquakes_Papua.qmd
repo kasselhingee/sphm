@@ -692,7 +692,7 @@ Scale and center all Euclidean covariates to have mean 0 and sd of 1.
 ```{r}
 xe <- s4df_clean %>%
   st_drop_geometry() %>%
-  select(fstrike,
+  select(
          Latitude, 
          Longitude) %>%
   mutate(L148 = Longitude < 148) %>%
@@ -1108,11 +1108,8 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-
-+ Some outliers in standard residuals
-+ Distance appears to be well accounted for.
-
 This model looks good.
+Depth, distance and strike appear accounted for.
 
 
 
@@ -1240,10 +1237,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-
-+ Optimisation difficutly
-
-This model good except for the optimisation difficulty.
+This model looks good.
 
 
 # SvMF Regression: G01 free
@@ -1372,9 +1366,9 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
++ Some suggestion of increasing `srdist` with fstrike.
 
-+ Some outliers in standardised residuals
-+ Some suggestion of increasing `srdist` with longitude.
+Otherwise model looks okay.
 
 
 

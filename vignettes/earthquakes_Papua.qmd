@@ -337,8 +337,6 @@ ggplot() +
 ```
 
 # Look for Outliers
-Here I'll look for obvious outliers using Longitude and fstrike and distance.
-
 Below makes circles for plotting the edge of S^4 later.
 
 ```{r}
@@ -509,60 +507,6 @@ s4df %>%
 Since removing the outliers identified by the Vs Longitude plot, Earthquake 93 is revealed as a possible outlier too. But we will leave it for this analysis.
 There also appears to be a shift in earthquake moment tensors with longitude < 148 (blue) vs other earthquakes (green-yellow), which we will incorporate into regression later.
 
-## Vs Distance
-```{r}
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  ggplot(aes(x = dist)) +
-  geom_histogram(bins = 15) +
-  geom_rug() +
-  ggrepel::geom_label_repel(aes(y = 0, label = Number),
-                            data = ~filter(.x, dist > 40000),
-                            label.padding = 0.1,
-                            min.segment.length = 0)
-```
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(outlier = case_when(dist > 90000 ~ "bigdistance", TRUE ~ outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = dist, fill = after_stat(value)),
-                  bins = 10,
-                  data = ~filter(.x, dist < 90000)) +
-  scale_fill_viridis_c(name = "Distance") +
-  geom_point(aes(fill = dist), size = 2, shape = 21,
-             data = ~filter(.x, dist < 90000)) +
-  geom_point(size = 2, shape = 4, 
-             data = ~filter(.x, dist >= 90000)) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0)
-```
-
-Consider two earthquakes with huge distance outliers:
-
-```{r}
-outliers <- c("92" = "distance",
-  "93" = "distance") %>%
-  tibble::enframe(name = "Number", value = "outlier") %>%
-  mutate(Number = as.integer(Number)) %>%
-  bind_rows(outliers)
-```
-
 ## Vs Fault Strike
 In the below plot, moment tensors of earthquakes on $S^4$ are orthogonally projected onto pairs of axes.
 Point colour is given by fault strike.
@@ -595,25 +539,6 @@ s4df %>%
                             min.segment.length = 0)
 ```
 
-```{r}
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  ggplot() +
-  geom_histogram(aes(x = fstrike), bins = 15) +
-  geom_rug(aes(x = fstrike))
-```
-
-There could be two outliers with very low fault strike (54 and 305 - dark blue) relative to other earthquakes.
-
-```{r}
-outliers <- c("305" = "fstrike",
-  "54" = "fstrike") %>%
-  tibble::enframe(name = "Number", value = "outlier") %>%
-  mutate(Number = as.integer(Number)) %>%
-  bind_rows(outliers)
-```
 
 ## Vs Depth
 
@@ -1108,9 +1033,9 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-This model looks good.
-Depth, distance and strike appear accounted for.
++ Some residuals suggested.
 
+Model okay.
 
 
 # SvMF Regression: G01 = p1
@@ -1238,7 +1163,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 ## Conclusion
 This model looks good.
-
+But some optimisation difficulty.
 
 # SvMF Regression: G01 free
 ```{r}
@@ -1279,9 +1204,6 @@ restarts <- pbapply::pblapply(1:100, function(seed){
                       G01behaviour = "free",
                       mean = start)
 }, cl = 2)
-fail <- vapply(restarts, inherits, "try-error", FUN.VALUE = TRUE)
-fails <- restarts[fail]
-restarts <- restarts[!fail]
 lapply(restarts, "[[", "AIC") %>%
   unlist() %>%
   tibble::enframe("seed", "AIC") %>%
@@ -1324,7 +1246,6 @@ Angle with G01:
 range(acos(mod_SvMF$pred %*% mod_SvMF$G0[,1]))
 ```
 
-
 ## Prediction Paired Plot
 
 ```{r}
@@ -1366,9 +1287,9 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-+ Some suggestion of increasing `srdist` with fstrike.
++ Some outliers in the standard residuals
++ Some indication of greater residuals with Longitude and fstrike
 
-Otherwise model looks okay.
 
 
 

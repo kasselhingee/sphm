@@ -337,7 +337,7 @@ ggplot() +
 ```
 
 # Look for Outliers
-Here I'll look for obvious outliers using Longitude and fstrike.
+Here I'll look for obvious outliers using Longitude and fstrike and distance.
 
 Below makes circles for plotting the edge of S^4 later.
 
@@ -509,6 +509,60 @@ s4df %>%
 Since removing the outliers identified by the Vs Longitude plot, Earthquake 93 is revealed as a possible outlier too. But we will leave it for this analysis.
 There also appears to be a shift in earthquake moment tensors with longitude < 148 (blue) vs other earthquakes (green-yellow), which we will incorporate into regression later.
 
+## Vs Distance
+```{r}
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  ggplot(aes(x = dist)) +
+  geom_histogram(bins = 15) +
+  geom_rug() +
+  ggrepel::geom_label_repel(aes(y = 0, label = Number),
+                            data = ~filter(.x, dist > 40000),
+                            label.padding = 0.1,
+                            min.segment.length = 0)
+```
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(dist > 90000 ~ "bigdistance", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = dist, fill = after_stat(value)),
+                  bins = 10,
+                  data = ~filter(.x, dist < 90000)) +
+  scale_fill_viridis_c(name = "Distance") +
+  geom_point(aes(fill = dist), size = 2, shape = 21,
+             data = ~filter(.x, dist < 90000)) +
+  geom_point(size = 2, shape = 4, 
+             data = ~filter(.x, dist >= 90000)) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0)
+```
+
+Consider two earthquakes with huge distance outliers:
+
+```{r}
+outliers <- c("92" = "distance",
+  "93" = "distance") %>%
+  tibble::enframe(name = "Number", value = "outlier") %>%
+  mutate(Number = as.integer(Number)) %>%
+  bind_rows(outliers)
+```
+
 ## Vs Fault Strike
 In the below plot, moment tensors of earthquakes on $S^4$ are orthogonally projected onto pairs of axes.
 Point colour is given by fault strike.
@@ -640,7 +694,8 @@ xe <- s4df_clean %>%
   st_drop_geometry() %>%
   select(fstrike,
          Latitude, 
-         Longitude) %>%
+         Longitude,
+         dist) %>%
   mutate(L148 = Longitude < 148) %>%
   mutate(Longitude.L148 = L148*Longitude) %>%
   select(-L148) %>%
@@ -1054,11 +1109,8 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
+This model looks good.
 
-+ Some outliers in standard residuals, but could be consistent with Gaussian.
-+ `srdist` increases with `fstrike` (bad)
-
-This model is maybe bad.
 
 
 # SvMF Regression: G01 = p1
@@ -1187,9 +1239,10 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 ## Conclusion
 
-+ There are a few outliers in the standardised residuals
++ A concentration of G axes as seen in other models.
++ Some outliers in standardised residuals
 
-This model is okay.
+This model is good.
 
 
 # SvMF Regression: G01 free
@@ -1231,6 +1284,9 @@ restarts <- pbapply::pblapply(1:100, function(seed){
                       G01behaviour = "free",
                       mean = start)
 }, cl = 2)
+fail <- vapply(restarts, inherits, "try-error", FUN.VALUE = TRUE)
+fails <- restarts[fail]
+restarts <- restarts[!fail]
 lapply(restarts, "[[", "AIC") %>%
   unlist() %>%
   tibble::enframe("seed", "AIC") %>%
@@ -1317,11 +1373,13 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 ## Conclusion
 
-+ Some instability in estimation.
-+ Reaches parallel transport singularity
-+ There are a few outliers in the standardised residuals
++ Standardised residuals are really weird, with lots of extremes.
++ Non-zero mean residuals for some Longitudes
++ Predictions look strange.
 
 This model is bad.
+
+
 
 
 # Predictions

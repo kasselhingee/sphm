@@ -694,8 +694,7 @@ xe <- s4df_clean %>%
   st_drop_geometry() %>%
   select(fstrike,
          Latitude, 
-         Longitude,
-         dist) %>%
+         Longitude) %>%
   mutate(L148 = Longitude < 148) %>%
   mutate(Longitude.L148 = L148*Longitude) %>%
   select(-L148) %>%
@@ -1109,6 +1108,10 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
+
++ Some outliers in standard residuals
++ Distance appears to be well accounted for.
+
 This model looks good.
 
 
@@ -1166,7 +1169,6 @@ idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
 all.equal(restarts[[idx]][c("mean", "k", "a", "G0", "AIC")], mod_SvMF[c("mean", "k", "a", "G0", "AIC")])
 ```
 
-No real differences in estimates!
 
 ```{r}
 idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
@@ -1239,10 +1241,9 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 ## Conclusion
 
-+ A concentration of G axes as seen in other models.
-+ Some outliers in standardised residuals
++ Optimisation difficutly
 
-This model is good.
+This model good except for the optimisation difficulty.
 
 
 # SvMF Regression: G01 free
@@ -1329,7 +1330,6 @@ Angle with G01:
 range(acos(mod_SvMF$pred %*% mod_SvMF$G0[,1]))
 ```
 
-The model predictions do not get close to the antipode of p1 or the antipode of G01. This is good.
 
 ## Prediction Paired Plot
 
@@ -1373,12 +1373,8 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 ## Conclusion
 
-+ Standardised residuals are really weird, with lots of extremes.
-+ Non-zero mean residuals for some Longitudes
-+ Predictions look strange.
-
-This model is bad.
-
++ Some outliers in standardised residuals
++ Some suggestion of increasing `srdist` with longitude.
 
 
 

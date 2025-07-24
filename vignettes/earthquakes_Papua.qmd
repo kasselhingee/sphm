@@ -971,7 +971,7 @@ Scale and center all Euclidean covariates to have mean 0 and sd of 1.
 ```{r}
 xe <- s4df_clean %>%
   st_drop_geometry() %>%
-  select(
+  select(dist,
          Latitude, 
          Longitude
          ) %>%
@@ -1044,8 +1044,6 @@ lapply(restarts, "[[", "AIC") %>%
 idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
 all.equal(restarts[[idx]][c("mean", "k", "a", "G0", "AIC")], mod_SvMF[c("mean", "k", "a", "G0", "AIC")])
 ```
-
-No real differences in estimates!
 
 ```{r}
 idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
@@ -1388,7 +1386,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model looks good. AIC is on par with having fstrike, dist and Depth categorical, and better than just fstrike.
+Model looks good.
 
 # Simulation of Unscaled Residual Distance
 ## Residual Distance by Covariate (Unstandardised)
@@ -1585,13 +1583,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-
-+ Optimisation hard
-+ Antipode of p1 obtained - at L < 148.
-
-Model badish.
-
-AIC slightly worse than equivalent with fstrike.
+Model good.
 
 # SvMF Regression: G01 free
 ```{r}
@@ -1715,10 +1707,8 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-+ AIC worse than equivalent model with fstrike
-+ Obtains G01 antipode singularity
+Model okay. Some outliers in standardised residuals.
 
-Badish model.
 
 # Predictions
 ```{r}

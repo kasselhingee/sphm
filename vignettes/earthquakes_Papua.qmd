@@ -1390,6 +1390,76 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 ## Conclusion
 Model looks good. AIC is on par with having fstrike, dist and Depth categorical, and better than just fstrike.
 
+# Simulation of Unscaled Residual Distance
+## Residual Distance by Covariate (Unstandardised)
+```{r}
+p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
+  ggplot(aes(y=rdist, x = Longitude)) +
+  geom_point() +
+  geom_smooth() +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           data = ~filter(.x, rdist > 0.5), min.segment.length = 0.01) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           col = "blue",
+                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
+
+p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
+  ggplot(aes(y=rdist, x = fstrike)) +
+  geom_point() +
+  geom_smooth() +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           data = ~filter(.x, rdist > 0.5), min.segment.length = 0.01) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           col = "blue",
+                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
+p1 + p2
+```
+
+## Simulate Residuals
+```{r}
+simdists <- pbapply::pblapply(1:100, function(seed){
+  set.seed(seed)
+  y <- sphm:::rS2S_constV(xs = NULL, 
+                   xe = mod_SvMF$xe,
+                   mnparam = mod_SvMF$mean,
+                   k = mod_SvMF$k,
+                   a = mod_SvMF$a,
+                   G0 = mod_SvMF$G0)[,-6]
+  simdists <- acos(rowSums(mod_SvMF$pred * y))
+  bind_cols(rdist = simdists, s4df_clean)
+}) %>%
+  bind_rows()
+p1 <- simdists %>%
+  ggplot(aes(y=rdist, x = Longitude)) +
+  # geom_point() +
+  geom_violin(aes(group = Longitude), width = 0.1) +
+  geom_quantile(quantiles = c(0.1, 0.5, 0.9))
+
+p2 <- simdists %>%
+  ggplot(aes(y=rdist, x = fstrike)) +
+  # geom_point() +
+  geom_violin(aes(group = fstrike), width = 0.02) +
+  geom_quantile(quantiles = c(0.1, 0.5, 0.9))
+p3 <- simdists %>%
+  group_by(Longitude) %>%
+  summarise(r90 = quantile(rdist, 0.90)) %>%
+  ggplot(aes(x = Longitude, y = r90)) +
+  geom_point()
+p4 <- simdists %>%
+  group_by(fstrike) %>%
+  summarise(r90 = quantile(rdist, 0.90)) %>%
+  ggplot(aes(x = fstrike, y = r90)) +
+  geom_point()
+  
+
+(p1 + p2)/(p3 + p4)
+```
+
+Simulations are performing as I expected - no trend in residual size.
 
 # SvMF Regression: G01 = p1
 ```{r}

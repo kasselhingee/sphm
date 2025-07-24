@@ -1391,7 +1391,8 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-
+Model looks okay. Optimisation hard.
+AIC only slightly better than strike + longitude + L148.Longitude model.
 
 # SvMF Regression: G01 = p1
 ```{r}
@@ -1517,6 +1518,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
+Bad model. Overfitting?
 
 # SvMF Regression: G01 free
 ```{r}
@@ -1640,7 +1642,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-
+Bad model. Overfitting?
 
 # Predictions
 ```{r}
@@ -1912,7 +1914,6 @@ p1 + p2
 Left panel: There is some suggestion of increasing residual size with longitude, except that two earthquakes on the top left and bottom right might suggest otherwise.
 Right panel: No indication that fault strike is related to residual size.
 The possible outlier Earthquake 93 does not have an outlying residual.
-
 
 
 # Likelihood Ratio Test of vMF vs SvMF

@@ -337,6 +337,8 @@ ggplot() +
 ```
 
 # Look for Outliers
+Here I'll look for obvious outliers using Longitude and fstrike.
+
 Below makes circles for plotting the edge of S^4 later.
 
 ```{r}
@@ -539,6 +541,25 @@ s4df %>%
                             min.segment.length = 0)
 ```
 
+```{r}
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  ggplot() +
+  geom_histogram(aes(x = fstrike), bins = 15) +
+  geom_rug(aes(x = fstrike))
+```
+
+There could be two outliers with very low fault strike (54 and 305 - dark blue) relative to other earthquakes.
+
+```{r}
+outliers <- c("305" = "fstrike",
+  "54" = "fstrike") %>%
+  tibble::enframe(name = "Number", value = "outlier") %>%
+  mutate(Number = as.integer(Number)) %>%
+  bind_rows(outliers)
+```
 
 ## Vs Depth
 
@@ -1013,9 +1034,6 @@ p1 + p2
 defaultplot_srresid_dist(mod_SvMF, s4df_clean)
 ```
 
-These plots show very little association between longitude or fstrike and scaled residual distance.
-This is very good.
-
 ## Residual Mean by Covariates
 ```{r}
 defaultplot_residbycovar <- function(mod_SvMF, s4df_clean){
@@ -1036,8 +1054,12 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-This model looks good.
-Depth = 3 is accounted for fairly well.
+
++ Some outliers in standard residuals, but could be consistent with Gaussian.
++ `srdist` increases with `fstrike` (bad)
+
+This model is maybe bad.
+
 
 # SvMF Regression: G01 = p1
 ```{r}
@@ -1157,9 +1179,6 @@ defaultplot_srresid(mod_SvMF, s4df_clean)
 defaultplot_srresid_dist(mod_SvMF, s4df_clean)
 ```
 
-These plots show very little association between longitude or fstrike and scaled residual distance.
-This is very good.
-
 ## Residual Mean by Covariates
 ```{r}
 defaultplot_residbycovar(mod_SvMF, s4df_clean)
@@ -1167,7 +1186,11 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-This model looks good.
+
++ There are a few outliers in the standardised residuals
+
+This model is okay.
+
 
 # SvMF Regression: G01 free
 ```{r}
@@ -1293,8 +1316,12 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-This model is not okay.
-There are a few outliers in the standardised residuals and standardised residual size increases with longitude.
+
++ Some instability in estimation.
++ Reaches parallel transport singularity
++ There are a few outliers in the standardised residuals
+
+This model is bad.
 
 
 # Predictions

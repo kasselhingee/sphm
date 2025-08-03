@@ -1180,23 +1180,6 @@ getG0arrows <- function(mod_SvMF){
 defaultplot_pred <- function(mod_SvMF, s4df_clean, focusaxes = FALSE, focusresponse = FALSE){
   plotobj <- get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
     pairedplotggprep() +
-    ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                              data = ~filter(.x, !is.na(outlier)),
-                              size = 2, 
-                              label.padding = 0.1,
-                              min.segment.length = 0) +
-    ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                              data = ~filter(.x, rdist > 0.5),
-                              size = 2, 
-                              col = "black",
-                              label.padding = 0.1,
-                              min.segment.length = 0) +
-    ggrepel::geom_label_repel(aes(label = Number),
-                             size = 2,
-                             col = "blue",
-                             label.padding = 0.1,
-                             min.segment.length = 0,
-                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2))
   if (!focusaxes){
     plotobj <- plotobj %>%
       addaxes(mod_SvMF, axiscolour = rep("grey", 4), alpha = 0.5)
@@ -1280,16 +1263,6 @@ defaultplot_resid <- function(mod_SvMF, s4df_clean){
     stat_summary_2d(fun = mean, 
                     aes(z = Longitude, fill = after_stat(value)),
                     bins = 10) +
-    ggrepel::geom_label_repel(aes(label = Number),
-                             size = 2,
-                             col = "blue",
-                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2), min.segment.length = 0.01) +
-    ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                              data = ~filter(.x, rdist > 0.5),
-                              size = 2, 
-                              col = "black",
-                              label.padding = 0.1,
-                              min.segment.length = 0) +
     geom_point(aes(fill = Longitude), size = 2, shape = 21) +
     scale_fill_viridis_c(name = "Longitude") +
     scale_color_viridis_c(name = "Longitude")
@@ -1318,19 +1291,7 @@ mod_SvMF$rresids_std %>%
   geom_vline(xintercept = 0, lty = "dashed") +
   geom_point(size = 1) +
   scale_fill_viridis_c() +
-  coord_fixed() +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = ~filter(.x, abs(A) > 2 | abs(B) > 2),
-                            size = 2, 
-                            col = "blue",
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = ~filter(.x, rdist > 0.5),
-                            size = 2, 
-                            col = "black",
-                            label.padding = 0.1,
-                            min.segment.length = 0)
+  coord_fixed() 
 }
 defaultplot_srresid(mod_SvMF, s4df_clean)
 ```
@@ -1342,28 +1303,26 @@ stdrdist <- sqrt(rowSums(mod_SvMF$rresids_std^2))
 stdrdist[!attr(mod_SvMF$rresids_std, "samehemisphere")] <- NA_real_
 p1 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(x=srdist, y = Longitude)) +
-  geom_point() +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           data = ~filter(.x, rdist > 0.5), min.segment.length = 0.01) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
+  geom_point() 
 
 p2 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(x=srdist, y = fstrike)) +
-  geom_point() +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           data = ~filter(.x, rdist > 0.5), min.segment.length = 0.01) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
+  geom_point() 
 p1 + p2
 }
 defaultplot_srresid_dist(mod_SvMF, s4df_clean)
+```
+
+## Residual Distance by Covariate (Unstandardised)
+```{r}
+p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
+  ggplot(aes(y=rdist, x = Longitude)) +
+  geom_point()
+
+p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
+  ggplot(aes(y=rdist, x = fstrike)) +
+  geom_point()
+p1 + p2
 ```
 
 ## Residual Mean by Covariates
@@ -1393,27 +1352,11 @@ Model looks good.
 ```{r}
 p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(y=rdist, x = Longitude)) +
-  geom_point() +
-  geom_smooth() +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           data = ~filter(.x, rdist > 0.5), min.segment.length = 0.01) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
+  geom_point()
 
 p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(y=rdist, x = fstrike)) +
-  geom_point() +
-  geom_smooth() +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           data = ~filter(.x, rdist > 0.5), min.segment.length = 0.01) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
+  geom_point()
 p1 + p2
 ```
 

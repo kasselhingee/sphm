@@ -1179,7 +1179,7 @@ getG0arrows <- function(mod_SvMF){
 #| fig.height: 13
 defaultplot_pred <- function(mod_SvMF, s4df_clean, focusaxes = FALSE, focusresponse = FALSE){
   plotobj <- get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
-    pairedplotggprep() +
+    pairedplotggprep()
   if (!focusaxes){
     plotobj <- plotobj %>%
       addaxes(mod_SvMF, axiscolour = rep("grey", 4), alpha = 0.5)

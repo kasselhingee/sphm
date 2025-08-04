@@ -433,14 +433,9 @@ colnames(ystd) <- paste0("Y", 1:5)
 For easy plotting below, I've recorded the outliers I found.
 ```{r}
 outliers <- c(
-  "182" = "general",
-  "306" = "general",
-  "76" = "general",
-  "254" = "general",
   "169" = "general",
   "87" = "general",
-  "175" = "longitude",
-  "260" = "longitude"
+  "175" = "general"
 )
 outliers <- outliers %>%
   tibble::enframe(name = "Number", value = "outlier") %>%
@@ -655,9 +650,13 @@ ggplot() +
 ggsave("earthquakelocations.pdf", width = 7, height = 2)
 ```
 
-# Keep Outliers
+# Remove Just General Outliers
 The outliers by region are:
 ```{r}
+outliers <- outliers %>% #remove duplicates
+  group_by(Number) %>%
+  summarise(outlier = paste0(outlier, collapse = ""))
+
 s4df %>%
   left_join(outliers, by = "Number") %>%
   filter(!is.na(outlier)) %>%
@@ -669,8 +668,8 @@ s4df %>%
 
 ```{r}
 s4df_clean <- s4df %>%
-  left_join(outliers, by = "Number") 
-  # filter(is.na(outlier)) %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier) | outlier != "general")
   # mutate(outlier = case_when(Number == 93 ~ "possible", TRUE ~ outlier))
 nrow(s4df_clean)
 ```
@@ -687,7 +686,6 @@ xe <- s4df_clean %>%
          Latitude, 
          Longitude
          ) %>%
-  mutate(strike1.5 = fstrike*(fstrike < 1.5)) %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>
@@ -1064,8 +1062,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 ## Conclusion
 
 + Close to antipode of p1
-+ Optimisation hard
-+ standarised residuals associated with fstrike
++ Predictions concentrated
 
 Model not okay.
 
@@ -1202,7 +1199,10 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Okay model.
++ Close to antipode of p1
++ Predictions concentrated
+
+Model not okay.
 
 # SvMF Regression: G01 free
 ```{r}
@@ -1334,7 +1334,10 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model okay.
++ Close to antipodes
++ Predictions concentrated
+
+Model not okay.
 
 
 # Predictions

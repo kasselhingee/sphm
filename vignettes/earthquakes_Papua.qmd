@@ -567,17 +567,21 @@ s4df %>%
 s4df %>%
   st_drop_geometry() %>%
   left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
+  # filter(is.na(outlier)) %>%
   ggplot() +
   geom_histogram(aes(x = fstrike), bins = 15) +
   geom_rug(aes(x = fstrike))
 ```
 
-There could be two outliers with very low fault strike (54 and 305 - dark blue) relative to other earthquakes.
+There could be four outliers with very low fault strike (153, 169, 218, 301) relative to other earthquakes.
 
 ```{r}
-outliers <- c("305" = "fstrike",
-  "54" = "fstrike") %>%
+outliers <- c(
+  "153" = "fstrike",
+  "169" = "fstrike",
+  "218" = "fstrike",
+  "301" = "fstrike"
+  ) %>%
   tibble::enframe(name = "Number", value = "outlier") %>%
   mutate(Number = as.integer(Number)) %>%
   bind_rows(outliers)
@@ -655,7 +659,7 @@ The outliers by region are:
 ```{r}
 outliers <- outliers %>% #remove duplicates
   group_by(Number) %>%
-  summarise(outlier = paste0(outlier, collapse = ""))
+  summarise(outlier = paste0(outlier, collapse = ","))
 
 s4df %>%
   left_join(outliers, by = "Number") %>%
@@ -669,7 +673,7 @@ s4df %>%
 ```{r}
 s4df_clean <- s4df %>%
   left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier) | outlier != "general")
+  filter(!grepl("fstrike", outlier))
   # mutate(outlier = case_when(Number == 93 ~ "possible", TRUE ~ outlier))
 nrow(s4df_clean)
 ```
@@ -953,7 +957,6 @@ defaultplot_pred(mod_SvMF, s4df_clean)
 defaultplot_pred(mod_SvMF, s4df_clean, focusaxes = TRUE)
 ```
 
-The model predictions do not get close to the antipode of p1 or the antipode of G01. This is good.
 
 ## Residuals
 Here we plot the the residuals against each of the axes defined by $\Gamma_0$. We can see the ellipsiodal nature of Scaled von Mises Fisher residuals.
@@ -989,7 +992,7 @@ mod_SvMF$rresids_std %>%
   as_tibble() %>%
   bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
   pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
-  ggplot(mapping = aes(x=A, y=B)) + 
+  ggplot(mapping = aes(x=A, y=B, col = fstrike)) + 
   facet_wrap(vars(pair2, pair1)) +
   theme(strip.text.y = element_text(angle = 90),
         strip.placement = "outside",
@@ -998,7 +1001,7 @@ mod_SvMF$rresids_std %>%
   geom_hline(yintercept = 0, lty = "dashed") +
   geom_vline(xintercept = 0, lty = "dashed") +
   geom_point(size = 1) +
-  scale_fill_viridis_c() +
+  scale_color_viridis_c() +
   coord_fixed() 
 }
 defaultplot_srresid(mod_SvMF, s4df_clean)
@@ -1060,11 +1063,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-
-+ Close to antipode of p1
-+ Predictions concentrated
-
-Model not okay.
+Model okay.
 
 # SvMF Regression: G01 = p1
 ```{r}
@@ -1199,10 +1198,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-+ Close to antipode of p1
-+ Predictions concentrated
-
-Model not okay.
+Model okay.
 
 # SvMF Regression: G01 free
 ```{r}

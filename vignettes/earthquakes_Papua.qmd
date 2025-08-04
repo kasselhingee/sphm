@@ -654,7 +654,7 @@ ggplot() +
 ggsave("earthquakelocations.pdf", width = 7, height = 2)
 ```
 
-# Remove Just General Outliers
+# Remove fstrike Outliers
 The outliers by region are:
 ```{r}
 outliers <- outliers %>% #remove duplicates
@@ -685,7 +685,8 @@ Scale and center all Euclidean covariates to have mean 0 and sd of 1.
 ```{r}
 xe <- s4df_clean %>%
   st_drop_geometry() %>%
-  select(
+  select(fstrike,
+         Depth,
          Latitude, 
          Longitude
          ) %>%
@@ -693,7 +694,7 @@ xe <- s4df_clean %>%
 xestd <- xe %>%
   scale() |>
   as_tibble() |>
-  mutate(L2 = Longitude^2)
+  mutate(fstrike2 = fstrike^2)
 cor(xestd)
 ```
 
@@ -1037,7 +1038,7 @@ p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
 
 p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(y=rdist, x = fstrike)) +
-  geom_point() 
+  geom_point()
 p1 + p2
 }
 defaultplot_rresid_dist(mod_SvMF, s4df_clean)

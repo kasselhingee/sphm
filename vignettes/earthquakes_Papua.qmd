@@ -693,8 +693,7 @@ xe <- s4df_clean %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>
-  as_tibble() |>
-  mutate(fstrike2 = fstrike^2)
+  as_tibble()
 cor(xestd)
 ```
 

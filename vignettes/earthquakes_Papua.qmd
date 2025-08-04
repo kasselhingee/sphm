@@ -687,6 +687,7 @@ xe <- s4df_clean %>%
          Latitude, 
          Longitude
          ) %>%
+  mutate(strike1.5 = fstrike*(fstrike < 1.5)) %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>

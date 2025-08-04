@@ -685,7 +685,7 @@ Scale and center all Euclidean covariates to have mean 0 and sd of 1.
 ```{r}
 xe <- s4df_clean %>%
   st_drop_geometry() %>%
-  select(
+  select(dist,
          fstrike,
          Latitude, 
          Longitude

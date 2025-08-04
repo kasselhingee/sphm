@@ -172,6 +172,13 @@ s4df <- s4df %>%
 nrow(s4df)
 ```
 
+# Only Earthquakes with L > 148
+```{r}
+s4df <- s4df %>% 
+  filter(Longitude > 148)
+nrow(s4df)
+```
+
 # Fig of earthquake locations, NGT and BSSL
 Plate information was obtained from github `https://github.com/fraxen/tectonicplates`.
 
@@ -972,12 +979,10 @@ Scale and center all Euclidean covariates to have mean 0 and sd of 1.
 xe <- s4df_clean %>%
   st_drop_geometry() %>%
   select(dist,
+         fstrike,
          Latitude, 
          Longitude
          ) %>%
-  mutate(L148 = Longitude < 148) %>%
-  mutate(Longitude.L148 = L148*Longitude) %>%
-  select(-L148) %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>
@@ -1298,31 +1303,38 @@ defaultplot_srresid(mod_SvMF, s4df_clean)
 
 ## Standardised Residual Distance
 ```{r}
+#| fig.width: 5
+#| fig.height: 2
 defaultplot_srresid_dist <- function(mod_SvMF, s4df_clean){
 stdrdist <- sqrt(rowSums(mod_SvMF$rresids_std^2))
 stdrdist[!attr(mod_SvMF$rresids_std, "samehemisphere")] <- NA_real_
 p1 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
-  ggplot(aes(x=srdist, y = Longitude)) +
+  ggplot(aes(y=srdist, x = Longitude)) +
   geom_point() 
 
 p2 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
-  ggplot(aes(x=srdist, y = fstrike)) +
+  ggplot(aes(y=srdist, x = fstrike)) +
   geom_point() 
 p1 + p2
 }
 defaultplot_srresid_dist(mod_SvMF, s4df_clean)
 ```
 
-## Residual Distance by Covariate (Unstandardised)
+## Residual Distance (Unstandardised)
 ```{r}
+#| fig.width: 5
+#| fig.height: 2
+defaultplot_rresid_dist <- function(mod_SvMF, s4df_clean){
 p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(y=rdist, x = Longitude)) +
-  geom_point()
+  geom_point() 
 
 p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(y=rdist, x = fstrike)) +
-  geom_point()
+  geom_point() 
 p1 + p2
+}
+defaultplot_rresid_dist(mod_SvMF, s4df_clean)
 ```
 
 ## Residual Mean by Covariates
@@ -1345,62 +1357,11 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model looks good.
 
-# Simulation of Unscaled Residual Distance
-## Residual Distance by Covariate (Unstandardised)
-```{r}
-p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
-  ggplot(aes(y=rdist, x = Longitude)) +
-  geom_point()
++ Close to antipode of p1
++ Optimisation hard
 
-p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
-  ggplot(aes(y=rdist, x = fstrike)) +
-  geom_point()
-p1 + p2
-```
-
-## Simulate Residuals
-```{r}
-simdists <- pbapply::pblapply(1:100, function(seed){
-  set.seed(seed)
-  y <- sphm:::rS2S_constV(xs = NULL, 
-                   xe = mod_SvMF$xe,
-                   mnparam = mod_SvMF$mean,
-                   k = mod_SvMF$k,
-                   a = mod_SvMF$a,
-                   G0 = mod_SvMF$G0)[,-6]
-  simdists <- acos(rowSums(mod_SvMF$pred * y))
-  bind_cols(rdist = simdists, s4df_clean)
-}) %>%
-  bind_rows()
-p1 <- simdists %>%
-  ggplot(aes(y=rdist, x = Longitude)) +
-  # geom_point() +
-  geom_violin(aes(group = Longitude), width = 0.1) +
-  geom_quantile(quantiles = c(0.1, 0.5, 0.9))
-
-p2 <- simdists %>%
-  ggplot(aes(y=rdist, x = fstrike)) +
-  # geom_point() +
-  geom_violin(aes(group = fstrike), width = 0.02) +
-  geom_quantile(quantiles = c(0.1, 0.5, 0.9))
-p3 <- simdists %>%
-  group_by(Longitude) %>%
-  summarise(r90 = quantile(rdist, 0.90)) %>%
-  ggplot(aes(x = Longitude, y = r90)) +
-  geom_point()
-p4 <- simdists %>%
-  group_by(fstrike) %>%
-  summarise(r90 = quantile(rdist, 0.90)) %>%
-  ggplot(aes(x = fstrike, y = r90)) +
-  geom_point()
-  
-
-(p1 + p2)/(p3 + p4)
-```
-
-Simulations are performing as I expected - no trend in residual size.
+Model is okay.
 
 # SvMF Regression: G01 = p1
 ```{r}
@@ -1516,7 +1477,16 @@ defaultplot_srresid(mod_SvMF, s4df_clean)
 
 ## Standardised Residual Distance
 ```{r}
+#| fig.width: 5
+#| fig.height: 2
 defaultplot_srresid_dist(mod_SvMF, s4df_clean)
+```
+
+## Residual Distance (Unstandardised)
+```{r}
+#| fig.width: 5
+#| fig.height: 2
+defaultplot_rresid_dist(mod_SvMF, s4df_clean)
 ```
 
 ## Residual Mean by Covariates
@@ -1526,7 +1496,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model good.
+Bad model.
 
 # SvMF Regression: G01 free
 ```{r}
@@ -1639,9 +1609,17 @@ defaultplot_srresid(mod_SvMF, s4df_clean)
 
 ## Standardised Residual Distance
 ```{r}
+#| fig.width: 5
+#| fig.height: 2
 defaultplot_srresid_dist(mod_SvMF, s4df_clean)
 ```
 
+## Residual Distance (Unstandardised)
+```{r}
+#| fig.width: 5
+#| fig.height: 2
+defaultplot_rresid_dist(mod_SvMF, s4df_clean)
+```
 
 ## Residual Mean by Covariates
 ```{r}
@@ -1650,7 +1628,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model okay. Some outliers in standardised residuals.
+Bad model
 
 
 # Predictions

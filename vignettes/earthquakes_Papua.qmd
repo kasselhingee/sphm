@@ -426,9 +426,8 @@ colnames(ystd) <- paste0("Y", 1:5)
 For easy plotting below, I've recorded the outliers I found.
 ```{r}
 outliers <- c(
-  "169" = "general",
-  "87" = "general",
-  "175" = "general"
+  "306" = "general",
+  "182" = "general"
 )
 outliers <- outliers %>%
   tibble::enframe(name = "Number", value = "outlier") %>%
@@ -461,7 +460,8 @@ s4df %>%
   ggrepel::geom_label_repel(aes(label = Number,
                                 fontface = case_match(outlier, 
                                                       "general" ~ "plain",
-                                                      "longitude" ~ "italic")
+                                                      "longitude" ~ "italic",
+                                                      NA_character_ ~ "bold")
                                 ),
                             data = ~filter(.x, !is.na(outlier)),
                             label.padding = 0.1,
@@ -666,7 +666,7 @@ s4df %>%
 ```{r}
 s4df_clean <- s4df %>%
   left_join(outliers, by = "Number") %>%
-  filter(!(Number %in% c(76, 254, 182)))
+  filter(!(Number %in% c(182, 306)))
   # filter(!grepl("fstrike", outlier))
   # mutate(outlier = case_when(Number == 93 ~ "possible", TRUE ~ outlier))
 nrow(s4df_clean)

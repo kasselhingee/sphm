@@ -743,6 +743,8 @@ restarts <- pbapply::pblapply(1:100, function(seed){
                       G0 = cbind(ymean, NA, NA, NA, NA),
                       mean = start)
 }, cl = 2)
+badrestarts <- unlist(lapply(restarts, inherits, "try-error"))
+restarts <- restarts[!badrestarts]
 lapply(restarts, "[[", "AIC") %>%
   unlist() %>%
   tibble::enframe("seed", "AIC") %>%
@@ -764,6 +766,7 @@ mod_SvMF$k
 mod_SvMF$AIC
 mod_SvMF$a
 mod_SvMF$DoF
+sphm:::SvMFcann_check(sphm:::SvMFcann(mod_SvMF$k, mod_SvMF$a, mod_SvMF$G0))
 ```
 
 ```{r}
@@ -1063,7 +1066,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model okay.
+Model looks good. Even `rdist`.
 
 # SvMF Regression: G01 = p1
 ```{r}
@@ -1104,6 +1107,8 @@ restarts <- pbapply::pblapply(1:100, function(seed){
                       G01behaviour = "p1",
                       mean = start)
 }, cl = 2)
+badrestarts <- unlist(lapply(restarts, inherits, "try-error"))
+restarts <- restarts[!badrestarts]
 lapply(restarts, "[[", "AIC") %>%
   unlist() %>%
   tibble::enframe("seed", "AIC") %>%
@@ -1126,6 +1131,7 @@ mod_SvMF$k
 mod_SvMF$AIC
 mod_SvMF$a
 mod_SvMF$DoF
+sphm:::SvMFcann_check(sphm:::SvMFcann(mod_SvMF$k, mod_SvMF$a, mod_SvMF$G0))
 ```
 
 ```{r}
@@ -1198,7 +1204,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model okay.
+Model *BAD*.
 
 # SvMF Regression: G01 free
 ```{r}
@@ -1239,6 +1245,8 @@ restarts <- pbapply::pblapply(1:100, function(seed){
                       G01behaviour = "free",
                       mean = start)
 }, cl = 2)
+badrestarts <- unlist(lapply(restarts, inherits, "try-error"))
+restarts <- restarts[!badrestarts]
 lapply(restarts, "[[", "AIC") %>%
   unlist() %>%
   tibble::enframe("seed", "AIC") %>%
@@ -1260,6 +1268,7 @@ mod_SvMF$k
 mod_SvMF$AIC
 mod_SvMF$a
 mod_SvMF$DoF
+sphm:::SvMFcann_check(sphm:::SvMFcann(mod_SvMF$k, mod_SvMF$a, mod_SvMF$G0))
 ```
 
 ```{r}
@@ -1330,10 +1339,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-+ Close to antipodes
-+ Predictions concentrated
-
-Model not okay.
+Model *BAD*.
 
 
 # Predictions

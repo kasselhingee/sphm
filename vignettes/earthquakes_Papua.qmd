@@ -687,7 +687,7 @@ xe <- s4df_clean %>%
   st_drop_geometry() %>%
   select(fstrike,
          Depth,
-         Longitude
+         Latitude
          ) %>%
   as.matrix()
 xestd <- xe %>%

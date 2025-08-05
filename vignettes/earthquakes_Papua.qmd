@@ -676,6 +676,7 @@ s4df_clean <- s4df %>%
   filter(!grepl("fstrike", outlier))
   # mutate(outlier = case_when(Number == 93 ~ "possible", TRUE ~ outlier))
 nrow(s4df_clean)
+s4df_clean$Depth %>% as.factor() %>% summary()
 ```
 
 # Build covariates
@@ -687,12 +688,14 @@ xe <- s4df_clean %>%
   st_drop_geometry() %>%
   select(fstrike,
          Depth,
-         Latitude
+         Latitude,
+         Longitude
          ) %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>
-  as_tibble()
+  as_tibble() |>
+  mutate(Depth2 = Depth^2)
 cor(xestd)
 ```
 

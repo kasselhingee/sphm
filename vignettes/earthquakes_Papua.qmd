@@ -687,7 +687,6 @@ xe <- s4df_clean %>%
   st_drop_geometry() %>%
   select(fstrike,
          Depth,
-         Latitude, 
          Longitude
          ) %>%
   as.matrix()
@@ -1066,7 +1065,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model looks good. Even `rdist`.
+Model looks good, but has an outlier.
 
 # SvMF Regression: G01 = p1
 ```{r}
@@ -1204,7 +1203,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model *BAD*.
+Model poor.
 
 # SvMF Regression: G01 free
 ```{r}

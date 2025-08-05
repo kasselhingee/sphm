@@ -694,8 +694,7 @@ xe <- s4df_clean %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>
-  as_tibble() |>
-  mutate(Depth2 = Depth^2)
+  as_tibble()
 cor(xestd)
 ```
 
@@ -1068,7 +1067,11 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model looks good, but has an outlier.
+Model looks good. Even `rdist`.
+
+```{r}
+mainmod <- mod_SvMF
+```
 
 # SvMF Regression: G01 = p1
 ```{r}
@@ -1206,7 +1209,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model poor.
+Model *BAD*.
 
 # SvMF Regression: G01 free
 ```{r}
@@ -1344,142 +1347,6 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 Model *BAD*.
 
 
-# Predictions
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-circle_df_long <- circle_df_long %>%
-  mutate(across(starts_with("pair"), ~gsub("r", "Y", .x)))
-get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
-  pairedplotggprep() +
-  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
-               alpha = 0.5,
-                arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_point(aes(x=A, y=B, col = Longitude), size = 2) +
-  geom_point(aes(x=p_A, y=p_B, col = Longitude), size = 2, shape = 1) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = function(x) {x %>% filter(!is.na(outlier))},
-                            size = 2, 
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = ~filter(.x, rdist > 0.5),
-                            size = 2, 
-                            col = "black",
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           label.padding = 0.1,
-                           min.segment.length = 0,
-                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2)) +
-  scale_color_viridis_c() +
-  ggtitle("Longitude: Response Highlighted")
-```
-
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
-  pairedplotggprep() +
-  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = fstrike),
-               alpha = 0.5,
-                arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_point(aes(x=A, y=B, col = fstrike), size = 2) +
-  geom_point(aes(x=p_A, y=p_B, col = fstrike), size = 2, shape = 1) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = function(x) {x %>% filter(!is.na(outlier))},
-                            size = 2, 
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = ~filter(.x, rdist > 0.5),
-                            size = 2, 
-                            col = "black",
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           label.padding = 0.1,
-                           min.segment.length = 0,
-                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2)) +
-  scale_color_viridis_c() +
-  ggtitle("fstrike: Response Highlighted")
-```
-
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
-  pairedplotggprep() +
-  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = dist),
-               alpha = 0.5,
-                arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_point(aes(x=A, y=B, col = dist), size = 2) +
-  geom_point(aes(x=p_A, y=p_B, col = dist), size = 2, shape = 1) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = function(x) {x %>% filter(!is.na(outlier))},
-                            size = 2, 
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = ~filter(.x, rdist > 0.5),
-                            size = 2, 
-                            col = "black",
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           label.padding = 0.1,
-                           min.segment.length = 0,
-                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2)) +
-  scale_color_viridis_c() +
-  ggtitle("dist: Response Highlighted")
-```
-
-
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
-  pairedplotggprep() +
-  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Depth),
-               alpha = 0.5,
-                arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_point(aes(x=A, y=B, col = Depth), size = 2) +
-  geom_point(aes(x=p_A, y=p_B, col = Depth), size = 2, shape = 1) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = function(x) {x %>% filter(!is.na(outlier))},
-                            size = 2, 
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = ~filter(.x, rdist > 0.5),
-                            size = 2, 
-                            col = "black",
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           label.padding = 0.1,
-                           min.segment.length = 0,
-                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2)) +
-  scale_color_viridis_c() +
-  ggtitle("Depth: Response Highlighted")
-```
-
-The three large residual earthquakes (108, 299, 217) dont seem to have difference in moment tensors that are related obviously to the covariates.
-
-The three unusual residual earthquakes (89, 187, 209)
-
-
 # Predictions in Natural Coordinates
 
 ```{r}
@@ -1513,7 +1380,7 @@ get_predobspairsdf_nat <- function(mod,
 ```{r}
 #| fig.width: 15
 #| fig.height: 13
-get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s"))) %>%
+get_predobspairsdf_nat(mainmod, s4df_clean %>% select(-starts_with("s"))) %>%
   pairedplotggprep() +
   geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
                alpha = 0.5,
@@ -1539,7 +1406,7 @@ obsplots <- lapply(c("Y1-Y2", "Y3-Y2", "Y4-Y2"), function(pair){
   get_predobspairsdf(mod_SvMF, s4df_clean,
                      colpairs = strsplit(pair, "-")) %>%
     pairedplotggprep() +
-    geom_point(aes(x=A, y=B, col = Longitude), size = 1) +
+    geom_point(aes(x=A, y=B, col = Depth), size = 1) +
     scale_color_viridis_c() +
     theme(plot.margin = unit(c(0,2,0,2), "mm"),
           strip.text = element_text(margin = margin(0, 0, 0, 0)))
@@ -1548,10 +1415,10 @@ predplots <- lapply(c("Y1-Y2", "Y3-Y2", "Y4-Y2"), function(pair){
   get_predobspairsdf(mod_SvMF, s4df_clean,
                      colpairs = strsplit(pair, "-")) %>%
   pairedplotggprep() +
-  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
+  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Depth),
                alpha = 0.5,
                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_point(aes(x=p_A, y=p_B, fill = Longitude),
+  geom_point(aes(x=p_A, y=p_B, fill = Depth),
              size = 1.5,
              shape = 21) +
   geom_point(aes(x=A, y=B), size = 1, col = "blue",

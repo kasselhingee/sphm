@@ -172,13 +172,6 @@ s4df <- s4df %>%
 nrow(s4df)
 ```
 
-# Only Earthquakes with L > 148
-```{r}
-s4df <- s4df %>% 
-  filter(Longitude > 148)
-nrow(s4df)
-```
-
 # Fig of earthquake locations, NGT and BSSL
 Plate information was obtained from github `https://github.com/fraxen/tectonicplates`.
 
@@ -654,7 +647,7 @@ ggplot() +
 ggsave("earthquakelocations.pdf", width = 7, height = 2)
 ```
 
-# Remove fstrike Outliers
+# Keep Outliers
 The outliers by region are:
 ```{r}
 outliers <- outliers %>% #remove duplicates
@@ -672,8 +665,8 @@ s4df %>%
 
 ```{r}
 s4df_clean <- s4df %>%
-  left_join(outliers, by = "Number") %>%
-  filter(!grepl("fstrike", outlier))
+  left_join(outliers, by = "Number") #%>%
+  # filter(!grepl("fstrike", outlier))
   # mutate(outlier = case_when(Number == 93 ~ "possible", TRUE ~ outlier))
 nrow(s4df_clean)
 s4df_clean$Depth %>% as.factor() %>% summary()
@@ -895,7 +888,12 @@ getG0arrows <- function(mod_SvMF){
 #| fig.height: 13
 defaultplot_pred <- function(mod_SvMF, s4df_clean, focusaxes = FALSE, focusresponse = FALSE){
   plotobj <- get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
-    pairedplotggprep()
+    pairedplotggprep() +
+    ggrepel::geom_label_repel(aes(x = A, y = B, label = Number),
+                             size = 2,
+                             col = "blue",
+                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2),
+                             min.segment.length = 0)
   if (!focusaxes){
     plotobj <- plotobj %>%
       addaxes(mod_SvMF, axiscolour = rep("grey", 4), alpha = 0.5)
@@ -978,6 +976,10 @@ defaultplot_resid <- function(mod_SvMF, s4df_clean){
     stat_summary_2d(fun = mean, 
                     aes(z = Longitude, fill = after_stat(value)),
                     bins = 10) +
+    ggrepel::geom_label_repel(aes(label = Number),
+                             size = 2,
+                             col = "blue",
+                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2), min.segment.length = 0.01) +
     geom_point(aes(fill = Longitude), size = 2, shape = 21) +
     scale_fill_viridis_c(name = "Longitude") +
     scale_color_viridis_c(name = "Longitude")
@@ -1006,7 +1008,12 @@ mod_SvMF$rresids_std %>%
   geom_vline(xintercept = 0, lty = "dashed") +
   geom_point(size = 1) +
   scale_color_viridis_c() +
-  coord_fixed() 
+  coord_fixed() +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           col = "blue",
+                           data = ~filter(.x, abs(A) > 2 | abs(B) > 2),
+                           min.segment.length = 0)
 }
 defaultplot_srresid(mod_SvMF, s4df_clean)
 ```
@@ -1019,12 +1026,22 @@ defaultplot_srresid_dist <- function(mod_SvMF, s4df_clean){
 stdrdist <- sqrt(rowSums(mod_SvMF$rresids_std^2))
 stdrdist[!attr(mod_SvMF$rresids_std, "samehemisphere")] <- NA_real_
 p1 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
+  bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   ggplot(aes(y=srdist, x = Longitude)) +
-  geom_point() 
+  geom_point() +
+    ggrepel::geom_label_repel(aes(label = Number),
+                             size = 2,
+                             col = "blue",
+                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2), min.segment.length = 0.01)
 
 p2 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
+  bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   ggplot(aes(y=srdist, x = fstrike)) +
-  geom_point() 
+  geom_point() +
+    ggrepel::geom_label_repel(aes(label = Number),
+                             size = 2,
+                             col = "blue",
+                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2), min.segment.length = 0.01)
 p1 + p2
 }
 defaultplot_srresid_dist(mod_SvMF, s4df_clean)
@@ -1036,12 +1053,22 @@ defaultplot_srresid_dist(mod_SvMF, s4df_clean)
 #| fig.height: 2
 defaultplot_rresid_dist <- function(mod_SvMF, s4df_clean){
 p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
+  bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   ggplot(aes(y=rdist, x = Longitude)) +
-  geom_point() 
+  geom_point() +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           col = "blue",
+                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2))
 
 p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
+  bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   ggplot(aes(y=rdist, x = fstrike)) +
-  geom_point()
+  geom_point() +
+  ggrepel::geom_label_repel(aes(label = Number),
+                           size = 2,
+                           col = "blue",
+                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2))
 p1 + p2
 }
 defaultplot_rresid_dist(mod_SvMF, s4df_clean)

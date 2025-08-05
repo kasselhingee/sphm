@@ -686,6 +686,7 @@ xe <- s4df_clean %>%
          Latitude,
          Longitude
          ) %>%
+  mutate(L148 = (Longitude > 148) * Longitude) %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>

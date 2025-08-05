@@ -426,8 +426,14 @@ colnames(ystd) <- paste0("Y", 1:5)
 For easy plotting below, I've recorded the outliers I found.
 ```{r}
 outliers <- c(
+  "182" = "general",
   "306" = "general",
-  "182" = "general"
+  "76" = "general",
+  "254" = "general",
+  "169" = "general",
+  "87" = "general",
+  "175" = "longitude",
+  "260" = "longitude"
 )
 outliers <- outliers %>%
   tibble::enframe(name = "Number", value = "outlier") %>%
@@ -460,23 +466,55 @@ s4df %>%
   ggrepel::geom_label_repel(aes(label = Number,
                                 fontface = case_match(outlier, 
                                                       "general" ~ "plain",
-                                                      "longitude" ~ "italic",
-                                                      NA_character_ ~ "bold")
+                                                      "longitude" ~ "italic")
                                 ),
                             data = ~filter(.x, !is.na(outlier)),
                             label.padding = 0.1,
                             min.segment.length = 0)
 ```
 
-Maybe 175, 87 and 169 are outliers in Y1, but seems a bit questionable.
+From these plots we can see 6 earthquakes very different to the rest in at least some of the coordinates Y1 - Y5.
+Earthquakes 182, 306, 76, 87 and 169 were outlying in Y1.
+Earthquake 254 is an outlier in Y5.
 
+Furthermore, earthquake 175 is an outlier because it has a high longitude, but is located among low longitude earthquakes.
+Earthquake 260 is similar.
+
+Below is the same plotting method, without the outliers. The axes used for plotting are different because of the data has changed without the outliers.
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(Number == 93 ~ "maybeLongitude", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = Longitude, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c() +
+  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0)
+```
+
+Since removing the outliers identified by the Vs Longitude plot, Earthquake 93 is revealed as a possible outlier too. But we will leave it for this analysis.
+There also appears to be a shift in earthquake moment tensors with longitude < 148 (blue) vs other earthquakes (green-yellow), which we will incorporate into regression later.
 
 ## Vs Distance
 ```{r}
 s4df %>%
   st_drop_geometry() %>%
   left_join(outliers, by = "Number") %>%
-  # filter(is.na(outlier)) %>%
+  filter(is.na(outlier)) %>%
   ggplot(aes(x = dist)) +
   geom_histogram(bins = 15) +
   geom_rug() +
@@ -492,8 +530,8 @@ s4df %>%
 s4df %>%
   st_drop_geometry() %>%
   left_join(outliers, by = "Number") %>%
-  # filter(is.na(outlier)) %>%
-  mutate(outlier = case_when(dist > 30000 ~ "bigdistance", TRUE ~ outlier)) %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(dist > 90000 ~ "bigdistance", TRUE ~ outlier)) %>%
   mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
   tidyr::unnest_wider(stdcoords, names_sep = "") %>%
   rename_with(~gsub("stdcoordsV", "Y", .)) %>%
@@ -503,22 +541,23 @@ s4df %>%
   stat_summary_2d(fun = mean,
                     aes(z = dist, fill = after_stat(value)),
                   bins = 10,
-                  data = ~filter(.x, dist < 30000)) +
+                  data = ~filter(.x, dist < 90000)) +
   scale_fill_viridis_c(name = "Distance") +
   geom_point(aes(fill = dist), size = 2, shape = 21,
-             data = ~filter(.x, dist < 30000)) +
+             data = ~filter(.x, dist < 90000)) +
   geom_point(size = 2, shape = 4, 
-             data = ~filter(.x, dist >= 30000)) +
+             data = ~filter(.x, dist >= 90000)) +
   ggrepel::geom_label_repel(aes(label = Number),
                             data = ~filter(.x, !is.na(outlier)),
                             label.padding = 0.1,
                             min.segment.length = 0)
 ```
 
-Maybe the earthquake 229 is an outlier.
+Consider two earthquakes with huge distance outliers:
 
 ```{r}
-outliers <- c("229" = "distance") %>%
+outliers <- c("92" = "distance",
+  "93" = "distance") %>%
   tibble::enframe(name = "Number", value = "outlier") %>%
   mutate(Number = as.integer(Number)) %>%
   bind_rows(outliers)
@@ -537,7 +576,7 @@ The axes Y1 ... Y5 have been chosen so that the second moment of the data is the
 s4df %>%
   st_drop_geometry() %>%
   left_join(outliers, by = "Number") %>%
-  # filter(is.na(outlier)) %>%
+  filter(is.na(outlier)) %>%
   mutate(outlier = case_when(fstrike < 1 ~ "lowfstrike", TRUE ~ outlier)) %>%
   mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
   tidyr::unnest_wider(stdcoords, names_sep = "") %>%
@@ -560,21 +599,17 @@ s4df %>%
 s4df %>%
   st_drop_geometry() %>%
   left_join(outliers, by = "Number") %>%
-  # filter(is.na(outlier)) %>%
+  filter(is.na(outlier)) %>%
   ggplot() +
   geom_histogram(aes(x = fstrike), bins = 15) +
   geom_rug(aes(x = fstrike))
 ```
 
-There could be four outliers with very low fault strike (153, 169, 218, 301) relative to other earthquakes.
+There could be two outliers with very low fault strike (54 and 305 - dark blue) relative to other earthquakes.
 
 ```{r}
-outliers <- c(
-  "153" = "fstrike",
-  "169" = "fstrike",
-  "218" = "fstrike",
-  "301" = "fstrike"
-  ) %>%
+outliers <- c("305" = "fstrike",
+  "54" = "fstrike") %>%
   tibble::enframe(name = "Number", value = "outlier") %>%
   mutate(Number = as.integer(Number)) %>%
   bind_rows(outliers)
@@ -588,7 +623,7 @@ outliers <- c(
 s4df %>%
   st_drop_geometry() %>%
   left_join(outliers, by = "Number") %>%
-  # filter(is.na(outlier)) %>%
+  filter(is.na(outlier)) %>%
   mutate(outlier = case_when(Depth == 19 ~ "depth", TRUE ~ outlier)) %>%
   mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
   tidyr::unnest_wider(stdcoords, names_sep = "") %>%
@@ -626,6 +661,268 @@ outliers <- c("308" = "depth",
   mutate(Number = as.integer(Number)) %>%
   bind_rows(outliers)
 ```
+
+
+## Recheck Outlier Plots After Removal
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = Longitude, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c() +
+  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("Longitude")
+```
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(dist > 35000 ~ "bigdistance", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = dist, fill = after_stat(value)),
+                  bins = 10,
+                  data = ~filter(.x, dist < 35000)) +
+  scale_fill_viridis_c(name = "Distance") +
+  geom_point(aes(fill = dist), size = 2, shape = 21,
+             data = ~filter(.x, dist < 35000)) +
+  geom_point(size = 2, shape = 4, 
+             data = ~filter(.x, dist >= 35000)) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("Distance")
+```
+
+```{r}
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  ggplot(aes(x = dist)) +
+  geom_histogram(bins = 15) +
+  geom_rug() +
+  ggrepel::geom_label_repel(aes(y = 0, label = Number),
+                            data = ~filter(.x, dist > 40000),
+                            label.padding = 0.1,
+                            min.segment.length = 0)
+```
+
+Possibly more outliers: Number 103.
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(fstrike < 1.25 ~ "fstrike", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = fstrike, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c(name = "Fault Strike") +
+  geom_point(aes(fill = fstrike), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("fstrike")
+```
+
+Maybe another 2 fstrike outliers above.
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(Depth == 19 ~ "depth", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = Depth, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c(name = "Depth") +
+  geom_point(aes(fill = Depth), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("Depth")
+```
+
+Three more outliers
+
+```{r}
+outliers <- c("103" = "distance",
+  "218" = "fstrike",
+  "153" = "fstrike") %>%
+  tibble::enframe(name = "Number", value = "outlier") %>%
+  mutate(Number = as.integer(Number)) %>%
+  bind_rows(outliers)
+```
+
+## Outlier Plots Again After Removal
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = Longitude, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c() +
+  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("Longitude")
+```
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(dist > 30000 ~ "bigdistance", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = dist, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c(name = "Distance") +
+  geom_point(aes(fill = dist), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("Distance")
+```
+
+```{r}
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  ggplot(aes(x = dist)) +
+  geom_histogram(bins = 15) +
+  geom_rug() +
+  ggrepel::geom_label_repel(aes(y = 0, label = Number),
+                            data = ~filter(.x, dist > 30000),
+                            label.padding = 0.1,
+                            min.segment.length = 0)
+```
+
+Maybe 9 and 94 are outliers too.
+
+```{r}
+outliers <- c("9" = "distance",
+  "94" = "distance") %>%
+  tibble::enframe(name = "Number", value = "outlier") %>%
+  mutate(Number = as.integer(Number)) %>%
+  bind_rows(outliers)
+```
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(fstrike < 1.25 ~ "fstrike", TRUE ~ outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = fstrike, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c(name = "Fault Strike") +
+  geom_point(aes(fill = fstrike), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("fstrike")
+```
+
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  st_drop_geometry() %>%
+  left_join(outliers, by = "Number") %>%
+  filter(is.na(outlier)) %>%
+  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
+  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
+  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
+  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean,
+                    aes(z = Depth, fill = after_stat(value)),
+                  bins = 10) +
+  scale_fill_viridis_c(name = "Depth") +
+  geom_point(aes(fill = Depth), size = 2, shape = 21) +
+  ggrepel::geom_label_repel(aes(label = Number),
+                            data = ~filter(.x, !is.na(outlier)),
+                            label.padding = 0.1,
+                            min.segment.length = 0) +
+  ggtitle("Depth")
+```
+
+
 
 # Figure for Paper
 ```{r}
@@ -666,10 +963,8 @@ s4df %>%
 ```{r}
 s4df_clean <- s4df %>%
   left_join(outliers, by = "Number") %>%
-  filter(!(Number %in% c(182, 306))) %>%
-  filter(!(Number %in% c(76, 175, 254)))
-  # filter(!grepl("fstrike", outlier))
-  # mutate(outlier = case_when(Number == 93 ~ "possible", TRUE ~ outlier))
+  filter(is.na(outlier)) %>%
+  mutate(outlier = case_when(Number == 93 ~ "possible", TRUE ~ outlier))
 nrow(s4df_clean)
 s4df_clean$Depth %>% as.factor() %>% summary()
 ```
@@ -682,11 +977,10 @@ Scale and center all Euclidean covariates to have mean 0 and sd of 1.
 xe <- s4df_clean %>%
   st_drop_geometry() %>%
   select(fstrike,
-         Depth,
          Latitude,
          Longitude
          ) %>%
-  mutate(L148 = (Longitude > 148) * Longitude) %>%
+  mutate(Longitude.L148 = (Longitude > 148) * Longitude) %>%
   as.matrix()
 xestd <- xe %>%
   scale() |>

@@ -647,7 +647,7 @@ ggplot() +
 ggsave("earthquakelocations.pdf", width = 7, height = 2)
 ```
 
-# Keep Outliers
+# Remove Outliers
 The outliers by region are:
 ```{r}
 outliers <- outliers %>% #remove duplicates
@@ -665,7 +665,8 @@ s4df %>%
 
 ```{r}
 s4df_clean <- s4df %>%
-  left_join(outliers, by = "Number") #%>%
+  left_join(outliers, by = "Number") %>%
+  filter(!(Number %in% c(76, 254, 182)))
   # filter(!grepl("fstrike", outlier))
   # mutate(outlier = case_when(Number == 93 ~ "possible", TRUE ~ outlier))
 nrow(s4df_clean)
@@ -1006,14 +1007,14 @@ mod_SvMF$rresids_std %>%
         strip.background = element_blank()) +
   geom_hline(yintercept = 0, lty = "dashed") +
   geom_vline(xintercept = 0, lty = "dashed") +
-  geom_point(size = 1) +
-  scale_color_viridis_c() +
-  coord_fixed() +
   ggrepel::geom_label_repel(aes(label = Number),
                            size = 2,
                            col = "blue",
                            data = ~filter(.x, abs(A) > 2 | abs(B) > 2),
-                           min.segment.length = 0)
+                           min.segment.length = 0) +
+  geom_point(size = 1) +
+  scale_color_viridis_c() +
+  coord_fixed()
 }
 defaultplot_srresid(mod_SvMF, s4df_clean)
 ```

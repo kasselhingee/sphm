@@ -1,5 +1,6 @@
 ---
-title: "Regions 1-4 Shallow Mobius Regression"
+title: "Mobius Regression of Earthquake Moment Tensors"
+subtitle: "Shallow Earthquakes Regions 2 - 4"
 author: "Kassel Hingee"
 format:
   pdf:
@@ -9,7 +10,7 @@ format:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 library(ggplot2)
 library(dplyr)
 library(GGally)
@@ -1186,12 +1187,7 @@ getG0arrows <- function(mod_SvMF){
 #| fig.height: 13
 defaultplot_pred <- function(mod_SvMF, s4df_clean, focusaxes = FALSE, focusresponse = FALSE){
   plotobj <- get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
-    pairedplotggprep() +
-    ggrepel::geom_label_repel(aes(x = A, y = B, label = Number),
-                             size = 2,
-                             col = "blue",
-                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2),
-                             min.segment.length = 0)
+    pairedplotggprep() 
   if (!focusaxes){
     plotobj <- plotobj %>%
       addaxes(mod_SvMF, axiscolour = rep("grey", 4), alpha = 0.5)
@@ -1274,10 +1270,6 @@ defaultplot_resid <- function(mod_SvMF, s4df_clean){
     stat_summary_2d(fun = mean, 
                     aes(z = Longitude, fill = after_stat(value)),
                     bins = 10) +
-    ggrepel::geom_label_repel(aes(label = Number),
-                             size = 2,
-                             col = "blue",
-                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2), min.segment.length = 0.01) +
     geom_point(aes(fill = Longitude), size = 2, shape = 21) +
     scale_fill_viridis_c(name = "Longitude") +
     scale_color_viridis_c(name = "Longitude")
@@ -1304,11 +1296,6 @@ mod_SvMF$rresids_std %>%
         strip.background = element_blank()) +
   geom_hline(yintercept = 0, lty = "dashed") +
   geom_vline(xintercept = 0, lty = "dashed") +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, abs(A) > 2 | abs(B) > 2),
-                           min.segment.length = 0) +
   geom_point(size = 1) +
   scale_color_viridis_c() +
   coord_fixed()
@@ -1326,21 +1313,11 @@ stdrdist[!attr(mod_SvMF$rresids_std, "samehemisphere")] <- NA_real_
 p1 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
   bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   ggplot(aes(y=srdist, x = Longitude)) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                             size = 2,
-                             col = "blue",
-                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2),
-                             min.segment.length = 0.01) +
   geom_point() 
 
 p2 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
   bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   ggplot(aes(y=srdist, x = fstrike)) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                             size = 2,
-                             col = "blue",
-                             data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2), 
-                             min.segment.length = 0.01) +
   geom_point() 
 
 p1 + p2
@@ -1356,20 +1333,13 @@ defaultplot_rresid_dist <- function(mod_SvMF, s4df_clean){
 p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   ggplot(aes(y=rdist, x = Longitude)) +
-  geom_point() +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2))
+  geom_point()
 
 p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   ggplot(aes(y=rdist, x = fstrike)) +
-  geom_point() +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, abs(stdr1) > 2 | abs(stdr2) > 2 | abs(stdr3) > 2 | abs(stdr4) > 2))
+  geom_point()
+
 p1 + p2
 }
 defaultplot_rresid_dist(mod_SvMF, s4df_clean)
@@ -1717,11 +1687,6 @@ get_predobspairsdf_nat(mainmod, s4df_clean %>% select(-starts_with("s"))) %>%
   geom_point(aes(x=A, y=B), size = 2, col = "blue",
              shape = 4,
              data = attr(get_predobspairsdf_nat(mod_SvMF), "p1")) +
-  ggrepel::geom_label_repel(aes(x=A, y=B, label = Number),
-                            data = function(x) {x %>% filter(!is.na(outlier))},
-                            size = 2, 
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
   scale_color_viridis_c() +
   ggtitle("Prediction Highlighted: natural coords")
 ```
@@ -1734,7 +1699,7 @@ obsplots <- lapply(c("Y1-Y2", "Y3-Y2", "Y4-Y2"), function(pair){
   get_predobspairsdf(mod_SvMF, s4df_clean,
                      colpairs = strsplit(pair, "-")) %>%
     pairedplotggprep() +
-    geom_point(aes(x=A, y=B, col = Depth), size = 1) +
+    geom_point(aes(x=A, y=B, col = Longitude), size = 1) +
     scale_color_viridis_c() +
     theme(plot.margin = unit(c(0,2,0,2), "mm"),
           strip.text = element_text(margin = margin(0, 0, 0, 0)))
@@ -1743,10 +1708,10 @@ predplots <- lapply(c("Y1-Y2", "Y3-Y2", "Y4-Y2"), function(pair){
   get_predobspairsdf(mod_SvMF, s4df_clean,
                      colpairs = strsplit(pair, "-")) %>%
   pairedplotggprep() +
-  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Depth),
+  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
                alpha = 0.5,
                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
-  geom_point(aes(x=p_A, y=p_B, fill = Depth),
+  geom_point(aes(x=p_A, y=p_B, fill = Longitude),
              size = 1.5,
              shape = 21) +
   geom_point(aes(x=A, y=B), size = 1, col = "blue",
@@ -1784,25 +1749,13 @@ Grey circle boundary: intersection of $S^4$ with the plane given by the pair of 
 ```{r}
 p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(x=rdist, y = Longitude)) +
-  geom_point() +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           data = ~filter(.x, rdist > 0.5), min.segment.length = 0.01) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
+  geom_point()
+
 
 p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   ggplot(aes(x=rdist, y = fstrike)) +
-  geom_point() +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           data = ~filter(.x, rdist > 0.5), min.segment.length = 0.01) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                           size = 2,
-                           col = "blue",
-                           data = ~filter(.x, !is.na(outlier)), min.segment.length = 0.01)
+  geom_point()
+
 p1 + p2
 ```
 

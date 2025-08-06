@@ -1670,6 +1670,37 @@ get_predobspairsdf_nat <- function(mod,
   p1pairs <- tibble::as_tibble_row(mod$mean$p1) %>%
     pivot_coordpairs(colpairs = colpairs)
   
+  # apply to G0 too
+  # first get start and end location of pretty axes around G01
+  arrowends <- t(t(mod$G0[,-1] - mod$G0[,1]) * mod$a[-1]/10) + mod$G0[,1] # convert to difference, scale difference by scales a, add start back
+  colnames(arrowends) <- paste0("G0", 1+ (1:ncol(arrowends)))
+  
+  axisarrows <- lapply(1:nrow(mod$pred), function(idx){
+    pred <- mod$pred[idx, ]
+    # rotate (parallel transport) arrows to be around predicted mean
+    arrowends <- sphm:::rotationmat_amaral(mod$G0[,1], pred) %*% arrowends
+    # include start location too
+    names(pred) <- paste0("start", rownames(arrowends))
+    as_tibble(t(arrowends), rownames = "Axis") %>%
+      bind_cols(t(pred)) %>%
+      bind_cols(extra[idx, ])
+  }) %>%
+    bind_rows()
+  # apply orthogonal projections
+  axisarrows_pairs <- lapply(colpairs, function(pair) {
+    axisarrows %>%
+      select(everything(), -starts_with("s"), -starts_with("starts"), all_of(pair), all_of(paste0("start", pair))) %>%
+      rename(A = last_col(3), B = last_col(2), startA = last_col(1), startB = last_col(0)) %>%
+      mutate(pair1=pair[1],
+             pair2=pair[2],
+             pair = paste(pair, collapse = "-"))
+  }) %>%
+    bind_rows()
+  
+  # old G0 axes
+  G0pairs <- as_tibble(t(mod$G0), rownames = "Axis") %>%
+    pivot_coordpairs(colpairs = colpairs)
+  
   predsobs <- bind_cols(mod$pred %>%
                           as_tibble() %>%
                           rename_with(~paste0("p_", .)),
@@ -1685,6 +1716,8 @@ get_predobspairsdf_nat <- function(mod,
   })
   pairsdf <- bind_rows(pair_dfs)
   attr(pairsdf, "p1") <- p1pairs
+  attr(pairsdf, "G0") <- G0pairs
+  attr(pairsdf, "Garrows") <- axisarrows_pairs
   attr(pairsdf, "coordnames") <- c("s1", "s2", "sMrt", "sMrf", "sMtf")
   pairsdf
 }
@@ -1772,6 +1805,58 @@ Colour: Longitude of earthquakes.
 Arrows: represent residuals and point from mean earthquake moment tensor to the corresponding observed earthquake moment tensor.
 Blue x: The location of the first column of $B_0$.
 Grey circle boundary: intersection of $S^4$ with the plane given by the pair of axes.
+
+# Paper Plot 2
+```{r}
+obsplots <- lapply(c("s1-s2", "sMtf-s2", "sMrt-s2"), function(pair){
+  get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s")),
+                     colpairs = strsplit(pair, "-")) %>%
+    pairedplotggprep() +
+    geom_point(aes(x=A, y=B, col = Longitude), size = 1) +
+    scale_color_viridis_c() +
+    theme(plot.margin = unit(c(0,2,0,2), "mm"),
+          strip.text = element_text(margin = margin(0, 0, 0, 0)))
+})
+# choose earthquakes to mark orientation axes
+axesmarked <- c(225, 217, 86, 89, 218, 54) #ends of Longitude bins [.,148], [148,.] and middles
+#arrange(s4df_clean, Longitude)$Number[seq(1, nrow(s4df_clean), by = 5)]
+
+predplots <- lapply(c("s1-s2", "sMtf-s2", "sMrt-s2"), function(pair){
+  paireddf <- get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s")),
+                     colpairs = strsplit(pair, "-"))
+  paireddf %>%
+  pairedplotggprep() +
+  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+                 data = ~attr(paireddf, "Garrows") %>% filter(pair %in% .x$pair) %>% filter(Number %in% axesmarked),
+                 alpha = 1,
+                 col = "grey") +
+  geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
+               alpha = 1,
+                arrow = grid::arrow(length = unit(0.02, "npc"))) +
+  geom_point(aes(x=p_A, y=p_B, fill = Longitude),
+             size = 1.5,
+             shape = 21) +
+  geom_point(aes(x=A, y=B), size = 2, col = "blue",
+             shape = 21,
+             data = ~attr(paireddf, "G0") %>% filter(Axis == "G01") %>% filter(pair %in% .x$pair)) +
+  geom_point(aes(x=A, y=B), size = 2, col = "blue",
+             shape = 4,
+             data = ~(attr(paireddf, "p1") %>% filter(pair %in% .x$pair))
+             ) +
+  scale_color_viridis_c() +
+  scale_fill_viridis_c() +
+  theme(plot.margin = unit(c(0,2,0,2), "mm"),
+          strip.text = element_text(margin = margin(0, 0, 0, 0)))
+})
+( (obsplots[[1]] + 
+     (obsplots[[2]]) + 
+     (obsplots[[3]]) )/
+  (predplots[[1]] + 
+     (predplots[[2]]) + 
+     (predplots[[3]])) ) + 
+  plot_layout(guides = "collect") + 
+  theme(legend.position = "bottom")
+```
 
 # Likelihood Ratio Test of vMF vs SvMF
 First get best vMF model

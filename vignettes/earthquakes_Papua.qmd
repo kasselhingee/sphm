@@ -925,26 +925,6 @@ s4df %>%
 
 
 
-# Figure for Paper
-```{r}
-#| fig.width: 7
-#| fig.height: 2
-ggplot() +
-  geom_sf(data = world) +
-  geom_point(data = s4df %>% left_join(outliers, by = "Number"),
-             aes(x = Longitude, y = Latitude, shape = is.na(outlier)),
-             position = position_jitter(width = 0.05, height = 0.05, seed = 1),
-             show.legend = FALSE) +
-  scale_shape_manual(values = c(4, 16)) +
-  geom_sf(data = tecbound %>% filter(NiceName !="Other"), aes(lty = NiceName), show.legend = FALSE) +
-  # geom_sf(data = regions %>% filter(region %in% 2:4), fill = NA, show.legend = FALSE) +
-  scale_linetype_manual(values = c(NGT = "dashed", BSSL = "solid", Other = "dotted")) +
-  theme_bw() +
-  theme(axis.title = element_blank()) +
-  coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
-ggsave("earthquakelocations.pdf", width = 7, height = 2)
-```
-
 # Remove Outliers
 The outliers by region are:
 ```{r}
@@ -970,6 +950,29 @@ s4df_clean <- s4df %>%
 nrow(s4df_clean)
 s4df_clean$Depth %>% as.factor() %>% summary()
 ```
+
+# Earthquake Locations for Paper
+```{r}
+#| fig.width: 7
+#| fig.height: 2
+ggplot() +
+  geom_sf(data = world) +
+  geom_point(data = s4df %>% left_join(outliers, by = "Number"),
+             aes(x = Longitude, y = Latitude, shape = is.na(outlier) | outlier == "depth" | outlier == "distance" |
+           outlier == "fstrike"),
+             position = position_jitter(width = 0.05, height = 0.05, seed = 1),
+             show.legend = FALSE) +
+  scale_shape_manual(values = c(4, 16)) +
+  geom_sf(data = tecbound %>% filter(NiceName !="Other"), aes(lty = NiceName), show.legend = FALSE) +
+  # geom_sf(data = regions %>% filter(region %in% 2:4), fill = NA, show.legend = FALSE) +
+  scale_linetype_manual(values = c(NGT = "dashed", BSSL = "solid", Other = "dotted")) +
+  theme_bw() +
+  theme(axis.title = element_blank()) +
+  coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
+ggsave("earthquakelocations.pdf", width = 7, height = 2)
+```
+
+
 
 # Build covariates
 Since dip has only two values 30 or 90, use it has a categorical variable.

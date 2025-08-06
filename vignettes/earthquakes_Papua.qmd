@@ -1372,10 +1372,6 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 ## Conclusion
 Model looks good. Even `rdist`.
 
-```{r}
-mainmod <- mod_SvMF
-```
-
 # SvMF Regression: G01 = p1
 ```{r}
 mod_SvMF <- mobius_SvMF(s4df_clean %>% 
@@ -1763,28 +1759,28 @@ Arrows: represent residuals and point from mean earthquake moment tensor to the 
 Blue x: The location of the first column of $B_0$.
 Grey circle boundary: intersection of $S^4$ with the plane given by the pair of axes.
 
-# Residual Distance by Covariate (Unstandardised)
+# Likelihood Ratio Test of vMF vs SvMF
+First get best vMF model
 ```{r}
-p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
-  ggplot(aes(x=rdist, y = Longitude)) +
-  geom_point()
-
-
-p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
-  ggplot(aes(x=rdist, y = fstrike)) +
-  geom_point()
-
-p1 + p2
+mod_vMF <- mobius_vMF(y = mod_SvMF$y,
+                     xs = NULL, 
+                     xe = mod_SvMF$xe,
+                     type = "Shogo")
+mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){sphm:::mobius_vFM_restart(mod_vMF, seed)})
+lapply(mod_vMF_restarts, "[[", "AIC") %>%
+  unlist() %>%
+  tibble::enframe("seed", "AIC") %>%
+  ggplot()+
+  geom_freqpoly(aes(x = AIC), bins = 30) +
+  geom_vline(xintercept = mod_vMF$AIC, col = "blue") +
+  geom_rug(aes(x = AIC))
+idx <- which.min(lapply(mod_vMF_restarts, "[[", "AIC") %>% unlist())
+mod_vMF <- restarts[[idx]]
+mod_vMF$k
+mod_vMF$AIC
 ```
 
-Left panel: There is some suggestion of increasing residual size with longitude, except that two earthquakes on the top left and bottom right might suggest otherwise.
-Right panel: No indication that fault strike is related to residual size.
-The possible outlier Earthquake 93 does not have an outlying residual.
-
-
-# Likelihood Ratio Test of vMF vs SvMF
 ```{r}
-#| eval: false
 getlikR <- function(y){
   mod1 <- mobius_vMF(y,
                      xs = NULL, 
@@ -1844,7 +1840,6 @@ obs <- getlikR(s4df_clean %>%
 P-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
 
 ```{r}
-#| eval: false
 mean(obs$likR < lapply(null_likRs, "[[", "likR") %>% unlist())
 ```
 
@@ -1854,7 +1849,6 @@ The likelihood ratio is larger than any simulated data from the null (vMF model)
 Since a vMF model is rejected, lets look at CI that for the fitted SvMF.
 
 ```{r}
-#| eval: false
 Bests <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
   y <- sphm:::rS2S_constV(xs = NULL, 

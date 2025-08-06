@@ -337,6 +337,7 @@ ggplot() +
   coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
 ```
 
+
 # Look for Outliers
 Here I'll look for outliers, with the aim of obtaining a very clean data set for demonstration.
 
@@ -923,7 +924,20 @@ s4df %>%
   ggtitle("Depth")
 ```
 
-
+# Earthquake Moment Tensors Paired Plots
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  left_join(outliers, by = "Number") %>%
+  pivot_coordpairs(coordnames = c("s1", "s2", "sMrt", "sMrf", "sMtf")) %>%
+  pairedplotggprep() +
+  geom_point(aes(col = Longitude,
+                 shape = is.na(outlier) | outlier == "depth" | outlier == "distance" |
+           outlier == "fstrike")) +
+  scale_shape_manual(guide = "none", values = c(4, 16)) +
+  scale_color_viridis_c()
+```
 
 # Remove Outliers
 The outliers by region are:
@@ -2003,5 +2017,4 @@ loocvmseRegionMeans(mod_3regions)
 loocvmseRegionMeans(mod_2regions)
 ```
 
-Mean squared error is great compared to Rosenthal's PLT!
 

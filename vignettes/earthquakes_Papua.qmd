@@ -964,7 +964,7 @@ s4df %>%
 s4df_clean <- s4df %>%
   left_join(outliers, by = "Number") %>%
   filter(is.na(outlier) | outlier == "depth" | outlier == "distance" |
-           outlier == "fstrike" | outlier == "longitude" | outlier == "general") %>%
+           outlier == "fstrike") %>%
   mutate(outlier = case_when(Number == 93 ~ "possible", TRUE ~ outlier))
 nrow(s4df_clean)
 s4df_clean$Depth %>% as.factor() %>% summary()

@@ -10,7 +10,7 @@ format:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
 library(ggplot2)
 library(dplyr)
 library(GGally)
@@ -1107,7 +1107,8 @@ get_predobspairsdf <- function(mod,
   arrowends <- t(t(mod$G0[,-1] - mod$G0[,1]) * mod$a[-1]/10) + mod$G0[,1] # convert to difference, scale difference by scales a, add start back
   colnames(arrowends) <- paste0("G0", 1+ (1:ncol(arrowends)))
   
-  axisarrows <- apply(mod$pred, 1, function(pred){
+  axisarrows <- lapply(1:nrow(mod$pred), function(idx){
+    pred <- mod$pred[idx, ]
     # rotate (parallel transport) arrows to be around predicted mean, then rotate again for standardised coordinates
     stdarrowends <- attr(ystd, "std_rotation") %*% sphm:::rotationmat_amaral(mod$G0[,1], pred) %*% arrowends
     rownames(stdarrowends) <- paste0("Y", 1:ncol(ystd))
@@ -1115,8 +1116,9 @@ get_predobspairsdf <- function(mod,
     stdpred <- drop(attr(ystd, "std_rotation") %*% pred)
     names(stdpred) <- paste0("start", rownames(stdarrowends))
     as_tibble(t(stdarrowends), rownames = "Axis") %>%
-      bind_cols(t(stdpred))
-  }, simplify = FALSE) %>%
+      bind_cols(t(stdpred)) %>%
+      bind_cols(extra[idx, ])
+  }) %>%
     bind_rows()
   # apply orthogonal projections
   axisarrows_pairs <- lapply(colpairs, function(pair) {
@@ -1134,7 +1136,7 @@ get_predobspairsdf <- function(mod,
   rownames(G0std) <- paste0("Y", 1:ncol(ystd))
   colnames(G0std) <- paste0("G0", 1:ncol(G0std))
   G0pairs <- as_tibble(t(G0std), rownames = "Axis") %>%
-    pivot_coordpairs()
+    pivot_coordpairs(colpairs = colpairs)
   
   predsobs <- bind_cols(predstd,
                         ystd,
@@ -1704,19 +1706,32 @@ obsplots <- lapply(c("Y1-Y2", "Y3-Y2", "Y4-Y2"), function(pair){
     theme(plot.margin = unit(c(0,2,0,2), "mm"),
           strip.text = element_text(margin = margin(0, 0, 0, 0)))
 })
+# choose earthquakes to mark orientation axes
+axesmarked <- c(225, 217, 86, 89, 218, 54) #ends of Longitude bins [.,148], [148,.] and middles
+#arrange(s4df_clean, Longitude)$Number[seq(1, nrow(s4df_clean), by = 5)]
+
 predplots <- lapply(c("Y1-Y2", "Y3-Y2", "Y4-Y2"), function(pair){
-  get_predobspairsdf(mod_SvMF, s4df_clean,
-                     colpairs = strsplit(pair, "-")) %>%
+  paireddf <- get_predobspairsdf(mod_SvMF, s4df_clean,
+                     colpairs = strsplit(pair, "-"))
+  paireddf %>%
   pairedplotggprep() +
+  # ggrepel::geom_text_repel(aes(x=p_A, y=p_B, label = Number), size = 1, min.segment.length = 0) +
+  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
+                 data = ~attr(paireddf, "Garrows") %>% filter(pair %in% .x$pair) %>% filter(Number %in% axesmarked),
+                 alpha = 1,
+                 col = "grey") +
   geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
-               alpha = 0.5,
+               alpha = 1,
                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
   geom_point(aes(x=p_A, y=p_B, fill = Longitude),
              size = 1.5,
              shape = 21) +
-  geom_point(aes(x=A, y=B), size = 1, col = "blue",
+  geom_point(aes(x=A, y=B), size = 2, col = "blue",
+             shape = 21,
+             data = ~attr(paireddf, "G0") %>% filter(Axis == "G01") %>% filter(pair == "Y1-Y2")) +
+  geom_point(aes(x=A, y=B), size = 2, col = "blue",
              shape = 4,
-             data = ~(attr(get_predobspairsdf(mod_SvMF, colpairs = strsplit(pair, "-")), "p1"))
+             data = ~(attr(paireddf, "p1") %>% filter(pair == "Y1-Y2"))
              ) +
   scale_color_viridis_c() +
   scale_fill_viridis_c() +

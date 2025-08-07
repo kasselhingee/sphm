@@ -10,7 +10,7 @@ format:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 library(ggplot2)
 library(dplyr)
 library(GGally)
@@ -1659,6 +1659,9 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 ## Conclusion
 Model *BAD*.
 
+```{r}
+mainmod <- mod_SvMF
+```
 
 # Predictions in Natural Coordinates
 
@@ -1698,6 +1701,7 @@ get_predobspairsdf_nat <- function(mod,
     bind_rows()
   
   # old G0 axes
+  colnames(mod$G0) <- paste0("G0", 1:ncol(mod$G0))
   G0pairs <- as_tibble(t(mod$G0), rownames = "Axis") %>%
     pivot_coordpairs(colpairs = colpairs)
   
@@ -1792,7 +1796,6 @@ predplots <- lapply(c("Y1-Y2", "Y3-Y2", "Y4-Y2"), function(pair){
      (predplots[[3]])) ) + 
   plot_layout(guides = "collect") + 
   theme(legend.position = "bottom")
-ggsave("earthquake_results.pdf", width = 7, height = 4)
 ```
 
 
@@ -1856,6 +1859,7 @@ predplots <- lapply(c("s1-s2", "sMtf-s2", "sMrt-s2"), function(pair){
      (predplots[[3]])) ) + 
   plot_layout(guides = "collect") + 
   theme(legend.position = "bottom")
+ggsave("earthquake_results.pdf", width = 7, height = 4)
 ```
 
 # Likelihood Ratio Test of vMF vs SvMF
@@ -1874,7 +1878,7 @@ lapply(mod_vMF_restarts, "[[", "AIC") %>%
   geom_vline(xintercept = mod_vMF$AIC, col = "blue") +
   geom_rug(aes(x = AIC))
 idx <- which.min(lapply(mod_vMF_restarts, "[[", "AIC") %>% unlist())
-mod_vMF <- restarts[[idx]]
+mod_vMF <- mod_vMF_restarts[[idx]]
 mod_vMF$k
 mod_vMF$AIC
 ```
@@ -1922,7 +1926,7 @@ null_likRs <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
   y_ld <- sphm:::rS2S_constV(xs = NULL, 
                    xe = mod_vMF$xe,
-                   mnparam = mod_vMF$est,
+                   mnparam = mod_vMF$mean,
                    k = mod_vMF$k,
                    a = rep(1, 5),
                    G0 = diag(1,5))
@@ -1951,20 +1955,20 @@ Since a vMF model is rejected, lets look at CI that for the fitted SvMF.
 Bests <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
   y <- sphm:::rS2S_constV(xs = NULL, 
-                   xe = mod_SvMF$xe,
-                   mnparam = mod_SvMF$mean,
-                   k = mod_SvMF$k,
-                   a = mod_SvMF$a,
-                   G0 = mod_SvMF$G0)[,-6]
+                   xe = mainmod$xe,
+                   mnparam = mainmod$mean,
+                   k = mainmod$k,
+                   a = mainmod$a,
+                   G0 = mainmod$G0)[,-6]
   newmod <- withCallingHandlers({mobius_SvMF(y,
                       xs = NULL, 
-                      xe = mod_vMF$xe,
+                      xe = mainmod$xe,
                       type = "Shogo",
                       G01behaviour = "free",
-                      mean = mod_SvMF$mean,
-                      k = mod_SvMF$k,
-                      a = mod_SvMF$a,
-                      G0 = mod_SvMF$G0)},
+                      mean = mainmod$mean,
+                      k = mainmod$k,
+                      a = mainmod$a,
+                      G0 = mainmod$G0)},
           warning = function(w){
         if (grepl("p!=3", conditionMessage(w))) {
           invokeRestart("muffleWarning")

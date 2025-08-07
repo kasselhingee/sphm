@@ -173,7 +173,112 @@ s4df <- s4df %>%
 nrow(s4df)
 ```
 
-# Fig of earthquake locations, NGT and BSSL
+# $S^4$ Plot Helpers
+Below makes circles for plotting the edge of S^4 later.
+
+```{r}
+# Create data for the unit circle
+theta <- seq(0, 2 * pi, length.out = 100)
+circle_df <- data.frame(x = cos(theta), y = sin(theta))
+colpairs <- #combn(paste0("Y", 1:5), 2, simplify = FALSE)
+expand.grid(paste0("Y", 1:5), paste0("Y", 1:5)) %>%
+  filter(Var1 != Var2) %>%
+  mutate(Var1 = as.character(Var1), Var2 = as.character(Var2)) %>%
+  rowwise() %>%
+  mutate(pair = list(c(Var1, Var2))) %>%
+  select(pair) %>%
+  unlist(recursive = FALSE)
+pair_dfs <- lapply(colpairs, function(pair) {
+  Aname <- pair[1]
+  Bname <- pair[2]
+  circle_df %>%
+    rename(A = x, B = y) %>%
+    mutate(pair1=Aname,
+           pair2=Bname,
+           pair = paste(pair, collapse = "-"))
+})
+circle_df_long <- bind_rows(pair_dfs)
+```
+
+And the following is useful for orthogonal projection of locations on to pairs of axes:
+
+```{r}
+pivot_coordpairs <- function(df, coordnames = paste0("Y",1:5), colpairs = combn(coordnames, 2, simplify = FALSE)){
+  pair_dfs <- lapply(colpairs, function(pair) {
+    Aname <- pair[1]
+    Bname <- pair[2]
+    df %>%
+      # copy pair values
+      mutate(A = .data[[Aname]],
+             B = .data[[Bname]]) %>%
+      mutate(pair1=Aname,
+             pair2=Bname,
+             pair = paste(pair, collapse = "-"))
+  })
+  pairsdf <- bind_rows(pair_dfs)
+  attr(pairsdf, "coordnames") <- coordnames
+  pairsdf
+}
+pairedplotggprep <- function(df){
+  # rename circle_df_long to coordnames
+  dict <- attr(df, "coordnames")
+  names(dict) <-  paste0("Y", 1:length(dict))
+  circle_df_long <- circle_df_long %>%
+    mutate(
+      pair1 = dict[pair1],
+      pair2 = dict[pair2],
+      pair = paste0(pair1,"-",pair2))
+  
+  # nicer strip labels
+  label_map <- c(
+    s1 = "(Mrr - Mtt)/sqrt(2)",
+    s2 = "(Mrr + Mtt - 2*Mff)/sqrt(6)",
+    sMrt = "Mrt / sqrt(2)",
+    sMrf = "Mrf / sqrt(2)",
+    sMtf = "Mtf / sqrt(2)",
+    Y1 = "Y1",
+    Y2 = "Y2",
+    Y3 = "Y3",
+    Y4 = "Y4",
+    Y5 = "Y5"
+  )
+  
+  #now do plotting prep
+  ggplot(data = df, mapping = aes(x=A, y=B)) +
+  facet_grid(vars(pair2), vars(pair1), switch = "both", labeller = as_labeller(label_map, label_parsed)) +
+  geom_path(data = ~(circle_df_long %>% filter(pair %in% .x$pair)),
+            mapping = aes(x=A,y=B),
+            inherit.aes = FALSE,
+            color = "grey") +
+  coord_fixed(xlim = c(-1.01,1.01), ylim = c(-1.01,1.01), expand = FALSE) +
+  theme_minimal() +
+  theme(strip.text.y = element_text(angle = 90),
+        strip.placement = "outside",
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_blank(), #element_line(arrow = grid::arrow(ends = "both", length = unit(0.1, "inches"))),
+        panel.grid = element_blank())
+}
+```
+
+
+# SI Figure: Earthquake Moment Tensors Paired Plots
+```{r}
+#| fig.width: 15
+#| fig.height: 13
+s4df %>%
+  pivot_coordpairs(coordnames = c("s1", "s2", "sMrt", "sMrf", "sMtf")) %>%
+  pairedplotggprep() +
+  geom_point(aes(col = Longitude) +
+  scale_shape_manual(guide = "none", values = c(4, 16)) +
+  scale_color_viridis_c()
+```
+
+# Fault distance and strike
+For each earthquake we find the distance to the BSSL and also the strike (up to $\pm \pi$) of the fault at this closest point.
+For BSSL, the fault plane is vertical so strike may as well be below $\pi$.
+
+## Distance to BSSL
 Plate information was obtained from github `https://github.com/fraxen/tectonicplates`.
 
 ```{r}
@@ -184,6 +289,8 @@ tmp <- paste0("https://github.com/fraxen/tectonicplates/raw/refs/heads/master/PB
 
 ```{r}
 library(sf)
+library("rnaturalearth")
+world <- ne_countries(scale = "medium", returnclass = "sf")
 tecbound <- st_read("PB2002_boundaries.shp")
 mat <- st_intersects(tecbound, st_as_sfc(st_bbox(s4df)))
 tecbound <- tecbound[apply(mat, 1, any), ]
@@ -196,48 +303,8 @@ tecbound <- tecbound %>%
     "NB-SB" ~ "BSSL",
     .default = "Other"
   ))
-
-centroids <- tecbound %>%
-  st_crop(xmin = 141.0, xmax = 153, ymin = -4.5, ymax = -2) %>%
-  # filter(NiceName != "Other") %>%
-  group_by(NiceName, Name) %>%
-  summarize() %>%
-  mutate(centroid = st_centroid(geometry)) %>%
-  mutate(cenX = st_coordinates(centroid)[, "X"],
-         cenY = st_coordinates(centroid)[, "Y"])
 ```
 
-
-```{r}
-library("rnaturalearth")
-world <- ne_countries(scale = "medium", returnclass = "sf")
-```
-
-Now I will plot the earthquakes we use in this analysis.
-
-```{r}
-#| fig.width: 7
-#| fig.height: 2
-ggplot() +
-  geom_sf(data = world) +
-  geom_point(data = s4df, aes(x = Longitude, y = Latitude), position = position_jitter(width = 0.05, height = 0.05, seed = 1)) +
-  geom_sf(data = tecbound %>% filter(NiceName !="Other"), aes(lty = NiceName), show.legend = FALSE) +
-  geom_sf(data = regions %>% filter(region %in% 2:4), fill = NA, show.legend = FALSE) +
-  scale_linetype_manual(values = c(NGT = "dashed", BSSL = "solid", Other = "dotted")) +
-  theme_bw() +
-  theme(axis.title = element_blank()) +
-  coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
-```
-
-Caption: Shallow earthquake locations near the Bismarck Sea Seismic Lineation (solid line).
-Some jitter has been introduced because
-`r s4df %>% select(Latitude, Longitude) %>% duplicated() %>% sum()` are colocated.
-
-# Fault distance and strike
-For each earthquake we find the distance to the BSSL and also the strike (up to $\pm \pi$) of the fault at this closest point.
-For BSSL, the fault plane is vertical so strike may as well be below $\pi$.
-
-## Distance to BSSL
 ```{r}
 dist_BSSL <- tecbound %>%
   filter(NiceName == "BSSL") %>%
@@ -341,92 +408,6 @@ ggplot() +
 # Look for Outliers
 Here I'll look for outliers, with the aim of obtaining a very clean data set for demonstration.
 
-Below makes circles for plotting the edge of S^4 later.
-
-```{r}
-# Create data for the unit circle
-theta <- seq(0, 2 * pi, length.out = 100)
-circle_df <- data.frame(x = cos(theta), y = sin(theta))
-colpairs <- #combn(paste0("Y", 1:5), 2, simplify = FALSE)
-expand.grid(paste0("Y", 1:5), paste0("Y", 1:5)) %>%
-  filter(Var1 != Var2) %>%
-  mutate(Var1 = as.character(Var1), Var2 = as.character(Var2)) %>%
-  rowwise() %>%
-  mutate(pair = list(c(Var1, Var2))) %>%
-  select(pair) %>%
-  unlist(recursive = FALSE)
-pair_dfs <- lapply(colpairs, function(pair) {
-  Aname <- pair[1]
-  Bname <- pair[2]
-  circle_df %>%
-    rename(A = x, B = y) %>%
-    mutate(pair1=Aname,
-           pair2=Bname,
-           pair = paste(pair, collapse = "-"))
-})
-circle_df_long <- bind_rows(pair_dfs)
-```
-
-And the following is useful for paired plotting of locations on S4:
-
-```{r}
-pivot_coordpairs <- function(df, coordnames = paste0("Y",1:5), colpairs = combn(coordnames, 2, simplify = FALSE)){
-  pair_dfs <- lapply(colpairs, function(pair) {
-    Aname <- pair[1]
-    Bname <- pair[2]
-    df %>%
-      # copy pair values
-      mutate(A = .data[[Aname]],
-             B = .data[[Bname]]) %>%
-      mutate(pair1=Aname,
-             pair2=Bname,
-             pair = paste(pair, collapse = "-"))
-  })
-  pairsdf <- bind_rows(pair_dfs)
-  attr(pairsdf, "coordnames") <- coordnames
-  pairsdf
-}
-pairedplotggprep <- function(df){
-  # rename circle_df_long to coordnames
-  dict <- attr(df, "coordnames")
-  names(dict) <-  paste0("Y", 1:length(dict))
-  circle_df_long <- circle_df_long %>%
-    mutate(
-      pair1 = dict[pair1],
-      pair2 = dict[pair2],
-      pair = paste0(pair1,"-",pair2))
-  
-  # nicer strip labels
-  label_map <- c(
-    s1 = "(Mrr - Mtt)/sqrt(2)",
-    s2 = "(Mrr + Mtt - 2*Mff)/sqrt(6)",
-    sMrt = "Mrt / sqrt(2)",
-    sMrf = "Mrf / sqrt(2)",
-    sMtf = "Mtf / sqrt(2)",
-    Y1 = "Y1",
-    Y2 = "Y2",
-    Y3 = "Y3",
-    Y4 = "Y4",
-    Y5 = "Y5"
-  )
-  
-  #now do plotting prep
-  ggplot(data = df, mapping = aes(x=A, y=B)) +
-  facet_grid(vars(pair2), vars(pair1), switch = "both", labeller = as_labeller(label_map, label_parsed)) +
-  geom_path(data = ~(circle_df_long %>% filter(pair %in% .x$pair)),
-            mapping = aes(x=A,y=B),
-            inherit.aes = FALSE,
-            color = "grey") +
-  coord_fixed(xlim = c(-1.01,1.01), ylim = c(-1.01,1.01), expand = FALSE) +
-  theme_minimal() +
-  theme(strip.text.y = element_text(angle = 90),
-        strip.placement = "outside",
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.line = element_blank(), #element_line(arrow = grid::arrow(ends = "both", length = unit(0.1, "inches"))),
-        panel.grid = element_blank())
-}
-```
 
 
 
@@ -525,433 +506,6 @@ s4df %>%
 Since removing the outliers identified by the Vs Longitude plot, Earthquake 93 is revealed as a possible outlier too. But we will leave it for this analysis.
 There also appears to be a shift in earthquake moment tensors with longitude < 148 (blue) vs other earthquakes (green-yellow), which we will incorporate into regression later.
 
-## Vs Distance
-```{r}
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  ggplot(aes(x = dist)) +
-  geom_histogram(bins = 15) +
-  geom_rug() +
-  ggrepel::geom_label_repel(aes(y = 0, label = Number),
-                            data = ~filter(.x, dist > 40000),
-                            label.padding = 0.1,
-                            min.segment.length = 0)
-```
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(outlier = case_when(dist > 90000 ~ "bigdistance", TRUE ~ outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = dist, fill = after_stat(value)),
-                  bins = 10,
-                  data = ~filter(.x, dist < 90000)) +
-  scale_fill_viridis_c(name = "Distance") +
-  geom_point(aes(fill = dist), size = 2, shape = 21,
-             data = ~filter(.x, dist < 90000)) +
-  geom_point(size = 2, shape = 4, 
-             data = ~filter(.x, dist >= 90000)) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0)
-```
-
-Consider two earthquakes with huge distance outliers:
-
-```{r}
-outliers <- c("92" = "distance",
-  "93" = "distance") %>%
-  tibble::enframe(name = "Number", value = "outlier") %>%
-  mutate(Number = as.integer(Number)) %>%
-  bind_rows(outliers)
-```
-
-## Vs Fault Strike
-In the below plot, moment tensors of earthquakes on $S^4$ are orthogonally projected onto pairs of axes.
-Point colour is given by fault strike.
-Background colour is the average fault strike for that part of projected $S^4$.
-
-The axes Y1 ... Y5 have been chosen so that the second moment of the data is the identity.
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(outlier = case_when(fstrike < 1 ~ "lowfstrike", TRUE ~ outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = fstrike, fill = after_stat(value)),
-                  bins = 10) +
-  scale_fill_viridis_c(name = "Fault Strike") +
-  geom_point(aes(fill = fstrike), size = 2, shape = 21) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0)
-```
-
-```{r}
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  ggplot() +
-  geom_histogram(aes(x = fstrike), bins = 15) +
-  geom_rug(aes(x = fstrike))
-```
-
-There could be two outliers with very low fault strike (54 and 305 - dark blue) relative to other earthquakes.
-
-```{r}
-outliers <- c("305" = "fstrike",
-  "54" = "fstrike") %>%
-  tibble::enframe(name = "Number", value = "outlier") %>%
-  mutate(Number = as.integer(Number)) %>%
-  bind_rows(outliers)
-```
-
-## Vs Depth
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(outlier = case_when(Depth == 19 ~ "depth", TRUE ~ outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = Depth, fill = after_stat(value)),
-                  bins = 10) +
-  scale_fill_viridis_c(name = "Depth") +
-  geom_point(aes(fill = Depth), size = 2, shape = 21) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0)
-```
-
-```{r}
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(Depth = as.factor(Depth)) %>%
-  select(Depth) %>%
-  summary()
-```
-
-The two very deep earthquakes could also be outliers.
-
-```{r}
-outliers <- c("308" = "depth",
-  "229" = "depth") %>%
-  tibble::enframe(name = "Number", value = "outlier") %>%
-  mutate(Number = as.integer(Number)) %>%
-  bind_rows(outliers)
-```
-
-
-## Recheck Outlier Plots After Removal
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = Longitude, fill = after_stat(value)),
-                  bins = 10) +
-  scale_fill_viridis_c() +
-  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggtitle("Longitude")
-```
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(outlier = case_when(dist > 35000 ~ "bigdistance", TRUE ~ outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = dist, fill = after_stat(value)),
-                  bins = 10,
-                  data = ~filter(.x, dist < 35000)) +
-  scale_fill_viridis_c(name = "Distance") +
-  geom_point(aes(fill = dist), size = 2, shape = 21,
-             data = ~filter(.x, dist < 35000)) +
-  geom_point(size = 2, shape = 4, 
-             data = ~filter(.x, dist >= 35000)) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggtitle("Distance")
-```
-
-```{r}
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  ggplot(aes(x = dist)) +
-  geom_histogram(bins = 15) +
-  geom_rug() +
-  ggrepel::geom_label_repel(aes(y = 0, label = Number),
-                            data = ~filter(.x, dist > 40000),
-                            label.padding = 0.1,
-                            min.segment.length = 0)
-```
-
-Possibly more outliers: Number 103.
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(outlier = case_when(fstrike < 1.25 ~ "fstrike", TRUE ~ outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = fstrike, fill = after_stat(value)),
-                  bins = 10) +
-  scale_fill_viridis_c(name = "Fault Strike") +
-  geom_point(aes(fill = fstrike), size = 2, shape = 21) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggtitle("fstrike")
-```
-
-Maybe another 2 fstrike outliers above.
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(outlier = case_when(Depth == 19 ~ "depth", TRUE ~ outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  mutate(outlier = case_when(Y2 < -0.75 ~ "new", TRUE ~ outlier)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = Depth, fill = after_stat(value)),
-                  bins = 10) +
-  scale_fill_viridis_c(name = "Depth") +
-  geom_point(aes(fill = Depth), size = 2, shape = 21) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggtitle("Depth")
-```
-
-Three more outliers
-
-```{r}
-outliers <- c("103" = "distance",
-  "218" = "fstrike",
-  "153" = "fstrike") %>%
-  tibble::enframe(name = "Number", value = "outlier") %>%
-  mutate(Number = as.integer(Number)) %>%
-  bind_rows(outliers)
-```
-
-## Outlier Plots Again After Removal
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = Longitude, fill = after_stat(value)),
-                  bins = 10) +
-  scale_fill_viridis_c() +
-  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggtitle("Longitude")
-```
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(outlier = case_when(dist > 30000 ~ "bigdistance", TRUE ~ outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = dist, fill = after_stat(value)),
-                  bins = 10) +
-  scale_fill_viridis_c(name = "Distance") +
-  geom_point(aes(fill = dist), size = 2, shape = 21) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggtitle("Distance")
-```
-
-```{r}
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  ggplot(aes(x = dist)) +
-  geom_histogram(bins = 15) +
-  geom_rug() +
-  ggrepel::geom_label_repel(aes(y = 0, label = Number),
-                            data = ~filter(.x, dist > 30000),
-                            label.padding = 0.1,
-                            min.segment.length = 0)
-```
-
-Maybe 9 and 94 are outliers too.
-
-```{r}
-outliers <- c("9" = "distance",
-  "94" = "distance") %>%
-  tibble::enframe(name = "Number", value = "outlier") %>%
-  mutate(Number = as.integer(Number)) %>%
-  bind_rows(outliers)
-```
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(outlier = case_when(fstrike < 1.25 ~ "fstrike", TRUE ~ outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = fstrike, fill = after_stat(value)),
-                  bins = 10) +
-  scale_fill_viridis_c(name = "Fault Strike") +
-  geom_point(aes(fill = fstrike), size = 2, shape = 21) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggtitle("fstrike")
-```
-
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = Depth, fill = after_stat(value)),
-                  bins = 10) +
-  scale_fill_viridis_c(name = "Depth") +
-  geom_point(aes(fill = Depth), size = 2, shape = 21) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0) +
-  ggtitle("Depth")
-```
-
-# Earthquake Moment Tensors Paired Plots
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  left_join(outliers, by = "Number") %>%
-  pivot_coordpairs(coordnames = c("s1", "s2", "sMrt", "sMrf", "sMtf")) %>%
-  pairedplotggprep() +
-  geom_point(aes(col = Longitude,
-                 shape = is.na(outlier) | outlier == "depth" | outlier == "distance" |
-           outlier == "fstrike")) +
-  scale_shape_manual(guide = "none", values = c(4, 16)) +
-  scale_color_viridis_c()
-```
 
 # Remove Outliers
 The outliers by region are:
@@ -979,7 +533,7 @@ nrow(s4df_clean)
 s4df_clean$Depth %>% as.factor() %>% summary()
 ```
 
-# Earthquake Locations for Paper
+# Main Figure: Earthquake Locations
 ```{r}
 #| fig.width: 7
 #| fig.height: 2
@@ -1001,6 +555,9 @@ ggsave("earthquakelocations.pdf", width = 7, height = 2)
 ```
 
 
+Caption: Shallow earthquake locations near the Bismarck Sea Seismic Lineation (solid line).
+Some jitter has been introduced because
+`r s4df %>% select(Latitude, Longitude) %>% duplicated() %>% sum()` are colocated.
 
 # Build covariates
 Since dip has only two values 30 or 90, use it has a categorical variable.
@@ -1599,7 +1156,7 @@ lapply(mod_vMF_restarts, "[[", "AIC") %>%
   geom_vline(xintercept = mod_vMF$AIC, col = "blue") +
   geom_rug(aes(x = AIC))
 idx <- which.min(lapply(mod_vMF_restarts, "[[", "AIC") %>% unlist())
-mod_vMF <- mod_vMF_restarts[[idx]]
+mod_vMF <- mod_vMF_restarts[[idx]]  
 mod_vMF$k
 mod_vMF$AIC
 ```

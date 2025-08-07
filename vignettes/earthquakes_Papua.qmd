@@ -396,9 +396,23 @@ pairedplotggprep <- function(df){
       pair2 = dict[pair2],
       pair = paste0(pair1,"-",pair2))
   
+  # nicer strip labels
+  label_map <- c(
+    s1 = "(Mrr - Mtt)/sqrt(2)",
+    s2 = "(Mrr + Mtt - 2*Mff)/sqrt(6)",
+    sMrt = "Mrt / sqrt(2)",
+    sMrf = "Mrf / sqrt(2)",
+    sMtf = "Mtf / sqrt(2)",
+    Y1 = "Y1",
+    Y2 = "Y2",
+    Y3 = "Y3",
+    Y4 = "Y4",
+    Y5 = "Y5"
+  )
+  
   #now do plotting prep
   ggplot(data = df, mapping = aes(x=A, y=B)) +
-  facet_grid(vars(pair2), vars(pair1), switch = "both") +
+  facet_grid(vars(pair2), vars(pair1), switch = "both", labeller = as_labeller(label_map, label_parsed)) +
   geom_path(data = ~(circle_df_long %>% filter(pair %in% .x$pair)),
             mapping = aes(x=A,y=B),
             inherit.aes = FALSE,
@@ -1811,23 +1825,21 @@ Grey circle boundary: intersection of $S^4$ with the plane given by the pair of 
 
 # Paper Plot 2
 ```{r}
-obsplots <- lapply(c("s1-s2", "sMtf-s2", "sMrt-s2"), function(pair){
-  get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s")),
-                     colpairs = strsplit(pair, "-")) %>%
+obsplots <- get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s")),
+                     colpairs = strsplit(c("s1-s2", "sMtf-s2", "sMrt-s2"), "-")) %>%
     pairedplotggprep() +
     geom_point(aes(x=A, y=B, col = Longitude), size = 1) +
     scale_color_viridis_c() +
     theme(plot.margin = unit(c(0,2,0,2), "mm"),
-          strip.text = element_text(margin = margin(0, 0, 0, 0)))
-})
+          axis.line.y = element_line(arrow = grid::arrow()),
+          strip.text = element_text(margin = margin(0, 0, 0, 0), size = 8))
 # choose earthquakes to mark orientation axes
 axesmarked <- c(225, 217, 86, 89, 218, 54) #ends of Longitude bins [.,148], [148,.] and middles
 #arrange(s4df_clean, Longitude)$Number[seq(1, nrow(s4df_clean), by = 5)]
 
-predplots <- lapply(c("s1-s2", "sMtf-s2", "sMrt-s2"), function(pair){
-  paireddf <- get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s")),
-                     colpairs = strsplit(pair, "-"))
-  paireddf %>%
+paireddf <- get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s")),
+                     colpairs = strsplit(c("s1-s2", "sMtf-s2", "sMrt-s2"), "-"))
+predplots <- paireddf %>%
   pairedplotggprep() +
   geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
                  data = ~attr(paireddf, "Garrows") %>% filter(pair %in% .x$pair) %>% filter(Number %in% axesmarked),
@@ -1849,16 +1861,11 @@ predplots <- lapply(c("s1-s2", "sMtf-s2", "sMrt-s2"), function(pair){
   scale_color_viridis_c() +
   scale_fill_viridis_c() +
   theme(plot.margin = unit(c(0,2,0,2), "mm"),
-          strip.text = element_text(margin = margin(0, 0, 0, 0)))
-})
-( (obsplots[[1]] + 
-     (obsplots[[2]]) + 
-     (obsplots[[3]]) )/
-  (predplots[[1]] + 
-     (predplots[[2]]) + 
-     (predplots[[3]])) ) + 
-  plot_layout(guides = "collect") + 
-  theme(legend.position = "bottom")
+          strip.text = element_text(margin = margin(0, 0, 0, 0), size = 8))
+
+(obsplots + theme(strip.text.x.bottom = element_blank()) )/
+  predplots + 
+  plot_layout(guides = "collect")
 ggsave("earthquake_results.pdf", width = 7, height = 4)
 ```
 

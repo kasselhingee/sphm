@@ -145,6 +145,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
   
   niceout <- list(
     est = est,
+    mean = est,
     k = k,
     obj = nlopt$objective,
     solution = projectedom, #non-standardised solution

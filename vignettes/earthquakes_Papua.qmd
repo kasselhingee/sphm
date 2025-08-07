@@ -1831,20 +1831,15 @@ obsplots <- get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with(
     geom_point(aes(x=A, y=B, col = Longitude), size = 1) +
     scale_color_viridis_c() +
     theme(plot.margin = unit(c(0,2,0,2), "mm"),
-          axis.line.y = element_line(arrow = grid::arrow()),
-          strip.text = element_text(margin = margin(0, 0, 0, 0), size = 8))
-# choose earthquakes to mark orientation axes
-axesmarked <- c(225, 217, 86, 89, 218, 54) #ends of Longitude bins [.,148], [148,.] and middles
-#arrange(s4df_clean, Longitude)$Number[seq(1, nrow(s4df_clean), by = 5)]
+        axis.line.y = element_line(arrow = grid::arrow(type = "closed", angle = 10, length = unit(10, "points")),
+                                 linewidth = 0.2),
+          strip.text = element_text(margin = margin(0, 0, 0, 0), size = 8),
+          strip.text.x.bottom = element_blank())
 
 paireddf <- get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s")),
                      colpairs = strsplit(c("s1-s2", "sMtf-s2", "sMrt-s2"), "-"))
 predplots <- paireddf %>%
   pairedplotggprep() +
-  geom_segment(aes(x=startA,y=startB, xend=A, yend=B),
-                 data = ~attr(paireddf, "Garrows") %>% filter(pair %in% .x$pair) %>% filter(Number %in% axesmarked),
-                 alpha = 1,
-                 col = "grey") +
   geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
                alpha = 1,
                 arrow = grid::arrow(length = unit(0.02, "npc"))) +
@@ -1861,9 +1856,11 @@ predplots <- paireddf %>%
   scale_color_viridis_c() +
   scale_fill_viridis_c() +
   theme(plot.margin = unit(c(0,2,0,2), "mm"),
+        axis.line = element_line(arrow = grid::arrow(type = "closed", angle = 10, length = unit(10, "points")),
+                                 linewidth = 0.2),
           strip.text = element_text(margin = margin(0, 0, 0, 0), size = 8))
 
-(obsplots + theme(strip.text.x.bottom = element_blank()) )/
+obsplots/
   predplots + 
   plot_layout(guides = "collect")
 ggsave("earthquake_results.pdf", width = 7, height = 4)

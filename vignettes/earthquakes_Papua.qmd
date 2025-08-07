@@ -269,7 +269,7 @@ pairedplotggprep <- function(df){
 s4df %>%
   pivot_coordpairs(coordnames = c("s1", "s2", "sMrt", "sMrf", "sMtf")) %>%
   pairedplotggprep() +
-  geom_point(aes(col = Longitude) +
+  geom_point(aes(col = Longitude)) +
   scale_shape_manual(guide = "none", values = c(4, 16)) +
   scale_color_viridis_c()
 ```
@@ -405,11 +405,8 @@ ggplot() +
 ```
 
 
-# Look for Outliers
+# SI Fig: Look for Outliers
 Here I'll look for outliers, with the aim of obtaining a very clean data set for demonstration.
-
-
-
 
 ```{r}
 ystd <- s4df %>%
@@ -437,7 +434,6 @@ outliers <- outliers %>%
   mutate(Number = as.integer(Number))
 ```
 
-## Vs Longitude
 In the below plot, moment tensors of earthquakes on $S^4$ are orthogonally projected onto pairs of axes.
 Point colour is given by earthquake longitude.
 Background colour is the average earthquake longitude for that part of projected $S^4$.
@@ -477,33 +473,7 @@ Earthquake 254 is an outlier in Y5.
 Furthermore, earthquake 175 is an outlier because it has a high longitude, but is located among low longitude earthquakes.
 Earthquake 260 is similar.
 
-Below is the same plotting method, without the outliers. The axes used for plotting are different because of the data has changed without the outliers.
 
-```{r}
-#| fig.width: 15
-#| fig.height: 13
-s4df %>%
-  st_drop_geometry() %>%
-  left_join(outliers, by = "Number") %>%
-  filter(is.na(outlier)) %>%
-  mutate(outlier = case_when(Number == 93 ~ "maybeLongitude", TRUE ~ outlier)) %>%
-  mutate(stdcoords = as_tibble(sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))))) %>%
-  tidyr::unnest_wider(stdcoords, names_sep = "") %>%
-  rename_with(~gsub("stdcoordsV", "Y", .)) %>%
-  pivot_coordpairs(coordnames = paste0("Y", 1:5)) %>%
-  pairedplotggprep() +
-  stat_summary_2d(fun = mean,
-                    aes(z = Longitude, fill = after_stat(value)),
-                  bins = 10) +
-  scale_fill_viridis_c() +
-  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
-  ggrepel::geom_label_repel(aes(label = Number),
-                            data = ~filter(.x, !is.na(outlier)),
-                            label.padding = 0.1,
-                            min.segment.length = 0)
-```
-
-Since removing the outliers identified by the Vs Longitude plot, Earthquake 93 is revealed as a possible outlier too. But we will leave it for this analysis.
 There also appears to be a shift in earthquake moment tensors with longitude < 148 (blue) vs other earthquakes (green-yellow), which we will incorporate into regression later.
 
 
@@ -1268,12 +1238,10 @@ summary(Bests_a)
 
 ### 95% CI for a
 ```{r}
-#| eval: false
 apply(Bests_a[,-1], 2, quantile, probs = c(0.025, 0.975)) %>%
   round(2)
 ```
 
-a2 stays a long way from 1 and a5 is always smaller than 0.6.
 
 # LOOCV MSE
 ```{r}

@@ -256,7 +256,8 @@ pairedplotggprep <- function(df){
         strip.placement = "outside",
         axis.title = element_blank(),
         axis.text = element_blank(),
-        axis.line = element_blank(), #element_line(arrow = grid::arrow(ends = "both", length = unit(0.1, "inches"))),
+        axis.line = element_line(arrow = grid::arrow(type = "closed", angle = 10, length = unit(10, "points")),
+                                 linewidth = 0.2),
         panel.grid = element_blank())
 }
 ```
@@ -267,7 +268,7 @@ pairedplotggprep <- function(df){
 #| fig.width: 15
 #| fig.height: 13
 s4df %>%
-  pivot_coordpairs(coordnames = c("s1", "s2", "sMrt", "sMrf", "sMtf")) %>%
+  pivot_coordpairs(coordnames = c("s1", "s2", "sMrf", "sMrt", "sMtf")) %>%
   pairedplotggprep() +
   geom_point(aes(col = Longitude)) +
   scale_shape_manual(guide = "none", values = c(4, 16)) +

@@ -1228,7 +1228,6 @@ Bests <- pbapply::pblapply(1:1000, function(seed){
 
 
 ```{r}
-#| eval: false
 Bests_a <- lapply(Bests, "[[", "a") %>%
   simplify2array() %>%
   t()

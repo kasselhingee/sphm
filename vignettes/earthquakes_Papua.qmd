@@ -1279,7 +1279,8 @@ bootres <- boot::boot(
 ```
 
 ```{r}
-boot::boot.ci(bootres, type = c("perc", "bca"))
+boot::boot.ci(bootres, type = c("perc"))
+# boot::boot.ci(bootres, type = c("bca"))
 ```
 
 # LOOCV MSE
@@ -1530,7 +1531,7 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model *BAD*.
+Model okay.
 
 # SvMF Regression: G01 fixed
 ```{r}
@@ -1672,6 +1673,6 @@ defaultplot_residbycovar(mod_SvMF, s4df_clean)
 
 
 ## Conclusion
-Model *BAD*.
+Model okay.
 
 

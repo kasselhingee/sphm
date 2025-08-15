@@ -309,6 +309,44 @@ plotIAG1 + ggtitle("IAG1") +
   plotESAG2 + ggtitle("ESAG2")
 ```
 
+# LOOCV MSE
+```{r}
+loocvmseSvMF <- function(mod){
+  stopifnot(inherits(mod$mean, "mnlink_Omega"))
+  dists <- pbapply::pblapply(1:nrow(mod$y), function(idx){
+    newmod <- mobius_SvMF(mod$y[-idx,],
+                xs = mod$xs[-idx,],
+                xe = mod$xe[-idx,c(-1,-ncol(mod$xe)), drop = FALSE],
+                fix_qs1 = FALSE,
+                type = "Shogo",
+                G01behaviour = "free",
+                mean = mod$mean,
+                k = mod$k,
+                a = mod$a,
+                G0 = mod$G0)
+    pred <- mnlink(xs = mod$xs[idx,, drop = FALSE],
+                   xe = mod$xe[idx,, drop = FALSE],
+                   param = newmod$mean)
+    obs <- mod$y[idx,]
+    Euc <- sphm:::vnorm(drop(obs - pred))
+    angle <- acos(rowSums(obs * pred))
+    return(c(
+      Euc = Euc,
+      angle = angle
+    ))
+  })
+  dists <- dists %>%
+    simplify2array() %>%
+    t() %>%
+    as_tibble()
+  dists %>%
+    summarise(across(everything(), ~sum(.x^2)/nrow(mod$y)))
+}
+loocvmseSvMF(mod)
+```
+
+Both of these are smaller than the LOOCV MSE that Rosenthal's PLT acheived of `r 7.4E-2`, which corresponds to the Euc metric MSE.
+
 # Residual Size
 Geodesic distance between predicted mean and observation
 ```{r}

@@ -118,7 +118,7 @@ calc_Paine_resids <- function(mod){
 
 predplot_ESAG <- function(esagmod){
   stdmat <- standardise_mat(t(esagmod$Ystd))
-  stdmat[,3] <- -stdmat[,3]
+  if(det(stdmat) < 1){stdmat[,3] <- -stdmat[,3]}
   #get back to Earth coordinates
   rot1 <- standardise_mat(fulldf %>% select(starts_with("Y")) %>% as.matrix())
   rot <- prettyrot %*% rot1 %*% stdmat
@@ -295,7 +295,7 @@ ESAG2$DoF <- 5 * nrow(ESAG2$X.SEuc) + #maps for mu and gamma
   0 #rotation matrix Q 6 if estimated, 0 otherwise
 ESAG2$AIC <- 2*ESAG2$DoF - 2 * (ESAG2$Lik)
 ESAG2$AIC
-ESAG2$Qmat <- diag(3)
+ESAG2$Qmat <- IAG1$Yrot
 ESAG2$Z <- ESAG2$Ystd
 ESAG2$predmean <- ESAG2$mean.SEuc2S.esag
 plotESAG2 <- predplot_ESAG(ESAG2)

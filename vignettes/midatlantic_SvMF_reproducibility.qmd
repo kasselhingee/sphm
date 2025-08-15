@@ -21,7 +21,7 @@ __Code version: `r packageVersion("sphm")`__
 
 ```{r prep}
 #| include: false
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
 library(R.matlab)
 library(ggplot2)
 library(sphm)
@@ -110,19 +110,13 @@ plotdata
 ```{r Paine Plot Resids and Dists}
 #| include: false
 calc_Paine_resids <- function(mod){
-  mod$rresids <- rotatedresid(t(mod$Ystd), t(mod$predmean), base = sphm:::nthpole(3))[,-1]
-  mod$dists <- acos(rowSums(t(mod$Ystd) * t(mod$predmean)))
+  mod$rresids <- rotatedresid(t(mod$Z), t(mod$predmean), base = sphm:::nthpole(3))[,-1]
+  mod$dists <- acos(rowSums(t(mod$Z) * t(mod$predmean)))
   colnames(mod$rresids) <- c("r1", "r2")
   return(mod)
 }
 
 predplot_ESAG <- function(esagmod){
-  stdmat <- standardise_mat(t(esagmod$Ystd))
-  if(det(stdmat) < 1){stdmat[,3] <- -stdmat[,3]}
-  #get back to Earth coordinates
-  rot1 <- standardise_mat(fulldf %>% select(starts_with("Y")) %>% as.matrix())
-  rot <- prettyrot %*% rot1 %*% stdmat
-  ystd <- t(rot %*% esagmod$Ystd)
   nthproj <- (diag(3) - sphm:::nthpole(3) %*% t(sphm:::nthpole(3)))
   obspred <- bind_cols(obs = as_tibble(t(nthproj %*% prettyrot %*% esagmod$Qmat %*% esagmod$Z)[,-1]),
                        pred = as_tibble(t(nthproj %*% prettyrot %*% esagmod$Qmat %*% esagmod$predmean)[,-1]) %>% rename_with(.fn = ~ paste0("p", .x)),

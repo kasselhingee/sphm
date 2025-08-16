@@ -21,7 +21,7 @@ __Code version: `r packageVersion("sphm")`__
 
 ```{r prep}
 #| include: false
-knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 library(R.matlab)
 library(ggplot2)
 library(sphm)
@@ -187,6 +187,25 @@ cann$Qs[,1]
 
 Some general scaling occurs with greater influence from X3 (N-S direction), then X2 then X1.
 
+## Table of Estimates
+```{r Estimates Table, results='asis'}
+library(kableExtra)
+df <- cbind("diag($B_s$)" = diag(cann$Bs),
+      "diag($B_e$)" = diag(cann$Be),
+      tQe = t(cann$Qe[-1,-1])) %>%
+  as.data.frame()
+row.names(df) <- c("$t_2$", "$t_3$")
+mykbl <- kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex", digits = 2) %>%
+  add_header_above(c(" "=3, "$R_e^\\top$" = 2), escape = FALSE)
+kableExtra::save_kable(mykbl,
+                       "estimatestable.pdf", 
+                         keep_tex = TRUE)
+mykbl
+```
+
+
+## Plot
+
 ```{r Projected Predictions Plot}
 #| include: false
 predplot <- function(svmfresult){
@@ -232,10 +251,12 @@ predplot <- function(svmfresult){
     annotate("point", x = eastwestedge[1, 2], y = eastwestedge[1, 3], fill = "black", shape = 24, size = 2) +
     annotate("point", x = eastwestedge[2, 2], y = eastwestedge[2, 3], fill = "white", shape = 24, size = 2)
   
-  # mark denominator in spherical covariate link
-  denomloc <- drop(attr(ystd, "std_rotation") %*% sphm:::as_mnlink_cann(svmfresult$mean)$Qs[,1])
+  # mark columns of Qs on the plot
+  prettyQs <- attr(ystd, "std_rotation") %*% sphm:::as_mnlink_cann(svmfresult$mean)$Qs
   outplot <- outplot +
-    annotate("point", x = denomloc[2], y = denomloc[3], shape = 3, size = 2, col = "blue")
+    annotate("point", x = prettyQs[2,1], y = prettyQs[3,1], shape = 3, size = 2, col = switch(1+(prettyQs[1,1] > 0), "grey", "black")) +
+    annotate("point", x = prettyQs[2,2], y = prettyQs[3,2], shape = 4, size = 2, col = switch(1+(prettyQs[1,2] > 0), "grey", "black")) +
+    annotate("point", x = prettyQs[2,3], y = prettyQs[3,3], shape = 8, size = 2, col = switch(1+(prettyQs[1,3] > 0), "grey", "black"))
   
 if (!is.null(svmfresult$G0)){
   G0proj <- (diag(3) - sphm:::nthpole(3) %*% t(sphm:::nthpole(3))) %*% attr(ystd, "std_rotation") %*% svmfresult$G0

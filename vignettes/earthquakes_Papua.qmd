@@ -276,7 +276,7 @@ pairedplotggprep <- function(df){
 ```
 
 
-## SI Figure: Pairwise Projections of Earthquake Moment Tensors
+## Pairwise Projections of Earthquake Moment Tensors (SI Figure)
 ```{r}
 #| fig.width: 12
 #| fig.height: 13
@@ -622,7 +622,7 @@ library(kableExtra)
 df <- data.frame(t(mod_SvMF$a))
 colnames(df) <- 1:ncol(df)
 mykbl <- df %>%
-  mutate(across(everything(), formatC, digits = 2, format = "f")) %>%
+  mutate(across(everything(), ~formatC(.x, digits = 2, format = "f"))) %>%
   kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex") %>%
   add_header_above(c("Scales" = ncol(df)), escape = FALSE)
 kableExtra::save_kable(mykbl,
@@ -636,7 +636,7 @@ library(kableExtra)
 df <- data.frame(mod_SvMF$G0)
 colnames(df) <- c("$\\gamma_{01}$", "$\\gamma_{02}$", "$\\gamma_{03}$", "$\\gamma_{04}$", "$\\gamma_{05}$")
 mykbl <- df %>%
-  mutate(across(everything(), formatC, digits = 2, format = "f")) %>%
+  mutate(across(everything(), ~formatC(.x, digits = 2, format = "f"))) %>%
   kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex")
 kableExtra::save_kable(mykbl,
                        "earthq_G0.pdf", 
@@ -652,7 +652,7 @@ cann <- sphm:::as_mnlink_cann(mod_SvMF$mean)
 df <- data.frame(cann$Be)
 colnames(df) <- paste0("col", 1:ncol(df))
 mykbl <- df %>%
-  mutate(across(everything(), round, 2)) %>%
+  mutate(across(everything(), ~round(.x,2))) %>%
   mutate(across(everything(), as.character)) %>%
   kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex",
       row.names = FALSE,
@@ -670,7 +670,7 @@ In the software, there is a dummy zero-valued covariate that is used to allow fo
 df <- data.frame(cann$Qe[-1,-1])
 colnames(df) <- paste0("col", 1:ncol(df))
 mykbl <- df %>%
-  mutate(across(everything(), round, 2)) %>%
+  mutate(across(everything(), ~round(.x, 2))) %>%
   mutate(across(everything(), as.character)) %>%
   kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex",
       row.names = FALSE,
@@ -685,7 +685,7 @@ mykbl
 ```{r, results='asis'}
 df <- data.frame(cann$P)
 mykbl <- df %>%
-  mutate(across(everything(), round, 2)) %>%
+  mutate(across(everything(), ~round(.x, 2))) %>%
   mutate(across(everything(), as.character)) %>%
   kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex",
       col.names = c("$b_{01}$", paste0("col", 2:ncol(df)))) %>%
@@ -1242,7 +1242,19 @@ summary(Bests_a)
 ```
 
 ## 95% CI for a (SI Table)
-```{r}
-apply(Bests_a[,-1], 2, quantile, probs = c(0.025, 0.975)) %>%
-  round(2)
+```{r, results='asis'}
+df <- rbind(mod_SvMF$a[-1],
+            apply(Bests_a[,-1], 2, quantile, probs = c(0.025, 0.975)) %>%
+  round(2)) %>%
+  as.data.frame()
+row.names(df) <- c("Estimate","Lower", "Upper")
+mykbl <- df %>%
+  mutate(across(everything(), ~formatC(.x, digits = 2, format = "f"))) %>%
+  kbl(booktabs = TRUE, position = "!h", escape = FALSE, format = "latex",
+      col.names = paste0("a",2:5)) %>%
+  add_header_above(c(" "=1, "Scales" = 4), escape = FALSE)
+kableExtra::save_kable(mykbl,
+                       "earthq_aCI.pdf", 
+                       keep_tex = TRUE)
+mykbl
 ```

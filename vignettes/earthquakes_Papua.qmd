@@ -243,7 +243,11 @@ pairedplotggprep <- function(df){
     Y2 = "Y2",
     Y3 = "Y3",
     Y4 = "Y4",
-    Y5 = "Y5"
+    Y5 = "Y5",
+    r1 = "r1",
+    r2 = "r2",
+    r3 = "r3",
+    r4 = "r4"
   )
   
   #now do plotting prep
@@ -830,7 +834,7 @@ The range of the angle between predicted mean and estimated $\gamma_{01}$ is:
 range(acos(mod_SvMF$pred %*% mod_SvMF$G0[,1]))
 ```
 
-## Prediction Paired Plot
+# Predictions in Standardised Coordinates
 ```{r}
 get_predobspairsdf <- function(mod,
                                extra = NULL,
@@ -1004,37 +1008,55 @@ defaultplot_pred(mod_SvMF, s4df_clean)
 defaultplot_pred(mod_SvMF, s4df_clean, focusaxes = TRUE)
 ```
 
-
-## Residuals
-Here we plot the the residuals against each of the axes defined by $\Gamma_0$. We can see the ellipsiodal nature of Scaled von Mises Fisher residuals.
+# Model Diagnostics
+## Rotated Residuals (SI Figure)
+Here we plot the rotated residuals against each of the axes defined by $\Gamma_0$. We can see the ellipsiodal nature of Scaled von Mises Fisher residuals. The maximum size of a rotated residual is $1$ (grey circular boundary).
 
 ```{r}
 #| fig.width: 8
 #| fig.height: 7
-defaultplot_resid <- function(mod_SvMF, s4df_clean){
-  mod_SvMF$rresids_G0 %>%
-    as_tibble() %>%
-    bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
-    bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
-    pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
-    pairedplotggprep() +
-    stat_summary_2d(fun = mean, 
-                    aes(z = Longitude, fill = after_stat(value)),
-                    bins = 10) +
-    geom_point(aes(fill = Longitude), size = 2, shape = 21) +
-    scale_fill_viridis_c(name = "Longitude") +
-    scale_color_viridis_c(name = "Longitude")
-}
-defaultplot_resid(mod_SvMF, s4df_clean)
+mod_SvMF$rresids_G0 %>%
+  as_tibble() %>%
+  bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
+  bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
+  pivot_coordpairs(coordnames = paste0("r", 1:4)) %>%
+  pairedplotggprep() +
+  stat_summary_2d(fun = mean, 
+                  aes(z = Longitude, fill = after_stat(value)),
+                  bins = 10) +
+  geom_point(aes(fill = Longitude), size = 2, shape = 21) +
+  scale_fill_viridis_c(name = "Longitude") +
+  scale_color_viridis_c(name = "Longitude")
 ```
 
+
+## Residual Mean by Covariates (SI Figure)
+```{r}
+bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
+  st_drop_geometry() %>%
+  tidyr::pivot_longer(matches("^r.$"), names_to = "raxis", values_to = "value") %>%
+  tidyr::pivot_longer(c(Latitude, Longitude, fstrike, dist, Depth), names_to = "covariate", values_to = "cvalue") %>%
+  filter(!(covariate == "dist" & (cvalue > 50000))) %>%
+  ggplot(aes(x = cvalue, y = value)) +
+  facet_grid(rows = vars(raxis), cols = vars(covariate), scales = "free",
+             labeller = as_labeller(c(Depth = "Depth", dist = "Distance", fstrike = "Strike", Longitude = "Longitude", Latitude = "Latitude",
+                                      r1 ="r1",r2="r2",r3="r3",r4="r4"))) +
+  geom_hline(yintercept = 0, col = "blue", lty = "dashed") +
+  geom_smooth(method = "loess", formula = 'y ~ x', data = ~filter(.x, covariate != "Depth")) +
+  geom_point() +
+  stat_summary(fun.data = mean_se, geom = "errorbar", width = 1.5, col = "blue", data = ~filter(.x, covariate == "Depth")) +
+  scale_y_continuous(name = "Residual") +
+  scale_x_continuous(name = "Covariate Value")
+```
+
+Above is the residuals in each of the basis coordinates given by the SvMF orientation against covariate values.
+
 ## Standardised Residuals
-Below the same residuals are transformed using the estimated concentration and Scale von Mises Fisher scales so that at high-concentrations the residuals should be close to a standard multivariate Normal.
+Below the same residuals are transformed using the estimated concentration and Scale von Mises Fisher scales so that, at high-concentrations, the residuals should be close to a standard multivariate Normal (Scealy and Wood, 2019, Proposition 2).
 
 ```{r}
 #| fig.width: 6
 #| fig.height: 5
-defaultplot_srresid <- function(mod_SvMF, s4df_clean){
 mod_SvMF$rresids_std %>%
   as_tibble() %>%
   bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
@@ -1050,37 +1072,34 @@ mod_SvMF$rresids_std %>%
   geom_point(size = 1) +
   scale_color_viridis_c() +
   coord_fixed()
-}
-defaultplot_srresid(mod_SvMF, s4df_clean)
 ```
 
-## Standardised Residual Distance
+## Standardised Residual Distance (SI Figure)
 ```{r}
 #| fig.width: 5
 #| fig.height: 2
-defaultplot_srresid_dist <- function(mod_SvMF, s4df_clean){
 stdrdist <- sqrt(rowSums(mod_SvMF$rresids_std^2))
 stdrdist[!attr(mod_SvMF$rresids_std, "samehemisphere")] <- NA_real_
 p1 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
   bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   ggplot(aes(y=srdist, x = Longitude)) +
-  geom_point() 
+  geom_point() +
+  ylab("Scaled Residual\nDistance")
 
 p2 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
   bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   ggplot(aes(y=srdist, x = fstrike)) +
-  geom_point() 
+  geom_point() +
+  ylab("Scaled Residual\nDistance") +
+  xlab("Strike")
 
-p1 + p2
-}
-defaultplot_srresid_dist(mod_SvMF, s4df_clean)
+p1 + p2 + plot_layout(axes = "collect")
 ```
 
 ## Residual Distance (Unstandardised)
 ```{r}
 #| fig.width: 5
 #| fig.height: 2
-defaultplot_rresid_dist <- function(mod_SvMF, s4df_clean){
 p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   ggplot(aes(y=rdist, x = Longitude)) +
@@ -1092,31 +1111,7 @@ p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   geom_point()
 
 p1 + p2
-}
-defaultplot_rresid_dist(mod_SvMF, s4df_clean)
 ```
-
-## Residual Mean by Covariates
-```{r}
-defaultplot_residbycovar <- function(mod_SvMF, s4df_clean){
-bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
-  st_drop_geometry() %>%
-  tidyr::pivot_longer(matches("^r.$"), names_to = "raxis", values_to = "value") %>%
-  tidyr::pivot_longer(c(Longitude, fstrike, dist, Depth), names_to = "covariate", values_to = "cvalue") %>%
-  filter(!(covariate == "dist" & (cvalue > 50000))) %>%
-  ggplot(aes(x = cvalue, y = value)) +
-  facet_grid(rows = vars(raxis), cols = vars(covariate), scales = "free") +
-  geom_hline(yintercept = 0, col = "blue", lty = "dashed") +
-  geom_smooth(method = "loess", formula = 'y ~ x', data = ~filter(.x, covariate != "Depth")) +
-  geom_point() +
-  stat_summary(fun.data = mean_se, geom = "errorbar", width = 1.5, col = "blue", data = ~filter(.x, covariate == "Depth"))
-}
-defaultplot_residbycovar(mod_SvMF, s4df_clean)
-```
-
-
-## Conclusion
-Model looks good. Even `rdist`.
 
 # Likelihood Ratio Test of vMF vs SvMF
 
@@ -1246,163 +1241,11 @@ colnames(Bests_a) <- paste0("a", 1:5)
 summary(Bests_a)
 ```
 
-### 95% CI for a
+## 95% CI for a (SI Table)
 ```{r}
 apply(Bests_a[,-1], 2, quantile, probs = c(0.025, 0.975)) %>%
   round(2)
 ```
-
-# CI via `boot` package
-```{r}
-set.seed(1)
-bootres <- boot::boot(
-  data = mod_SvMF$y,
-  statistic = function(data){
-    newmod <- withCallingHandlers({mobius_SvMF(data,
-                    xs = NULL, 
-                    xe = mod_SvMF$xe,
-                    type = "Shogo",
-                    G01behaviour = "free",
-                    mean = mod_SvMF$mean,
-                    k = mod_SvMF$k,
-                    a = mod_SvMF$a,
-                    G0 = mod_SvMF$G0)},
-        warning = function(w){
-      if (grepl("p!=3", conditionMessage(w))) {
-        invokeRestart("muffleWarning")
-      }
-    })
-    newmod$a[-1]
-  },
-  R = 1000,
-  sim = "parametric",
-  ran.gen = function(data, mle){
-    sphm:::rS2S_constV(xs = NULL, 
-                   xe = mod_SvMF$xe,
-                   mnparam = mod_SvMF$mean,
-                   k = mod_SvMF$k,
-                   a = mod_SvMF$a,
-                   G0 = mod_SvMF$G0)[,-6]
-  }
-)
-```
-
-```{r}
-boot::boot.ci(bootres, type = c("perc"))
-# boot::boot.ci(bootres, type = c("bca"))
-```
-
-# LOOCV MSE
-```{r}
-loocvmseSvMF <- function(mod){
-  stopifnot(inherits(mod$mean, "mnlink_Omega"))
-  dists <- pbapply::pblapply(1:nrow(mod$y), function(idx){
-    newmod <- 
-      withCallingHandlers({
-      sphm:::optim_constV(mod$y[-idx,],
-                xs = mod$xs[-idx,],
-                xe = mod$xe[-idx,c(-1,-ncol(mod$xe)), drop = FALSE],
-                fix_qs1 = FALSE,
-                type = "Shogo",
-                G01behaviour = "free",
-                mean = mod$mean,
-                k = mod$k,
-                a = mod$a,
-                G0 = mod$G0)},
-      warning = function(w){
-        if (grepl("p!=3", conditionMessage(w))) {
-          invokeRestart("muffleWarning")
-        }
-      })
-    pred <- mnlink(xs = mod$xs[idx,, drop = FALSE],
-                   xe = mod$xe[idx,, drop = FALSE],
-                   param = newmod$mean)
-    obs <- mod$y[idx,]
-    Euc <- sphm:::vnorm(drop(obs - pred))
-    angle <- acos(rowSums(obs * pred))
-    return(c(
-      Euc = Euc,
-      angle = angle
-    ))
-  })
-  dists <- dists %>%
-    simplify2array() %>%
-    t() %>%
-    as_tibble()
-  dists %>%
-    summarise(across(everything(), ~sum(.x^2)/nrow(mod$y)))
-}
-loocvmseSvMF(mod_SvMF)
-```
-
-More stable is to only do the `optim_constV()` step. MSE here is worse than the regional means.
-
-
-# Discrete Mean Models
-Instead of a regression, just use the regional mean, where regions defined by longitude.
-
-```{r}
-regionalmeans <- function(y, Longitude, breaks){
-  y <- as_tibble(y)
-  Longfctr <- cut(Longitude, breaks = breaks, include.lowest = TRUE, dig.lab = 4)
-  groups <- split(y, Longfctr)
-  means <- lapply(groups, function(df){
-    mn <- colMeans(df)
-    mn <- mn/sphm:::vnorm(mn)
-    mn
-  })
-  return(list(means = means,
-              y = y,
-              Longitude = Longitude,
-              breaks = breaks))
-}
-mod_3regions <- regionalmeans(
-  y = s4df_clean %>%
-  select(s1,s2,sMrt,sMrf,sMtf) %>%
-  st_drop_geometry(),
-  Longitude = s4df_clean$Longitude,
-  breaks = c(144,147.3,150.3,152.5)
-)
-mod_2regions <- regionalmeans(
-  y = s4df_clean %>%
-  select(s1,s2,sMrt,sMrf,sMtf) %>%
-  st_drop_geometry(),
-  Longitude = s4df_clean$Longitude,
-  breaks = c(144,148,152.5)
-)
-```
-
-## LOOCV MSE
-```{r}
-loocvmseRegionMeans <- function(mod){
-  dists <- pbapply::pblapply(1:nrow(mod$y), function(idx){
-    newmod <- regionalmeans(y = mod$y[-idx,, drop = FALSE],
-                            Longitude = mod$Longitude[-idx],
-                            breaks = mod$breaks)
-    # prediction
-    region <- cut(mod$Longitude[idx], breaks = newmod$breaks, dig.lab = 4)
-    pred <- newmod$means[[region]]
-    obs <- unlist(as.vector(mod$y[idx,]))
-    Euc <- sphm:::vnorm(drop(obs - pred))
-    angle <- acos(sum(obs * pred))
-    return(c(
-      Euc = Euc,
-      angle = angle
-    ))
-  })
-  dists <- dists %>%
-    simplify2array() %>%
-    t() %>%
-    as_tibble()
-  dists %>%
-    summarise(across(everything(), ~sum(.x^2)/nrow(mod$y)))
-}
-loocvmseRegionMeans(mod_3regions)
-loocvmseRegionMeans(mod_2regions)
-```
-
-
-\appendix
 
 # SvMF Regression: G01 = p1
 ```{r}

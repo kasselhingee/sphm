@@ -1,6 +1,6 @@
 #' SvMF Parameterisations
-#' @rdname SvMFparams
-#' The SvMF canonical parameterisation is a set of positive real numbers (kappa, `a`) and a matrix of orthonormal column vectors `Gamma`, where the product of the `a` is 1. `a_1` and `kappa` are not jointly estimatable by MLE, so I'm expecting them to be closely related.
+#' @name SvMFparams
+#' @description The SvMF canonical parameterisation is a set of positive real numbers (kappa, `a`) and a matrix of orthonormal column vectors `Gamma`, where the product of the `a` is 1. `a_1` and `kappa` are not jointly estimatable by MLE, so I'm expecting them to be closely related.
 #' There are three other parametrisations.
 #' Alternatively this set of numbers are the eigenvalues and eigenvectors of the symmetric matrix E(yy^T). The determinant of this matrix would be kappa * a_1.
 #' A third parametrisation is available: using kappa, mu and a matrix V that is symmetric positive definite matrix with det(V) = 1.
@@ -8,7 +8,6 @@
 #' 
 #' @examples 
 #' SvMFcann(kappa = 0.5, a = c(2, rep(1, 5-1)), Gamma = diag(1, 5))
-
 NULL
 
 #' @describeIn SvMFparams The canonical parameterisation of a SvMF using a kappa, a vector and Gamma, as used in equation 7 of Scealy and Wood 2017.

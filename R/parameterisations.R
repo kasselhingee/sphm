@@ -117,8 +117,9 @@ as_mnlink_Omega <- function(obj){
   if ("p1" %in% names(obj)){return(do.call(mnlink_Omega, c(obj, list(check = FALSE))))}
   return(obj)
 }
+
 #' @noRd
-#' Vectorsises and inverse of this vectorisation for the OmegaS2S parameterisation.
+#' @description Converts OmegaS2S parameterisation to a vector.
 #' @param obj An OmegaS2S parameter object.
 mnlink_Omega_vec <- function(obj){
   stopifnot(inherits(obj, "mnlink_Omega"))
@@ -144,7 +145,8 @@ mnlink_Omega_vec <- function(obj){
 }
 
 #' @noRd
-#' @param vec is a vector like `mnlink_Omega_vec()`
+#' @description Inverse of `mnlink_Omega_vec()`
+#' @param vec is a vector created by `mnlink_Omega_vec()`
 #' @param p The dimension of the response (The dimension of covariates will be infered from `p`).
 #' @param qe Number of Euclidean covariates
 mnlink_Omega_unvec <- function(vec, p, qe = 0, check = TRUE){
@@ -191,7 +193,8 @@ cann2Omega <- function(obj, check = TRUE){
   return(mnlink_Omega(p1, qs1 = qs1, Omega = Omega, qe1 = qe1, ce = ce, check = FALSE))
 }
 
-#' # Warning
+#' @noRd
+#' @description Converts an Omega parameterisation to the cannonical parameterisation.
 #' Apart from p1 and q1, sign of columns of P and Q cannot be recovered from Omega.
 Omega2cann <- function(obj, check = TRUE){
   if (check){mnlink_Omega_check(obj)}

@@ -6,7 +6,13 @@
 
 // [[Rcpp::depends(RcppEigen)]]
 
-// #' Unnormalised log density of the SvMF using the cannonical parameterisation of k, a and G. For p=3, the normalised form is computed, but otherwise the normalising constant is treated as `1` because no analytic formula exist.
+// @title Log-density of the scaled von Mises-Fisher distribution
+// @param y a matrix with each row an observation
+// @param k concentration
+// @param a the scales of the scaled von Mises-Fisher distribution
+// @param G An orthogonal matrix with first column the mean of the distribution and remaining columns the orientation axes in the same order as `a`
+// @returns A vector of log-density evaluated at row of `y`
+// @details For p=3, the normalised form is computed, but otherwise the normalising constant is approximated using `besselImixed()`.
 // [[Rcpp::export]]
 veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
 

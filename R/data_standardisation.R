@@ -20,7 +20,7 @@ destandardise_sph <- function(y, tG){
   return(ydestd)
 }
 
-#' @describeIn standardise_sph
+#' @describeIn standardise_sph Returns a matrix with columns that are the mean direction and then eigenvectors of \eqn{\sum_{i=1}^n y_i y_i^\top} projected orthogonal to the mean.
 #' @export
 standardise_mat <- function(y){
   p <- ncol(y)

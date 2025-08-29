@@ -1,14 +1,7 @@
-#' Links for SvMF Variance Distribution
-#' @rdname SvMF_varlinks
-#' These functions map from covariates to the variance distribution of the SvMF.
-#' Different links are: 
-#' + Fixed: independent of covariates (a useful first step)
-#' + SW19: from Scealy and Wood 2019. Need params for the function g().
-#' + Paine20: from Paine et al 2020 for p=3 only, use two free values gamma_1 and gamma_2, to specify the variance. The gamma_1 and gamma_2 dependence on covariates needs specifying. (Looks involved to program initially).
-#' + aligned: axes given by removing the mean from the directions given by the columns of P (looks easiest to implement)
-NULL
-
-#' @describeIn SvMF_varlinks Aligns the columns of the Mobius-link rotation matrix `P` for the mean to the columns of G. Note that the first column of the returned G is the given mean. Returns the matrix G.
+#' @title Gram-Schmidt Orthogonalisation to get Orientation Axes
+#' @description Given a rotation matrix `P`, uses Gram-Schmidt orthogonalisation to obtain a new set of orthogonal axes that include the chosen direction `m` as the first axis.
+#' @param m a unit vector
+#' @param P an orthogonal matrix
 alignedG <- function(m, P){
   mproj <- m %*% t(m)
   

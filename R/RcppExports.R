@@ -34,9 +34,6 @@ alignedGcpp <- function(m, P) {
     .Call(`_sphm_alignedGcpp`, m, P)
 }
 
-#' @param G01 only for the G01behaviour == "fixed" situation is G01 needed to recover full parameter set
-NULL
-
 cayleyTransform <- function(A) {
     .Call(`_sphm_cayleyTransform`, A)
 }
@@ -53,6 +50,9 @@ inverseVectorizeLowerTriangle <- function(vec) {
     .Call(`_sphm_inverseVectorizeLowerTriangle`, vec)
 }
 
+#' @title Convert all SvMF regression parameters into a single long vector
+#' @description Placing all parameters in a single vector allow automatic differentiation with the parameters as independent values. Some tidying of the parameter space also occurs in the vectorisation.
+#' @details The scales `aremaining` are constrained to have a product of `1` and be positive. This function encodes these restrictions by dropping the first element of `aremaining` and converting the other elements to \eqn{log(a_j)} etc.
 #' @param G0 are the orientation axes of SvMF in cannonical coordinate (p x p matrix). Ideally G0 is close to the referencecoords axes. G0 must be a rotation matrix (det > 0) so that the Cayley transform representation works.
 #' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms. It is best if referencecoords is close to the best G0 (so rG0 is close the identity) and it will fail if `G01` is the antepode of `referencoords[,1]`.
 S2S_constV_nota1_tovecparams <- function(omvec, k, aremaining, G0, referencecoords, G01behaviour) {
@@ -94,7 +94,9 @@ tape_besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
     .Call(`_sphm_tape_besselImixed`, x, nu, threshold, order, log_result)
 }
 
-#' Function for taping a general function. The function must have signature
+#' @noRd
+#' @title Function for taping a general function. 
+#' @description The function must have signature
 #' `veca1 fun(const veca1 & independent, const veca2 & dynamic, const vecd & constvec, const matd & constmat)`.
 #' Differentiation of `fun` will occur with respect to the independent arguments. The taping will keep of dependence on the dynamic arguments so that the value of the dynamic arguments can be changed in the tape. The constants (constvec and constmat) will be baked into the tape (to change these constants `tapefun` will have to be called again.
 #' 
@@ -112,12 +114,6 @@ NULL
 tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for_nan) {
     .Call(`_sphm_tape_namedfun`, func_name, ind_t, dyn_t, constvec, constmat, check_for_nan)
 }
-
-#' This function approximates the BesselI function by
-#' Using BesselItrunc for small values of x
-#' Using BesselIasym for large values of x
-#' @param threshold is the location at which the calculation switches
-NULL
 
 #' Helper function Bessel I approximation from BesselI::besselIasym()
 #' which should be from Asymptotic expansion of Bessel I_nu(x) function   x -> oo
@@ -165,10 +161,17 @@ uldSvMF_muV <- function(y, k, m, a1, V) {
     .Call(`_sphm_uldSvMF_muV`, y, k, m, a1, V)
 }
 
+#' @noRd
+#' @description
 #' This function approximates the BesselI function by
-#' Using BesselItrunc for small values of x
-#' Using BesselIasym for large values of x
+#' using `BesselItrunc()` for values of `x` smaller than `threshold` and
+#' using `BesselIasym()` for values of `x` larger than `threshold`.
+#' @param x value to compute the BesselI function at.
+#' @param nu The `nu` in the BesselI function.
+#' @param order The order of approximation to use in `BesselItrunc()` and `BesselIasym()`
 #' @param threshold is the location at which the calculation switches
+#' @param log_result Whether to return the log of the approximated BesselI function. This is useful to avoid floating point over run or inaccuracies.
+#' @return a single value
 besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
     .Call(`_sphm_besselImixed`, x, nu, threshold, order, log_result)
 }

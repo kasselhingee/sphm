@@ -70,10 +70,6 @@ a1type besselItrunc(const a1type& x, const double & nu, int order, bool log_resu
         return sum;
 }
 
-//' This function approximates the BesselI function by
-//' Using BesselItrunc for small values of x
-//' Using BesselIasym for large values of x
-//' @param threshold is the location at which the calculation switches
 a1type besselImixed(const a1type & x, const double & nu, double threshold, int order, bool log_result) {
   // CppAD::CondExpLe returns one of two T‐typed branches
   // depending on x <= threshold

@@ -23,10 +23,17 @@ veca1 uldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
 // a helper
 mata1 getHstar(veca1 m);
 
+//' @noRd
+//' @description
 //' This function approximates the BesselI function by
-//' Using BesselItrunc for small values of x
-//' Using BesselIasym for large values of x
+//' using `BesselItrunc()` for values of `x` smaller than `threshold` and
+//' using `BesselIasym()` for values of `x` larger than `threshold`.
+//' @param x value to compute the BesselI function at.
+//' @param nu The `nu` in the BesselI function.
+//' @param order The order of approximation to use in `BesselItrunc()` and `BesselIasym()`
 //' @param threshold is the location at which the calculation switches
+//' @param log_result Whether to return the log of the approximated BesselI function. This is useful to avoid floating point over run or inaccuracies.
+//' @return a single value
 // [[Rcpp::export]]
 a1type besselImixed(const a1type & x, const double & nu, double threshold, int order, bool log_result = true);
 

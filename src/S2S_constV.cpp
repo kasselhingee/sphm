@@ -124,6 +124,9 @@ mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
 }
 
 // aremaining becomes log(1/a) with the first element dropped
+//' @title Convert all SvMF regression parameters into a single long vector
+//' @description Placing all parameters in a single vector allow automatic differentiation with the parameters as independent values. Some tidying of the parameter space also occurs in the vectorisation.
+//' @details The scales `aremaining` are constrained to have a product of `1` and be positive. This function encodes these restrictions by dropping the first element of `aremaining` and converting the other elements to \eqn{log(a_j)} etc.
 //' @param G0 are the orientation axes of SvMF in cannonical coordinate (p x p matrix). Ideally G0 is close to the referencecoords axes. G0 must be a rotation matrix (det > 0) so that the Cayley transform representation works.
 //' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms. It is best if referencecoords is close to the best G0 (so rG0 is close the identity) and it will fail if `G01` is the antepode of `referencoords[,1]`.
 // [[Rcpp::export]]
@@ -169,9 +172,14 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
   return result;
 }
 
-// reverse function
-// without ce, would only need q = qs + qe to be passed in
-//' @param G01 only for the G01behaviour == "fixed" situation is G01 needed to recover full parameter set
+// @title reverse function of the `_tovecparams` function
+// @param mainvec Vector created by `_tovecparams` or similar to it.
+// @param p Length of the response unit vectors
+// @param qs Length of the spherical covariate unit vectors
+// @param qe Length of the Euclidean covariate vectors
+// @param G01behaviour the behaviour of G01 ('fixed', 'free' or identified with 'p1')
+// @param G01 First column of G01 - only needed in the G01behaviour == "fixed" situation to recover full parameter set
+// @returns A tuple of the mean link parameters (vectorised Omega form), concentration, scales a (omitting first a[1] that is fixed), and SvMF orientation matrix G0.
 std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, vecd G01 = vecd(0)) {
   // check G01behaviour
   if ((G01behaviour != "p1") && (G01behaviour != "fixed") && (G01behaviour != "free")){Rcpp::stop("G01behaviour not understood");}

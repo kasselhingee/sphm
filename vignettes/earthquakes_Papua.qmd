@@ -286,6 +286,7 @@ s4df %>%
   geom_point(aes(col = Longitude)) +
   scale_shape_manual(guide = "none", values = c(4, 16)) +
   scale_color_viridis_c()
+ggsave("earthq_mtensors.pdf", width = 12, height = 13)
 ```
 
 ## Additional Covariates
@@ -419,7 +420,7 @@ ggplot() +
 ```
 
 
-## SI Fig: Look for Outliers
+## Look for Outliers (SI Figure)
 Here I'll look for outliers.
 I'll view the moment tensors orthogonally projected onto axes determined by the first and second moment of the data such that
  the mean moment tensor has `Y1=1` and the covariance of the data in `Y2`...`Y5` coordinates is diagonal.
@@ -470,6 +471,7 @@ s4df %>%
                             box.padding = 1,
                             show.legend = FALSE) +
   scale_colour_manual(values = c("black", "grey"))
+ggsave("earthq_mtensors_outlier.pdf", width = 12, height = 13)
 ```
 
 From these plots we can see 6 earthquakes very different to the rest in at least some of the coordinates Y1 - Y5.
@@ -595,6 +597,9 @@ restarts <- pbapply::pblapply(1:100, function(seed){
 }, cl = 2)
 badrestarts <- unlist(lapply(restarts, inherits, "try-error"))
 restarts <- restarts[!badrestarts]
+```
+
+```{r}
 lapply(restarts, "[[", "AIC") %>%
   unlist() %>%
   tibble::enframe("seed", "AIC") %>%
@@ -602,6 +607,8 @@ lapply(restarts, "[[", "AIC") %>%
   geom_histogram(aes(x = AIC), bins = 30) +
   geom_vline(xintercept = mod_SvMF$AIC, col = "blue") +
   geom_rug(aes(x = AIC))
+
+ggsave("earthq_restarts.pdf", width = 7, height = 5)
 ```
 
 ```{r}
@@ -623,7 +630,7 @@ df <- data.frame(t(mod_SvMF$a))
 colnames(df) <- 1:ncol(df)
 mykbl <- df %>%
   mutate(across(everything(), ~formatC(.x, digits = 2, format = "f"))) %>%
-  kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex") %>%
+  kbl(booktabs = TRUE, position = "!h", escape = FALSE, format = "latex") %>%
   add_header_above(c("Scales" = ncol(df)), escape = FALSE)
 kableExtra::save_kable(mykbl,
                        "earthq_a.pdf", 
@@ -634,10 +641,18 @@ mykbl
 ```{r, results='asis'}
 library(kableExtra)
 df <- data.frame(mod_SvMF$G0)
+label_map <- c(
+  s1 = "(Mrr - Mtt)/$\\sqrt{2}$",
+  s2 = "(Mrr + Mtt - 2Mff)/$\\sqrt{6}$",
+  sMrf = "Mrf /$\\sqrt{2}$",
+  sMrt = "Mrt /$\\sqrt{2}$",
+  sMtf = "Mtf /$\\sqrt{2}$"
+)
+row.names(df) <- label_map[row.names(df)]
 colnames(df) <- c("$\\gamma_{01}$", "$\\gamma_{02}$", "$\\gamma_{03}$", "$\\gamma_{04}$", "$\\gamma_{05}$")
 mykbl <- df %>%
   mutate(across(everything(), ~formatC(.x, digits = 2, format = "f"))) %>%
-  kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex")
+  kbl(booktabs = TRUE, position = "!h", escape = FALSE, format = "latex")
 kableExtra::save_kable(mykbl,
                        "earthq_G0.pdf", 
                        keep_tex = TRUE)
@@ -654,9 +669,9 @@ colnames(df) <- paste0("col", 1:ncol(df))
 mykbl <- df %>%
   mutate(across(everything(), ~round(.x,2))) %>%
   mutate(across(everything(), as.character)) %>%
-  kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex",
-      row.names = FALSE,
-      col.names = paste0("col", 1:ncol(df))) %>%
+  kbl(booktabs = TRUE, position = "!h", escape = FALSE, format = "latex",
+      row.names = NA,
+      col.names = NULL) %>%
   add_header_above(c("$B_e$" = ncol(df)), escape = FALSE)
 kableExtra::save_kable(mykbl,
                        "earthq_Be.pdf", 
@@ -669,13 +684,14 @@ In the software, there is a dummy zero-valued covariate that is used to allow fo
 ```{r, results='asis'}
 df <- data.frame(cann$Qe[-1,-1])
 colnames(df) <- paste0("col", 1:ncol(df))
+rownames(df)[1] <- "Strike"
 mykbl <- df %>%
   mutate(across(everything(), ~round(.x, 2))) %>%
   mutate(across(everything(), as.character)) %>%
-  kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex",
-      row.names = FALSE,
-      col.names = paste0("col", 1:ncol(df))) %>%
-  add_header_above(c("$R_e$" = ncol(df)), escape = FALSE)
+  kbl(booktabs = TRUE, position = "!h", escape = FALSE, format = "latex",
+      row.names = TRUE,
+      col.names = NULL) %>%
+  add_header_above(c(" " = 1, "$R_e$" = ncol(df)), escape = FALSE)
 kableExtra::save_kable(mykbl,
                        "earthq_Re.pdf", 
                        keep_tex = TRUE)
@@ -683,12 +699,20 @@ mykbl
 ```
 
 ```{r, results='asis'}
+label_map <- c(
+  s1 = "(Mrr - Mtt)/$\\sqrt{2}$",
+  s2 = "(Mrr + Mtt - 2Mff)/$\\sqrt{6}$",
+  sMrf = "Mrf /$\\sqrt{2}$",
+  sMrt = "Mrt /$\\sqrt{2}$",
+  sMtf = "Mtf /$\\sqrt{2}$"
+)
 df <- data.frame(cann$P)
+row.names(df) <- label_map[row.names(df)]
 mykbl <- df %>%
   mutate(across(everything(), ~round(.x, 2))) %>%
   mutate(across(everything(), as.character)) %>%
-  kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex",
-      col.names = c("$b_{01}$", paste0("col", 2:ncol(df)))) %>%
+  kbl(booktabs = TRUE, position = "!h", escape = FALSE, format = "latex",
+      col.names = NULL) %>%
   add_header_above(c(" "=1, "$B_0$" = ncol(df)), escape = FALSE)
 kableExtra::save_kable(mykbl,
                        "earthq_B0.pdf", 
@@ -760,7 +784,7 @@ get_predobspairsdf_nat <- function(mod,
 ```
 
 ```{r}
-#| fig.width: 15
+#| fig.width: 12
 #| fig.height: 13
 get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s"))) %>%
   pairedplotggprep() +
@@ -776,6 +800,7 @@ get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s"))) %>%
   scale_fill_viridis_c() +
   scale_color_viridis_c() +
   ggtitle("Predictions")
+ggsave("earthq_predictions.pdf", width = 12, height = 13)
 ```
 
 # Main Figure: Observed and Predicted
@@ -1027,6 +1052,8 @@ mod_SvMF$rresids_G0 %>%
   geom_point(aes(fill = Longitude), size = 2, shape = 21) +
   scale_fill_viridis_c(name = "Longitude") +
   scale_color_viridis_c(name = "Longitude")
+
+ggsave("earthq_rresids.pdf", width = 8, height = 7)
 ```
 
 
@@ -1047,6 +1074,7 @@ bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
   stat_summary(fun.data = mean_se, geom = "errorbar", width = 1.5, col = "blue", data = ~filter(.x, covariate == "Depth")) +
   scale_y_continuous(name = "Residual") +
   scale_x_continuous(name = "Covariate Value")
+ggsave("earthq_rresids2.pdf", width = 8, height = 6)
 ```
 
 Above is the residuals in each of the basis coordinates given by the SvMF orientation against covariate values.
@@ -1094,6 +1122,7 @@ p2 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
   xlab("Strike")
 
 p1 + p2 + plot_layout(axes = "collect")
+ggsave("earthq_srdist.pdf", width = 5, height = 2)
 ```
 
 ## Residual Distance (Unstandardised)
@@ -1114,8 +1143,6 @@ p1 + p2
 ```
 
 # Likelihood Ratio Test of vMF vs SvMF
-
-__should remove unfinished convergence results__
 
 First get best vMF model
 ```{r}
@@ -1158,6 +1185,11 @@ getlikR <- function(y){
           invokeRestart("muffleWarning")
         }
       })
+  if ((mod1$nlopt$status != 4) || (mod2$nlopt$status != 4)){
+    return(list(likR = NA_real_,
+         vMF = mod1,
+         SvMF = mod2))
+  }
   lLik1 <- sphm:::dS2S_constV(mod1$y, xs = NULL, xe =mod1$xe,
               mean = mod1$est,
               k = mod1$k,
@@ -1171,7 +1203,6 @@ getlikR <- function(y){
               G0 = mod2$G0) %>%
     colSums()
 
-  # I'm going to use the R version because it will calculate things more accurately
   list(likR = -2* (lLik1[["R"]] - lLik2[["R"]]),
        vMF = mod1,
        SvMF = mod2)
@@ -1194,16 +1225,21 @@ obs <- getlikR(s4df_clean %>%
                         as.matrix())
 ```
 
-P-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
-
 ```{r}
-mean(lapply(null_likRs, "[[", "likR") %>% unlist() > obs$likR)
+null_likRs_vec <- lapply(null_likRs, "[[", "likR") %>% unlist()
+sum(is.na(null_likRs_vec))
+sum(!is.na(null_likRs_vec))
 ```
 
-The likelihood ratio is larger than any simulated data from the null (vMF model) achieves. Suggesting the data does not come from the vMF model.
+There were a few cases where the regression did not converge, and these have been discarded.
+P-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
+```{r}
+mean(null_likRs_vec > obs$likR, na.rm = TRUE)
+```
+This small $p$-value suggests that the data was not drawn from a vMF regression.
 
 # Parametric Bootstrap Regions for `a`
-Since a vMF model is rejected, lets look at CI that for the fitted SvMF.
+Lets look at the CI for the scales of the SvMF.
 
 ```{r}
 Bests <- pbapply::pblapply(1:1000, function(seed){

@@ -90,7 +90,7 @@ test_that("MLE with p1 = G01", {
   k <- 30
   a <- c(1, seq(5, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
-  y_ld <- rMobius_SvMF(x$xs, x$xe, mnparam = omegapar, k, a, G0)
+  y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
 
   # check ull_S2S_constV in C++
   ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mnlink_Omega_vec(omegapar), k = k,
@@ -177,7 +177,7 @@ test_that("MLE with G01 fixed", {
   k <- 30
   a <- c(1, seq(5, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
-  y_ld <- rMobius_SvMF(x$xs, x$xe, mnparam = omegapar, k, a, G0)
+  y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
   
   # check ull_S2S_constV in C++
   ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mnlink_Omega_vec(omegapar), k = k,
@@ -263,7 +263,7 @@ test_that("MLE with G01 free, p=5", {
   a <- c(1, seq(0.8, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
   SvMFcann_check(SvMFcann(k, a, G0))
-  y_ld <- rMobius_SvMF(x$xs, x$xe, mnparam = omegapar, k, a, G0)
+  y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
   
   # check ull_S2S_constV in C++
   ldCpp <- ull_S2S_constV_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mnlink_Omega_vec(omegapar), k = k,
@@ -353,7 +353,7 @@ test_that("Under high concentration, standardised residuals are the correct MVN"
   k <- 500
   a <- c(1, seq(5, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
-  y_ld <- rMobius_SvMF(x$xs, x$xe, mnparam = omegapar, k, a, G0)
+  y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
   
   exactresids <- resid_SvMF_partransport(y_ld[, 1:p], mnlink(xs = x$xs, xe = x$xe, param = omegapar), k, a, G0)
   expect_gt(ks.test(rowSums(exactresids^2), "pchisq", df = ncol(exactresids))$p.value, 0.05)

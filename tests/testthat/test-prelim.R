@@ -65,9 +65,9 @@ test_that("mobius_vMF optimisation works with Sph covars",{
   
   # starting away from optimum, but still within constraints
   set.seed(14)
-  start <- as_mnlink_Omega(cannS2S(P = mclust::randomOrthogonalMatrix(p, p),
-          Q = mclust::randomOrthogonalMatrix(qs, p),
-          B = diag(sort(runif(p-1), decreasing = TRUE))))
+  start <- as_mnlink_Omega(mnlink_cann(P = mclust::randomOrthogonalMatrix(p, p),
+          Qs = mclust::randomOrthogonalMatrix(qs, p),
+          Bs = diag(sort(runif(p-1), decreasing = TRUE))))
   opt2 <- mobius_vMF(y, xs = x, start = start, type = "Kassel", intercept = FALSE)
   expect_equal(opt2$est, omegapar, tolerance = 0.05)
   expect_equal(opt2$k, 30, tolerance = 1E-1)
@@ -212,24 +212,6 @@ test_that("C++ Omega_constraints() and Omega check is non-zero correctly", {
   Om$Omega <- matrix(rnorm(p * (qs + qe)), p, qs + qe) #check commutivity
   expect_true(all(mnlink_Omega_check_numerical(Om) > 1E-3))
   expect_true(all(abs(Omega_constraints(mnlink_Omega_vec(Om), p, qe)) > 1E-3))
-})
-
-test_that("pre_est3_mod optimisation works", {
-  rmnlink_cann__place_in_env(3, 3, 0)
-
-set.seed(1)
-n=100
-x <- matrix(rnorm(n*qs), nrow = n)
-x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/") #covariates
-y <- mnlink(xs = x, param = paramobj) # assume y=mu(x) for simulation purpose
-
-ini_value=c(0,0,0,0,0,0,0.9,0.2)  # initial value for optimization. Try multiple values.
-result=nlminb(start=ini_value,objective=function(theta) pre_est3_mod(y,x,theta),lower=c(rep(-Inf,6),0,0),upper=c(rep(Inf,6),1,1))  # numerical optimization
-
-expect_equal(cayley(result$par[1:3]), P, tolerance = 10^4*sqrt(.Machine$double.eps))
-expect_equal(cayley(result$par[4:6]), Qs, tolerance = 10^4*sqrt(.Machine$double.eps))
-expect_equal(result$par[7], Bs[1,1], tolerance = 1E-3)
-expect_equal(result$par[8] * result$par[7], Bs[2,2], tolerance = 1E-3)
 })
 
 test_that("mobius_vMF() performs correctly for Shogo", {

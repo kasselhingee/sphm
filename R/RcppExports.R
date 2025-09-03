@@ -38,12 +38,12 @@ S2S_constV_nota1_fromvecparamsR <- function(mainvec, p, qs, qe, referencecoords,
     .Call(`_sphm_S2S_constV_nota1_fromvecparamsR`, mainvec, p, qs, qe, referencecoords, G01behaviour, G01)
 }
 
-ull_S2S_constV_forR <- function(y, xs, xe, omvec, k, a1, aremaining, G0) {
-    .Call(`_sphm_ull_S2S_constV_forR`, y, xs, xe, omvec, k, a1, aremaining, G0)
+uld_Mobius_SvMF_partran_forR <- function(y, xs, xe, omvec, k, a1, aremaining, G0) {
+    .Call(`_sphm_uld_Mobius_SvMF_partran_forR`, y, xs, xe, omvec, k, a1, aremaining, G0)
 }
 
-tape_ull_S2S_constV_nota1 <- function(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour) {
-    .Call(`_sphm_tape_ull_S2S_constV_nota1`, omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour)
+tape_uld_Mobius_SvMF_partran_nota1 <- function(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour) {
+    .Call(`_sphm_tape_uld_Mobius_SvMF_partran_nota1`, omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour)
 }
 
 #' Preliminary Objective in the style of the `generalfunction` class:

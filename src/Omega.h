@@ -68,7 +68,7 @@ mnlink_Omega_cpp<T> mnlink_Omega_cpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic
                         );
 }
 
-// Function to project the Omega in an OmegaS2S object to be perpendicular to p1 and q1
+// Function to project the Omega in an Omega parameterisation to be perpendicular to p1 and qs1 and qe1
 template <typename T>
 mnlink_Omega_cpp<T> Omega_proj_cpp(const mnlink_Omega_cpp<T>& inobj) {
     mnlink_Omega_cpp<T> obj = inobj;

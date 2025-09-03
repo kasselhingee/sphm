@@ -5,7 +5,7 @@
 
 //G0 specifies the axes of the SvMF.
 //G0star is pararallel transported along G01 -> predicted mean
-veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 G0){
+veca1 uld_Mobius_SvMF_partran(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 G0){
   int p = om.p1.size();
   //check that ncol(y) == p
   if (y.cols() != p){Rcpp::stop("width of y does not equal length of p1");}
@@ -36,9 +36,9 @@ veca1 ull_S2S_constV(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a
 
 
 
-veca1 ull_S2S_constV_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0){
+veca1 uld_Mobius_SvMF_partran_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0){
    mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, y.cols(), xe.cols());
-   veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, G0);
+   veca1 ld = uld_Mobius_SvMF_partran(y, xs, xe, om, k, a1, aremaining, G0);
    return ld;
 }
 
@@ -250,7 +250,7 @@ Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs,
 
 
 //G0 are the orientation axes of SvMF in cannonical coordinate (p x p) matrix
-pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0, vecd & p_in, vecd & qe_in, matd & yx, matd referencecoords, std::string G01behaviour){
+pADFun tape_uld_Mobius_SvMF_partran_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0, vecd & p_in, vecd & qe_in, matd & yx, matd referencecoords, std::string G01behaviour){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qe = int(qe_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qs = yx.cols() - qe - p; 
@@ -286,13 +286,13 @@ pADFun tape_ull_S2S_constV_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremain
   
   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
 
-  veca1 ld = ull_S2S_constV(y, xs, xe, om, k, a1, aremaining, G0);
+  veca1 ld = uld_Mobius_SvMF_partran(y, xs, xe, om, k, a1, aremaining, G0);
 
   CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
   tape.Dependent(mainvec, ld);
   tape.check_for_nan(false);
 
-  pADFun out(tape, mainvec, a1vec, "ull_S2S_constV_nota1");
+  pADFun out(tape, mainvec, a1vec, "uld_Mobius_SvMF_partran_nota1");
   return(out);
 }
 

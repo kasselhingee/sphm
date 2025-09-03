@@ -76,7 +76,7 @@ rcovars <- function(n, qs, qe){
 }
 
 test_that("MLE with p1 = G01", {
-  rmnlink_cann__place_in_env(4, 5, 4)
+  rmnlink_cann__place_in_env(4, 5, 4, preseed = 1)
   omegapar <- as_mnlink_Omega(paramobj)
   set.seed(4)
   x <- rcovars(1000, qs, qe)
@@ -88,7 +88,7 @@ test_that("MLE with p1 = G01", {
   # simulate observations
   set.seed(7)
   k <- 30
-  a <- c(1, seq(5, 0.2, length.out = p-1))
+  a <- c(1, seq(1, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
   y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
 
@@ -133,7 +133,7 @@ test_that("MLE with p1 = G01", {
   
   ## now try optimisation starting at true values ##
   expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "p1", 
-                                       type = "Kassel", intercept = FALSE)}, "(p!=3|multimodal)")
+                                       type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est1$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
@@ -147,7 +147,8 @@ test_that("MLE with p1 = G01", {
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, 
                                        mean = preest$mean, k = preest$k, a = preest$a, G0 = preest$G0,
                                        G01behaviour = "p1",
-                                       type = "Kassel", intercept = FALSE)}, "(p!=3|multimodal)")
+                                       type = "Kassel", intercept = FALSE)}, "p!=3")
+  #if (sign(est2$mean$ce) != sign(est1$mean$ce)){est2$mean <- Euc_signswitch(est2$mean)}
   expect_equal(est2$mean, est1$mean, tolerance = 1E-1)
   expect_equal(est2$k, est1$k, tolerance = 0.2)
   expect_equal(est2$a, est1$a, tolerance = 1E-1, ignore_attr = "names")
@@ -156,15 +157,15 @@ test_that("MLE with p1 = G01", {
   # from default starts with prelim estimate
   expect_warning({est3 <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe,
                        G01behaviour = "p1",
-                       type = "Kassel", intercept = FALSE)}, "(p!=3|multimodal)")
+                       type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est3$mean, est1$mean, tolerance = 1E-1)
   expect_equal(est3$k, est1$k, tolerance = 0.2)
-  expect_equal(est3$a, est1$a, tolerance = 1E-1)
+  expect_equal(est3$a, est1$a, tolerance = 1E-1, ignore_attr = "names")
   expect_equal(axis_distance(acos(colSums(est3$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
 })
 
 test_that("MLE with G01 fixed", {
-  rmnlink_cann__place_in_env(4, 5, 4)
+  rmnlink_cann__place_in_env(4, 5, 4, preseed = 1)
   omegapar <- as_mnlink_Omega(paramobj)
   set.seed(4)
   x <- rcovars(1000, qs, qe)
@@ -175,7 +176,7 @@ test_that("MLE with G01 fixed", {
   # simulate observations
   set.seed(6)
   k <- 30
-  a <- c(1, seq(5, 0.2, length.out = p-1))
+  a <- c(1, seq(1, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
   y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
   
@@ -220,7 +221,7 @@ test_that("MLE with G01 fixed", {
   
   ## now try optimisation starting at true values ##
   expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "fixed",
-                                       type = "Kassel", intercept = FALSE)}, "(p!=3|multimodal)")
+                                       type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est1$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
@@ -232,7 +233,7 @@ test_that("MLE with G01 fixed", {
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, 
                                        mean = preest$mean, k = preest$k, a = preest$a, G0 = preest$G0,
                                        G01behaviour = "fixed",
-                                       type = "Kassel", intercept = FALSE)}, "(p!=3|multimodal)")
+                                       type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est2$mean, est1$mean, tolerance = 1E-2)
   expect_equal(est2[c("k", "a")], est1[c("k", "a")], tolerance = 1E-1, ignore_attr = "names")
   expect_equal(est2$G0, est1$G0, tolerance = 1E-2, ignore_attr = TRUE)
@@ -241,11 +242,11 @@ test_that("MLE with G01 fixed", {
   expect_warning({est3 <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe, 
                       G0 = cbind(G0[,1], matrix(NA, p, p-1)),
                       G01behaviour = "fixed",
-                      type = "Kassel", intercept = FALSE)}, "(p!=3|multimodal)")
+                      type = "Kassel", intercept = FALSE)}, "p!=3")
   expect_equal(est3$mean, est1$mean, tolerance = 1E-1)
   expect_equal(est3$k, est1$k, tolerance = 0.2)
   expect_equal(est3$a, est1$a, tolerance = 1E-1, ignore_attr = "names")
-  expect_equal(axis_distance(acos(colSums(est3$G0 * est1$G0) - 1E-15)), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
+  expect_equal(axis_distance(acos(pmin(colSums(est3$G0 * est1$G0),1))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
 })
 
 test_that("MLE with G01 free, p=5", {

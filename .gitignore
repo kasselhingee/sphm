@@ -5,3 +5,8 @@
 src/*.o
 src/*.so
 src/*.dll
+vignettes/*.tex
+vignettes/*.pdf
+vignettes/*.log
+vignettes/*.aux
+

@@ -1,5 +1,5 @@
-#ifndef S2S_constV_H
-#define S2S_constV_H
+#ifndef MOBIUSSVMF
+#define MOBIUSSVMF
 
 #include <scorematchingad_forward.h> //includes RcppEigenForward
 #include <utils/pADFun.h>

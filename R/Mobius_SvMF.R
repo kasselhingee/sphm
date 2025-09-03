@@ -378,7 +378,7 @@ undo_partransport <- function(y, ymean, G01){
 #' @param k Concentration of the SvMF error distribution
 #' @param a Scales of the SvMF error distribution
 #' @param G0 The base location of parallel transport along with axes \eqn{\gamma_{0j}}, \eqn{j=2,...,p}.
-#' @inheritParams Mobius_SvMF
+#' @inheritParams mobius_SvMF
 #' @description The log-density of each row of `y` for a given SvMF regression. Two methods are used. The approximate method used in the optimisation of all parameters (labelled `Cpp`) and an exact log-density using highly accurate Bessel function implementations from base `R` (labelled `R`).
 #' @return A matrix with two columns and the same number of rows as `y`.
 #' @export

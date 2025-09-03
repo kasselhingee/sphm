@@ -12,11 +12,23 @@
 #' @details
 #' # Cannonical Parameterisation
 #' The parameters here are for a mean link defined as
-#' \deqn{\mu(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  \frac{B_e(Q_e[,-1]^\top x_e}{Qe[,1]^\top x_e + c_e}\right).}
-#' The `P`, `Bs`, `Be`, `Qs`, `Qe` and `ce` is slightly more flexible the link function with both Euclidean covariates and a spherical covariate in the "Regression for spherical responses with linear and spherical covariates using a scaled link function" manuscript.
-#' In the above notation the link in Equation (1) from that manuscript is 
-#' \deqn{\mu(x) = P\mathcal{S}^{[-1]}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  B_e(Q_e[,-1]^\top x_e\right),}
-#' which can be obtained by including an extra zero-valued Euclidean covariate as the first covariate and fixing \eqn{q_{e1}} to be `(1, 0, ...)` to match the index of the constant covariate and setting `ce=1`.
+#' \deqn{\mu_{SpEuc}(x) = P\mathcal{S}^{[-1]}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  \frac{B_e(Q_e[,-1]^\top x_e}{Q_e[,1]^\top x_e + c_e}\right)}
+#' where \eqn{\mu(x)} is a p-length unit vector,
+#' \eqn{x_s} is a `qs`-length unit vector,
+#' \eqn{x_e} is a `qe`-length vector,
+#' `P` is a p x p rotation matrix,
+#' `Qs` is a `qs x p` orthonormal matrix (`t(Qs) %*% Qs == diag(p)),
+#' `Bs` is a diagonal matrix (p-1) x (p-1) matrix,
+#' `Be` is a diagonal matrix (p-1) x (p-1) matrix,
+#' `Qs` is a `qe x p` orthonormal matrix,
+#' `ce` is a real-valued number.
+#' The Euclidean covariate in this link is essentially transformed by \eqn{B_e\mathcal{S}\left(Q_e^\top x/c_1 \right)}, thus we call this link the `SpEuc` link.
+#'
+#' The `SpEuc` link above is slightly more flexible than the link function defined at the start of "Regression for spherical responses with linear and spherical covariates using a scaled link function" manuscript.
+#' The link in Equation (1) from that manuscript is 
+#' \deqn{\mu_{LinEuc}(x) = P\mathcal{S}^{[-1]}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  B_e(Q_e[,-1]^\top x_e\right),}
+#' which can be written as \eqn{\mu_{SpEuc}} with an extra zero-valued Euclidean covariate as the first covariate and fixing \eqn{Q_e[,1]=q_{e1}} to be `(1, 0, ...)` to match the index of the constant covariate and setting `ce=1`.
+#' This is the `LinEuc` (for linear Euclidean) link form.
 #' 
 #' # Omega Parameterisation
 #' The link functions are simplified by writing \eqn{\Omega_s = P^* B_s {Q_s^*}^T} and \eqn{\Omega_e = P^* B_e {Q_e^*}^T}, \eqn{\Omega = [\Omega_s \,\, \Omega_e]}.
@@ -421,7 +433,7 @@ rmnlink_cann__place_in_env <- function(p = 3, qs = 5, qe = 4, preseed = 0){
   return(NULL)
 }
 
-is_Shogo <- function(obj, tol = sqrt(.Machine$double.eps)){
+is_LinEuc <- function(obj, tol = sqrt(.Machine$double.eps)){
   if (inherits(obj, "mnlink_Omega")){
     if (length(obj$qe1) > 0){
       checks <- c((obj$qe1 - c(1, rep(0, length(obj$qe1) - 1)))^2, (obj$ce - 1)^2)

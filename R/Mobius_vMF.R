@@ -20,14 +20,14 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' Before fitting, standardises y, xs and xe (*the latter needs implementing*). If supplied, `start`, is updated accordingly.
 #' Note that if standardised y has a vMF distribution with the given means, the unstandardised y *does not* because of the second-moment standardisation (I would expect is to not be isotropic).
 #' 
-#' If `type == "Shogo"` a column of zeros called `'dummyzero'` is added to the front of `xe`.
+#' If `type == "LinEuc"` a column of zeros called `'dummyzero'` is added to the front of `xe`.
 #' 
 #' Default scaling of 0.9 avoids being on the inequality boundary at the start of the search.
-#' @param start is a starting parameter object. For Shogo mean link the Qe matrix must have an extra row and column that at the front/top, with 1 in the first entry (and zero elsewhere).
+#' @param start is a starting parameter object. For LinEuc mean link the Qe matrix must have an extra row and column that at the front/top, with 1 in the first entry (and zero elsewhere).
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @param intercept `TRUE` to include a Euclidean intercept term using a covariate that is always `1`. This is needed for centering of Euclidean covariates, which is part of standardising the covariates. If `intercept = FALSE` then the Euclidean covariates will not be standardised.
 #' @export
-mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, lb = NULL, ub = NULL, ...){
+mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, lb = NULL, ub = NULL, ...){
   p <- ncol(y)
   preplist <- list(y = y, xs = xs, xe = xe, start = start)
   # if needed, add Euclidean covariates and update start accordingly
@@ -37,9 +37,9 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
   # If start not supplied, choose start close to identities since data standardised
   preplist <- defaultstart(preplist, type)
 
-  # Check Shogo link initiated properly
-  if ((type == "Shogo") && (!is.null(preplist$xe))){
-    stopifnot(is_Shogo(preplist$start))
+  # Check LinEuc link initiated properly
+  if ((type == "LinEuc") && (!is.null(preplist$xe))){
+    stopifnot(is_LinEuc(preplist$start))
     stopifnot(all(preplist$xe[, 1]^2 < sqrt(.Machine$double.eps)))
   }
 

@@ -197,22 +197,22 @@ test_that("vec and unvec", {
   expect_equal(mnlink_Omega_unvec(mnlink_Omega_vec(Om), p, qe = qe), Om)
 })
 
-test_that("check Shogo conversion", {
+test_that("check LinEuc conversion", {
   rmnlink_cann__place_in_env(3, 0, 4)
-  # convert to Shogo form:
+  # convert to LinEuc form:
   bigQe <- rbind(0, Qe)
   bigQe[, 1] <- 0
   bigQe[1,1] <- 1
   ce <- 1
   paramobj <- mnlink_cann(P, Be = Be, Qe = bigQe, ce = ce)
-  expect_true(is_Shogo(paramobj))
+  expect_true(is_LinEuc(paramobj))
   
   # check manual
   x <- runif(qe)
   expect_equal(drop(mnlink(xe = matrix(c(0, x), nrow = 1), param = paramobj)),
                drop(P %*% iSp(drop(Be %*% (t(bigQe[-1,-1]) %*% x)))))
   
-  # check Shogo:
+  # check LinEuc:
   # need to check linearity of P^{-1} S(y) wrt x_e or even Qe
   # expect differences between the intermediate output to be purely due to the difference between inputs
   out <- Sp(mnlink(xe = rbind(0, c(0,x), c(0, 2*x)), param = paramobj) %*% P)

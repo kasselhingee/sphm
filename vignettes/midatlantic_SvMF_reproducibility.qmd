@@ -1,6 +1,5 @@
 ---
 title: "Mid-Atlantic Regression"
-author: "Kassel Hingee"
 format:
   pdf:
     toc: true
@@ -52,7 +51,7 @@ soloplt <- function(rresids, covars, extraaes = list(NULL), continuous = TRUE, b
     geom_hline(yintercept = 0, lty = "dotted", col = "blue") +
     coord_equal()
 }
-# soloplt(small_Shogo$rresid, sphdf, aes(col = Depth), continuous = TRUE)
+# soloplt(small_LinEuc$rresid, sphdf, aes(col = Depth), continuous = TRUE)
 ```
 
 ```{r Tools for ggally with circle}
@@ -96,7 +95,7 @@ mod <- mobius_SvMF(y = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
        xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
        xe = xestd %>% as.matrix(),
        G01behaviour = "free",
-       fix_qs1 = FALSE, type = "Shogo")
+       fix_qs1 = FALSE, type = "LinEuc")
 mod[c("k", "DoF", "AIC")]
 mod$a
 ```
@@ -163,7 +162,7 @@ predplot_ESAG <- function(esagmod){
 ```
 
 # Predictions
-The below 'ours' model is using Shogo's link with an extra covariate for an intercept and G01 free.
+The below 'ours' model is using LinEuc's link with an extra covariate for an intercept and G01 free.
 The results here are from a local optimisation using gradient from default starting values.
 I've checked that global search for the best vMF regression does not find anything better.
 
@@ -362,7 +361,7 @@ loocvmseSvMF <- function(mod){
                 xs = mod$xs[-idx,],
                 xe = mod$xe[-idx,c(-1,-ncol(mod$xe)), drop = FALSE],
                 fix_qs1 = FALSE,
-                type = "Shogo",
+                type = "LinEuc",
                 G01behaviour = "free",
                 mean = mod$mean,
                 k = mod$k,
@@ -497,7 +496,7 @@ These are all positive and non-zero, which confirms that the optimisation routin
 #| cache: true
 restarts <- pbapply::pblapply(1:100, function(seed){
   start <- rmnlink_cann(p = 3, qs = 3, qe = ncol(xe) + 2, preseed = seed)
-  # convert to Shogo form:
+  # convert to LinEuc form:
   set.seed(seed+1)
   Qe <- mclust::randomOrthogonalMatrix(ncol(xe)+1, 3-1)
   bigQe <- cbind(0, rbind(0, Qe))
@@ -508,7 +507,7 @@ restarts <- pbapply::pblapply(1:100, function(seed){
   modvMF <- mobius_vMF(y = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
       xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
       xe = xe %>% as.matrix(),
-      fix_qs1 = FALSE, type = "Shogo",
+      fix_qs1 = FALSE, type = "LinEuc",
       start = start)
 }, cl = 2)
 lapply(restarts, "[[", "obj") %>%
@@ -526,9 +525,9 @@ Would be better if it was even more stable though!!!
 ## Check Other Starts for SvMF
 ```{r}
 restarts <- pbapply::pblapply(1:100, function(seed){
-  # randomly generates a Kassel-form link
+  # randomly generates a SpEuc-form link
   start <- rmnlink_cann(p = 3, qs = 3, qe = ncol(xestd) + 2, preseed = seed)
-  # convert to Shogo form:
+  # convert to LinEuc form:
   set.seed(seed+1)
   Qe <- mclust::randomOrthogonalMatrix(ncol(xestd)+1, 5-1)
   bigQe <- cbind(0, rbind(0, Qe))
@@ -539,7 +538,7 @@ restarts <- pbapply::pblapply(1:100, function(seed){
   mobius_SvMF(y = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
               xs = fulldf %>% select(starts_with("X")) %>% as.matrix(), 
               xe = xestd %>% as.matrix(),
-              type = "Shogo",
+              type = "LinEuc",
               G01behaviour = "free",
               mean = start)
 }, cl = 2)
@@ -565,7 +564,7 @@ mod2 <- mobius_SvMF(y = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
        k = mod$k,
        G0 = mod$G0,
        G0reference = mod$G0,
-       fix_qs1 = FALSE, type = "Shogo", doprelim = FALSE)
+       fix_qs1 = FALSE, type = "LinEuc", doprelim = FALSE)
 ```
 
 

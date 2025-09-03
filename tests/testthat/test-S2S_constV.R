@@ -133,7 +133,7 @@ test_that("MLE with p1 = G01", {
   
   ## now try optimisation starting at true values ##
   expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "p1", 
-                                       type = "Kassel", intercept = FALSE)}, "p!=3")
+                                       type = "SpEuc", intercept = FALSE)}, "p!=3")
   expect_equal(est1$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
@@ -143,11 +143,11 @@ test_that("MLE with p1 = G01", {
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
-  preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "Kassel", G01behaviour = "p1", intercept = FALSE)
+  preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "SpEuc", G01behaviour = "p1", intercept = FALSE)
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, 
                                        mean = preest$mean, k = preest$k, a = preest$a, G0 = preest$G0,
                                        G01behaviour = "p1",
-                                       type = "Kassel", intercept = FALSE)}, "p!=3")
+                                       type = "SpEuc", intercept = FALSE)}, "p!=3")
   #if (sign(est2$mean$ce) != sign(est1$mean$ce)){est2$mean <- Euc_signswitch(est2$mean)}
   expect_equal(est2$mean, est1$mean, tolerance = 1E-1)
   expect_equal(est2$k, est1$k, tolerance = 0.2)
@@ -157,7 +157,7 @@ test_that("MLE with p1 = G01", {
   # from default starts with prelim estimate
   expect_warning({est3 <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe,
                        G01behaviour = "p1",
-                       type = "Kassel", intercept = FALSE)}, "p!=3")
+                       type = "SpEuc", intercept = FALSE)}, "p!=3")
   expect_equal(est3$mean, est1$mean, tolerance = 1E-1)
   expect_equal(est3$k, est1$k, tolerance = 0.2)
   expect_equal(est3$a, est1$a, tolerance = 1E-1, ignore_attr = "names")
@@ -221,7 +221,7 @@ test_that("MLE with G01 fixed", {
   
   ## now try optimisation starting at true values ##
   expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "fixed",
-                                       type = "Kassel", intercept = FALSE)}, "p!=3")
+                                       type = "SpEuc", intercept = FALSE)}, "p!=3")
   expect_equal(est1$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
@@ -229,11 +229,11 @@ test_that("MLE with G01 fixed", {
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
-  preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "Kassel", G0 = cbind(G0[,1], matrix(NA, p, p-1)), G01behaviour = "fixed", intercept = FALSE)
+  preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "SpEuc", G0 = cbind(G0[,1], matrix(NA, p, p-1)), G01behaviour = "fixed", intercept = FALSE)
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, 
                                        mean = preest$mean, k = preest$k, a = preest$a, G0 = preest$G0,
                                        G01behaviour = "fixed",
-                                       type = "Kassel", intercept = FALSE)}, "p!=3")
+                                       type = "SpEuc", intercept = FALSE)}, "p!=3")
   expect_equal(est2$mean, est1$mean, tolerance = 1E-2)
   expect_equal(est2[c("k", "a")], est1[c("k", "a")], tolerance = 1E-1, ignore_attr = "names")
   expect_equal(est2$G0, est1$G0, tolerance = 1E-2, ignore_attr = TRUE)
@@ -242,7 +242,7 @@ test_that("MLE with G01 fixed", {
   expect_warning({est3 <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe, 
                       G0 = cbind(G0[,1], matrix(NA, p, p-1)),
                       G01behaviour = "fixed",
-                      type = "Kassel", intercept = FALSE)}, "p!=3")
+                      type = "SpEuc", intercept = FALSE)}, "p!=3")
   expect_equal(est3$mean, est1$mean, tolerance = 1E-1)
   expect_equal(est3$k, est1$k, tolerance = 0.2)
   expect_equal(est3$a, est1$a, tolerance = 1E-1, ignore_attr = "names")
@@ -306,7 +306,7 @@ test_that("MLE with G01 free, p=5", {
   
   ## now try optimisation starting at true values ##
   expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "free",
-                                       type = "Kassel", intercept = FALSE)}, "p!=3")
+                                       type = "SpEuc", intercept = FALSE)}, "p!=3")
   expect_equal(est1$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
   # check Gstar by checking angle between estimated and true axes
@@ -317,11 +317,11 @@ test_that("MLE with G01 free, p=5", {
   
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mnlink_Omega(rmnlink_cann(p, qs, qe, preseed = 2))
-  preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "Kassel", intercept = FALSE, G01behaviour = "free")
+  preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "SpEuc", intercept = FALSE, G01behaviour = "free")
   expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, 
                                        mean = preest$mean, k = preest$k, a = preest$a, G0 = preest$G0,
                                        G01behaviour = "free",
-                                       type = "Kassel", intercept = FALSE)}, "p!=3")
+                                       type = "SpEuc", intercept = FALSE)}, "p!=3")
   expect_equal(est2$mean, est1$mean, tolerance = 1E-2)
   expect_equal(est2[c("k", "a")], est1[c("k", "a")], tolerance = 1E-1, ignore_attr = "names")
   expect_equal(axis_distance(acos(colSums(est2$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
@@ -360,7 +360,7 @@ test_that("Under high concentration, standardised residuals are the correct MVN"
   expect_gt(ks.test(rowSums(exactresids^2), "pchisq", df = ncol(exactresids))$p.value, 0.05)
   
   expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = G0, G01behaviour = "fixed",
-                                       type = "Kassel", intercept = FALSE)}, "p!=3")
+                                       type = "SpEuc", intercept = FALSE)}, "p!=3")
   
   expect_gt(ks.test(rowSums(est1$rresids_std^2), "pchisq", df = ncol(est1$rresids_std))$p.value, 0.05)
 })

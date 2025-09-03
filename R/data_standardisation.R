@@ -238,14 +238,14 @@ destandardise_data <- function(preplist, intercept){
 
 # if needed, add Euclidean covariates to prepared list and update start accordingly 
 addEuccovars <- function(preplist, type, intercept){
-  # if Shogo add a zeros covariate
-  if ((type == "Shogo") && (!is.null(preplist$xe))){
+  # if LinEuc add a zeros covariate
+  if ((type == "LinEuc") && (!is.null(preplist$xe))){
     if (!is.null(preplist$xe)){
       if (any(preplist$xe[,1]^2 > .Machine$double.eps)){
         preplist$xe <- cbind("dummyzero" = 0, preplist$xe)
       }
     }
-    if (!is.null(preplist$start)){stopifnot(is_Shogo(preplist$start))}
+    if (!is.null(preplist$start)){stopifnot(is_LinEuc(preplist$start))}
   }
  
   # if intercept==TRUE add a ones 
@@ -289,7 +289,7 @@ defaultstart <- function(preplist, type){
                 Qe = if (!is.null(preplist$xe)){diag(1, ncol(preplist$xe), p)},
                 ce = if (!is.null(preplist$xe)){1}
     )
-    if ((type == "Kassel") && !is.null(preplist$xe)){ #default to be larger an all values of -xe
+    if ((type == "SpEuc") && !is.null(preplist$xe)){ #default to be larger an all values of -xe
       preplist$start$ce[1] <- max(-preplist$xe)  +  0.1*IQR(preplist$xe)
     }
   }

@@ -13,7 +13,7 @@ test_that("vMF optimisation works with Euc covars", {
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- mobius_vMF(y, xe = x, start = paramobj, type = "Kassel", intercept = FALSE)
+  tmp <- mobius_vMF(y, xe = x, start = paramobj, type = "SpEuc", intercept = FALSE)
   expect_equal(tmp$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
   expect_equal(tmp$k, 30, tolerance = 1E-1)
   
@@ -23,7 +23,7 @@ test_that("vMF optimisation works with Euc covars", {
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
                                        ce = 0))
-  opt2 <- mobius_vMF(y, xe = x, start = start, type = "Kassel", intercept = FALSE)
+  opt2 <- mobius_vMF(y, xe = x, start = start, type = "SpEuc", intercept = FALSE)
   if (sign(opt2$est$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$solution <- Omega_Euc_signswitch(opt2$est)
   }
@@ -59,7 +59,7 @@ test_that("mobius_vMF optimisation works with Sph covars",{
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- mobius_vMF(y, xs = x, start = omegapar, type = "Kassel", intercept = FALSE)
+  tmp <- mobius_vMF(y, xs = x, start = omegapar, type = "SpEuc", intercept = FALSE)
   expect_equal(tmp$est, omegapar, tolerance = 0.05)
   expect_equal(tmp$k, 30, tolerance = 1E-1)
   
@@ -68,7 +68,7 @@ test_that("mobius_vMF optimisation works with Sph covars",{
   start <- as_mnlink_Omega(mnlink_cann(P = mclust::randomOrthogonalMatrix(p, p),
           Qs = mclust::randomOrthogonalMatrix(qs, p),
           Bs = diag(sort(runif(p-1), decreasing = TRUE))))
-  opt2 <- mobius_vMF(y, xs = x, start = start, type = "Kassel", intercept = FALSE)
+  opt2 <- mobius_vMF(y, xs = x, start = start, type = "SpEuc", intercept = FALSE)
   expect_equal(opt2$est, omegapar, tolerance = 0.05)
   expect_equal(opt2$k, 30, tolerance = 1E-1)
 })
@@ -93,7 +93,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "Kassel", intercept = FALSE)
+  tmp <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "SpEuc", intercept = FALSE)
   expect_equal(tmp$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
   expect_equal(tmp$k, 30, tolerance = 1E-1)
   # result should also satisfy the commutation constraint
@@ -108,7 +108,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
                                        ce = 1))
-  opt2 <- mobius_vMF(y, xs = xs, xe = xe, start = start, type = "Kassel", intercept = FALSE)
+  opt2 <- mobius_vMF(y, xs = xs, xe = xe, start = start, type = "SpEuc", intercept = FALSE)
   if (sign(opt2$est$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$est <- Euc_signswitch(opt2$est)
   }
@@ -118,15 +118,15 @@ test_that("prelim optimisation works with Sph+Euc covars", {
   expect_silent(mnlink_cann_check(as_mnlink_cann(opt2$est)))
 })
 
-test_that("Shogo with Sph+Euc covars", {
+test_that("LinEuc with Sph+Euc covars", {
   rmnlink_cann__place_in_env(3, 5, 4)
-  # convert to Shogo form:
+  # convert to LinEuc form:
   bigQe <- rbind(0, Qe)
   bigQe[, 1] <- 0
   bigQe[1,1] <- 1
   ce <- 1
   paramobj <- mnlink_cann(P, Qs = Qs, Bs = Bs, Be = Be, Qe = bigQe, ce = ce)
-  expect_true(is_Shogo(paramobj))
+  expect_true(is_LinEuc(paramobj))
   
   #generate covariates Gaussianly
   set.seed(4)
@@ -145,7 +145,7 @@ test_that("Shogo with Sph+Euc covars", {
   
   # optimise locally using derivative information
   # starting at the optimum
-  tmp <- mobius_vMF(y, xs = xs, xe = xe[,-1], start = paramobj, type = "Shogo", intercept = FALSE)
+  tmp <- mobius_vMF(y, xs = xs, xe = xe[,-1], start = paramobj, type = "LinEuc", intercept = FALSE)
   expect_equal(tmp$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
   expect_equal(tmp$k, 30, tolerance = 1E-1)
   expect_silent(mnlink_Omega_check(tmp$est))
@@ -159,11 +159,11 @@ test_that("Shogo with Sph+Euc covars", {
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
                                        ce = 0))
-  # convert to start to Shogo form:
+  # convert to start to LinEuc form:
   start$Omega <- cbind(start$Omega[,1:qs], 0, start$Omega[,qs + (1:qe)])
   start$qe1 <- c(1, rep(0, qe))
   start$ce <- 1
-  opt2 <- mobius_vMF(y, xs = xs, xe = xe[,-1], start = start, type = "Shogo", intercept = FALSE)
+  opt2 <- mobius_vMF(y, xs = xs, xe = xe[,-1], start = start, type = "LinEuc", intercept = FALSE)
   if (sign(opt2$est$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
     opt2$est <- Euc_signswitch(opt2$est)
   }
@@ -214,15 +214,15 @@ test_that("C++ Omega_constraints() and Omega check is non-zero correctly", {
   expect_true(all(abs(Omega_constraints(mnlink_Omega_vec(Om), p, qe)) > 1E-3))
 })
 
-test_that("mobius_vMF() performs correctly for Shogo", {
+test_that("mobius_vMF() performs correctly for LinEuc", {
   rmnlink_cann__place_in_env(3, 5, 4)
-  # convert to Shogo form:
+  # convert to LinEuc form:
   bigQe <- rbind(0, Qe)
   bigQe[, 1] <- 0
   bigQe[1,1] <- 1
   ce <- 1
   paramobj <- mnlink_cann(P, Qs = Qs, Bs = Bs, Be = Be, Qe = bigQe, ce = ce)
-  expect_true(is_Shogo(paramobj))
+  expect_true(is_LinEuc(paramobj))
   
   #generate covariates Gaussianly
   set.seed(4)
@@ -242,8 +242,8 @@ test_that("mobius_vMF() performs correctly for Shogo", {
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
   colnames(y) <- paste0("y", 1:ncol(y))
   
-  # apply mobius_vMF as if directly on raw data (drop first column of zeros to account for user-friendly use of Shogo in mobius_vMF())
-  res <- mobius_vMF(y, xs = xs, xe = xe[, -1], type = "Shogo") 
+  # apply mobius_vMF as if directly on raw data (drop first column of zeros to account for user-friendly use of LinEuc in mobius_vMF())
+  res <- mobius_vMF(y, xs = xs, xe = xe[, -1], type = "LinEuc") 
   expect_equal(res$xe[,-(ncol(xe) + 1)], xe) #expect returned xe to include an intercept term
   expect_equal(-mean(cos(res$dists)), res$obj)
   # create a reference parameter object that hasnt been standardised, but has the ones covariate
@@ -253,7 +253,7 @@ test_that("mobius_vMF() performs correctly for Shogo", {
   expect_equal(res$k, 30, tolerance = 1E-1)
   
   # the following checks the start standardisation of supplied starting parameters
-  res2 <- mobius_vMF(y, xs = xs, xe = xe[, -1], type = "Shogo", start = res$est)
+  res2 <- mobius_vMF(y, xs = xs, xe = xe[, -1], type = "LinEuc", start = res$est)
   standardisedsolution <- mnlink_Omega_vec(res$solution)
   estimatedvalues <- !grepl("(^qe|^ce)", names(standardisedsolution))
   expect_equal(res2$nlopt$x0, standardisedsolution[estimatedvalues], ignore_attr = TRUE)
@@ -270,7 +270,7 @@ test_that("mobius_vMF() performs correctly for Shogo", {
   expect_true(vnorm(res5$nlopt$x0 - res3$nlopt$x0) > 1)
 })
 
-test_that("mobius_vMF() performs correctly for Kassel", {
+test_that("mobius_vMF() performs correctly for SpEuc", {
   rmnlink_cann__place_in_env(3, 5, 4)
   #generate covariates Gaussianly
   set.seed(4)
@@ -289,9 +289,9 @@ test_that("mobius_vMF() performs correctly for Kassel", {
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
   colnames(y) <- paste0("y", 1:ncol(y))
   
-  # apply mobius_vMF as if directly on raw data (drop first column of zeros to account for user-friendly use of Shogo in mobius_vMF())
+  # apply mobius_vMF as if directly on raw data (drop first column of zeros to account for user-friendly use of LinEuc in mobius_vMF())
   # the search space is much harder, and even global search doesnt get us close
-  res <- mobius_vMF(y, xs = xs, xe = xe, type = "Kassel", intercept = FALSE,
+  res <- mobius_vMF(y, xs = xs, xe = xe, type = "SpEuc", intercept = FALSE,
                     start = paramobj,
                     algorithm = "NLOPT_GN_ISRES",
                     lb = c(rep(-1, p + qs + qe), rep(-2, 40-qs-qe-p)),
@@ -300,7 +300,7 @@ test_that("mobius_vMF() performs correctly for Kassel", {
   expect_equal(res$est, as_mnlink_Omega(paramobj), ignore_attr = TRUE, tolerance = 1E-1)
   expect_equal(res$k, 30, tolerance = 1E-1)
   
-  res2 <- mobius_vMF(y, xs = xs, xe = xe, type = "Kassel", intercept = FALSE, start = paramobj)
+  res2 <- mobius_vMF(y, xs = xs, xe = xe, type = "SpEuc", intercept = FALSE, start = paramobj)
   expect_lt(res$obj, res2$obj + 1E-2)
 })
 
@@ -322,7 +322,7 @@ test_that("Hessian eigenvalues match DoF", {
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
   
-  fit <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "Kassel", intercept = FALSE)
+  fit <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "SpEuc", intercept = FALSE)
 
   # In the below Hessian of `prelimobj_cpp()` only the constraints built into prelimobj_cpp are incorporated (all from `Omega_proj_cpp()`): 
   #p1 size, 
@@ -340,15 +340,15 @@ test_that("Hessian eigenvalues match DoF", {
   # expect_gt(min(evals), -sqrt(.Machine$double.eps))
   
   # fix_qe1 = TRUE
-  fit <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "Kassel", intercept = FALSE, fix_qe1 = TRUE)
+  fit <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "SpEuc", intercept = FALSE, fix_qe1 = TRUE)
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), fit$DoF -1 + (p-1) * (p - 2) / 2)
   # fix_qs1 = TRUE
-  fit <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "Kassel", intercept = FALSE, fix_qs1 = TRUE)
+  fit <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "SpEuc", intercept = FALSE, fix_qs1 = TRUE)
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), fit$DoF -1 + (p-1) * (p - 2) / 2)
   # fix_qs1 = TRUE and fix_qe1=TRUE
-  fit <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "Kassel", intercept = FALSE, fix_qe1 = TRUE, fix_qs1 = TRUE)
+  fit <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "SpEuc", intercept = FALSE, fix_qe1 = TRUE, fix_qs1 = TRUE)
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), fit$DoF -1 + (p-1) * (p - 2) / 2)
 })
@@ -412,13 +412,13 @@ test_that("Hessian eigenvalues match DoF for S2S", {
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
   
-  fit <- mobius_vMF(y, xs = xs, start = paramobj, type = "Kassel", intercept = FALSE)
+  fit <- mobius_vMF(y, xs = xs, start = paramobj, type = "SpEuc", intercept = FALSE)
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), fit$DoF-1 + 0)
   expect_gt(min(evals), -sqrt(.Machine$double.eps))
   
   #fix_qe1 = TRUE
-  fit <- mobius_vMF(y, xs = xs, start = paramobj, type = "Kassel", intercept = FALSE, fix_qs1 = TRUE)
+  fit <- mobius_vMF(y, xs = xs, start = paramobj, type = "SpEuc", intercept = FALSE, fix_qs1 = TRUE)
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), fit$DoF-1 + 0)
 })
@@ -438,7 +438,7 @@ test_that("Hessian eigenvalues match DoF for Euc2S", {
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
   
-  fit <- mobius_vMF(y, xe = xe, start =  paramobj, type = "Kassel", intercept = FALSE)
+  fit <- mobius_vMF(y, xe = xe, start =  paramobj, type = "SpEuc", intercept = FALSE)
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), fit$DoF-1 + 0)
   expect_gt(min(evals), -sqrt(.Machine$double.eps))

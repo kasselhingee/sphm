@@ -27,7 +27,7 @@
 #' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
 #' No standardisation is performed.
 #' @export
-mobius_SvMF <- function(y, xs, xe, mean = NULL, k = NULL, a = NULL, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, doprelim = TRUE, ...){
+mobius_SvMF <- function(y, xs, xe, mean = NULL, k = NULL, a = NULL, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "LinEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, doprelim = TRUE, ...){
 
   if (doprelim){
   preest <- mobius_SvMF_partransport_prelim(y, xs, xe, 
@@ -59,7 +59,7 @@ mobius_SvMF <- function(y, xs, xe, mean = NULL, k = NULL, a = NULL, G0 = NULL, G
   return(c(finalest, list(preest = preest)))
 }
 
-optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, lb = NULL, ub = NULL, ...){
+optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "LinEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, lb = NULL, ub = NULL, ...){
   initial <-  list(
     mean = mean,
     k = k, 
@@ -81,9 +81,9 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   if (!is.null(a)){preplist$a <- a}
   if (!is.null(k)){preplist$k <- k}
 
-  # Check Shogo link initiated properly
-  if ((type == "Shogo") && (!is.null(preplist$xe))){
-    stopifnot(is_Shogo(preplist$start))
+  # Check LinEuc link initiated properly
+  if ((type == "LinEuc") && (!is.null(preplist$xe))){
+    stopifnot(is_LinEuc(preplist$start))
     stopifnot(all(preplist$xe[, 1]^2 < sqrt(.Machine$double.eps)))
   }
 
@@ -288,7 +288,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   return(niceout)
 }
 
-mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
+mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G01behaviour = "p1", type = "LinEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, ...){
   prelim <- mobius_vMF(y = y, xs = xs, xe = xe, 
              start = mean, 
              type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1, intercept = intercept, ...)

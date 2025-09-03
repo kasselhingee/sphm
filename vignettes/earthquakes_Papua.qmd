@@ -564,7 +564,7 @@ mod_SvMF <- mobius_SvMF(s4df_clean %>%
                         as.matrix(),
                       xs = NULL, 
                       xe = xestd %>% as.matrix(),
-                      type = "Shogo",
+                      type = "LinEuc",
                       G01behaviour = "free")
 mod_SvMF$k
 mod_SvMF$AIC
@@ -575,9 +575,9 @@ mod_SvMF$DoF
 # SI Figure: Random Starts
 ```{r}
 restarts <- pbapply::pblapply(1:100, function(seed){
-  # randomly generates a Kassel-form link
+  # randomly generates a SpEuc-form link
   start <- rmnlink_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)
-  # convert to Shogo form:
+  # convert to LinEuc form:
   set.seed(seed+1)
   Qe <- mclust::randomOrthogonalMatrix(ncol(xestd)+1, 5-1)
   bigQe <- cbind(0, rbind(0, Qe))
@@ -591,7 +591,7 @@ restarts <- pbapply::pblapply(1:100, function(seed){
                           as.matrix(),
                       xs = NULL, 
                       xe = xestd %>% as.matrix(),
-                      type = "Shogo",
+                      type = "LinEuc",
                       G01behaviour = "free",
                       mean = start)
 }, cl = 2)
@@ -1149,7 +1149,7 @@ First get best vMF model
 mod_vMF <- mobius_vMF(y = mod_SvMF$y,
                      xs = NULL, 
                      xe = mod_SvMF$xe,
-                     type = "Shogo")
+                     type = "LinEuc")
 mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){mobius_vMF_restart(mod_vMF, seed)})
 lapply(mod_vMF_restarts, "[[", "AIC") %>%
   unlist() %>%
@@ -1169,12 +1169,12 @@ getlikR <- function(y){
   mod1 <- mobius_vMF(y,
                      xs = NULL, 
                      xe = mod_vMF$xe,
-                     type = "Shogo",
+                     type = "LinEuc",
                      start = mod_vMF$est)
   mod2 <- withCallingHandlers({mobius_SvMF(y,
                       xs = NULL, 
                       xe = mod_vMF$xe,
-                      type = "Shogo",
+                      type = "LinEuc",
                       G01behaviour = "free",
                       mean = mod_SvMF$mean,
                       k = mod_SvMF$k,
@@ -1253,7 +1253,7 @@ Bests <- pbapply::pblapply(1:1000, function(seed){
   newmod <- withCallingHandlers({mobius_SvMF(y,
                       xs = NULL, 
                       xe = mod_SvMF$xe,
-                      type = "Shogo",
+                      type = "LinEuc",
                       G01behaviour = "free",
                       mean = mod_SvMF$mean,
                       k = mod_SvMF$k,

@@ -1,11 +1,14 @@
 #' Calculate the Mean Given Covariates
 #' @description
 #' Implements mean link:
-#' \deqn{\mu_{H}(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  \frac{B_e(Q_e[,-1]^\top x_e\right)}{Qe[,1]^\top x_e + c_e}.}
+#' \deqn{\mu(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  \frac{B_e(Q_e[,-1]^\top x_e\right)}{Qe[,1]^\top x_e + c_e}.}
 #' @param xs A matrix of row-vectors of the spherical covariate.
 #' @param xe A matrix of row-vectors of the Euclidean covariates.
 #' @param param Parameters of the mean link. As an object of class "mnlink_Omega" or "mnlink_cann". See [`mnlink_params`]. 
 #' @details
+#' This general form of the mean link encompases the primary form of the mean link in "Regression for spherical responses with linear and spherical covariates using a scaled link function" and a more general form that uses the a stereographic-like projection of the Euclidean covariates.
+#' See [`mnlink_params`] for further details.
+#'
 #' If `param` is of class "mnlink_Omega" then means are computed as
 #' \deqn{\mu(x) = \frac{(1-\|\tilde{y}(x)\|^2) P[,1] + 2 \tilde{y}(x)}{1+\|\tilde{y}(x)\|^2}}
 #' where

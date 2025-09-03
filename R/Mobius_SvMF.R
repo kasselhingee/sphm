@@ -232,6 +232,8 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
                           xerot = attr(preplist$xe, "std_rotation"), 
                           xecenter = attr(preplist$xe, "std_center"),
                           onescovaridx = preplist$onescovaridx)
+  ### Stabilise sign of Euc est based on ce ###
+  if (isTRUE(est$ce < 0)){est <- Euc_signswitch(est)}
 
   #put G0 into same coordinates as y
   G0 <- estparamlist$G0

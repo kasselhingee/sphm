@@ -135,6 +135,8 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
                           xerot = attr(preplist$xe, "std_rotation"), 
                           xecenter = attr(preplist$xe, "std_center"),
                           onescovaridx = preplist$onescovaridx)
+  ### Stabilise sign of Euc est based on ce ###
+  if (isTRUE(est$ce < 0)){est <- Euc_signswitch(est)}
   
   # DoF
   DoF <- mobius_DoF(p, length(est$qs1), length(est$qe1), fix_qs1 = fix_qs1, fix_qe1 = fix_qe1) + 

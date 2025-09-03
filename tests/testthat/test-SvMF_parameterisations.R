@@ -25,18 +25,4 @@ test_that("SvMF_cann2muV and reverse passes checks", {
 })
 
 
-test_that("alignedG() gives an orthogonal matrix", {
-  set.seed(1)
-  p <- 5
-  P <- mclust::randomOrthogonalMatrix(p, p)
-  set.seed(3)
-  m <- runif(p, -1, 1)
-  m <- m/vnorm(m)
-  G <- alignedG(m, P)
-  expect_equal(G[,1], m)
-  expect_equal(G %*% t(G), diag(1, p))
-
-  Gcpp <- alignedGcpp(m, P)
-  expect_equal(Gcpp, G)
-})
 

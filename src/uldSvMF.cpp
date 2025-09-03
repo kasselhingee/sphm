@@ -1,8 +1,9 @@
 #include "uldSvMF.h"
 #include <Rcpp.h>
 
-//' Helper function Bessel I approximation from BesselI::besselIasym()
-//' which should be from Asymptotic expansion of Bessel I_nu(x) function   x -> oo
+//' @noRd
+//' @description Helper function Bessel I approximation from BesselI::besselIasym()
+//' which is from the asymptotic expansion of Bessel I_nu(x) function   x -> infinity
 //'       by Abramowitz & Stegun (9.7.1), p.377 
 //' I_a(z) = exp(z) / sqrt(2*pi*z) * f(z,..)  where
 //'   f(z,..) = 1 - (mu-1)/ (8*z) + (mu-1)(mu-9)/(2! (8z)^2) - ...
@@ -11,6 +12,7 @@
 //' This is useful for large x
 //' @param x is the vMF concentration parameter
 //' @param nu is such that nu + 1 = d/2, where d is the ambient dimension of the sphere.
+//' @param order The expansion order to use.
 // [[Rcpp::export]]
 a1type besselIasym(const a1type& x, const double & nu, int order, bool log_result = true) {
   // Constants
@@ -44,13 +46,17 @@ a1type besselIasym(const a1type& x, const double & nu, int order, bool log_resul
   }
 }
 
+//' @noRd
+//' @title Approximation of Bessel I function for small x.
+//' @description 
 //' For small x (i.e. concentration) Hornik and Grun use simple relation by Schou 1979 (and others)
 //' for approximating the derivative of log(const(k)) but I want a coarse idea of the value here.
 //' I'm going to use the series 10.25.2 from Nist: `https://dlmf.nist.gov/10.25#E2`
 //' This looks actually to be just a solution to equation defining the modified Bessel function.
 //' (x/2)^nu sum_i{1/i! 1/gamma(nu + i + 1) (x/2)^(2i)}.
-//' nu and order are NOT differentiable
-//' @param order Maximum order of series to compute
+//' @param x is the vMF concentration parameter
+//' @param nu is such that nu + 1 = d/2, where d is the ambient dimension of the sphere.
+//' @param order The expansion order to use.
 // [[Rcpp::export]]
 a1type besselItrunc(const a1type& x, const double & nu, int order, bool log_result = true) {
     a1type sum = 0.0;

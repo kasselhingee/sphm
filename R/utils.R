@@ -36,10 +36,10 @@ iSp=function(y){
   else {return(out)}
 }
 
-
-#' Cayley Transform Reparameterisation
+#' @noRd
+#' @title Cayley Transform
 #' @description Map the upper triangle of a skew-symmetric matrix to an
-#' orthogonal matrix with (non-negative?) determinant.
+#' orthogonal matrix with (non-negative) determinant.
 #' @examples
 #' x <- 1:3
 cayley <- function(x){

@@ -2,7 +2,7 @@
 #define FUNCTION_MAP
 
 #include <sphm_forward.h>
-#include "prelimS2S.h"
+#include "mobius_vMF.h"
 #include "Omega.h"
 
 // defining a function map that will convert string names to a pointer to the function

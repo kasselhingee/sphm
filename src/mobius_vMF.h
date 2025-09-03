@@ -1,5 +1,5 @@
-#ifndef PRELIMS2S
-#define PRELIMS2S
+#ifndef MOBIUSVMF
+#define MOBIUSVMF
 
 
 #include <scorematchingad_forward.h> //includes <RcppEigenForward.h>

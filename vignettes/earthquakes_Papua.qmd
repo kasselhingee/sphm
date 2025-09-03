@@ -1211,7 +1211,7 @@ null_likRs <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
   y_ld <- rMobius_SvMF(xs = NULL, 
                    xe = mod_vMF$xe,
-                   mnparam = mod_vMF$mean,
+                   mean = mod_vMF$mean,
                    k = mod_vMF$k,
                    a = rep(1, 5),
                    G0 = diag(1,5))
@@ -1246,7 +1246,7 @@ Bests <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
   y <- rMobius_SvMF(xs = NULL, 
                    xe = mod_SvMF$xe,
-                   mnparam = mod_SvMF$mean,
+                   mean = mod_SvMF$mean,
                    k = mod_SvMF$k,
                    a = mod_SvMF$a,
                    G0 = mod_SvMF$G0)[,-6]

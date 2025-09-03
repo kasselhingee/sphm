@@ -1,0 +1,5 @@
+This directory contains an R package for running the regression model with SvMF error distribution in the manuscript titled "Regression for spherical responses with linear and spherical covariates using a scaled link function".
+
+The package uses automatic differentiation via the CppAD C++ package, which is accessed using the scorematchingad R package. To use automatic differentiation, functions must be written in C++ and use arguments that are special numeric classes for automatic differentiation. These functions are all in the ./src/ directory. The special classes are named by the `scorematchingad` package as a1type (real-valued number for automatic differentiation), veca1 (vector of a1type), mata1 (matrix of a1type).
+
+

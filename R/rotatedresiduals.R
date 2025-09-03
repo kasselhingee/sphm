@@ -30,8 +30,14 @@ JuppRmat <- function(y, base){
   (y+base) %*% t(y+base)/(1+drop(y%*%base)) - diag(1, length(y))
 }
 
-# Rotation of tangent vectors from base to y
-# if -start = end then a reflection matrix in the `end` direction is created
+#' @title The Amaral et al rotation matrix
+#' @description The rotation matrix from Amaral et al (2007, Lemma 2) is very convenient for performing parallel transport on the sphere. When applied to a tangent vector at `start` performs parallel transport along geodesics. When applied to the starting location `start`, it returns the end locaton `end`.
+#' @param start Starting location as a unit vector
+#' @param end End location as a unit vector.
+#' @return A matrix
+#' @details
+#'  if `-start` = `end` then a reflection matrix in the `end` direction is returned.
+#' @export
 rotationmat_amaral  <- function(start, end){ #assumes a and b are unit vectors
   ab <- (end %*% start)[[1]]
   if (ab > 1){ab <- min(ab, 1)}

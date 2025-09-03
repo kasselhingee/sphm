@@ -26,9 +26,8 @@
 #' 
 NULL
 
-cannS2S <- function(P, Q, B, check = TRUE){
-  mnlink_cann(P = P, Bs = B, Qs = Q)
-}
+#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mnlink()`] using the canonical form.
+#' @export
 mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL, check = TRUE){
   stopifnot(is.matrix(P))
   obj <- list(P = P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
@@ -39,10 +38,13 @@ mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL
   if (check){mnlink_cann_check(obj)}
   return(obj)
 }
+
+#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mnlink()`] using the canonical form.
+#' @export
 as_mnlink_cann <- function(obj){
   if (inherits(obj, "mnlink_cann")){return(obj)}
   if (inherits(obj, "mnlink_Omega")){return(Omega2cann(obj, check = FALSE))}
-  if (!inherits(obj, "list")){stop("obj isn't a cannS2S, OmegaS2S or a list.")}
+  if (!inherits(obj, "list")){stop("obj isn't a mnlink_cann or mnlink_Omega class, or a list.")}
   if ("P" %in% names(obj)){return(do.call(mnlink_cann, c(obj, list(check = FALSE))))}
   if ("p1" %in% names(obj)){return(Omega2cann(do.call(mnlink_Omega, c(obj, list(check = FALSE))), check = FALSE))}
   return(obj)
@@ -87,10 +89,8 @@ mnlink_cann_vec <- function(obj){
 #' @param ce The value of \eqn{c_e}.
 NULL
 
-OmegaS2S <- function(p1, q1, Omega, check = TRUE){
-  mnlink_Omega(p1 = p1, qs1 = q1, Omega = Omega, check = check)
-}
-
+#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mnlink()`] using the Omega form.
+#' @export
 mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("numeric", 0), ce = vector("numeric", 0), check = TRUE){
   if (is.null(qs1)){qs1 <- vector("numeric", 0)}
   if (is.null(qe1)){qe1 <- vector("numeric", 0)}
@@ -109,18 +109,20 @@ mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("nu
   return(obj)
 }
 
+#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mnlink()`] using the Omega form.
+#' @export
 as_mnlink_Omega <- function(obj){
   if (inherits(obj, "mnlink_cann")){return(cann2Omega(obj, check = FALSE))}
   if (inherits(obj, "mnlink_Omega")){return(obj)}
-  if (!inherits(obj, "list")){stop("obj must be either a cannS2S, OmegaS2S or list.")}
+  if (!inherits(obj, "list")){stop("obj must be either a mnlink_cann or mnlink_Omega class, or a list.")}
   if ("P" %in% names(obj)){return(cann2Omega(do.call(mnlink_cann, c(obj, list(check = FALSE))), check = FALSE))}
   if ("p1" %in% names(obj)){return(do.call(mnlink_Omega, c(obj, list(check = FALSE))))}
   return(obj)
 }
 
 #' @noRd
-#' @description Converts OmegaS2S parameterisation to a vector.
-#' @param obj An OmegaS2S parameter object.
+#' @description Converts Omega parameterisation to a vector.
+#' @param obj An `mnlink_Omega` parameter object.
 mnlink_Omega_vec <- function(obj){
   stopifnot(inherits(obj, "mnlink_Omega"))
   p1 <- obj$p1
@@ -165,16 +167,9 @@ mnlink_Omega_unvec <- function(vec, p, qe = 0, check = TRUE){
            check = check)
 }
 
-#' For converting between parameterisations of the link function
-#' @examples
-#' P <- diag(1, 3)
-#' Q <- rbind(diag(1, 3), 0, 0)
-#' B <- diag(c(0.9, 0.2))
-#' param_cann2omega(P, Q, B)
-#' @details
-#' 
-#' # Warning
-#' Sign of columns of P and Q are lost by this transformation.
+#' @noRd
+#' @describeIn mnlink_params For converting between parameterisations of the link function.
+#' Sign of columns of P and Q are lost by the `cann2Omega()` transformation.
 #' @export
 cann2Omega <- function(obj, check = TRUE){
   if (check){mnlink_cann_check(obj)}
@@ -332,6 +327,7 @@ mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothne
   }
   return(checkvals)
 }
+
 # if the values are close to satisfying the constraints, it might make sense to project and scale p1 and q1 to satisfy the constraints
 # will use canonical parameterisation to do this because orthogonality of the columns will make for easier projections
 Omega_proj <- function(obj){
@@ -383,9 +379,14 @@ P_signswitch <- function(obj, cols){
 }
 
 #' @title Randomly generate mean link parameters
+#' @description Uniformly generates orthogonal matrices `Qs`, `Qe` and `P`.
+#' The diagonal elements of `Bs` and `Be` are drawn uniformly from between `0` and `1`.
+#' The parameter `ce` is generated uniformly from between `0` and `1`.
+#' @param preseed Before the generation of each parameter matrix, the `seed` is incremented by `1`, starting from `preseed`.
+#' @param p The length of response vectors
+#' @param qs The length of spherical covariate vectors
+#' @param qe The length of Euclidean covariate vectors
 #' @return A `mnlink_cann` object.
-#' @details
-#' Place all the parameters in the environment by running list2env(obj, envir = environment())
 #' @export
 rmnlink_cann <- function(p = 3, qs = 5, qe = 4, preseed = 0){
   stopifnot((qe==0) | (qe >= p-1))
@@ -411,7 +412,10 @@ rmnlink_cann <- function(p = 3, qs = 5, qe = 4, preseed = 0){
   return(paramobj)
 }
 
-# for testing only, puts all the values in the environment
+#' @noRd
+#' @description To simplify testing places result of `rmnlink_cann()` into the calling environment.
+#' @details
+#' Places all the parameters in the environment by running list2env(obj, envir = environment())
 rmnlink_cann__place_in_env <- function(p = 3, qs = 5, qe = 4, preseed = 0){
   paramobj <- rmnlink_cann(p = p, qs = qs, qe = qe, preseed = preseed)
   target_env <- if (is.null(environment(-1))) .GlobalEnv else environment(-1)

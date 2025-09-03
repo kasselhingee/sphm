@@ -1,12 +1,20 @@
 #' @useDynLib sphm, .registration = TRUE
 #' @importFrom Rcpp evalCpp
 
-
-vnorm2=function(x) sum(x^2)
+#' @title Euclidean norm
+#' @description Returns the Euclidean norm (square root of the sum of squares) of a vector. `vnorm2()` returns the square of the Euclidean norm.
+#' @param x a vector
+#' @return A single numeric value.
+#' @export
 vnorm=function(x) sqrt(vnorm2(x))
+
+#' @rdname vnorm
+#' @export
+vnorm2=function(x) sum(x^2)
 
 #' Stereographic projection
 #' @param x is a matrix of row vectors
+#' @noRd
 Sp=function(x) {
   if (is.vector(x)){x <- matrix(x, nrow = 1)}
   # detect -e1 vectors, remembering the x may be in a disc
@@ -44,6 +52,11 @@ cayley <- function(x){
   return(P)
 }
 
+#' @title 'North pole' vector
+#' @description The vector \eqn{(1,0,0,...)^\top}{(1,0,0,...)} for given dimension.
+#' @param p The dimension of the space/length of the vector.
+#' @return A vector of length `p`.
+#' @export
 nthpole <- function(p){c(1, rep(0, p-1))}
 
 #' Standardise sign of columns of a matrix to have positive first element, or unchanged sign if 0 first element

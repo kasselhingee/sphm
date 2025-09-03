@@ -165,7 +165,16 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "Kassel", f
   return(niceout)
 }
 
-# Degrees of freedom of the mean link
+#' @title Degrees of freedom of the Mobius mean link function
+#' @description The parameters of the Mobius mean link function [`mnlink()`] have a number of constraints.
+#' This function incorporates these constraints to obtain the total degrees of freedom of the parameters.
+#' @param p The length of response vectors
+#' @param qs The length of spherical covariate vectors
+#' @param qe The length of Euclidean covariate vectors
+#' @param fix_qs1 Whether the first column of `Qs` is fixed (i.e. not estimated and not free).
+#' @param fix_qe1 Whether `ce` and the first column of `Qe` is fixed (i.e. not estimated and not free).
+#' @return An integer
+#' @export
 mobius_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
   if (qs == 0){fix_qs1 <- FALSE} #ignore fix_qs1
   if (qe == 0){fix_qe1 <- FALSE} #ignore fix_qs1

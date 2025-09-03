@@ -556,7 +556,7 @@ lapply(restarts, "[[", "AIC") %>%
 
 ## Check Restart of SvMF
 ```{r}
-mod2 <- sphm:::optim_constV(y = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
+mod2 <- sphm:::mobius_SvMF(y = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
        xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
        xe = xestd %>% as.matrix(),
        G01behaviour = "free",
@@ -565,7 +565,7 @@ mod2 <- sphm:::optim_constV(y = fulldf %>% select(starts_with("Y")) %>% as.matri
        k = mod$k,
        G0 = mod$G0,
        G0reference = mod$G0,
-       fix_qs1 = FALSE, type = "Shogo")
+       fix_qs1 = FALSE, type = "Shogo", doprelim = FALSE)
 ```
 
 

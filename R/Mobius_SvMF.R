@@ -21,17 +21,32 @@
 #' @param G0 A `p x p` orthonormal matrix specifying the starting guess of the axes of the SvMF distribution. G0 should have positive determinant because in the estimatino routine G0 or parts of G0 are representented using Cayley transforms.
 #' @param G0reference A `p x p` rotation matrix specifying a set of coordinates to represent G0 in for the estimation. Ideally the columns of `G0reference` will be close to the best `G0` because the Cayley transform representation has the best performance when applied to matrices close to the identity.
 #' @param G01behaviour "p1" identifies `G0[,1]` with `p1`. "fixed" fixes `G0[,1]` to its initial value. "free" allows `G0[,1]` to be estimated freely.
+#' @param doprelim When `FALSE` the preliminary von Mises-Fisher regression and subsequent moment estimation of `a` and `G0` is omitted. The provided parameters are used as the initial values for an optimisation of all parameters of the SvMF regression all together using [`nloptr::nloptr()`].
 #' @param ... Named optional arguments passed as a list to the `opts` argument of [`nloptr::nloptr()`].
 #' @details
 #' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
 #' No standardisation is performed.
 #' @export
-mobius_SvMF <- function(y, xs, xe, mean = NULL, k = NULL, a = NULL, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, ...){
+mobius_SvMF <- function(y, xs, xe, mean = NULL, k = NULL, a = NULL, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "Shogo", fix_qs1 = FALSE, fix_qe1 = (type == "Shogo"), intercept = TRUE, doprelim = TRUE, ...){
+
+  if (doprelim){
   preest <- mobius_SvMF_partransport_prelim(y, xs, xe, 
                                             mean = mean,
                                             G0 = G0, G01behaviour = G01behaviour, 
                                             type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
                                             intercept = intercept, ...)
+  } else {
+     stopifnot(!is.null(mean))
+     stopifnot(!is.null(k))
+     stopifnot(!is.null(a))
+     stopifnot(!is.null(G0))
+     preest <- list(
+       mean = mean,
+       k = k,
+       a = a,
+       G0 = G0)
+  }
+
   finalest <- optim_constV(y, xs, xe, 
                            mean = preest$mean,
                            k = if(!is.null(k)){k}else{preest$k},

@@ -9,4 +9,5 @@ vignettes/*.tex
 vignettes/*.pdf
 vignettes/*.log
 vignettes/*.aux
+SphRegByMobiusLink.Rproj
 

@@ -5,33 +5,8 @@ Omega_constraints <- function(vec, p, qe = 0L) {
     .Call(`_sphm_Omega_constraints`, vec, p, qe)
 }
 
-#' The unnormalised log-likelihood of a SvMF Sphere-Sphere Regression with Mobius Mean Link and Variance Axes Aligned with P.
-#' @description Three functions in a format compatible with `tapefun`. A difficulty is that the P matrix needs and SVD to get out of the Omega parameterisation so two functions for alternating between optimising the mean (with `kappa` and `a` fixed, and `G` aligned to a fixed `P`) and optimising a, with the mean fixed and concentration fixed, and updating `P` inbetween.
-#' @param vec For `_alignedG_mean`: A parameter vector specifying the mean via the Omega vectorisation.
-#' @param dyn For `_alignedG_mean`: A p+1+p*p length vector of kappa, then a1, a2, ..., then P as a vector of stacked columns.
-#' @param p_in The dimension p
-#' @param yx The observations and covariates cbind together as row vectors
-ull_S2S_alignedG_mean <- function(vec, dyn, p_in, yx) {
-    .Call(`_sphm_ull_S2S_alignedG_mean`, vec, dyn, p_in, yx)
-}
-
-#' @param vec For `_alignedG_a`: A p-2 vector of log(a3), log(a4), log(a5), ... log(a2) will be calculated as the negative sum of the others to satisfy the prod=1 constraint on a2,...
-#' @param dyn For `_alignedG_a`: A vector of kappa then a1
-#' @param pOmegavec For `_alignedG_a`: A vector of p then the Omega vectorisation, then `as.vector(P)`. Due to an SVD to extract P from Omega vec, taping the dependence on Omega would be unreliable. Furthermore R's SVD routine seems more reliable than Eigen's.
-ull_S2S_alignedG_a <- function(vec, dyn, pOmegavecP, yx) {
-    .Call(`_sphm_ull_S2S_alignedG_a`, vec, dyn, pOmegavecP, yx)
-}
-
-#' @param k For `_alignedG_k`: A parameter vector specifying the concentration k
-#' @param dyn For `_alignedG_k`: A p*q + p + p*p length vector of Omegavec, then a1, a2, ..., then P as a vector of stacked columns.
-#' The P and Omega are provided seperately because of the non-smooth nature of SVD.
-ull_S2S_alignedG_k <- function(k, dyn, p_in, yx) {
-    .Call(`_sphm_ull_S2S_alignedG_k`, k, dyn, p_in, yx)
-}
-
-#' @describeIn ull_S2S_alignedG_mean Aligns the columns of the Mobius-link rotation matrix `P` for the mean to the columns of G. Note that the first column of the returned G is the given mean. Returns the matrix G.
-alignedGcpp <- function(m, P) {
-    .Call(`_sphm_alignedGcpp`, m, P)
+mnlink_cpp <- function(xs, xe, vec, p) {
+    .Call(`_sphm_mnlink_cpp`, xs, xe, vec, p)
 }
 
 cayleyTransform <- function(A) {
@@ -69,10 +44,6 @@ ull_S2S_constV_forR <- function(y, xs, xe, omvec, k, a1, aremaining, G0) {
 
 tape_ull_S2S_constV_nota1 <- function(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour) {
     .Call(`_sphm_tape_ull_S2S_constV_nota1`, omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour)
-}
-
-mnlink_cpp <- function(xs, xe, vec, p) {
-    .Call(`_sphm_mnlink_cpp`, xs, xe, vec, p)
 }
 
 #' Preliminary Objective in the style of the `generalfunction` class:
@@ -180,12 +151,5 @@ uldSvMF_muV <- function(y, k, m, a1, V) {
 #' @return a single value
 besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
     .Call(`_sphm_besselImixed`, x, nu, threshold, order, log_result)
-}
-
-#' @param Vvec Vectorised form of matrix V ala vech
-#' @param yk vector of y values, then the k. Will be dynamic parameters because the 'y' may be residuals and be updated frequently
-#' @param a1m The tuning parameter a1 and the mean, which will often be the northpole
-ull_SvMF_V <- function(Vvec, yk, a1m) {
-    .Call(`_sphm_ull_SvMF_V`, Vvec, yk, a1m)
 }
 

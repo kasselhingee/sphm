@@ -311,7 +311,7 @@ test_that("MLE with G01 free, p=5", {
   # check Gstar by checking angle between estimated and true axes
   expect_equal(axis_distance(acos(colSums(est1$G0 * G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
   # check likelihood returns
-  externalll <- colSums(dS2S_constV(y_ld[, 1:p], x$xs, x$xe, est1$mean, est1$k, est1$a, est1$G0))
+  externalll <- colSums(ldMobius_SvMF(y_ld[, 1:p], x$xs, x$xe, est1$mean, est1$k, est1$a, est1$G0))
   expect_equal(externalll[["R"]], est1$lLik)
   
   ## now starting optimisation away from starting parameters ##

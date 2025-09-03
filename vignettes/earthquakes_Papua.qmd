@@ -1190,13 +1190,13 @@ getlikR <- function(y){
          vMF = mod1,
          SvMF = mod2))
   }
-  lLik1 <- sphm:::dS2S_constV(mod1$y, xs = NULL, xe =mod1$xe,
+  lLik1 <- sphm:::ldMobius_SvMF(mod1$y, xs = NULL, xe =mod1$xe,
               mean = mod1$est,
               k = mod1$k,
               a = rep(1, 5),
               G0 = mod2$G0) %>%
     colSums()
-  lLik2 <- sphm:::dS2S_constV(mod2$y, xs = NULL, xe =mod2$xe,
+  lLik2 <- sphm:::ldMobius_SvMF(mod2$y, xs = NULL, xe =mod2$xe,
               mean = mod2$mean,
               k = mod2$k,
               a = mod2$a,

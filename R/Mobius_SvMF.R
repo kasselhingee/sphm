@@ -186,7 +186,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   fullparam <- c(meanpars, nlopt$solution[-(1:length(conprep$x0))])
 
   
-  estparamlist <- S2S_constV_nota1_fromvecparamsR(fullparam, p, qs, qe, 
+  estparamlist <- Mobius_SvMF_partan_nota1_fromvecparamsR(fullparam, p, qs, qe, 
                                                   referencecoords = G0reference,
                                                   G01behaviour = G01behaviour,
                                                   G01 = preplist$G0[,1])

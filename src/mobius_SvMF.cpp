@@ -130,7 +130,7 @@ mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
 //' @param G0 are the orientation axes of SvMF in cannonical coordinate (p x p matrix). Ideally G0 is close to the referencecoords axes. G0 must be a rotation matrix (det > 0) so that the Cayley transform representation works.
 //' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms. It is best if referencecoords is close to the best G0 (so rG0 is close the identity) and it will fail if `G01` is the antepode of `referencoords[,1]`.
 // [[Rcpp::export]]
-veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 G0, matd referencecoords, std::string G01behaviour){
+veca1 Mobius_SvMF_partan_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 G0, matd referencecoords, std::string G01behaviour){
   int p = aremaining.size() + 1;
   // check G01behaviour
   if ((G01behaviour != "p1") && (G01behaviour != "fixed") && (G01behaviour != "free")){Rcpp::stop("G01behaviour not understood");}
@@ -180,7 +180,7 @@ veca1 S2S_constV_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, ma
 // @param G01behaviour the behaviour of G01 ('fixed', 'free' or identified with 'p1')
 // @param G01 First column of G01 - only needed in the G01behaviour == "fixed" situation to recover full parameter set
 // @returns A tuple of the mean link parameters (vectorised Omega form), concentration, scales a (omitting first a[1] that is fixed), and SvMF orientation matrix G0.
-std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, vecd G01 = vecd(0)) {
+std::tuple<veca1, a1type, veca1, mata1> Mobius_SvMF_partan_nota1_fromvecparams(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, vecd G01 = vecd(0)) {
   // check G01behaviour
   if ((G01behaviour != "p1") && (G01behaviour != "fixed") && (G01behaviour != "free")){Rcpp::stop("G01behaviour not understood");}
 
@@ -228,12 +228,12 @@ std::tuple<veca1, a1type, veca1, mata1> S2S_constV_nota1_fromvecparams(const vec
 
 //export the reverse function
 // [[Rcpp::export]]
-Rcpp::List S2S_constV_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, Rcpp::Nullable<vecd> G01 = R_NilValue) {
+Rcpp::List Mobius_SvMF_partan_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, Rcpp::Nullable<vecd> G01 = R_NilValue) {
   vecd G01_;
   if (G01.isNotNull()){G01_ = Rcpp::as<vecd>(G01);}
   else {G01_ = vecd();}
 
-  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour, G01_);
+  auto result = Mobius_SvMF_partan_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour, G01_);
   veca1 omvec = std::get<0>(result);
   a1type k = std::get<1>(result);
   veca1 aremaining = std::get<2>(result);
@@ -271,14 +271,14 @@ pADFun tape_uld_Mobius_SvMF_partran_nota1(veca1 omvec, a1type k, a1type a1, veca
 
 
   // Get all parameters except a1 into a vector
-  veca1 mainvec = S2S_constV_nota1_tovecparams(omvec, k, aremaining, G0, referencecoords, G01behaviour);
+  veca1 mainvec = Mobius_SvMF_partan_nota1_tovecparams(omvec, k, aremaining, G0, referencecoords, G01behaviour);
   veca1 a1vec(1);
   a1vec(0) = a1;
 
   // tape with main vector and a1 as a dynamic
   CppAD::Independent(mainvec, a1vec);
   // split mainvec into parts, overwriting passed arguments
-  auto result = S2S_constV_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour, tapeG01);//final argument only used if G01behaviour == "fixed"
+  auto result = Mobius_SvMF_partan_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour, tapeG01);//final argument only used if G01behaviour == "fixed"
   omvec = std::get<0>(result);
   k = std::get<1>(result);
   aremaining = std::get<2>(result);

@@ -15,12 +15,12 @@ test_that("to and from vecparams functions correctly", {
   
   # G01 identified with p1
   G01_p1 <- cbind(omegapar$p1, -JuppRmat(G0[,1], omegapar$p1) %*% G0[,-1])
-  vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+  vecparams <- Mobius_SvMF_partan_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                             aremaining = a[-1],
                                             G0 = G01_p1,
                                             referencecoords = referencecoords,
                                             G01behaviour = "p1")
-  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "p1"),
+  expect_equal(Mobius_SvMF_partan_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "p1"),
                list(omvec = mnlink_Omega_vec(omegapar),
                     k = k,
                     aremaining = a[-1],
@@ -29,13 +29,13 @@ test_that("to and from vecparams functions correctly", {
   vecparams_p1 <- vecparams
   
   # G01 fixed
-  vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+  vecparams <- Mobius_SvMF_partan_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                             aremaining = a[-1],
                                             G0 = G0,
                                             referencecoords = referencecoords,
                                             G01behaviour = "fixed")
   expect_equal(length(vecparams), veclength)
-  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "fixed", G01 = G0[,1]),
+  expect_equal(Mobius_SvMF_partan_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "fixed", G01 = G0[,1]),
                list(omvec = mnlink_Omega_vec(omegapar),
                     k = k,
                     aremaining = a[-1],
@@ -43,13 +43,13 @@ test_that("to and from vecparams functions correctly", {
   vecparams_fixed <- vecparams
   
   # G01 free
-  vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+  vecparams <- Mobius_SvMF_partan_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                             aremaining = a[-1],
                                             G0 = G0,
                                             referencecoords = referencecoords,
                                             G01behaviour = "free")
   expect_equal(length(vecparams), veclength + p-1)
-  expect_equal(S2S_constV_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "free"),
+  expect_equal(Mobius_SvMF_partan_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "free"),
                list(omvec = mnlink_Omega_vec(omegapar),
                     k = k,
                     aremaining = a[-1],
@@ -102,7 +102,7 @@ test_that("MLE with p1 = G01", {
   set.seed(7)
   referencecoords <- mclust::randomOrthogonalMatrix(p, p)
   referencecoords[, p] <- det(referencecoords) * referencecoords[,p]
-  vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+  vecparams <- Mobius_SvMF_partan_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                             aremaining = a[-1],
                                             G0 = G0, 
                                             referencecoords = referencecoords,
@@ -124,7 +124,7 @@ test_that("MLE with p1 = G01", {
   G0_other[, p] <- det(G0_other) * G0_other[,p]
   G0stardifferent <- -JuppRmat(G0_other[,1], omegapar$p1) %*% G0_other[,-1]
   badll <- sum(ulltape$forward(0, 
-                               S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+                               Mobius_SvMF_partan_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                                             aremaining = a[-1], 
                                                             G0 = cbind(omegapar$p1, G0stardifferent),
                                                             referencecoords = referencecoords,
@@ -190,7 +190,7 @@ test_that("MLE with G01 fixed", {
   set.seed(7)
   referencecoords <- mclust::randomOrthogonalMatrix(p, p)
   referencecoords[, p] <- det(referencecoords) * referencecoords[,p]
-  vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+  vecparams <- Mobius_SvMF_partan_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                             aremaining = a[-1],
                                             G0 = G0, 
                                             referencecoords = referencecoords,
@@ -212,7 +212,7 @@ test_that("MLE with G01 fixed", {
   G0_other[, p] <- det(G0_other) * G0_other[,p]
   G0stardifferent <- -JuppRmat(G0_other[,1], G0[,1]) %*% G0_other[,-1]
   badll <- sum(ulltape$forward(0, 
-                               S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+                               Mobius_SvMF_partan_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                                             aremaining = a[-1], 
                                                             G0 = cbind(G0[,1], G0stardifferent),
                                                             referencecoords = referencecoords,
@@ -276,7 +276,7 @@ test_that("MLE with G01 free, p=5", {
   set.seed(7)
   referencecoords <- mclust::randomOrthogonalMatrix(p, p)
   referencecoords[, p] <- det(referencecoords) * referencecoords[,p]
-  vecparams <- S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+  vecparams <- Mobius_SvMF_partan_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                             aremaining = a[-1],
                                             G0 = G0, 
                                             referencecoords = referencecoords,
@@ -297,7 +297,7 @@ test_that("MLE with G01 free, p=5", {
   G0_other <- mclust::randomOrthogonalMatrix(p, p) #axes around a random location
   G0_other[, p] <- det(G0_other) * G0_other[,p]
   badll <- sum(ulltape$forward(0, 
-                               S2S_constV_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
+                               Mobius_SvMF_partan_nota1_tovecparams(omvec = mnlink_Omega_vec(omegapar), k = k,
                                                             aremaining = a[-1], 
                                                             G0 = G0_other,
                                                             referencecoords = referencecoords,

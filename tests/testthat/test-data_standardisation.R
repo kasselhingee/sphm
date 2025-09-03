@@ -16,11 +16,11 @@ test_that("standardise spherical data gives data with correct moments", {
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
   
-  mat1 <- standardise_mat(y)
+  mat1 <- secondmoment_mat(y)
   y2 <- standardise_sph(y, tG = t(mat1))
   expect_equal(colMeans(y2)[-1], rep(0, p-1))
   # standardisation should do nothing up to sign:
-  expect_equal(standardise_mat(y2), diag(diag(standardise_mat(y2))), ignore_attr = TRUE)
+  expect_equal(secondmoment_mat(y2), diag(diag(secondmoment_mat(y2))), ignore_attr = TRUE)
   
   # undo standardisation
   expect_equal(destandardise_sph(y2, t(mat1)), y)

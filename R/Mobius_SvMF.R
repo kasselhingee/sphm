@@ -370,7 +370,15 @@ undo_partransport <- function(y, ymean, G01){
   return(yrot)
 }
 
-# log-density of each row of y according to a mobius_SvMF regression model
+#' @title log-density of data for a given SvMF regression
+#' @param mean Parameter object (see [`mnlink_params`]) specifying mean link.
+#' @param k Concentration of the SvMF error distribution
+#' @param a Scales of the SvMF error distribution
+#' @param G0 The base location of parallel transport along with axes \eqn{\gamma_{0j}}, \eqn{j=2,...,p}.
+#' @inheritParams Mobius_SvMF
+#' @description The log-density of each row of `y` for a given SvMF regression. Two methods are used. The approximate method used in the optimisation of all parameters (labelled `Cpp`) and an exact log-density using highly accurate Bessel function implementations from base `R` (labelled `R`).
+#' @return A matrix with two columns and the same number of rows as `y`.
+#' @export
 dS2S_constV <- function(y, xs, xe, mean, k, a, G0){
   ymean <- mnlink(xs = xs, xe = xe, param = mean)
   diff <- lvMFnormconst_approx(k, ncol(y)) - lvMFnormconst(k, ncol(y))

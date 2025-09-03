@@ -1150,7 +1150,7 @@ mod_vMF <- mobius_vMF(y = mod_SvMF$y,
                      xs = NULL, 
                      xe = mod_SvMF$xe,
                      type = "Shogo")
-mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){sphm:::mobius_vFM_restart(mod_vMF, seed)})
+mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){sphm:::mobius_vMF_restart(mod_vMF, seed)})
 lapply(mod_vMF_restarts, "[[", "AIC") %>%
   unlist() %>%
   tibble::enframe("seed", "AIC") %>%

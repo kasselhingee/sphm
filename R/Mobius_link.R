@@ -1,7 +1,7 @@
 #' Calculate the Mean Given Covariates
 #' @description
 #' Implements mean link:
-#' \deqn{\mu(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  \frac{B_e(Q_e[,-1]^\top x_e\right)}{Qe[,1]^\top x_e + c_e}.}
+#' \deqn{\mu(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  \frac{B_e\left(Q_e[,-1]^\top x_e\right)}{Qe[,1]^\top x_e + c_e}\right).}
 #' @param xs A matrix of row-vectors of the spherical covariate.
 #' @param xe A matrix of row-vectors of the Euclidean covariates.
 #' @param param Parameters of the mean link. As an object of class "mnlink_Omega" or "mnlink_cann". See [`mnlink_params`]. 

@@ -1,16 +1,16 @@
 Package: sphm
-Title: Sph Regression
+Title: Spherical Regression by Scaled Mobius Link
 Version: 0.0.17
 Authors@R: 
     person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Description: Regression for spherical response data and scaled von Mises-Fisher error distribution as described in the manuscript "Regression for spherical responses with linear and spherical covariates using a scaled link function".
 Imports:
   Rcpp (>= 1.0.11),
   Rdpack,
   movMF,
   mclust,
-  scorematchingad (>= 0.1.3),
+  scorematchingad (>= 0.1.4),
   nloptr
 Suggests:
   testthat (>= 3.0.0),
@@ -20,7 +20,7 @@ License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-LinkingTo: Rcpp, RcppEigen, scorematchingad (>= 0.0.66)
+LinkingTo: Rcpp, RcppEigen, scorematchingad (>= 0.1.4)
 Config/testthat/edition: 3
 Depends: 
     R (>= 3.5)

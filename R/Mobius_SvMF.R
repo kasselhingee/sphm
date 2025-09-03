@@ -342,9 +342,12 @@ mobius_SvMF_konly <- function(y, ymean, a, G0){
   ))
 }
 
-#' Function for simulating data given mean link and SvMF parameters
-rS2S_constV <- function(xs, xe, mnparam, k, a, G0){
-  ymean <- mnlink(xs = xs, xe = xe, param = mnparam)
+#' @title Function for simulating data given mean link and SvMF parameters
+#' @inheritParams ldMobius_SvMF
+#' @return A matrix of `p+1` columns and the same number of rows as `xs` or `xe`. The final column is the log-density of the simulated response.
+#' @export
+rMobius_SvMF <- function(xs, xe, mean, k, a, G0){
+  ymean <- mnlink(xs = xs, xe = xe, param = mean)
   
   # simulate noise
   y_ld <- t(apply(ymean, 1, function(mn){

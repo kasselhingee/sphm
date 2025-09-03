@@ -1209,7 +1209,7 @@ getlikR <- function(y){
 }
 null_likRs <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
-  y_ld <- sphm:::rS2S_constV(xs = NULL, 
+  y_ld <- sphm:::rMobius_SvMF(xs = NULL, 
                    xe = mod_vMF$xe,
                    mnparam = mod_vMF$mean,
                    k = mod_vMF$k,
@@ -1244,7 +1244,7 @@ Lets look at the CI for the scales of the SvMF.
 ```{r}
 Bests <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
-  y <- sphm:::rS2S_constV(xs = NULL, 
+  y <- sphm:::rMobius_SvMF(xs = NULL, 
                    xe = mod_SvMF$xe,
                    mnparam = mod_SvMF$mean,
                    k = mod_SvMF$k,

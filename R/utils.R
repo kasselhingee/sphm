@@ -1,6 +1,29 @@
 vnorm2=function(x) sum(x^2)
 vnorm=function(x) sqrt(vnorm2(x))
 
+#' Stereographic projection
+#' @param x is a matrix of row vectors
+Sp=function(x) {
+  if (is.vector(x)){x <- matrix(x, nrow = 1)}
+  # detect -e1 vectors, remembering the x may be in a disc
+  is_me1 <- colSums(t(x) != c(1, rep(0, ncol(x) - 1))) == 0
+  out <- x[, -1, drop = FALSE]
+  out[is_me1, ] <- 1e+9
+  out[!is_me1, ] <- out[!is_me1, , drop = FALSE]/(1+x[!is_me1, 1, drop = TRUE])
+  if (nrow(out) == 1){return(as.vector(out))}
+  else {return(out)}
+}
+
+#' Inverse stereographic projection
+#' @param y is a matrix of row vectors
+iSp=function(y){
+  if (is.vector(y)){y <- matrix(y, nrow = 1)}
+  norms2 <- rowSums(y^2)
+  out <- cbind(1-norms2, 2*y)/(1+norms2)
+  if (nrow(out) == 1){return(as.vector(out))}
+  else {return(out)}
+}
+
 
 #' Cayley Transform Reparameterisation
 #' @description Map the upper triangle of a skew-symmetric matrix to an

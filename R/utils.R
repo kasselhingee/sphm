@@ -1,3 +1,7 @@
+#' @useDynLib sphm, .registration = TRUE
+#' @importFrom Rcpp evalCpp
+
+
 vnorm2=function(x) sum(x^2)
 vnorm=function(x) sqrt(vnorm2(x))
 

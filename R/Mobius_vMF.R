@@ -4,7 +4,7 @@
 #' \deqn{\sum_i=1^n y_i^T \mu(x_i).}
 #' @param y A set of unit vectors in embedded coordinates, each row corresponds to a single unit vector.
 #' @param x A set of covariate vectors (also unit vectors), each row corresponds to the same row in `y`.
-#' @param paramobj A set of link parameters. See [`cannS2S()`] and [`OmegaS2S()`].
+#' @param paramobj A set of link parameters. See [`mnlink_cann()`] and [`mnlink_Omega()`].
 #' @inheritParams mnlink
 #' @export
 prelimobj <- function(y, xs = NULL, xe = NULL, param){

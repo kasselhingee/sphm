@@ -424,7 +424,7 @@ ggplot() +
 Here I'll look for outliers.
 I'll view the moment tensors orthogonally projected onto axes determined by the first and second moment of the data such that
  the mean moment tensor has `Y1=1` and the covariance of the data in `Y2`...`Y5` coordinates is diagonal.
- The moment tensors according to these axes are obtained using `sphm:::standardise_sph()`.
+ The moment tensors according to these axes are obtained using `standardise_sph()`.
 
 Point colour is given by earthquake longitude.
 Background colour is the average earthquake longitude for that part of projected $S^4$.
@@ -451,7 +451,7 @@ outliers <- outliers %>%
 s4df %>%
   st_drop_geometry() %>%
   mutate(stdcoords = as_tibble(
-    sphm:::standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))),
+    standardise_sph(as.matrix(across(c(s1, s2, sMrt, sMrf, sMtf)))),
     .name_repair = "minimal")) %>%
   tidyr::unnest_wider(stdcoords, names_sep = "") %>%
   rename_with(~gsub("stdcoords", "Y", .)) %>%
@@ -576,7 +576,7 @@ mod_SvMF$DoF
 ```{r}
 restarts <- pbapply::pblapply(1:100, function(seed){
   # randomly generates a Kassel-form link
-  start <- sphm:::rmnlink_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)
+  start <- rmnlink_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)
   # convert to Shogo form:
   set.seed(seed+1)
   Qe <- mclust::randomOrthogonalMatrix(ncol(xestd)+1, 5-1)
@@ -660,7 +660,7 @@ mykbl
 ```
 
 ```{r}
-cann <- sphm:::as_mnlink_cann(mod_SvMF$mean)
+cann <- as_mnlink_cann(mod_SvMF$mean)
 ```
 
 ```{r, results='asis'}
@@ -737,7 +737,7 @@ get_predobspairsdf_nat <- function(mod,
   axisarrows <- lapply(1:nrow(mod$pred), function(idx){
     pred <- mod$pred[idx, ]
     # rotate (parallel transport) arrows to be around predicted mean
-    arrowends <- sphm:::rotationmat_amaral(mod$G0[,1], pred) %*% arrowends
+    arrowends <- rotationmat_amaral(mod$G0[,1], pred) %*% arrowends
     # include start location too
     names(pred) <- paste0("start", rownames(arrowends))
     as_tibble(t(arrowends), rownames = "Axis") %>%
@@ -888,7 +888,7 @@ get_predobspairsdf <- function(mod,
   axisarrows <- lapply(1:nrow(mod$pred), function(idx){
     pred <- mod$pred[idx, ]
     # rotate (parallel transport) arrows to be around predicted mean, then rotate again for standardised coordinates
-    stdarrowends <- attr(ystd, "std_rotation") %*% sphm:::rotationmat_amaral(mod$G0[,1], pred) %*% arrowends
+    stdarrowends <- attr(ystd, "std_rotation") %*% rotationmat_amaral(mod$G0[,1], pred) %*% arrowends
     rownames(stdarrowends) <- paste0("Y", 1:ncol(ystd))
     # include start location too
     stdpred <- drop(attr(ystd, "std_rotation") %*% pred)
@@ -1150,7 +1150,7 @@ mod_vMF <- mobius_vMF(y = mod_SvMF$y,
                      xs = NULL, 
                      xe = mod_SvMF$xe,
                      type = "Shogo")
-mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){sphm:::mobius_vMF_restart(mod_vMF, seed)})
+mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){mobius_vMF_restart(mod_vMF, seed)})
 lapply(mod_vMF_restarts, "[[", "AIC") %>%
   unlist() %>%
   tibble::enframe("seed", "AIC") %>%
@@ -1190,13 +1190,13 @@ getlikR <- function(y){
          vMF = mod1,
          SvMF = mod2))
   }
-  lLik1 <- sphm:::ldMobius_SvMF(mod1$y, xs = NULL, xe =mod1$xe,
+  lLik1 <- ldMobius_SvMF(mod1$y, xs = NULL, xe =mod1$xe,
               mean = mod1$est,
               k = mod1$k,
               a = rep(1, 5),
               G0 = mod2$G0) %>%
     colSums()
-  lLik2 <- sphm:::ldMobius_SvMF(mod2$y, xs = NULL, xe =mod2$xe,
+  lLik2 <- ldMobius_SvMF(mod2$y, xs = NULL, xe =mod2$xe,
               mean = mod2$mean,
               k = mod2$k,
               a = mod2$a,
@@ -1209,7 +1209,7 @@ getlikR <- function(y){
 }
 null_likRs <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
-  y_ld <- sphm:::rMobius_SvMF(xs = NULL, 
+  y_ld <- rMobius_SvMF(xs = NULL, 
                    xe = mod_vMF$xe,
                    mnparam = mod_vMF$mean,
                    k = mod_vMF$k,
@@ -1244,7 +1244,7 @@ Lets look at the CI for the scales of the SvMF.
 ```{r}
 Bests <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
-  y <- sphm:::rMobius_SvMF(xs = NULL, 
+  y <- rMobius_SvMF(xs = NULL, 
                    xe = mod_SvMF$xe,
                    mnparam = mod_SvMF$mean,
                    k = mod_SvMF$k,

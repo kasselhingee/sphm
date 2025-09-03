@@ -107,9 +107,9 @@ ymean <- colMeans(fulldf %>% select(starts_with("Y")))
 ymean <- ymean/sqrt(sum(ymean^2))
 #project to equator
 ymeanproj <- c(ymean[1:2], 0)
-ymeanproj/sphm:::vnorm(ymeanproj)
+ymeanproj/vnorm(ymeanproj)
 target <- c(1,0,0)
-prettyrot <- sphm:::rotationmat_amaral(ymeanproj, target)
+prettyrot <- rotationmat_amaral(ymeanproj, target)
 prettyY <- (fulldf %>%
   select(Y1, Y2, Y3) %>%
   as.matrix()) %*% t(prettyrot)
@@ -119,8 +119,8 @@ prettyX <- (fulldf %>%
   as.matrix()) %*% t(prettyrot)
 colnames(prettyX) <- paste0("X", 1:3)
 prettyXmean <- colMeans(prettyX)
-prettyXmean <- prettyXmean/sphm:::vnorm(prettyXmean)
-# denomloc <- drop(prettyrot %*% sphm:::as_mnlink_cann(mod$mean)$Qs[,1])
+prettyXmean <- prettyXmean/vnorm(prettyXmean)
+# denomloc <- drop(prettyrot %*% as_mnlink_cann(mod$mean)$Qs[,1])
 plotdata <- bind_cols(prettyY, prettyX, westedge = fulldf$westedge) %>%
   as_tibble() %>%
   ggplot() +
@@ -140,14 +140,14 @@ plotdata
 ```{r Paine Plot Resids and Dists}
 #| include: false
 calc_Paine_resids <- function(mod){
-  mod$rresids <- rotatedresid(t(mod$Z), t(mod$predmean), base = sphm:::nthpole(3))[,-1]
+  mod$rresids <- rotatedresid(t(mod$Z), t(mod$predmean), base = nthpole(3))[,-1]
   mod$dists <- acos(rowSums(t(mod$Z) * t(mod$predmean)))
   colnames(mod$rresids) <- c("r1", "r2")
   return(mod)
 }
 
 predplot_ESAG <- function(esagmod){
-  nthproj <- (diag(3) - sphm:::nthpole(3) %*% t(sphm:::nthpole(3)))
+  nthproj <- (diag(3) - nthpole(3) %*% t(nthpole(3)))
   obspred <- bind_cols(obs = as_tibble(t(nthproj %*% prettyrot %*% esagmod$Qmat %*% esagmod$Z)[,-1]),
                        pred = as_tibble(t(nthproj %*% prettyrot %*% esagmod$Qmat %*% esagmod$predmean)[,-1]) %>% rename_with(.fn = ~ paste0("p", .x)),
                        .name_repair = "unique")
@@ -168,7 +168,7 @@ The results here are from a local optimisation using gradient from default start
 I've checked that global search for the best vMF regression does not find anything better.
 
 ```{r}
-cann <- sphm:::as_mnlink_cann(mod$mean)
+cann <- as_mnlink_cann(mod$mean)
 cann
 ```
 
@@ -211,7 +211,7 @@ mykbl
 #| include: false
 predplot <- function(svmfresult){
   ystd <- standardise_sph(svmfresult$y, tG = prettyrot)
-  projmat <- (diag(3) - sphm:::nthpole(3) %*% t(sphm:::nthpole(3)))
+  projmat <- (diag(3) - nthpole(3) %*% t(nthpole(3)))
   obs <- ystd %*% projmat[,-1]
   pred <- svmfresult$pred %*% t(attr(ystd, "std_rotation")) %*% projmat[,-1]
 
@@ -244,7 +244,7 @@ predplot <- function(svmfresult){
     cbind(dummyzero = 0, ones = 1)
   tmpxe <- xe_std[,names(svmfresult$mean$qe1)]
   xs <- colMeans(svmfresult$xs)
-  xs <- xs/sphm:::vnorm(xs)
+  xs <- xs/vnorm(xs)
   eastwestedge <- mnlink(xs = rbind(xs, xs),
          xe = tmpxe,
          param = svmfresult$mean) %*% t(attr(ystd, "std_rotation"))
@@ -253,7 +253,7 @@ predplot <- function(svmfresult){
     annotate("point", x = eastwestedge[2, 2], y = eastwestedge[2, 3], fill = "white", shape = 24, size = 2)
   
   # mark prediction when xs = rs1
-  # rs1 <- sphm:::as_mnlink_cann(svmfresult$mean)$Qs[,1]
+  # rs1 <- as_mnlink_cann(svmfresult$mean)$Qs[,1]
   # eastwestedge_rs1 <- mnlink(xs = rbind(rs1, rs1),
   #        xe = tmpxe,
   #        param = svmfresult$mean) %*% t(attr(ystd, "std_rotation"))
@@ -262,15 +262,15 @@ predplot <- function(svmfresult){
   #   annotate("point", x = eastwestedge_rs1[2, 2], y = eastwestedge_rs1[2, 3], fill = "white", shape = 24, size = 4)
   
   # mark columns of Qs on the plot
-  prettyQs <- attr(ystd, "std_rotation") %*% sphm:::as_mnlink_cann(svmfresult$mean)$Qs
+  prettyQs <- attr(ystd, "std_rotation") %*% as_mnlink_cann(svmfresult$mean)$Qs
   outplot <- outplot +
     annotate("point", x = prettyQs[2,1], y = prettyQs[3,1], shape = 3, size = 2, col = switch(1+(prettyQs[1,1] > 0), "grey", "black")) +
     annotate("point", x = prettyQs[2,2], y = prettyQs[3,2], shape = 4, size = 2, col = switch(1+(prettyQs[1,2] > 0), "grey", "black")) +
     annotate("point", x = prettyQs[2,3], y = prettyQs[3,3], shape = 8, size = 2, col = switch(1+(prettyQs[1,3] > 0), "grey", "black"))
   
 if (!is.null(svmfresult$G0)){
-  G0proj <- (diag(3) - sphm:::nthpole(3) %*% t(sphm:::nthpole(3))) %*% attr(ystd, "std_rotation") %*% svmfresult$G0
-  mnaxes_proj <- (diag(3) - sphm:::nthpole(3) %*% t(sphm:::nthpole(3))) %*% attr(ystd, "std_rotation") %*% sphm:::as_mnlink_cann(svmfresult$mean)$P
+  G0proj <- (diag(3) - nthpole(3) %*% t(nthpole(3))) %*% attr(ystd, "std_rotation") %*% svmfresult$G0
+  mnaxes_proj <- (diag(3) - nthpole(3) %*% t(nthpole(3))) %*% attr(ystd, "std_rotation") %*% as_mnlink_cann(svmfresult$mean)$P
   eps = 0.2
   outplot <- outplot + 
   annotate("segment", x = G0proj[2,1], y = G0proj[3,1],
@@ -372,7 +372,7 @@ loocvmseSvMF <- function(mod){
                    xe = mod$xe[idx,, drop = FALSE],
                    param = newmod$mean)
     obs <- mod$y[idx,]
-    Euc <- sphm:::vnorm(drop(obs - pred))
+    Euc <- vnorm(drop(obs - pred))
     angle <- acos(rowSums(obs * pred))
     return(c(
       Euc = Euc,
@@ -441,7 +441,7 @@ d1plot/d2plot + plot_layout(axes = "collect", guides = "collect")
 c(Ours = mod$DoF, IAG1 = IAG1$DoF, ESAG1 = ESAG1$DoF, ESAG2 = ESAG2$DoF)
 ```
 
-Our mean link with free rs1 has `r sphm:::mobius_DoF(p=dim(mod$mean)["p"],qs=dim(mod$mean)["qs"],qe=dim(mod$mean)["qe"], fix_qe1 = TRUE)` degrees of freedom.
+Our mean link with free rs1 has `r mobius_DoF(p=dim(mod$mean)["p"],qs=dim(mod$mean)["qs"],qe=dim(mod$mean)["qe"], fix_qe1 = TRUE)` degrees of freedom.
 
 # AIC
 ```{r}
@@ -496,7 +496,7 @@ These are all positive and non-zero, which confirms that the optimisation routin
 ```{r}
 #| cache: true
 restarts <- pbapply::pblapply(1:100, function(seed){
-  start <- sphm:::rmnlink_cann(p = 3, qs = 3, qe = ncol(xe) + 2, preseed = seed)
+  start <- rmnlink_cann(p = 3, qs = 3, qe = ncol(xe) + 2, preseed = seed)
   # convert to Shogo form:
   set.seed(seed+1)
   Qe <- mclust::randomOrthogonalMatrix(ncol(xe)+1, 3-1)
@@ -527,7 +527,7 @@ Would be better if it was even more stable though!!!
 ```{r}
 restarts <- pbapply::pblapply(1:100, function(seed){
   # randomly generates a Kassel-form link
-  start <- sphm:::rmnlink_cann(p = 3, qs = 3, qe = ncol(xestd) + 2, preseed = seed)
+  start <- rmnlink_cann(p = 3, qs = 3, qe = ncol(xestd) + 2, preseed = seed)
   # convert to Shogo form:
   set.seed(seed+1)
   Qe <- mclust::randomOrthogonalMatrix(ncol(xestd)+1, 5-1)
@@ -556,7 +556,7 @@ lapply(restarts, "[[", "AIC") %>%
 
 ## Check Restart of SvMF
 ```{r}
-mod2 <- sphm:::mobius_SvMF(y = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
+mod2 <- mobius_SvMF(y = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
        xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
        xe = xestd %>% as.matrix(),
        G01behaviour = "free",

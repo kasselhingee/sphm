@@ -11,6 +11,7 @@ Imports:
   movMF,
   mclust,
   scorematchingad (>= 0.1.4),
+  progress,
   nloptr
 Suggests:
   testthat (>= 3.0.0),

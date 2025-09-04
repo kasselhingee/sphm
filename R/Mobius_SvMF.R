@@ -1,29 +1,46 @@
 #' SvMF Regression with Scaled Mobius Link and Parallel Transported Axes
 #' @description
-#' 
+#' Performs regression for spherical response data with a scaled Mobius mean link and scale von Mises-Fisher error distribution (SvMF).
 #' @details
-#' The mean is assumed to follow the usual mean link.
+#' The mean is assumed to follow [`mnlink()`].
 #' The concentration and scaling in the SvMF is assumed constant across observations.
-#' The scaling axes of the SvMF at location \eqn{\mu} are assumed to be the parallel transport along the geodesic of axes at the first column of the matrix `P` from the mean link. These axes specified at first column of the matrix `P` are to be estimated and constant with respect to covariates (and \eqn{\mu})
-#' __Warning: C++ function still uses Jupp's transport rather than Amaral matrix and p!=3 only handled approximately__
-#' __Warning: resulting relevant matrices are only very close to orthogonal - something do with with p1 not being precisely orthogonal to singular vectors despite the projection of Omega (I could do a projection again!?)__
-#' __Warning: estimation could be improved by using moment estimators for Gstar and a etc if possible to start the optimisation__
-#' 
-#' The first element of each column of Gstar will have positive value.
+#' The symmetry axes of the SvMF at location \eqn{\mu} are assumed to be the result of parallel transport along the geodesic of axes `G0[,-1]` from  `G0[,1]` to \eqn{\mu}. The axis at this base location `G0[,1]` are estimated.
+#'
+#' Unless requested by `doprelim = FALSE`, a preliminary regression using a vMF error distribution is performed.
+#'
+#' When p!=3, the optimisation first approximates the normalising constant of the vMF distribution, then the concentration is optimised seperately.
 #' @param y Response data on a sphere
 #' @param xs Covariate data on a sphere
 #' @param xe Covariate data in Euclidean Space
-#' @param k Starting concentration. I suspect lower means less chance of finding a local minimum.
-#' @param a The scaling vector `a`. `a[1]` is a fixed tuning parameter and the remainining is used as a starting guess.
-#' @param mean Parameters for the mean link, used as a starting guess.
-#' @param G0 A `p x p` orthonormal matrix specifying the starting guess of the axes of the SvMF distribution. G0 should have positive determinant because in the estimatino routine G0 or parts of G0 are representented using Cayley transforms.
-#' @param G0reference A `p x p` rotation matrix specifying a set of coordinates to represent G0 in for the estimation. Ideally the columns of `G0reference` will be close to the best `G0` because the Cayley transform representation has the best performance when applied to matrices close to the identity.
+#' @param k Starting concentration. If omitted, then concentration of the preliminary vMF regression is used.
+#' @param a The scaling vector `a`. `a[1]` is a fixed tuning parameter and the remainining is used as an initial value for the optimisation. If omitted, then a moment estimate using residuals of from the preliminary vMF regression is used.
+#' @param mean Parameters for the mean link, used as a starting guess for the preliminary vMF regression if `doprelim = TRUE`.
+#' @param G0 A `p x p` rotation matrix specifying the starting guess of the axes of the SvMF distribution. G0 should have positive determinant because in the estimation routine G0 or parts of G0 are representented using Cayley transforms. If omitted, then a moment estimate using residuals of from the preliminary vMF regression is used.
+#' @param G0reference A `p x p` rotation matrix specifying a set of coordinates with which to represent G0 for the estimation. This is because internally `G0` or `G0[,-1]` is represented using a Cayley transform, which performs better the closer the matrix is to the identity. Ideally the columns of `G0reference` will be close to the best `G0`.
 #' @param G01behaviour "p1" identifies `G0[,1]` with `p1`. "fixed" fixes `G0[,1]` to its initial value. "free" allows `G0[,1]` to be estimated freely.
 #' @param doprelim When `FALSE` the preliminary von Mises-Fisher regression and subsequent moment estimation of `a` and `G0` is omitted. The provided parameters are used as the initial values for an optimisation of all parameters of the SvMF regression all together using [`nloptr::nloptr()`].
 #' @param ... Named optional arguments passed as a list to the `opts` argument of [`nloptr::nloptr()`].
-#' @details
-#' From the starting parameters, optimises everything. For p != 3, the concentration is approximated.
-#' No standardisation is performed.
+#' @return A list:
+#' \describe{
+#'   \item{mean}{Estimated mean parameters}
+#'   \item{k}{Estimated concentration parameter k}
+#'   \item{a}{Estimated vector of scales `a` (except `a[1]` which is fixed)}
+#'   \item{G0}{Estimated base location and symmetry axes.}
+#'   \item{obj}{Final objective value from NLopt}
+#'   \item{nlopt}{NLopt optimization result object}
+#'   \item{y}{Response data}
+#'   \item{xs}{Spherical covariate values}
+#'   \item{xe}{Euclidean covariate values (including any automatically added columns like dummy zeros and an intercept)}
+#'   \item{pred}{Predicted values on sphere}
+#'   \item{rresids, rresids_I}{Residuals rotated (by parallel transport) to the north pole}
+#'   \item{rresids_G0, rresids_std}{Residuals rotated to `G0[,1]` and expressed according to the axes given by `G0[,-1]`. `rresids_std` additionaly scales the rotated residuals by \eqn{\sqrt{k} a[1]/a[j]}.}
+#'   \item{dists}{Residual geodesic distances (geodesic distance between predicted value and observed value)}
+#'   \item{DoF}{Degrees of freedom of the optimisation}
+#'   \item{AIC}{Akaike Information Criterion}
+#'   \item{lLik}{Log-likelihood}
+#'   \item{initial}{Initial values}
+#'   \item{preest}{Results of the preliminary vMF regression}
+#' }
 #' @export
 mobius_SvMF <- function(y, xs, xe, mean = NULL, k = NULL, a = NULL, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "LinEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, doprelim = TRUE, ...){
 

@@ -123,7 +123,6 @@ mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
   return A;  // Return the reconstructed skew-symmetric matrix
 }
 
-// aremaining becomes log(1/a) with the first element dropped
 //' @title Convert all SvMF regression parameters into a single long vector
 //' @description Placing all parameters in a single vector allow automatic differentiation with the parameters as independent values. Some tidying of the parameter space also occurs in the vectorisation.
 //' @details The scales `aremaining` are constrained to have a product of `1` and be positive. This function encodes these restrictions by dropping the first element of `aremaining` and converting the other elements to \eqn{log(a_j)} etc.

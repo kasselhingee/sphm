@@ -83,6 +83,8 @@ SvMF_muV2cann <- function(obj){
   SvMFcann(k, c(a1, sqrt(es$values)), G = G)
 }
 
+#' @noRd 
+#' @description Get the Hstar matrix from Scealy and Wood (2019, Section 3) for a mean vector m
 getHstar <- function(m){
   m1 <- m[1]
   mL <- m[-1]

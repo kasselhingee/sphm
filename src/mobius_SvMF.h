@@ -5,9 +5,21 @@
 #include <utils/pADFun.h>
 #include "Omega.h"
 
-// function that accepts all the major arguments in usual (non-vector) format and returns log-density for each row of `y`
-// for a single observation y with covariates x and return the ull for that observation, parallel transporting axes H*(p1)*Kstar to the mean using Jupp's method from base being the first column of P.
-// will include projection of om
+//' @noRd
+//' @title Log-density at response `y` for SvMF regression with the scales Mobius link function
+//' @description For given response row-vectors y, covariate row-vectors xs, xe and regression parameters, returns the log-density for each row of `y` (and corresponding row of xs and xe). When the length of the response (`p`) is not 3, then the normalising constant from the vMF density is approximated.
+//' @param y A matrix of row vectors (each row a unit vector)
+//' @param xs A matrix of row vectors (each row a unit vector)
+//' @param xe A matrix of row vectors
+//' @param om A parameter object specifying the parameters of the mean link
+//' @param k Concentration of the SvMF error distribution
+//' @param a1 The first scale of the SvMF error distribution, which is typically fixed at `1`.
+//' @param aremaining A (p-1) vector of the remaining scales of the SvMF error distribution.
+//' @param G0 An orthonormal matrix with first column that are the 'base location' for parallel transport of axes on the sphere.
+//' @details
+//' For a given mean direction `mu`, the axes of the SvMF error distribution are obtained by parallel transport of `G0[,-1]` along the geodesic from `G0[,1]` to `mu`.
+//' 
+//' The function projects the parameter object `om` such that the matrix Omega is orthogonal to p1, qs1 and qe1.
 veca1 uld_Mobius_SvMF_partran(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 G0);
 
 // for checking uld_Mobius_SvMF_partran via unit testing

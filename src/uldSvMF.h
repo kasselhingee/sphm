@@ -16,11 +16,12 @@
 // [[Rcpp::export]]
 veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
 
-// #' Log density of the SvMF using the muV parameterisation
+// #' Log density of the SvMF using the muV parameterisation of Scealy and Wood (2019)
 // [[Rcpp::export]]
 veca1 uldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
 
-// a helper
+//' @noRd 
+//' @description Get the Hstar matrix from Scealy and Wood (2019, Section 3) for a mean vector m
 mata1 getHstar(veca1 m);
 
 //' @noRd

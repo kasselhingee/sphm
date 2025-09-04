@@ -76,6 +76,7 @@ a1type besselItrunc(const a1type& x, const double & nu, int order, bool log_resu
         return sum;
 }
 
+// description of this function in corresponding header file
 a1type besselImixed(const a1type & x, const double & nu, double threshold, int order, bool log_result) {
   // CppAD::CondExpLe returns one of two T‐typed branches
   // depending on x <= threshold

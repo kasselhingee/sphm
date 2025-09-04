@@ -11,6 +11,7 @@
 NULL
 
 #' @describeIn SvMFparams The canonical parameterisation of a SvMF using a kappa, a vector and Gamma, as used in equation 7 of Scealy and Wood 2017.
+#' @export
 SvMFcann <- function(k, a, G){
   obj <- list(k = k, a = a, G = G)
   class(obj) <- c("SvMFcann", class(obj))

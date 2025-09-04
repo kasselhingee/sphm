@@ -5,4 +5,6 @@ vignettes/midatlantic_SvMF_reproducibility_cache
 vignettes/earthquakes_Papua_files
 vignettes/midatlantic_SvMF_reproducibility_files
 ^vignettes/.*\.(pdf|tex|log|aux)$
+.github
+
 

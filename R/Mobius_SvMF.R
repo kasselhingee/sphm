@@ -1,7 +1,5 @@
-#' SvMF Regression with Parallel Transported Axes
+#' SvMF Regression with Scaled Mobius Link and Parallel Transported Axes
 #' @description
-#' This function is designed to eventually be an internal function.
-#' No standardisation is performed.
 #' 
 #' @details
 #' The mean is assumed to follow the usual mean link.

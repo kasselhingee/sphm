@@ -36,6 +36,7 @@ besselItrunc <- function(x, nu, order, log_result = TRUE) {
     .Call(`_sphm_besselItrunc`, x, nu, order, log_result)
 }
 
+#' @title Approximation of the vMF normalising constant
 #' Helper function lvMFnormconst_approx
 #' For p == 3 using an exact formula
 #' Otherwise uses *approximations* of the modified Bessel function of the first order.
@@ -45,6 +46,9 @@ besselItrunc <- function(x, nu, order, log_result = TRUE) {
 #' Returns the log of the normalising constant.
 #' The approximation uses a threshold of 10 to choose between the small concentration and large concentration regime,
 #' and in each regime the series order used is 15.
+#' @export
+#' @param kappa Concentration parameter
+#' @param p Dimension of ambient space (i.e. length of unit vectors).
 lvMFnormconst_approx <- function(kappa, p) {
     .Call(`_sphm_lvMFnormconst_approx`, kappa, p)
 }

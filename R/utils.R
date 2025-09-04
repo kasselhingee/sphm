@@ -12,7 +12,8 @@ vnorm=function(x) sqrt(vnorm2(x))
 #' @export
 vnorm2=function(x) sum(x^2)
 
-#' Stereographic projection
+#' @noRd
+#' @title Stereographic projection
 #' @param x is a matrix of row vectors
 #' @noRd
 Sp=function(x) {
@@ -26,7 +27,8 @@ Sp=function(x) {
   else {return(out)}
 }
 
-#' Inverse stereographic projection
+#' @noRd
+#' @title Inverse stereographic projection
 #' @param y is a matrix of row vectors
 iSp=function(y){
   if (is.vector(y)){y <- matrix(y, nrow = 1)}

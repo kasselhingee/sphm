@@ -89,7 +89,7 @@ a1type besselImixed(const a1type & x, const double & nu, double threshold, int o
   );
 }
 
-
+//' @title Approximation of the vMF normalising constant
 //' Helper function lvMFnormconst_approx
 //' For p == 3 using an exact formula
 //' Otherwise uses *approximations* of the modified Bessel function of the first order.
@@ -99,6 +99,9 @@ a1type besselImixed(const a1type & x, const double & nu, double threshold, int o
 //' Returns the log of the normalising constant.
 //' The approximation uses a threshold of 10 to choose between the small concentration and large concentration regime,
 //' and in each regime the series order used is 15.
+//' @export
+//' @param kappa Concentration parameter
+//' @param p Dimension of ambient space (i.e. length of unit vectors).
 // [[Rcpp::export]]
 a1type lvMFnormconst_approx(a1type kappa, int p) {
   if (p == 3) {

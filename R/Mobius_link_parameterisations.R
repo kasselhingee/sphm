@@ -1,7 +1,7 @@
 #' @name mnlink_params
-#' @title Parameterisation Classes
+#' @title Parameterisation Classes for the Scaled Mobius Mean Link
 #' @description Parameterisations of the link functions.
-#' These methods check and convert between parameterisations.
+#' These methods, create, check and convert between parameterisations of the mean link.
 #' Actual mean link calculations are performed by other functions.
 #' @param P Final rotation matrix on the response sphere: a p x p orthonormal matrix with positive determinant.
 #' @param Bs Scaling matrix for spherical covariates: a (p-1) x (p-1) diagonal matrix with elements between zero and one ordered in decreasing size. `NULL` if no Sph covariates.
@@ -17,7 +17,7 @@
 #' \eqn{x_s} is a `qs`-length unit vector,
 #' \eqn{x_e} is a `qe`-length vector,
 #' `P` is a p x p rotation matrix,
-#' `Qs` is a `qs x p` orthonormal matrix (`t(Qs) %*% Qs == diag(p)),
+#' `Qs` is a `qs x p` orthonormal matrix (`t(Qs) %*% Qs == diag(p)`),
 #' `Bs` is a diagonal matrix (p-1) x (p-1) matrix,
 #' `Be` is a diagonal matrix (p-1) x (p-1) matrix,
 #' `Qs` is a `qe x p` orthonormal matrix,
@@ -453,10 +453,10 @@ is_LinEuc <- function(obj, tol = sqrt(.Machine$double.eps)){
 #' @title Obtain dimensions corresponding to a mean link parameter set
 #' @param x A mean link parameter object of class `mnlink_Omega` or `mnlink_cann`.
 #' @return An integer vector of p (length of response unit vectors), qs (length of spherical covariate unit vectors) and qe (length of Euclidean covariate vectors).
-#' @name dim-mnlink_param
+#' @name dim-mnlink_params
 NULL
 
-#' @rdname dim-mnlink_param
+#' @rdname dim-mnlink_params
 #' @export
 #' @method dim mnlink_cann
 dim.mnlink_cann <- function(x){
@@ -465,7 +465,7 @@ dim.mnlink_cann <- function(x){
     qe = switch(1 + is.null(x$Qe), nrow(x$Qe), 0))
 }
 
-#' @rdname dim-mnlink_param
+#' @rdname dim-mnlink_params
 #' @export
 #' @method dim mnlink_Omega
 dim.mnlink_Omega <- function(x){

@@ -1,6 +1,6 @@
 # include "tapegeneral.h"
 # include "function_map.h"
-# include "uldSvMF.h" // purely for tape_besselImixed() below
+# include "ldSvMF.h" // purely for tape_besselImixed() below
 
 CppAD::ADFun<double> tapefun(generalfunction fun, veca1 & ind_t, veca1 & dyn_t, vecd & constvec, matd & constmat, bool check_for_nan) {
   CppAD::Independent(ind_t, dyn_t);
@@ -32,7 +32,7 @@ pADFun tape_namedfun(std::string func_name, veca1 & ind_t, veca1 & dyn_t, vecd &
   return(out);
 }
 
-//' Function to create tapes of besselImixed() from uldSvMF purely for testing differentiation
+//' Function to create tapes of besselImixed() from ldSvMF purely for testing differentiation
 // [[Rcpp::export]]
 pADFun tape_besselImixed(veca1 & x, const double & nu, double threshold, int order, bool log_result = true) {
   CppAD::Independent(x);

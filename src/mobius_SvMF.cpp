@@ -1,6 +1,6 @@
 #include "mobius_SvMF.h"
 #include "mnlink_cpp.h"
-#include "uldSvMF.h"
+#include "ldSvMF.h"
 #include "utils.h"
 
 //G0 specifies the axes of the SvMF.
@@ -29,7 +29,7 @@ veca1 ld_Mobius_SvMF_partran(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1typ
   for (int i = 0; i < y.rows(); ++i){
     G.col(0) = ypred.row(i);
     G.block(0, 1, p, p-1) = JuppRmat(G0.col(0), ypred.row(i)) * G0star;
-    ld(i) = uldSvMF_cann(y.row(i), k, a, G)(0);
+    ld(i) = ldSvMF_cann(y.row(i), k, a, G)(0);
   }
   return ld;
 }

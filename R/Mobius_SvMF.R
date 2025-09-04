@@ -355,7 +355,7 @@ rMobius_SvMF <- function(xs, xe, mean, k, a, G0){
   y_ld <- t(apply(ymean, 1, function(mn){
     G <- cbind(mn, -JuppRmat(G0[,1], mn) %*% G0[,-1])
     obs <- rSvMF(1, SvMFcann(k, a, G))
-    ld <- uldSvMF_cann(obs, k = k, a = a, G = G)
+    ld <- ldSvMF_cann(obs, k = k, a = a, G = G)
     return(c(obs, ld))
   }))
   return(y_ld)
@@ -390,7 +390,7 @@ ldMobius_SvMF <- function(y, xs, xe, mean, k, a, G0){
   
   #rotate all observations so that ymean --> G0[,1]
   yrot <- undo_partransport(y, ymean, G01 = G0[,1])
-  ldCpp <- uldSvMF_cann(yrot, k = k, a = a, G = G0)
+  ldCpp <- ldSvMF_cann(yrot, k = k, a = a, G = G0)
   ldR <- SvMF_ll_cann(yrot, SvMFcann(k = k, a = a, G = G0))
   ld <- cbind(Cpp = ldCpp, R = ldR)
   attr(ld, "error") <- diff

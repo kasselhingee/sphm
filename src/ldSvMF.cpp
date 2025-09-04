@@ -1,4 +1,4 @@
-#include "uldSvMF.h"
+#include "ldSvMF.h"
 #include <Rcpp.h>
 
 //' @noRd
@@ -127,7 +127,7 @@ mata1 getHstar(veca1 m) {
   return Hstar;
 }
 
-veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G) {
+veca1 ldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G) {
   int p = a.size();
   a1type lconst = - lvMFnormconst_approx(k, p) - CppAD::log(a.coeff(0));
  
@@ -143,7 +143,7 @@ veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G) {
   return ll;
 }
 
-veca1 uldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V) {
+veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V) {
   int p = m.size();
   a1type lconst = - lvMFnormconst_approx(k, p) - CppAD::log(a1);
   

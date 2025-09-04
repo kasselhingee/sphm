@@ -14,11 +14,11 @@
 // @returns A vector of log-density evaluated at row of `y`
 // @details For p=3, the normalised form is computed, but otherwise the normalising constant is approximated using `besselImixed()`.
 // [[Rcpp::export]]
-veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
+veca1 ldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
 
 // #' Log density of the SvMF using the muV parameterisation of Scealy and Wood (2019)
 // [[Rcpp::export]]
-veca1 uldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
+veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
 
 //' @noRd 
 //' @description Get the Hstar matrix from Scealy and Wood (2019, Section 3) for a mean vector m

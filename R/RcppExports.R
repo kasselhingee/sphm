@@ -5,6 +5,77 @@ Omega_constraints <- function(vec, p, qe = 0L) {
     .Call(`_sphm_Omega_constraints`, vec, p, qe)
 }
 
+#' @noRd
+#' @description Helper function Bessel I approximation from BesselI::besselIasym()
+#' which is from the asymptotic expansion of Bessel I_nu(x) function   x -> infinity
+#'       by Abramowitz & Stegun (9.7.1), p.377 
+#' I_a(z) = exp(z) / sqrt(2*pi*z) * f(z,..)  where
+#'   f(z,..) = 1 - (mu-1)/ (8*z) + (mu-1)(mu-9)/(2! (8z)^2) - ...
+#'           = 1- (mu-1)/(8z)*(1- (mu-9)/(2(8z))*(1-(mu-25)/(3(8z))*..))
+#' where  mu = 4*a^2  *and*  |arg(z)| < pi/2
+#' This is useful for large x
+#' @param x is the vMF concentration parameter
+#' @param nu is such that nu + 1 = d/2, where d is the ambient dimension of the sphere.
+#' @param order The expansion order to use.
+besselIasym <- function(x, nu, order, log_result = TRUE) {
+    .Call(`_sphm_besselIasym`, x, nu, order, log_result)
+}
+
+#' @noRd
+#' @title Approximation of Bessel I function for small x.
+#' @description 
+#' For small x (i.e. concentration) Hornik and Grun use simple relation by Schou 1979 (and others)
+#' for approximating the derivative of log(const(k)) but I want a coarse idea of the value here.
+#' I'm going to use the series 10.25.2 from Nist: `https://dlmf.nist.gov/10.25#E2`
+#' This looks actually to be just a solution to equation defining the modified Bessel function.
+#' (x/2)^nu sum_i{1/i! 1/gamma(nu + i + 1) (x/2)^(2i)}.
+#' @param x is the vMF concentration parameter
+#' @param nu is such that nu + 1 = d/2, where d is the ambient dimension of the sphere.
+#' @param order The expansion order to use.
+besselItrunc <- function(x, nu, order, log_result = TRUE) {
+    .Call(`_sphm_besselItrunc`, x, nu, order, log_result)
+}
+
+#' Helper function lvMFnormconst_approx
+#' For p == 3 using an exact formula
+#' Otherwise uses *approximations* of the modified Bessel function of the first order.
+#' The normalising constant is \eqn{(2 * \pi)^{p/2} besselI(k, p/2 - 1)/k^{p/2 -1}}
+#' where \eqn{p} is the dimension of the ambient space of the sphere (i.e. vectors have \eqn{p} entries)
+#' @details
+#' Returns the log of the normalising constant.
+#' The approximation uses a threshold of 10 to choose between the small concentration and large concentration regime,
+#' and in each regime the series order used is 15.
+lvMFnormconst_approx <- function(kappa, p) {
+    .Call(`_sphm_lvMFnormconst_approx`, kappa, p)
+}
+
+#' @noRd 
+#' @description Get the Hstar matrix from Scealy and Wood (2019, Section 3) for a mean vector m
+NULL
+
+ldSvMF_cann <- function(y, k, a, G) {
+    .Call(`_sphm_ldSvMF_cann`, y, k, a, G)
+}
+
+ldSvMF_muV <- function(y, k, m, a1, V) {
+    .Call(`_sphm_ldSvMF_muV`, y, k, m, a1, V)
+}
+
+#' @noRd
+#' @description
+#' This function approximates the BesselI function by
+#' using `BesselItrunc()` for values of `x` smaller than `threshold` and
+#' using `BesselIasym()` for values of `x` larger than `threshold`.
+#' @param x value to compute the BesselI function at.
+#' @param nu The `nu` in the BesselI function.
+#' @param order The order of approximation to use in `BesselItrunc()` and `BesselIasym()`
+#' @param threshold is the location at which the calculation switches
+#' @param log_result Whether to return the log of the approximated BesselI function. This is useful to avoid floating point over run or inaccuracies.
+#' @return a single value
+besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
+    .Call(`_sphm_besselImixed`, x, nu, threshold, order, log_result)
+}
+
 mnlink_cpp <- function(xs, xe, vec, p) {
     .Call(`_sphm_mnlink_cpp`, xs, xe, vec, p)
 }
@@ -77,7 +148,7 @@ prelimobj_cpp <- function(omvec, dyn, dims_in, yx) {
     .Call(`_sphm_prelimobj_cpp`, omvec, dyn, dims_in, yx)
 }
 
-#' Function to create tapes of besselImixed() from uldSvMF purely for testing differentiation
+#' Function to create tapes of besselImixed() from ldSvMF purely for testing differentiation
 tape_besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
     .Call(`_sphm_tape_besselImixed`, x, nu, threshold, order, log_result)
 }
@@ -101,76 +172,5 @@ NULL
 #' @param func_name Name of function to tape. Name must be in the internal `function_map` object.
 tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for_nan) {
     .Call(`_sphm_tape_namedfun`, func_name, ind_t, dyn_t, constvec, constmat, check_for_nan)
-}
-
-#' @noRd
-#' @description Helper function Bessel I approximation from BesselI::besselIasym()
-#' which is from the asymptotic expansion of Bessel I_nu(x) function   x -> infinity
-#'       by Abramowitz & Stegun (9.7.1), p.377 
-#' I_a(z) = exp(z) / sqrt(2*pi*z) * f(z,..)  where
-#'   f(z,..) = 1 - (mu-1)/ (8*z) + (mu-1)(mu-9)/(2! (8z)^2) - ...
-#'           = 1- (mu-1)/(8z)*(1- (mu-9)/(2(8z))*(1-(mu-25)/(3(8z))*..))
-#' where  mu = 4*a^2  *and*  |arg(z)| < pi/2
-#' This is useful for large x
-#' @param x is the vMF concentration parameter
-#' @param nu is such that nu + 1 = d/2, where d is the ambient dimension of the sphere.
-#' @param order The expansion order to use.
-besselIasym <- function(x, nu, order, log_result = TRUE) {
-    .Call(`_sphm_besselIasym`, x, nu, order, log_result)
-}
-
-#' @noRd
-#' @title Approximation of Bessel I function for small x.
-#' @description 
-#' For small x (i.e. concentration) Hornik and Grun use simple relation by Schou 1979 (and others)
-#' for approximating the derivative of log(const(k)) but I want a coarse idea of the value here.
-#' I'm going to use the series 10.25.2 from Nist: `https://dlmf.nist.gov/10.25#E2`
-#' This looks actually to be just a solution to equation defining the modified Bessel function.
-#' (x/2)^nu sum_i{1/i! 1/gamma(nu + i + 1) (x/2)^(2i)}.
-#' @param x is the vMF concentration parameter
-#' @param nu is such that nu + 1 = d/2, where d is the ambient dimension of the sphere.
-#' @param order The expansion order to use.
-besselItrunc <- function(x, nu, order, log_result = TRUE) {
-    .Call(`_sphm_besselItrunc`, x, nu, order, log_result)
-}
-
-#' Helper function lvMFnormconst_approx
-#' For p == 3 using an exact formula
-#' Otherwise uses *approximations* of the modified Bessel function of the first order.
-#' The normalising constant is \eqn{(2 * \pi)^{p/2} besselI(k, p/2 - 1)/k^{p/2 -1}}
-#' where \eqn{p} is the dimension of the ambient space of the sphere (i.e. vectors have \eqn{p} entries)
-#' @details
-#' Returns the log of the normalising constant.
-#' The approximation uses a threshold of 10 to choose between the small concentration and large concentration regime,
-#' and in each regime the series order used is 15.
-lvMFnormconst_approx <- function(kappa, p) {
-    .Call(`_sphm_lvMFnormconst_approx`, kappa, p)
-}
-
-#' @noRd 
-#' @description Get the Hstar matrix from Scealy and Wood (2019, Section 3) for a mean vector m
-NULL
-
-uldSvMF_cann <- function(y, k, a, G) {
-    .Call(`_sphm_uldSvMF_cann`, y, k, a, G)
-}
-
-uldSvMF_muV <- function(y, k, m, a1, V) {
-    .Call(`_sphm_uldSvMF_muV`, y, k, m, a1, V)
-}
-
-#' @noRd
-#' @description
-#' This function approximates the BesselI function by
-#' using `BesselItrunc()` for values of `x` smaller than `threshold` and
-#' using `BesselIasym()` for values of `x` larger than `threshold`.
-#' @param x value to compute the BesselI function at.
-#' @param nu The `nu` in the BesselI function.
-#' @param order The order of approximation to use in `BesselItrunc()` and `BesselIasym()`
-#' @param threshold is the location at which the calculation switches
-#' @param log_result Whether to return the log of the approximated BesselI function. This is useful to avoid floating point over run or inaccuracies.
-#' @return a single value
-besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
-    .Call(`_sphm_besselImixed`, x, nu, threshold, order, log_result)
 }
 

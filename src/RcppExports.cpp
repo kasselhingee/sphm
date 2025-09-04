@@ -28,6 +28,90 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// besselIasym
+a1type besselIasym(const a1type& x, const double& nu, int order, bool log_result);
+RcppExport SEXP _sphm_besselIasym(SEXP xSEXP, SEXP nuSEXP, SEXP orderSEXP, SEXP log_resultSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const a1type& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< int >::type order(orderSEXP);
+    Rcpp::traits::input_parameter< bool >::type log_result(log_resultSEXP);
+    rcpp_result_gen = Rcpp::wrap(besselIasym(x, nu, order, log_result));
+    return rcpp_result_gen;
+END_RCPP
+}
+// besselItrunc
+a1type besselItrunc(const a1type& x, const double& nu, int order, bool log_result);
+RcppExport SEXP _sphm_besselItrunc(SEXP xSEXP, SEXP nuSEXP, SEXP orderSEXP, SEXP log_resultSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const a1type& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< int >::type order(orderSEXP);
+    Rcpp::traits::input_parameter< bool >::type log_result(log_resultSEXP);
+    rcpp_result_gen = Rcpp::wrap(besselItrunc(x, nu, order, log_result));
+    return rcpp_result_gen;
+END_RCPP
+}
+// lvMFnormconst_approx
+a1type lvMFnormconst_approx(a1type kappa, int p);
+RcppExport SEXP _sphm_lvMFnormconst_approx(SEXP kappaSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< a1type >::type kappa(kappaSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(lvMFnormconst_approx(kappa, p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ldSvMF_cann
+veca1 ldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
+RcppExport SEXP _sphm_ldSvMF_cann(SEXP ySEXP, SEXP kSEXP, SEXP aSEXP, SEXP GSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< mata1 >::type y(ySEXP);
+    Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
+    Rcpp::traits::input_parameter< veca1 >::type a(aSEXP);
+    Rcpp::traits::input_parameter< mata1 >::type G(GSEXP);
+    rcpp_result_gen = Rcpp::wrap(ldSvMF_cann(y, k, a, G));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ldSvMF_muV
+veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
+RcppExport SEXP _sphm_ldSvMF_muV(SEXP ySEXP, SEXP kSEXP, SEXP mSEXP, SEXP a1SEXP, SEXP VSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< mata1 >::type y(ySEXP);
+    Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
+    Rcpp::traits::input_parameter< veca1 >::type m(mSEXP);
+    Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
+    Rcpp::traits::input_parameter< mata1 >::type V(VSEXP);
+    rcpp_result_gen = Rcpp::wrap(ldSvMF_muV(y, k, m, a1, V));
+    return rcpp_result_gen;
+END_RCPP
+}
+// besselImixed
+a1type besselImixed(const a1type& x, const double& nu, double threshold, int order, bool log_result);
+RcppExport SEXP _sphm_besselImixed(SEXP xSEXP, SEXP nuSEXP, SEXP thresholdSEXP, SEXP orderSEXP, SEXP log_resultSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const a1type& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
+    Rcpp::traits::input_parameter< int >::type order(orderSEXP);
+    Rcpp::traits::input_parameter< bool >::type log_result(log_resultSEXP);
+    rcpp_result_gen = Rcpp::wrap(besselImixed(x, nu, threshold, order, log_result));
+    return rcpp_result_gen;
+END_RCPP
+}
 // mnlink_cpp
 mata1 mnlink_cpp(const mata1& xs, const mata1& xe, const veca1& vec, const int p);
 RcppExport SEXP _sphm_mnlink_cpp(SEXP xsSEXP, SEXP xeSEXP, SEXP vecSEXP, SEXP pSEXP) {
@@ -202,93 +286,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// besselIasym
-a1type besselIasym(const a1type& x, const double& nu, int order, bool log_result);
-RcppExport SEXP _sphm_besselIasym(SEXP xSEXP, SEXP nuSEXP, SEXP orderSEXP, SEXP log_resultSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const a1type& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< int >::type order(orderSEXP);
-    Rcpp::traits::input_parameter< bool >::type log_result(log_resultSEXP);
-    rcpp_result_gen = Rcpp::wrap(besselIasym(x, nu, order, log_result));
-    return rcpp_result_gen;
-END_RCPP
-}
-// besselItrunc
-a1type besselItrunc(const a1type& x, const double& nu, int order, bool log_result);
-RcppExport SEXP _sphm_besselItrunc(SEXP xSEXP, SEXP nuSEXP, SEXP orderSEXP, SEXP log_resultSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const a1type& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< int >::type order(orderSEXP);
-    Rcpp::traits::input_parameter< bool >::type log_result(log_resultSEXP);
-    rcpp_result_gen = Rcpp::wrap(besselItrunc(x, nu, order, log_result));
-    return rcpp_result_gen;
-END_RCPP
-}
-// lvMFnormconst_approx
-a1type lvMFnormconst_approx(a1type kappa, int p);
-RcppExport SEXP _sphm_lvMFnormconst_approx(SEXP kappaSEXP, SEXP pSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< a1type >::type kappa(kappaSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    rcpp_result_gen = Rcpp::wrap(lvMFnormconst_approx(kappa, p));
-    return rcpp_result_gen;
-END_RCPP
-}
-// uldSvMF_cann
-veca1 uldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G);
-RcppExport SEXP _sphm_uldSvMF_cann(SEXP ySEXP, SEXP kSEXP, SEXP aSEXP, SEXP GSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< mata1 >::type y(ySEXP);
-    Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
-    Rcpp::traits::input_parameter< veca1 >::type a(aSEXP);
-    Rcpp::traits::input_parameter< mata1 >::type G(GSEXP);
-    rcpp_result_gen = Rcpp::wrap(uldSvMF_cann(y, k, a, G));
-    return rcpp_result_gen;
-END_RCPP
-}
-// uldSvMF_muV
-veca1 uldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
-RcppExport SEXP _sphm_uldSvMF_muV(SEXP ySEXP, SEXP kSEXP, SEXP mSEXP, SEXP a1SEXP, SEXP VSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< mata1 >::type y(ySEXP);
-    Rcpp::traits::input_parameter< a1type >::type k(kSEXP);
-    Rcpp::traits::input_parameter< veca1 >::type m(mSEXP);
-    Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
-    Rcpp::traits::input_parameter< mata1 >::type V(VSEXP);
-    rcpp_result_gen = Rcpp::wrap(uldSvMF_muV(y, k, m, a1, V));
-    return rcpp_result_gen;
-END_RCPP
-}
-// besselImixed
-a1type besselImixed(const a1type& x, const double& nu, double threshold, int order, bool log_result);
-RcppExport SEXP _sphm_besselImixed(SEXP xSEXP, SEXP nuSEXP, SEXP thresholdSEXP, SEXP orderSEXP, SEXP log_resultSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const a1type& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
-    Rcpp::traits::input_parameter< int >::type order(orderSEXP);
-    Rcpp::traits::input_parameter< bool >::type log_result(log_resultSEXP);
-    rcpp_result_gen = Rcpp::wrap(besselImixed(x, nu, threshold, order, log_result));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_sphm_Omega_constraints", (DL_FUNC) &_sphm_Omega_constraints, 3},
+    {"_sphm_besselIasym", (DL_FUNC) &_sphm_besselIasym, 4},
+    {"_sphm_besselItrunc", (DL_FUNC) &_sphm_besselItrunc, 4},
+    {"_sphm_lvMFnormconst_approx", (DL_FUNC) &_sphm_lvMFnormconst_approx, 2},
+    {"_sphm_ldSvMF_cann", (DL_FUNC) &_sphm_ldSvMF_cann, 4},
+    {"_sphm_ldSvMF_muV", (DL_FUNC) &_sphm_ldSvMF_muV, 5},
+    {"_sphm_besselImixed", (DL_FUNC) &_sphm_besselImixed, 5},
     {"_sphm_mnlink_cpp", (DL_FUNC) &_sphm_mnlink_cpp, 4},
     {"_sphm_cayleyTransform", (DL_FUNC) &_sphm_cayleyTransform, 1},
     {"_sphm_inverseCayleyTransform", (DL_FUNC) &_sphm_inverseCayleyTransform, 1},
@@ -301,12 +307,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_prelimobj_cpp", (DL_FUNC) &_sphm_prelimobj_cpp, 4},
     {"_sphm_tape_besselImixed", (DL_FUNC) &_sphm_tape_besselImixed, 5},
     {"_sphm_tape_namedfun", (DL_FUNC) &_sphm_tape_namedfun, 6},
-    {"_sphm_besselIasym", (DL_FUNC) &_sphm_besselIasym, 4},
-    {"_sphm_besselItrunc", (DL_FUNC) &_sphm_besselItrunc, 4},
-    {"_sphm_lvMFnormconst_approx", (DL_FUNC) &_sphm_lvMFnormconst_approx, 2},
-    {"_sphm_uldSvMF_cann", (DL_FUNC) &_sphm_uldSvMF_cann, 4},
-    {"_sphm_uldSvMF_muV", (DL_FUNC) &_sphm_uldSvMF_muV, 5},
-    {"_sphm_besselImixed", (DL_FUNC) &_sphm_besselImixed, 5},
     {NULL, NULL, 0}
 };
 

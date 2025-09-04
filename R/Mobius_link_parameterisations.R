@@ -450,16 +450,24 @@ is_LinEuc <- function(obj, tol = sqrt(.Machine$double.eps)){
   return(NULL)
 }
 
-#' Obtain dimensions corresponding to a mean link parameter set
+#' @title Obtain dimensions corresponding to a mean link parameter set
+#' @param x A mean link parameter object of class `mnlink_Omega` or `mnlink_cann`.
+#' @return An integer vector of p (length of response unit vectors), qs (length of spherical covariate unit vectors) and qe (length of Euclidean covariate vectors).
+#' @name dim-mnlink_param
+NULL
+
+#' @rdname dim-mnlink_param
 #' @export
+#' @method dim mnlink_cann
 dim.mnlink_cann <- function(x){
   c(p = ncol(x$P), 
     qs = switch(1 + is.null(x$Qs), nrow(x$Qs), 0),
     qe = switch(1 + is.null(x$Qe), nrow(x$Qe), 0))
 }
 
-#' Obtain dimensions corresponding to a mean link parameter set
+#' @rdname dim-mnlink_param
 #' @export
+#' @method dim mnlink_Omega
 dim.mnlink_Omega <- function(x){
   c(p = length(x$p1), 
     qs = length(x$qs1),

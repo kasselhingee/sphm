@@ -92,8 +92,8 @@ test_that("MLE with p1 = G01", {
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
   y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
 
-  # check uld_Mobius_SvMF_partran in C++
-  ldCpp <- uld_Mobius_SvMF_partran_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mnlink_Omega_vec(omegapar), k = k,
+  # check ld_Mobius_SvMF_partran in C++
+  ldCpp <- ld_Mobius_SvMF_partran_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mnlink_Omega_vec(omegapar), k = k,
                                a1 = a[1], aremaining = a[-1], G0 = G0)
   expect_equal(ldCpp, y_ld[, p+1])
   
@@ -107,7 +107,7 @@ test_that("MLE with p1 = G01", {
                                             G0 = G0, 
                                             referencecoords = referencecoords,
                                             G01behaviour = "p1")
-  expect_warning({ulltape <- tape_uld_Mobius_SvMF_partran_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
+  expect_warning({ulltape <- tape_ld_Mobius_SvMF_partran_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
                                                        a1 = a[1], aremaining = a[-1],
                                                        G0 = G0,
                                                        p, qe,
@@ -180,8 +180,8 @@ test_that("MLE with G01 fixed", {
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
   y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
   
-  # check uld_Mobius_SvMF_partran in C++
-  ldCpp <- uld_Mobius_SvMF_partran_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mnlink_Omega_vec(omegapar), k = k,
+  # check ld_Mobius_SvMF_partran in C++
+  ldCpp <- ld_Mobius_SvMF_partran_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mnlink_Omega_vec(omegapar), k = k,
                                a1 = a[1], aremaining = a[-1], G0 = G0)
   expect_equal(ldCpp, y_ld[, p+1])
   
@@ -195,7 +195,7 @@ test_that("MLE with G01 fixed", {
                                             G0 = G0, 
                                             referencecoords = referencecoords,
                                             G01behaviour = "fixed")
-  expect_warning({ulltape <- tape_uld_Mobius_SvMF_partran_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
+  expect_warning({ulltape <- tape_ld_Mobius_SvMF_partran_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
                                                        a1 = a[1], aremaining = a[-1],
                                                        G0 = G0,
                                                        p, qe,
@@ -266,8 +266,8 @@ test_that("MLE with G01 free, p=5", {
   SvMFcann_check(SvMFcann(k, a, G0))
   y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
   
-  # check uld_Mobius_SvMF_partran in C++
-  ldCpp <- uld_Mobius_SvMF_partran_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mnlink_Omega_vec(omegapar), k = k,
+  # check ld_Mobius_SvMF_partran in C++
+  ldCpp <- ld_Mobius_SvMF_partran_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mnlink_Omega_vec(omegapar), k = k,
                                a1 = a[1], aremaining = a[-1], G0 = G0)
   expect_equal(ldCpp, y_ld[, p+1])
   
@@ -281,7 +281,7 @@ test_that("MLE with G01 free, p=5", {
                                             G0 = G0, 
                                             referencecoords = referencecoords,
                                             G01behaviour = "free")
-  expect_warning({ulltape <- tape_uld_Mobius_SvMF_partran_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
+  expect_warning({ulltape <- tape_ld_Mobius_SvMF_partran_nota1(omvec = mnlink_Omega_vec(omegapar), k = k,
                                                        a1 = a[1], aremaining = a[-1],
                                                        G0 = G0,
                                                        p, qe,

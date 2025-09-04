@@ -38,12 +38,29 @@ Mobius_SvMF_partan_nota1_fromvecparamsR <- function(mainvec, p, qs, qe, referenc
     .Call(`_sphm_Mobius_SvMF_partan_nota1_fromvecparamsR`, mainvec, p, qs, qe, referencecoords, G01behaviour, G01)
 }
 
-uld_Mobius_SvMF_partran_forR <- function(y, xs, xe, omvec, k, a1, aremaining, G0) {
-    .Call(`_sphm_uld_Mobius_SvMF_partran_forR`, y, xs, xe, omvec, k, a1, aremaining, G0)
+#' @noRd
+#' @title Log-density at response `y` for SvMF regression with the scales Mobius link function
+#' @description For given response row-vectors y, covariate row-vectors xs, xe and regression parameters, returns the log-density for each row of `y` (and corresponding row of xs and xe). When the length of the response (`p`) is not 3, then the normalising constant from the vMF density is approximated.
+#' @param y A matrix of row vectors (each row a unit vector)
+#' @param xs A matrix of row vectors (each row a unit vector)
+#' @param xe A matrix of row vectors
+#' @param om A parameter object specifying the parameters of the mean link
+#' @param k Concentration of the SvMF error distribution
+#' @param a1 The first scale of the SvMF error distribution, which is typically fixed at `1`.
+#' @param aremaining A (p-1) vector of the remaining scales of the SvMF error distribution.
+#' @param G0 An orthonormal matrix with first column that are the 'base location' for parallel transport of axes on the sphere.
+#' @details
+#' For a given mean direction `mu`, the axes of the SvMF error distribution are obtained by parallel transport of `G0[,-1]` along the geodesic from `G0[,1]` to `mu`.
+#' 
+#' The function projects the parameter object `om` such that the matrix Omega is orthogonal to p1, qs1 and qe1.
+NULL
+
+ld_Mobius_SvMF_partran_forR <- function(y, xs, xe, omvec, k, a1, aremaining, G0) {
+    .Call(`_sphm_ld_Mobius_SvMF_partran_forR`, y, xs, xe, omvec, k, a1, aremaining, G0)
 }
 
-tape_uld_Mobius_SvMF_partran_nota1 <- function(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour) {
-    .Call(`_sphm_tape_uld_Mobius_SvMF_partran_nota1`, omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour)
+tape_ld_Mobius_SvMF_partran_nota1 <- function(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour) {
+    .Call(`_sphm_tape_ld_Mobius_SvMF_partran_nota1`, omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour)
 }
 
 #' Preliminary Objective in the style of the `generalfunction` class:
@@ -129,6 +146,10 @@ besselItrunc <- function(x, nu, order, log_result = TRUE) {
 lvMFnormconst_approx <- function(kappa, p) {
     .Call(`_sphm_lvMFnormconst_approx`, kappa, p)
 }
+
+#' @noRd 
+#' @description Get the Hstar matrix from Scealy and Wood (2019, Section 3) for a mean vector m
+NULL
 
 uldSvMF_cann <- function(y, k, a, G) {
     .Call(`_sphm_uldSvMF_cann`, y, k, a, G)

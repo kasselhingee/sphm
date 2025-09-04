@@ -1,6 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-README
 vignettes/earthquakes_Papua_cache
 vignettes/midatlantic_SvMF_reproducibility_cache
 vignettes/earthquakes_Papua_files

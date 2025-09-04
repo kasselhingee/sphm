@@ -20,6 +20,10 @@
 #' @param G01behaviour "p1" identifies `G0[,1]` with `p1`. "fixed" fixes `G0[,1]` to its initial value. "free" allows `G0[,1]` to be estimated freely.
 #' @param doprelim When `FALSE` the preliminary von Mises-Fisher regression and subsequent moment estimation of `a` and `G0` is omitted. The provided parameters are used as the initial values for an optimisation of all parameters of the SvMF regression all together using [`nloptr::nloptr()`].
 #' @param ... Named optional arguments passed as a list to the `opts` argument of [`nloptr::nloptr()`].
+#' @param type Specify the link type ("SpEuc" or "LinEuc")
+#' @param fix_qs1 Fix qs1 to the starting values.
+#' @param fix_qe1 Fix qe1 to the starting values - typically used in when "LinEuc" link used.
+#' @param intercept Include an intercept (Euclidean covariate that is always `1`).
 #' @return A list:
 #' \describe{
 #'   \item{mean}{Estimated mean parameters}

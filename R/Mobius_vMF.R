@@ -1,10 +1,11 @@
-#' Optimise Mobius Link with vMF Error
-#' @importClassesFrom scorematchingad Rcpp_ADFun
-#' @details Assumes that the distribution is isotropic around the mean with constant concentration, thus maximising
-#' \deqn{\sum_i=1^n y_i^T \mu(x_i).}
-#' @param y A set of unit vectors in embedded coordinates, each row corresponds to a single unit vector.
-#' @param x A set of covariate vectors (also unit vectors), each row corresponds to the same row in `y`.
-#' @param paramobj A set of link parameters. See [`mnlink_cann()`] and [`mnlink_Omega()`].
+#' @title Objective function for vMF regression
+#' @description 
+#' For given parameters of [`mnlink()`], computes \deqn{\frac{1}{n}\sum_{i=1}^n y_i^T \mu(x_i)}
+#' where \eqn{y_i} are observed unit vectors and \eqn{\mu(x_i)} is the corresponding predicted unit vector.
+# @param y A matrix of unit vectors, each row corresponds to a single unit vector.
+# @param xs A matrix of spherical covariate vectors (also unit vectors), each row corresponds to the same row in `y`.
+# @param xe A matrix of Euclidean covariate vectors, each row corresponds to the same row in `y`.
+# @param param A set of link parameters. See [`mnlink_cann()`] and [`mnlink_Omega()`].
 #' @inheritParams mnlink
 #' @export
 prelimobj <- function(y, xs = NULL, xe = NULL, param){
@@ -14,18 +15,29 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
   return(-mean(rowSums(y * predictedmeans)))
 }
 
-#' Optimisation of the Preliminary Objective Function
-#' @details Uses `nloptr`. `NLopt` doesn't have any algorithms for global optimisation with non-linear equality constraints that use provided gradients. So `_parttape` only does local optimisation and uses `NLOPT_LD_SLSQP` which is the only algorithm that takes advantage of derivatives and can handle non-linear equality constraints.
+#' @title Regression with vMF Error and Scaled Mobius Link
+#' @importClassesFrom scorematchingad Rcpp_ADFun
+#' @description Regression of spherical response with vMF error and scaled Mobius link [`mnlink()`].
+#' @details Optimisation of link parameters is by maximising 
+#' \deqn{\sum_i=1^n y_i^T \mu(x_i)}
+#' where \eqn{y_i} are observed unit vectors and \eqn{\mu(x_i)} is the corresponding predicted unit vector.
+#' The concentration of the vMF is then estimated from the residuals.
 #' 
-#' Before fitting, standardises y, xs and xe (*the latter needs implementing*). If supplied, `start`, is updated accordingly.
-#' Note that if standardised y has a vMF distribution with the given means, the unstandardised y *does not* because of the second-moment standardisation (I would expect is to not be isotropic).
+#' Uses `nloptr`.
+#' 
+#' Before fitting, rotates y, xs and xe into standard form. If supplied, `start`, is updated accordingly.
 #' 
 #' If `type == "LinEuc"` a column of zeros called `'dummyzero'` is added to the front of `xe`.
 #' 
-#' Default scaling of 0.9 avoids being on the inequality boundary at the start of the search.
+#' @param y A matrix of unit vectors, each row corresponds to a single unit vector.
+#' @param xs A matrix of spherical covariate vectors (also unit vectors), each row corresponds to the same row in `y`.
+#' @param xe A matrix of Euclidean covariate vectors, each row corresponds to the same row in `y`.
 #' @param start is a starting parameter object. For LinEuc mean link the Qe matrix must have an extra row and column that at the front/top, with 1 in the first entry (and zero elsewhere).
 #' @param ... Passed as options to [`nloptr()`]. 
 #' @param intercept `TRUE` to include a Euclidean intercept term using a covariate that is always `1`. This is needed for centering of Euclidean covariates, which is part of standardising the covariates. If `intercept = FALSE` then the Euclidean covariates will not be standardised.
+#' @param lb Passed to [`nloptr()`]. Usually not used.
+#' @param ub Passed to [`nloptr()`]. Usually not used.
+#' @inheritParams mobius_SvMF
 #' @export
 mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, lb = NULL, ub = NULL, ...){
   p <- ncol(y)

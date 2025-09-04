@@ -61,6 +61,7 @@ cayley <- function(x){
 #' @export
 nthpole <- function(p){c(1, rep(0, p-1))}
 
+#' @noRd
 #' Standardise sign of columns of a matrix to have positive first element, or unchanged sign if 0 first element
 topos1strow <- function(mat){
   neg <- mat[1, ] < -.Machine$double.eps #only negative values found
@@ -70,9 +71,12 @@ topos1strow <- function(mat){
   return(mat)
 }
 
+#' @title Standardise signs of columns
+#' @description
 #' Standardise signs of columns so that largest (absolute value) element is positive in each column, or unchanged if all elements are 0.
 #' This should not change the signs of diagonal elements in diagonal matrices.
-#' As less sensitive to zeros in the first row than topos1strow
+#' @param mat
+#' @export
 toBigPosEl <- function(mat){
   maxidx <- apply(abs(mat), 2, which.max)
   neg <- mat[cbind(maxidx, 1:length(maxidx))] < -.Machine$double.eps #only negative values found
@@ -80,14 +84,18 @@ toBigPosEl <- function(mat){
   return(mat)
 }
 
-#' From orthogonal matrix to rotation matrix
+#' @title Convert orthogonal matrix to rotation matrix
+#' @description Convert from an orthogonal matrix to rotation matrix
 #' by switching sign of final column to make determinant positive
+#' @param mat
+#' @export
 toRot <- function(mat){
   mat[,ncol(mat)] <- sign(det(mat)) * mat[,ncol(mat)] #make mat a rotation matrix
   return(mat)
 }
 
-#' Applies toBigPosEl() and toRot, not doing any sign switchin on the first column
+#' @noRd
+#' @description Applies toBigPosEl() and toRot, not doing any sign switchin on the first column
 toBigPosElRot_keepfirst <- function(mat){
   mat[,-1] <- toBigPosEl(mat[,-1]) # make Gamma consistentish signs, and a rotation matrix
   mat <- toRot(mat)

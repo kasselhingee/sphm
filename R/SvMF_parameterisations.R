@@ -7,7 +7,7 @@
 #' A fourth represents the above V matrix as an orthogonal matrix and a set of positive real values.
 #' 
 #' @examples 
-#' SvMFcann(kappa = 0.5, a = c(2, rep(1, 5-1)), Gamma = diag(1, 5))
+#' SvMFcann(k = 0.5, a = c(1, rep(1, 5-1)), G = diag(1, 5))
 NULL
 
 #' @describeIn SvMFparams The canonical parameterisation of a SvMF using a kappa, a vector and Gamma, as used in equation 7 of Scealy and Wood 2017.

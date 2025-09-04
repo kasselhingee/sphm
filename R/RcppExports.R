@@ -100,6 +100,7 @@ inverseVectorizeLowerTriangle <- function(vec) {
     .Call(`_sphm_inverseVectorizeLowerTriangle`, vec)
 }
 
+#' @noRd
 #' @title Convert all SvMF regression parameters into a single long vector
 #' @description Placing all parameters in a single vector allow automatic differentiation with the parameters as independent values. Some tidying of the parameter space also occurs in the vectorisation.
 #' @details The scales `aremaining` are constrained to have a product of `1` and be positive. This function encodes these restrictions by dropping the first element of `aremaining` and converting the other elements to \eqn{log(a_j)} etc.
@@ -138,7 +139,8 @@ tape_ld_Mobius_SvMF_partran_nota1 <- function(omvec, k, a1, aremaining, G0star, 
     .Call(`_sphm_tape_ld_Mobius_SvMF_partran_nota1`, omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour)
 }
 
-#' Preliminary Objective in the style of the `generalfunction` class:
+#' @noRd
+#' @title Preliminary Objective in the style of the `generalfunction` class:
 #' @param yx is the response the spherical covariates, and the Euclidean covariates *cbind* together. Each row an observation.
 #' @param dyn is a zero length vector that is ignored
 #' @param dims_in A vector of `c(p, qe)`. `p` and `qe` are required to separate yx and omvec into their constituents.
@@ -152,7 +154,8 @@ prelimobj_cpp <- function(omvec, dyn, dims_in, yx) {
     .Call(`_sphm_prelimobj_cpp`, omvec, dyn, dims_in, yx)
 }
 
-#' Function to create tapes of besselImixed() from ldSvMF purely for testing differentiation
+#' @noRd
+#' @description Function to create tapes of besselImixed() from ldSvMF purely for testing differentiation
 tape_besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
     .Call(`_sphm_tape_besselImixed`, x, nu, threshold, order, log_result)
 }
@@ -170,9 +173,6 @@ tape_besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
 #' @param dyn_t The value of the dynamic argument to use for taping.
 #' @param constants The value of the constants argument.
 #' @param check_for_nan Should the tape watch for nan values when in use? This can be useful to let the tape pass nan back to R
-NULL
-
-#' Tape using a function name in function_map 
 #' @param func_name Name of function to tape. Name must be in the internal `function_map` object.
 tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for_nan) {
     .Call(`_sphm_tape_namedfun`, func_name, ind_t, dyn_t, constvec, constmat, check_for_nan)

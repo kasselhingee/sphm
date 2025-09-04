@@ -5,7 +5,8 @@
 #include <scorematchingad_forward.h> //includes <RcppEigenForward.h>
 #include <Rcpp.h>
 
-//' Preliminary Objective in the style of the `generalfunction` class:
+//' @noRd
+//' @title Preliminary Objective in the style of the `generalfunction` class:
 //' @param yx is the response the spherical covariates, and the Euclidean covariates *cbind* together. Each row an observation.
 //' @param dyn is a zero length vector that is ignored
 //' @param dims_in A vector of `c(p, qe)`. `p` and `qe` are required to separate yx and omvec into their constituents.

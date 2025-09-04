@@ -32,7 +32,8 @@ pADFun tape_namedfun(std::string func_name, veca1 & ind_t, veca1 & dyn_t, vecd &
   return(out);
 }
 
-//' Function to create tapes of besselImixed() from ldSvMF purely for testing differentiation
+//' @noRd
+//' @description Function to create tapes of besselImixed() from ldSvMF purely for testing differentiation
 // [[Rcpp::export]]
 pADFun tape_besselImixed(veca1 & x, const double & nu, double threshold, int order, bool log_result = true) {
   CppAD::Independent(x);

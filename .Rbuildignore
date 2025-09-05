@@ -1,9 +1,9 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-vignettes/earthquakes_Papua_cache
-vignettes/midatlantic_SvMF_reproducibility_cache
-vignettes/earthquakes_Papua_files
-vignettes/midatlantic_SvMF_reproducibility_files
+vignettes/reproduce_earthquakes_cache
+vignettes/reproduce_midatlantic_cache
+vignettes/reproduce_earthquakes_files
+vignettes/reproduce_midatlantic_files
 ^vignettes/.*\.(pdf|tex|log|aux)$
 .github
 

@@ -337,7 +337,7 @@ plotESAG2 <- predplot_ESAG(ESAG2)
 plotESAG2
 ```
 
-Note that we have not optimised Q for ESAG2 because optimisation did not converge. Instead Q was the default ...?
+Note that we have not optimised Q for ESAG2 because optimisation did not converge.
 
 ```{r}
 #| fig.width: 10
@@ -437,8 +437,6 @@ d1plot/d2plot + plot_layout(axes = "collect", guides = "collect")
 c(Ours = mod$DoF, IAG1 = IAG1$DoF, ESAG1 = ESAG1$DoF, ESAG2 = ESAG2$DoF)
 ```
 
-Our mean link with free rs1 has `r mobius_DoF(p=dim(mod$mean)["p"],qs=dim(mod$mean)["qs"],qe=dim(mod$mean)["qe"], fix_qe1 = TRUE)` degrees of freedom.
-
 # AIC
 ```{r}
 #| echo: false
@@ -478,7 +476,7 @@ Pair of grey lines: estimated directions of $\gamma_{02}$ (solid) and $\gamma_{0
 ## Hessian of Likelihood at Optimum
 The parameter vector is longer than the DoF because of the constraints in the optimisation.
 There should be DoF + `(3-1) * (3 - 2) / 2` positive eigenvalues.
-The term `(3-1) * (3 - 2) / 2` if for the commutativity constraint on Omega, which the likelihood computation does not account for, so appears as extra degrees of freedom in its Hessian.
+The term `(3-1) * (3 - 2) / 2` if for the commutativity constraint on Omega, which the likelihood computation does not account for, so appears as extra degrees of freedom in the Hessian of the likelihood.
 
 ```{r}
 #| echo: false
@@ -516,8 +514,7 @@ lapply(restarts, "[[", "obj") %>%
   geom_rug(aes(x = objective))
 ```
 
-Estimation is somewhat stable. That is good.
-Would be better if it was even more stable though!!!
+Other initial parameters have not improved on the default initial parameters.
 
 ## Check Other Starts for SvMF
 ```{r}
@@ -550,33 +547,5 @@ lapply(restarts, "[[", "AIC") %>%
   geom_rug(aes(x = AIC))
 ```
 
-## Check Restart of SvMF
-```{r}
-mod2 <- mobius_SvMF(y = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
-       xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
-       xe = xestd %>% as.matrix(),
-       G01behaviour = "free",
-       mean = mod$mean,
-       a = mod$a,
-       k = mod$k,
-       G0 = mod$G0,
-       G0reference = mod$G0,
-       fix_qs1 = FALSE, type = "LinEuc", doprelim = FALSE)
-```
+Other initial parameters have not improved on the default initial parameters.
 
-
-
-
-## Plans for Tables and Plots in Paper
-
- 1. 5-panneled figure of midatlantic data and the predictions from the 4 models above.
-Additional marks on our prediction to aid interpretation:
-    1. westedge = 0/1 when xs = Rs1
-    1. arrows away from these points in directions given by axes of B0
-    1. Arrows indicating east, west, north, south.
- 1. Table of likelihood, AIC and median geodesic residual distance
- 
- 
- In Appendix:
- 
- 1. Table of estimated loadings for our fitted model

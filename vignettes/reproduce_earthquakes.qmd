@@ -405,22 +405,6 @@ segs %>%
   coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
 ```
 
-Strike looks correct.
-
-```{r}
-#| fig.width: 8
-#| fig.height: 2
-ggplot() +
-  geom_sf(data = world) +
-  geom_point(data = s4df, aes(x = Longitude, y = Latitude, col = dist/1000)) +
-  geom_sf(show.legend = FALSE, data = filter(tecbound, NiceName == "BSSL")) +
-  theme_bw() +
-  scale_color_viridis_c(name = "Distance (km)", transform = "log10") +
-  theme(axis.title = element_blank()) +
-  coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
-```
-
-
 ## Look for Outliers (SI Figure)
 Here I'll look for outliers.
 I'll view the moment tensors orthogonally projected onto axes determined by the first and second moment of the data such that
@@ -669,7 +653,7 @@ mykbl <- df %>%
 mykbl
 ```
 
-In the software, there is a dummy zero-valued covariate that is used to allow for the option of a denominator below $B_e Q_e^\top$.
+Below I ignore a dummy zero-valued covariate that is automatically added by the software for compatibility with a link that has a denominator below $B_e R_e^\top$ ("SpEuc" type link).
 
 ```{r, results='asis'}
 df <- data.frame(cann$Qe[-1,-1])
@@ -844,6 +828,11 @@ range(acos(mod_SvMF$pred %*% mod_SvMF$G0[,1]))
 ```
 
 # Predictions in Standardised Coordinates
+
+Below I plot the predictions in standardised coordinates.
+In the first plot the residuals are coloured arrows and the orientation axes for each prediction are shown in grey.
+In the second plot the residuals are still coloured arrows, but the orientation axes are shown as strong blued, red, purple etc lines.
+
 ```{r}
 get_predobspairsdf <- function(mod,
                                extra = NULL,
@@ -1042,6 +1031,8 @@ ggsave("earthq_rresids.pdf", width = 8, height = 7)
 
 
 ## Residual Mean by Covariates (SI Figure)
+Below is the residuals in each of the basis coordinates given by the SvMF orientation against covariate values.
+
 ```{r}
 bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
   st_drop_geometry() %>%
@@ -1060,8 +1051,6 @@ bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
   scale_x_continuous(name = "Covariate Value")
 ggsave("earthq_rresids2.pdf", width = 8, height = 6)
 ```
-
-Above is the residuals in each of the basis coordinates given by the SvMF orientation against covariate values.
 
 ## Standardised Residuals
 Below the same residuals are transformed using the estimated concentration and Scale von Mises Fisher scales so that, at high-concentrations, the residuals should be close to a standard multivariate Normal (Scealy and Wood, 2019, Proposition 2).
@@ -1148,6 +1137,8 @@ mod_vMF$k
 mod_vMF$AIC
 ```
 
+Below is plot for comparing likelihoods for give simulated response `y`.
+
 ```{r}
 getlikR <- function(y){
   mod1 <- mobius_vMF(y,
@@ -1191,6 +1182,11 @@ getlikR <- function(y){
        vMF = mod1,
        SvMF = mod2)
 }
+```
+
+Now we simulate the response 1000 times from the best vMF model and compare the likelihood of the vMF model to the likelihood of the SvMF model on each simulated data.
+
+```{r}
 null_likRs <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
   y_ld <- rMobius_SvMF(xs = NULL, 
@@ -1216,7 +1212,7 @@ sum(!is.na(null_likRs_vec))
 ```
 
 There were a few cases where the regression did not converge, and these have been discarded.
-P-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
+p-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
 ```{r}
 mean(null_likRs_vec > obs$likR, na.rm = TRUE)
 ```
@@ -1224,6 +1220,7 @@ This small $p$-value suggests that the data was not drawn from a vMF regression.
 
 # Parametric Bootstrap Regions for `a`
 Lets look at the CI for the scales of the SvMF.
+We do this by simulating from the fitted SvMF model 1000 times, and refitting a SvMF regression each time.
 
 ```{r}
 Bests <- pbapply::pblapply(1:1000, function(seed){

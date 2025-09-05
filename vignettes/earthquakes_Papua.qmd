@@ -19,6 +19,7 @@ library(sphm)
 library(sf)
 library("rnaturalearth")
 library("rnaturalearthdata")
+library(kableExtra)
 packageVersion("sphm")
 ```
 
@@ -141,7 +142,6 @@ s4df <- bind_cols(diagproj, offdiag, raw)
 ## Hejrani et al (2017)'s Regions
 Here I have captured the regions from Fig 16 of Hejrani et al (2017) by visual assessment.
 ```{r}
-library(sf)
 ptmatrix <- function(xmin, xmax, ymin, ymax){
   matrix(c(xmin, ymax,   
            xmax, ymax,
@@ -626,7 +626,6 @@ mod_SvMF$DoF
 ```
 
 ```{r, results='asis'}
-library(kableExtra)
 df <- data.frame(t(mod_SvMF$a))
 colnames(df) <- 1:ncol(df)
 mykbl <- df %>%
@@ -637,7 +636,6 @@ mykbl
 ```
 
 ```{r, results='asis'}
-library(kableExtra)
 df <- data.frame(mod_SvMF$G0)
 label_map <- c(
   s1 = "(Mrr - Mtt)/$\\sqrt{2}$",

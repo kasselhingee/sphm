@@ -27,6 +27,8 @@ library(sphm)
 library("R.matlab")
 library(tibble)
 library(dplyr)
+library(patchwork)
+library(kableExtra)
 ```
 
 ```{r Residual Plotting Function}
@@ -187,7 +189,6 @@ Some general scaling occurs with greater influence from X3 (N-S direction), then
 
 ## Table of Estimates
 ```{r Estimates Table, results='asis'}
-library(kableExtra)
 df <- cbind("diag($B_s$)" = diag(cann$Bs),
       "diag($B_e$)" = diag(cann$Be),
       tQe = t(cann$Qe[-1,-1])) %>%
@@ -342,7 +343,6 @@ Note that we have not optimised Q for ESAG2 because optimisation did not converg
 #| fig.width: 10
 #| fig.height: 10
 #| echo: false
-library(patchwork)
 plotours + ggtitle("Ours") + theme(legend.position = "none") +
 plotIAG1 + ggtitle("IAG1") + 
   plotESAG1 + ggtitle("ESAG1") + 

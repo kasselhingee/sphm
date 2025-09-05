@@ -16,6 +16,9 @@ library(dplyr)
 library(GGally)
 library(patchwork)
 library(sphm)
+library(sf)
+library("rnaturalearth")
+library("rnaturalearthdata")
 packageVersion("sphm")
 ```
 
@@ -303,8 +306,6 @@ tmp <- paste0("https://github.com/fraxen/tectonicplates/raw/refs/heads/master/PB
 ```
 
 ```{r}
-library(sf)
-library("rnaturalearth")
 world <- ne_countries(scale = "medium", returnclass = "sf")
 tecbound <- st_read("PB2002_boundaries.shp")
 mat <- st_intersects(tecbound, st_as_sfc(st_bbox(s4df)))
@@ -632,9 +633,6 @@ mykbl <- df %>%
   mutate(across(everything(), ~formatC(.x, digits = 2, format = "f"))) %>%
   kbl(booktabs = TRUE, position = "!h", escape = FALSE, format = "latex") %>%
   add_header_above(c("Scales" = ncol(df)), escape = FALSE)
-kableExtra::save_kable(mykbl,
-                       "earthq_a.pdf", 
-                       keep_tex = TRUE)
 mykbl
 ```
 
@@ -653,9 +651,6 @@ colnames(df) <- c("$\\gamma_{01}$", "$\\gamma_{02}$", "$\\gamma_{03}$", "$\\gamm
 mykbl <- df %>%
   mutate(across(everything(), ~formatC(.x, digits = 2, format = "f"))) %>%
   kbl(booktabs = TRUE, position = "!h", escape = FALSE, format = "latex")
-kableExtra::save_kable(mykbl,
-                       "earthq_G0.pdf", 
-                       keep_tex = TRUE)
 mykbl
 ```
 
@@ -673,9 +668,6 @@ mykbl <- df %>%
       row.names = NA,
       col.names = NULL) %>%
   add_header_above(c("$B_e$" = ncol(df)), escape = FALSE)
-kableExtra::save_kable(mykbl,
-                       "earthq_Be.pdf", 
-                       keep_tex = TRUE)
 mykbl
 ```
 
@@ -692,9 +684,6 @@ mykbl <- df %>%
       row.names = TRUE,
       col.names = NULL) %>%
   add_header_above(c(" " = 1, "$R_e$" = ncol(df)), escape = FALSE)
-kableExtra::save_kable(mykbl,
-                       "earthq_Re.pdf", 
-                       keep_tex = TRUE)
 mykbl
 ```
 
@@ -714,9 +703,6 @@ mykbl <- df %>%
   kbl(booktabs = TRUE, position = "!h", escape = FALSE, format = "latex",
       col.names = NULL) %>%
   add_header_above(c(" "=1, "$B_0$" = ncol(df)), escape = FALSE)
-kableExtra::save_kable(mykbl,
-                       "earthq_B0.pdf", 
-                       keep_tex = TRUE)
 mykbl
 ```
 
@@ -1289,8 +1275,5 @@ mykbl <- df %>%
   kbl(booktabs = TRUE, position = "!h", escape = FALSE, format = "latex",
       col.names = paste0("a",2:5)) %>%
   add_header_above(c(" "=1, "Scales" = 4), escape = FALSE)
-kableExtra::save_kable(mykbl,
-                       "earthq_aCI.pdf", 
-                       keep_tex = TRUE)
 mykbl
 ```

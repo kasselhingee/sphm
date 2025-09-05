@@ -89,8 +89,6 @@ xestd <- xe %>% scale() %>% as_tibble()
 # Our SvMF Model
 ```{r ours}
 #| include: false
-ymean <- colMeans(fulldf %>% select(starts_with("Y")) %>% as.matrix())
-ymean <- ymean/sqrt(sum(ymean^2))
 mod <- mobius_SvMF(y = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
        xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
        xe = xestd %>% as.matrix(),
@@ -197,12 +195,8 @@ df <- cbind("diag($B_s$)" = diag(cann$Bs),
 row.names(df) <- c("$t_2$", "$t_3$")
 mykbl <- kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex", digits = 2) %>%
   add_header_above(c(" "=3, "$R_e^\\top$" = 2), escape = FALSE)
-kableExtra::save_kable(mykbl,
-                       "estimatestable.pdf", 
-                         keep_tex = TRUE)
 mykbl
 ```
-
 
 ## Plot
 

@@ -300,7 +300,8 @@ plotours
 
 ```{r iag1}
 #| include: false
-IAG1 <- R.matlab::readMat("../../sphere_reg_code/reverse_westedge/SEuc2S_IAG1.mat")
+#IAG1 <- R.matlab::readMat("../../sphere_reg_code/reverse_westedge/SEuc2S_IAG1.mat")
+IAG1 <- R.matlab::readMat("SEuc2S_IAG1.mat")
 IAG1$Lik <- -IAG1$fval.IAG1
 IAG1$DoF <- (3*nrow(IAG1$Cov) + 1 + 1)
 IAG1$AIC <- 2*IAG1$DoF - 2 * (IAG1$Lik)
@@ -313,7 +314,8 @@ plotIAG1
 
 ```{r esag1}
 #| include: false
-ESAG1 <- R.matlab::readMat("../../sphere_reg_code/reverse_westedge/SEuc2S_ESAG1.mat")
+#ESAG1 <- R.matlab::readMat("../../sphere_reg_code/reverse_westedge/SEuc2S_ESAG1.mat")
+ESAG1 <- R.matlab::readMat("SEuc2S_ESAG1.mat")
 ESAG1$Lik <- 251.7973
 ESAG1$predmean <- ESAG1$predmean1
 ESAG1 <- calc_Paine_resids(ESAG1)
@@ -326,7 +328,8 @@ plotESAG1
 
 ```{r esag2}
 #| include: false
-ESAG2 <- R.matlab::readMat("../../sphere_reg_code/reverse_westedge/SEuc2S_ESAG2.mat")
+#ESAG2 <- R.matlab::readMat("../../sphere_reg_code/reverse_westedge/SEuc2S_ESAG2.mat")
+ESAG2 <- R.matlab::readMat("SEuc2S_ESAG2.mat")
 ESAG2$Lik <- 243.1426
 ESAG2$DoF <- 5 * nrow(ESAG2$X.SEuc) + #maps for mu and gamma
   0 #rotation matrix Q 6 if estimated, 0 otherwise

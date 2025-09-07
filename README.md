@@ -1,6 +1,6 @@
 # sphm: Spherical Regression by Scaled Mobius Link
 
-This directory contains an R package for running the regression model with SvMF error distribution in the manuscript titled "Regression for spherical responses with linear and spherical covariates using a scaled link function" by Shogo Kato, Kassel L. Hingee, Janice L. Scealy, and Andrew T.A. Wood.
+This directory contains an R package for running the regression model with scaled von Mises-Fisher (SvMF) error distribution in the manuscript titled "Regression for spherical responses with linear and spherical covariates using a scaled link function" by Shogo Kato, Kassel L. Hingee, Janice L. Scealy, and Andrew T.A. Wood.
 
 ## Installation
 This package can be installed by running
@@ -22,5 +22,7 @@ quarto::quarto_render("./vignettes/reproduce_earthquakes.qmd")
 Currently all data required for these documents is also in `./vignettes/`.
 
 ## Included C++ Code
-The package uses automatic differentiation via the [`CppAD`](https://github.com/coin-or/CppAD) C++ package, which is accessed using the [`scorematchingad`](https://cran.r-project.org/package=scorematchingad) R package on CRAN. To use automatic differentiation, functions must be written in C++ and use arguments that are special numeric classes for automatic differentiation. These functions are all in the `./src/` directory. The special classes are named by the `scorematchingad` package as `a1type` (real-valued number for automatic differentiation), `veca1` (vector of `a1type`), `mata1` (matrix of `a1type`).
+The package uses automatic differentiation via the [`CppAD`](https://github.com/coin-or/CppAD) C++ package, which is accessed using the [`scorematchingad`](https://cran.r-project.org/package=scorematchingad) R package on CRAN. To use automatic differentiation, code must be written in C++ and use objects that are special numeric classes for automatic differentiation. The special classes are named by the `scorematchingad` package as `a1type` (real-valued number for automatic differentiation), `veca1` (vector of `a1type`), `mata1` (matrix of `a1type`).
+This code can then be 'taped', which if exported to `R`, results in `Rcpp_ADFun` objects that can be evaluated and differentiated (and more - search `tape builders` in `scorematchingad` help). Code that does this using `scorematchingad`, `CppAD` and `Eigen` is in the `./src/` directory.
+
 

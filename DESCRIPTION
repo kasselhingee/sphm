@@ -2,9 +2,9 @@ Package: sphm
 Title: Spherical Regression by Scaled Mobius Link
 Version: 0.0.17
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: Regression for spherical response data and scaled von Mises-Fisher error distribution as described in the manuscript "Regression for spherical responses with linear and spherical covariates using a scaled link function".
+    person("Kassel", "Hingee", "Liam", "kassel.hingee@anu.edu.au", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-9894-2407"))
+Description: Regression for spherical response data and scaled von Mises-Fisher error distribution as described in the manuscript "Regression for spherical responses with linear and spherical covariates using a scaled link function" by Shogo Kato, Kassel L. Hingee, Janice L. Scealy, and Andrew T.A. Wood.
 Imports:
   Rcpp (>= 1.0.11),
   Rdpack,

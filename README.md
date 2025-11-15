@@ -3,7 +3,11 @@
 This directory contains an R package for running the regression model with scaled von Mises-Fisher (SvMF) error distribution in the manuscript titled "Regression for spherical responses with linear and spherical covariates using a scaled link function".
 
 ## Installation
-This package can be installed by running `install.packages("sphm_0.0.17.tar.gz", repos = NULL)` or running `install.packages(".", repos = NULL)` from inside the package root directory.
+This package with its dependencies is convenient to install by applying the `remotes` package to the `.tar.gz` file for this package:
+
+```
+remotes::install_local("sphm_0.0.17.tar.gz")
+```
 
 ## Reproducing Results in Manuscript
 The two quarto documents (`.qmd` files) in `./vignettes/` reproduce the results for the midatlantic ridge and earthquake moment tensor regressions in the manuscript "Regression for spherical responses with linear and spherical covariates using a scaled link function".

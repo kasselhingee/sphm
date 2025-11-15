@@ -6,8 +6,11 @@ This directory contains an R package for running the regression model with scale
 This package with its dependencies is convenient to install by applying the `remotes` package to the `.tar.gz` file for this package:
 
 ```
+#install.packages("remotes")
 remotes::install_local("sphm_0.0.17.tar.gz")
 ```
+
+The required package `scorematchingad` can take a long time to install.
 
 ## Reproducing Results in Manuscript
 The two quarto documents (`.qmd` files) in `./vignettes/` reproduce the results for the midatlantic ridge and earthquake moment tensor regressions in the manuscript "Regression for spherical responses with linear and spherical covariates using a scaled link function".

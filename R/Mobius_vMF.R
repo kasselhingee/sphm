@@ -252,11 +252,11 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
   x0 <- om0vec[!isfixed]
   Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = constraint_tape$domain)
   if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){
-    # modify Qs and Qe so that they dont individually form orthogonal vectors
+    # modify Qs and Qe so that they dont individually form orthogonal vectors by adding a little bit of noise
     cann <- as_mnlink_cann(om0)
     scalemodifier <- max(abs(rbind(cann$Qs, cann$Qe)))/1E3
-    cann$Qs[,-1] <- cann$Qs[,-1] + scalemodifier*savednoisemat[1:nrow(cann$Qs), 1:(ncol(cann$Qs)-1)]
-    cann$Qe[,-1] <- cann$Qe[,-1] + scalemodifier*savednoisemat[1:nrow(cann$Qe), 1:(ncol(cann$Qe)-1)]
+    cann$Qs[,-1] <- cann$Qs[,-1] + scalemodifier*savednoisemat[1:nrow(cann$Qs), 1:(ncol(cann$Qs)-1)] #use pregenerated 100 x 100 noise matrix in R/sysdata.rda, built by data-raw/generate-savednoisemat.R
+    cann$Qe[,-1] <- cann$Qe[,-1] + scalemodifier*savednoisemat[1:nrow(cann$Qe), 1:(ncol(cann$Qe)-1)] #use pregenerated 100 x 100 noise matrix in R/sysdata.rda, built by data-raw/generate-savednoisemat.R
     om0new <- as_mnlink_Omega(cann)
     x0 <- mnlink_Omega_vec(om0new)[!isfixed]
     }

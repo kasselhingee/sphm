@@ -6,5 +6,5 @@ vignettes/reproduce_earthquakes_files
 vignettes/reproduce_midatlantic_files
 ^vignettes/.*\.(pdf|tex|log|aux)$
 .github
-
+data-raw/*
 

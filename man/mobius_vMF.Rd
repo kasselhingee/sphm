@@ -35,11 +35,11 @@ mobius_vMF(
 
 \item{intercept}{\code{TRUE} to include a Euclidean intercept term using a covariate that is always \code{1}. This is needed for centering of Euclidean covariates, which is part of standardising the covariates. If \code{intercept = FALSE} then the Euclidean covariates will not be standardised.}
 
-\item{lb}{Passed to \code{\link[=nloptr]{nloptr()}}. Usually not used.}
+\item{lb}{Passed to \code{\link[nloptr:nloptr]{nloptr::nloptr()}}. Usually not used.}
 
-\item{ub}{Passed to \code{\link[=nloptr]{nloptr()}}. Usually not used.}
+\item{ub}{Passed to \code{\link[nloptr:nloptr]{nloptr::nloptr()}}. Usually not used.}
 
-\item{...}{Passed as options to \code{\link[=nloptr]{nloptr()}}.}
+\item{...}{Passed as options to \code{\link[nloptr:nloptr]{nloptr::nloptr()}}.}
 }
 \description{
 Regression of spherical response with vMF error and scaled Mobius link \code{\link[=mnlink]{mnlink()}}.

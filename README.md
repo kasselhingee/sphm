@@ -3,11 +3,11 @@
 This directory contains an R package for running the regression model with scaled von Mises-Fisher (SvMF) error distribution in the manuscript titled "Regression for spherical responses with linear and spherical covariates using a scaled link function".
 
 ## Installation
-This package with its dependencies is convenient to install by applying the `remotes` package to the `.tar.gz` file for this package:
+This package with its dependencies is convenient to install by applying the `remotes` package to this directory:
 
 ```
 #install.packages("remotes")
-remotes::install_local("sphm_0.0.17.tar.gz")
+remotes::install_local(".")
 ```
 
 The required package `scorematchingad` can take a long time to install.

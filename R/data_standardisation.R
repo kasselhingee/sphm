@@ -104,18 +104,19 @@ destandardise_Euc <- function(xe, center, rotation){
 #' This function computes those parameters.
 #' @details
 #' Suppose spherical \eqn{xs} and Euclidean covariate \eqn{xe} are related to a spherical 
-#' response \eqn{y} by [`meanlink()`].
+#' response \eqn{y} by [`mnlink()`].
 #' Then `xsrot %*% xs` and `xerot %*% (xe - xecenter)` are related to
-#' \eqn{`yrot` \times y} according to `meanlink()` with parameters given by
-#' [`recoordinate_Omega()`].
+#' \eqn{`yrot` \times y} according to `mnlink()` with parameters given by
+#' `recoordinate_Omega()`.
+#'
+#' Reversing this coordinate change can be performed by `undo_recoordinate_Omega()`.
+#'
+#' The standardisation of the data `xs`, `xe` and `y` can be performed by
+#' [`standardise_sph()`] and `standardise_Euc()`.
 #' 
-#' Reversing this coordinate change can be performed by [`undo_recoordinate_Omega()`].
-#' 
-#' The standardisation of the data `xs`, `xe` and `y` can be performed by 
-#' [`standardise_sph()`] and [`standardise_Euc()`].
-#' 
-#' I'm only sure that the following works when there is no shift of the 1s covariate and when param$qe1[onescovaridx] = 0
-#' @param onescovaridx Gives the index in `xe` of the covariate that is identically 1 - needed whenever xecenter is non-zero.
+#' Note: only verified correct when there is no shift of the 1s covariate
+#' and when `param$qe1[onescovaridx] = 0`.
+#' `onescovaridx` gives the index in `xe` of the covariate that is identically 1.
 recoordinate_Omega <- function(param, yrot = diag(length(param$p1)), 
                                xsrot = diag(length(param$qs1)),
                                xerot = diag(length(param$qe1)), 

@@ -12,10 +12,10 @@ rotatedresid(y, ypred, base, path = "geo")
 \item{ypred}{Matrix of predicted unit vectors (one per row, same size as \code{y}).}
 
 \item{base}{Unit vector giving the base location to transport residuals to.
-Typically the north pole \code{\link{north_pole(p)}}.}
+Typically \code{north_pole(p)} (see \code{\link[=north_pole]{north_pole()}}).}
 
 \item{path}{Transport method: \code{"geo"} or \code{"Amaral"} use \code{\link[=parallel_transport_mat]{parallel_transport_mat()}};
-\code{"Jupp"} uses \code{\link[=JuppRmat]{JuppRmat()}} (gives the negative); \code{"Absil"} uses a third formula.}
+\code{"Jupp"} uses \code{JuppRmat()} (internal; gives the negative); \code{"Absil"} uses a third formula.}
 }
 \value{
 A matrix of rotated residuals (one per row), with attribute
@@ -28,7 +28,7 @@ plane at \code{ypred}) is parallel transported along the geodesic to a common
 \code{base} location, making residuals comparable across observations.
 }
 \seealso{
-\code{\link[=parallel_transport_mat]{parallel_transport_mat()}}, \code{\link[=JuppRmat]{JuppRmat()}}
+\code{\link[=parallel_transport_mat]{parallel_transport_mat()}}
 
 Other residuals: 
 \code{\link{parallel_transport_mat}()}

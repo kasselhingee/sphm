@@ -21,15 +21,15 @@ that vector to the corresponding tangent vector at \code{end}. When applied to \
 it returns \code{end}.
 
 This is the matrix from Amaral et al. (2007, Lemma 2), which is equivalent to the negative
-of Jupp's (1988) rotation matrix \code{\link[=JuppRmat]{JuppRmat()}}. Both perform the same parallel transport;
-this version uses a rotation-based formula.
+of Jupp's (1988) rotation matrix (internal function \code{JuppRmat()}). Both perform the same
+parallel transport; this version uses a rotation-based formula.
 }
 \details{
 If \code{end = -start} (antipodal points), there is no unique geodesic and a reflection
 matrix in the \code{end} direction is returned.
 }
 \seealso{
-\code{\link[=rotatedresid]{rotatedresid()}}, \code{\link[=JuppRmat]{JuppRmat()}}
+\code{\link[=rotatedresid]{rotatedresid()}}
 
 Other residuals: 
 \code{\link{rotatedresid}()}

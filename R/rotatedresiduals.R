@@ -6,12 +6,12 @@
 #' @param y Matrix of observed unit vectors (one per row).
 #' @param ypred Matrix of predicted unit vectors (one per row, same size as `y`).
 #' @param base Unit vector giving the base location to transport residuals to.
-#'   Typically the north pole [`north_pole(p)`].
+#'   Typically `north_pole(p)` (see [`north_pole()`]).
 #' @param path Transport method: `"geo"` or `"Amaral"` use [`parallel_transport_mat()`];
-#'   `"Jupp"` uses [`JuppRmat()`] (gives the negative); `"Absil"` uses a third formula.
+#'   `"Jupp"` uses `JuppRmat()` (internal; gives the negative); `"Absil"` uses a third formula.
 #' @return A matrix of rotated residuals (one per row), with attribute
 #'   `"samehemisphere"` indicating observations on the same side as `ypred`.
-#' @seealso [parallel_transport_mat()], [JuppRmat()]
+#' @seealso [parallel_transport_mat()]
 #' @family residuals
 #' @export
 rotatedresid <- function(y, ypred, base, path = "geo"){
@@ -55,14 +55,14 @@ JuppRmat <- function(y, base){
 #' it returns `end`.
 #'
 #' This is the matrix from Amaral et al. (2007, Lemma 2), which is equivalent to the negative
-#' of Jupp's (1988) rotation matrix [`JuppRmat()`]. Both perform the same parallel transport;
-#' this version uses a rotation-based formula.
+#' of Jupp's (1988) rotation matrix (internal function `JuppRmat()`). Both perform the same
+#' parallel transport; this version uses a rotation-based formula.
 #' @param start Starting location as a unit vector.
 #' @param end End location as a unit vector.
 #' @return A square orthogonal matrix.
 #' @details If `end = -start` (antipodal points), there is no unique geodesic and a reflection
 #' matrix in the `end` direction is returned.
-#' @seealso [rotatedresid()], [JuppRmat()]
+#' @seealso [rotatedresid()]
 #' @family residuals
 #' @export
 parallel_transport_mat <- function(start, end){ #assumes a and b are unit vectors

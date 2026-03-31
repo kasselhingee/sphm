@@ -45,6 +45,7 @@
 #'   \item{initial}{Initial values}
 #'   \item{preest}{Results of the preliminary vMF regression}
 #' }
+#' @family regression
 #' @export
 mobius_SvMF <- function(y, xs, xe, mean = NULL, k = NULL, a = NULL, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "LinEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, doprelim = TRUE, ...){
 
@@ -78,6 +79,10 @@ mobius_SvMF <- function(y, xs, xe, mean = NULL, k = NULL, a = NULL, G0 = NULL, G
   return(c(finalest, list(preest = preest)))
 }
 
+# Joint maximum likelihood optimisation of all SvMF regression parameters for fixed
+# scale structure (a and G0 are estimated, but the constraint prod(a[-1]) = 1 is enforced).
+# Called by mobius_SvMF() after the preliminary vMF estimate. Uses automatic differentiation
+# (CppAD via scorematchingad) and a gradient-based solver (nloptr/SLSQP).
 optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "LinEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, lb = NULL, ub = NULL, ...){
   initial <-  list(
     mean = mean,
@@ -307,6 +312,9 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   return(niceout)
 }
 
+# Preliminary estimation step for mobius_SvMF(): runs a vMF regression to get a good
+# starting mean link, then estimates G0 axes (parallel transport base) and shape
+# parameters a using method-of-moments on the rotated residuals (Scealy & Wood 2019, Sec 4.1).
 mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G01behaviour = "p1", type = "LinEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, ...){
   prelim <- mobius_vMF(y = y, xs = xs, xe = xe, 
              start = mean, 
@@ -332,7 +340,7 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G
     aremaining <- SvMF_prelim_scales(rresid, G0)
   } else {
     # axes:
-    G0 <- SvMF_mom_axes(rresid, G01)
+    G0 <- SvMF_moment_axes(rresid, G01)
     # estimate the scales
     aremaining <- SvMF_prelim_scales(rresid, G0)
   }
@@ -347,6 +355,9 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G
   return(prelim)
 }
 
+# Estimate only the concentration parameter k by univariate MLE, holding a and G0 fixed.
+# Used after the main joint optimisation converges when p != 3 (because the normalising
+# constant can be computed more accurately for a scalar search than during joint AD optimisation).
 mobius_SvMF_konly <- function(y, ymean, a, G0){
   yrot <- undo_partransport(y = y, ymean = ymean, G01 = G0[,1])
   res <- optimise(function(k){
@@ -366,6 +377,7 @@ mobius_SvMF_konly <- function(y, ymean, a, G0){
 #' @title Function for simulating data given mean link and SvMF parameters
 #' @inheritParams ldMobius_SvMF
 #' @return A matrix of `p+1` columns and the same number of rows as `xs` or `xe`. The final column is the log-density of the simulated response.
+#' @family regression
 #' @export
 rMobius_SvMF <- function(xs, xe, mean, k, a, G0){
   ymean <- mnlink(xs = xs, xe = xe, param = mean)
@@ -402,6 +414,7 @@ undo_partransport <- function(y, ymean, G01){
 #' @inheritParams mobius_SvMF
 #' @description The log-density of each row of `y` for a given SvMF regression. Two methods are used. The approximate method used in the optimisation of all parameters (labelled `Cpp`) and an exact log-density using highly accurate Bessel function implementations from base `R` (labelled `R`).
 #' @return A matrix with two columns and the same number of rows as `y`.
+#' @family regression
 #' @export
 ldMobius_SvMF <- function(y, xs, xe, mean, k, a, G0){
   ymean <- mnlink(xs = xs, xe = xe, param = mean)

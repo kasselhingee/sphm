@@ -2,6 +2,7 @@
 #' @param n The number of samples to simulate
 #' @param param A parameter object. See [`SvMFcann()`] or [`SvMFmuV()`].
 #' @param check If TRUE, will check that the parameters are appropriate for a SvMF model.
+#' @family SvMF-distribution
 #' @export
 rSvMF <- function(n, param, check = TRUE)
 {

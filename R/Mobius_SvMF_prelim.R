@@ -8,6 +8,7 @@
 NULL
 
 #' @describeIn SvMF_prelim `SvMF_moment_axes` follows Scealy and Wood (2019) Section 4.1.1 description
+#' @family SvMF-distribution
 #' @export
 SvMF_moment_axes <- function(y, mu){
   projmat <- diag(length(mu)) - mu %*% t(mu)
@@ -21,6 +22,7 @@ SvMF_moment_axes <- function(y, mu){
 }
 
 #' @describeIn SvMF_prelim `SvMF_prelim_scales()` follows Scealy and Wood (2019) Proposition 2
+#' @family SvMF-distribution
 #' @export
 SvMF_prelim_scales <- function(y, G){
   # rotate y to star coordinates, where the columns of G are the basis coordinates

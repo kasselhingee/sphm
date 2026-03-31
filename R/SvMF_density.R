@@ -2,6 +2,7 @@
 #' @param y is row-vectors of data
 #' @param param is a set of parameters from either [`SvMFcann()`] or [`SvMFmuV()`].
 #' @param log Return log density?
+#' @family SvMF-distribution
 #' @export
 #' @return A vector of values.
 dSvMF <- function(y, param, log = FALSE){

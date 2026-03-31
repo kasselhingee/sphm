@@ -15,6 +15,8 @@ standardise_sph <- function(y, tG = t(secondmoment_mat(y))){
   return(ystd)
 }
 
+# Reverse the rotation applied by standardise_sph(). tG must be the std_rotation
+# attribute returned by standardise_sph() (i.e. the rotation matrix, not its transpose).
 destandardise_sph <- function(y, tG){
   ydestd <- y %*% tG
   attr(ydestd, "std_rotation") <- NULL
@@ -52,8 +54,11 @@ secondmoment_mat <- function(y){
 }
 standardise_mat <- secondmoment_mat
 
-# For covariates that are all a const != 0, leave unchanged
-# Link isn't equivariant to scaling so dont do scaling
+# Centre and rotate Euclidean covariates by PCA (principal components). Constant
+# covariates are left unchanged. Stores the PCA centre and loadings as attributes
+# "std_center" and "std_rotation" so that undo_recoordinate_Omega() can reverse the
+# effect on the mean link parameters. Scaling by SD is NOT applied because the
+# link function is not equivariant to scaling.
 standardise_Euc <- function(xe){
   xe_names <- colnames(xe)
   constcovars <- apply(xe, 2, sd) < sqrt(.Machine$double.eps)
@@ -79,6 +84,8 @@ standardise_Euc <- function(xe){
   return(xe)
 }
 
+# Reverse the PCA centering and rotation applied by standardise_Euc().
+# rotation must be the std_rotation attribute (the PCA loadings matrix).
 destandardise_Euc <- function(xe, center, rotation){
   stopifnot(is.vector(center))
   stopifnot(all(abs(t(rotation) %*% rotation - diag(ncol(rotation))) < sqrt(.Machine$double.eps)))
@@ -157,7 +164,9 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   return(omstd)
 }
 
-undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)), 
+# Reverse the parameter transformation applied by recoordinate_Omega().
+# Given parameters in standardised coordinates, returns parameters in original coordinates.
+undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
                                     xsrot = diag(length(param$qs1)),
                                     xerot = diag(length(param$qe1)), 
                                     xecenter = rep(0, length(param$qe1)),
@@ -200,8 +209,8 @@ undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
   return(om)
 }
 
-# for a list list(y = y, xs = xs, xe = xe, start = start, onescovaridx), do standardisation and update start accordingly
-# if intercept is FALSE dont standardise xe
+# Standardise all data in preplist (y, xs, xe) and update the starting link parameters
+# to match the standardised coordinate system. If intercept = FALSE, xe is not standardised.
 standardise_data <- function(preplist, intercept){
   # standardise inputs
   preplist$y <- standardise_sph(preplist$y)
@@ -236,7 +245,11 @@ destandardise_data <- function(preplist, intercept){
 
 
 
-# if needed, add Euclidean covariates to prepared list and update start accordingly 
+# Add dummy Euclidean covariates as required by the link type:
+# - For "LinEuc" links, prepend a column of zeros ("dummyzero") so the Euclidean
+#   part is treated as a linear predictor (not stereographic).
+# - If intercept = TRUE and no constant covariate exists, append a column of ones.
+# Stores onescovaridx (the column index of the constant-1 covariate) in preplist.
 addEuccovars <- function(preplist, type, intercept){
   # if LinEuc add a zeros covariate
   if ((type == "LinEuc") && (!is.null(preplist$xe))){
@@ -275,7 +288,9 @@ addEuccovars <- function(preplist, type, intercept){
   ))
 }
 
-### If start not supplied, choose start close to identities since data standardised ###
+# Generate default starting parameters for the mean link optimisation when no start is supplied.
+# Assumes data have been standardised (so identity-like starting values are sensible).
+# Sets P = I, Bs = 0.9 I, Be = 0.9 I, Qs and Qe to the first p columns of identity.
 defaultstart <- function(preplist, type){
   if (is.null(preplist$start)){
     p <- ncol(preplist$y)

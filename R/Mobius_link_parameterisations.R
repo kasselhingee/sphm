@@ -37,6 +37,7 @@
 NULL
 
 #' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mnlink()`] using the canonical form.
+#' @family link-function
 #' @export
 mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL, check = TRUE){
   stopifnot(is.matrix(P))
@@ -50,6 +51,7 @@ mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL
 }
 
 #' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mnlink()`] using the canonical form.
+#' @family link-function
 #' @export
 as_mnlink_cann <- function(obj){
   if (inherits(obj, "mnlink_cann")){return(obj)}
@@ -60,6 +62,8 @@ as_mnlink_cann <- function(obj){
   return(obj)
 }
 
+# Flatten a canonical mean link object to a named numeric vector. Used for
+# passing parameters to/from C++ optimisers and numerical checks.
 mnlink_cann_vec <- function(obj){
   stopifnot(inherits(obj, "mnlink_cann"))
   Pvec <- as.vector(obj$P)
@@ -100,6 +104,7 @@ mnlink_cann_vec <- function(obj){
 NULL
 
 #' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mnlink()`] using the Omega form.
+#' @family link-function
 #' @export
 mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("numeric", 0), ce = vector("numeric", 0), check = TRUE){
   if (is.null(qs1)){qs1 <- vector("numeric", 0)}
@@ -120,6 +125,7 @@ mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("nu
 }
 
 #' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mnlink()`] using the Omega form.
+#' @family link-function
 #' @export
 as_mnlink_Omega <- function(obj){
   if (inherits(obj, "mnlink_cann")){return(cann2Omega(obj, check = FALSE))}
@@ -177,9 +183,9 @@ mnlink_Omega_unvec <- function(vec, p, qe = 0, check = TRUE){
            check = check)
 }
 
-#' @noRd
 #' @describeIn mnlink_params For converting between parameterisations of the link function.
 #' Sign of columns of P and Q are lost by the `cann2Omega()` transformation.
+#' @family link-function
 #' @export
 cann2Omega <- function(obj, check = TRUE){
   if (check){mnlink_cann_check(obj)}
@@ -338,8 +344,10 @@ mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothne
   return(checkvals)
 }
 
-# if the values are close to satisfying the constraints, it might make sense to project and scale p1 and q1 to satisfy the constraints
-# will use canonical parameterisation to do this because orthogonality of the columns will make for easier projections
+# Project an Omega parameter object to exactly satisfy the Omega constraints:
+# normalise p1, qs1, qe1 to unit length, then project Omega to be orthogonal to p1,
+# Omega_s to be orthogonal to qs1, and Omega_e to be orthogonal to qe1.
+# Used after small numerical violations during optimisation.
 Omega_proj <- function(obj){
   stopifnot(inherits(obj, "mnlink_Omega"))
   # first project orthogonal to p1 (needs p1 unit vector)
@@ -362,7 +370,9 @@ Omega_proj <- function(obj){
   return(obj)
 }
 
-# The Euc part of the Omega parameterisations is invariant to sign because ce can be anything (if it was fixed to +1 then there would be no invariance). This function switches the sign
+# Switch the sign of the Euclidean part of the mean link (qe1, ce, and Omega_e columns).
+# The Euclidean part of the Omega parameterisation is invariant to this sign flip because
+# ce is a free parameter; used to standardise sign conventions when recovering canonical params.
 Euc_signswitch <- function(obj){
   if (inherits(obj, "mnlink_Omega")){
     obj$qe1 <- -1 * obj$qe1
@@ -376,6 +386,9 @@ Euc_signswitch <- function(obj){
     return(obj)
   }
 }
+# Flip the sign of selected columns of P (and corresponding columns of Qs, Qe)
+# in a canonical parameter object. Used to enforce a canonical sign convention
+# (e.g. making P a rotation matrix after SVD). Column 1 cannot be switched.
 P_signswitch <- function(obj, cols){
   stopifnot(inherits(obj, "mnlink_cann"))
   if (is.logical(cols)){cols <- which(cols)}
@@ -388,6 +401,7 @@ P_signswitch <- function(obj, cols){
   return(obj)
 }
 
+#' @family link-function
 #' @title Randomly generate mean link parameters
 #' @description Uniformly generates orthogonal matrices `Qs`, `Qe` and `P`.
 #' The diagonal elements of `Bs` and `Be` are drawn uniformly from between `0` and `1`.
@@ -433,6 +447,8 @@ rmnlink_cann__place_in_env <- function(p = 3, qs = 5, qe = 4, preseed = 0){
   return(NULL)
 }
 
+# Check whether a mean link parameter object uses the "LinEuc" form (linear Euclidean link).
+# In LinEuc form, qe1 = (1,0,...) and ce = 1, so the Euclidean part acts as a linear predictor.
 is_LinEuc <- function(obj, tol = sqrt(.Machine$double.eps)){
   if (inherits(obj, "mnlink_Omega")){
     if (length(obj$qe1) > 0){

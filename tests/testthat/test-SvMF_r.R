@@ -24,7 +24,7 @@ test_that("simple estimators correct at high concentration and data", {
   set.seed(3)
   y <- rSvMF(1E4, obj)
   
-  Gest <- SvMF_mom_axes(y = y, mu = Gamma[,1])
+  Gest <- SvMF_moment_axes(y = y, mu = Gamma[,1])
   diff <- acos(t(Gest[,-1]) %*% Gamma[,-1]) #pairwise geodesic differences, ignoring mu, which isnt estimated
   expect_equal(diag(diff), rep(0, p-1), tolerance = 1E-2)
   expect_equal(diff[upper.tri(diff)], rep(pi/2, (p-1)*(p-2)/2), tolerance = 1E-2)

@@ -14,6 +14,7 @@
 #' where
 #' \deqn{\tilde{y}(x) = \frac{\Omega_s x_s}{1+Q_s[,1]^\top x_s} + \frac{\Omega_e x_e}{c_e+{Q_e[,1]}^\top x_e}}
 #' and \eqn{x_s} and \eqn{x_e} are the spherical and Euclidean covariate.
+#' @family link-function
 #' @export
 mnlink <- function(xs = NULL, xe = NULL, param = NULL, check = TRUE){
   if (!is.null(xs)){
@@ -43,7 +44,8 @@ mnlink <- function(xs = NULL, xe = NULL, param = NULL, check = TRUE){
   return(out)
 }
 
-# following Remark 1, not the main one.
+# Evaluate the mean link using the canonical parameterisation. Follows the SpEuc form
+# (Remark 1 of the manuscript), which is slightly more general than the primary form.
 mnlink_pred_cann <- function(xs = NULL, xe = NULL, paramobj){
   stopifnot(inherits(paramobj, "mnlink_cann"))
   if (!is.null(xs) && !is.null(xe)){stopifnot(nrow(xs) == nrow(xe))}

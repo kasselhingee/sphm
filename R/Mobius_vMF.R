@@ -1,13 +1,11 @@
 #' @title Objective function for vMF regression
-#' @description 
+#' @description
+#' Internal objective function used by [`mobius_vMF()`].
 #' For given parameters of [`mnlink()`], computes \deqn{\frac{1}{n}\sum_{i=1}^n y_i^T \mu(x_i)}
 #' where \eqn{y_i} are observed unit vectors and \eqn{\mu(x_i)} is the corresponding predicted unit vector.
-# @param y A matrix of unit vectors, each row corresponds to a single unit vector.
-# @param xs A matrix of spherical covariate vectors (also unit vectors), each row corresponds to the same row in `y`.
-# @param xe A matrix of Euclidean covariate vectors, each row corresponds to the same row in `y`.
-# @param param A set of link parameters. See [`mnlink_cann()`] and [`mnlink_Omega()`].
+#' Maximising this is equivalent to maximising the vMF log-likelihood over the mean link parameters.
 #' @inheritParams mnlink
-#' @export
+#' @keywords internal
 prelimobj <- function(y, xs = NULL, xe = NULL, param){
   predictedmeans <- mnlink(xs = xs, xe = xe, param = param, check = FALSE)
   stopifnot(nrow(y) == nrow(predictedmeans))
@@ -38,6 +36,7 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' @param lb Passed to [`nloptr()`]. Usually not used.
 #' @param ub Passed to [`nloptr()`]. Usually not used.
 #' @inheritParams mobius_SvMF
+#' @family regression
 #' @export
 mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, lb = NULL, ub = NULL, ...){
   p <- ncol(y)
@@ -188,6 +187,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
 #' @param fix_qs1 Whether the first column of `Qs` is fixed (i.e. not estimated and not free).
 #' @param fix_qe1 Whether `ce` and the first column of `Qe` is fixed (i.e. not estimated and not free).
 #' @return An integer
+#' @family regression
 #' @export
 mobius_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
   if (qs == 0){fix_qs1 <- FALSE} #ignore fix_qs1
@@ -279,6 +279,7 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
 #' @param preseed Passed to [`rmnlink_cann()`]
 #' @details `fix_qe1` and `fix_qs1` of `mod_vMF` will be respected.
 #' @return An vMF regression using the same data as `mod_vMF`.
+#' @family regression
 #' @export
 mobius_vMF_restart <- function(mod_vMF, preseed = 1){
   inparam <- as_mnlink_Omega(mod_vMF$est)

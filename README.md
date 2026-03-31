@@ -1,6 +1,46 @@
 # sphm: Spherical Regression by Scaled Mobius Link
 
-This directory contains an R package for running the regression model with scaled von Mises-Fisher (SvMF) error distribution in the manuscript titled "Regression for spherical responses with linear and spherical covariates using a scaled link function" by Shogo Kato, Kassel L. Hingee, Janice L. Scealy, and Andrew T.A. Wood.
+R package for regression where the response is a unit vector (a point on a sphere S^(p-1)). Covariates can be Euclidean vectors, spherical (unit vector) covariates, or both. The mean direction is modelled using a scaled Möbius link function, and the error distribution is the scaled von Mises–Fisher (SvMF) family, which allows anisotropic spread. This package accompanies the manuscript "Regression for spherical responses with linear and spherical covariates using a scaled link function" by Shogo Kato, Kassel L. Hingee, Janice L. Scealy, and Andrew T.A. Wood.
+
+## Quick Start
+
+```r
+library(sphm)
+
+# Simulate data on S^2 with a spherical covariate
+set.seed(1)
+p <- 3  # response on S^2
+start_params <- rmnlink_cann(p = p, qs = p, qe = 0)
+sim <- rMobius_SvMF(n = 100, mean = start_params,
+                    SvMFpar = SvMFcann(kappa = 5, a = c(1, 1.5, 0.7),
+                                       Gamma = diag(p)))
+y  <- sim$y   # n x p matrix of unit vector responses
+xs <- sim$xs  # n x p matrix of unit vector covariates
+
+# Step 1: fast preliminary vMF regression (provides good starting values)
+fit_vMF <- mobius_vMF(y = y, xs = xs)
+
+# Step 2: full SvMF regression with anisotropic error
+fit_SvMF <- mobius_SvMF(y = y, xs = xs, start = fit_vMF$mean)
+
+# Inspect the fitted mean link (canonical parameterisation: P, Bs, Qs)
+as_mnlink_cann(fit_SvMF$mean)
+```
+
+### Key functions
+
+| Purpose | Function |
+|---|---|
+| Fit full regression | `mobius_SvMF()` |
+| Fast preliminary regression | `mobius_vMF()` |
+| Evaluate the link function | `mnlink()` |
+| Simulate from the model | `rMobius_SvMF()` |
+| Rotated residuals | `rotatedresid()` |
+| Degrees of freedom | `mobius_DoF()` |
+| Link in canonical form | `mnlink_cann()`, `as_mnlink_cann()` |
+| Link in Omega form (for optimisation) | `mnlink_Omega()`, `as_mnlink_Omega()` |
+
+Run `?sphm` for a full overview of all functions and the package workflow.
 
 ## Installation
 This package can be installed by running

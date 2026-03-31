@@ -840,7 +840,7 @@ get_predobspairsdf <- function(mod,
                                useG0 = FALSE){
   # standard rotations
   if (useG0){
-    ystd <- standardise_sph(mod$y, tG = t(mod$G0))
+    ystd <- standardise_sph(mod$y, rotation = t(mod$G0))
   } else {
     ystd <- standardise_sph(mod$y)
   }

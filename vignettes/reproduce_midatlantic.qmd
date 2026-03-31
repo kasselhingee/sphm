@@ -204,7 +204,7 @@ mykbl
 ```{r Projected Predictions Plot}
 #| include: false
 predplot <- function(svmfresult){
-  ystd <- standardise_sph(svmfresult$y, tG = prettyrot)
+  ystd <- standardise_sph(svmfresult$y, rotation = prettyrot)
   projmat <- (diag(3) - north_pole(3) %*% t(north_pole(3)))
   obs <- ystd %*% projmat[,-1]
   pred <- svmfresult$pred %*% t(attr(ystd, "std_rotation")) %*% projmat[,-1]

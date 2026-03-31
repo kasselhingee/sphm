@@ -47,7 +47,7 @@
 #' }
 #' @family regression
 #' @export
-mobius_SvMF <- function(y, xs, xe, mean = NULL, k = NULL, a = NULL, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "LinEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, doprelim = TRUE, ...){
+mobius_SvMF <- function(y, xs = NULL, xe = NULL, mean = NULL, k = NULL, a = NULL, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "LinEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, doprelim = TRUE, ...){
 
   if (doprelim){
   preest <- mobius_SvMF_partransport_prelim(y, xs, xe, 

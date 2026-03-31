@@ -6,8 +6,8 @@
 \usage{
 mobius_SvMF(
   y,
-  xs,
-  xe,
+  xs = NULL,
+  xe = NULL,
   mean = NULL,
   k = NULL,
   a = NULL,

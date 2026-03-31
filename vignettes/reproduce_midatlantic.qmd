@@ -4,6 +4,7 @@ format:
   pdf:
     toc: true
     number-sections: true
+    keep-tex: true
     header-includes: |
       \usepackage{hyperref}
       \hypersetup{
@@ -195,7 +196,7 @@ df <- cbind("diag($B_s$)" = diag(cann$Bs),
   as.data.frame()
 row.names(df) <- c("$t_2$", "$t_3$")
 mykbl <- kbl(df, booktabs = TRUE, position = "!h", escape = FALSE, format = "latex", digits = 2) %>%
-  add_header_above(c(" "=3, "$R_e^\\top$" = 2), escape = FALSE)
+  add_header_above(c(" "=3, "$R_e^{\\\\top}$" = 2), escape = FALSE)
 mykbl
 ```
 

@@ -23,15 +23,15 @@ test_that("rotatedresiduals() rotates residuals to the northpole along a geodesi
   expect_equal(rresid2, -rresid)
 })
 
-test_that("rotationmat_amaral() rotates start to end", {
+test_that("parallel_transport_mat() rotates start to end", {
   vecs <- matrix(rnorm(6), nrow = 2)
   vecs <- vecs/sqrt(rowSums(vecs^2))
-  expect_equal(drop(rotationmat_amaral(vecs[1, ], vecs[2,]) %*% vecs[1,]), vecs[2, ])
+  expect_equal(drop(parallel_transport_mat(vecs[1, ], vecs[2,]) %*% vecs[1,]), vecs[2, ])
 })
 
-test_that("rotationmat_amaral() is identity when start=end", {
+test_that("parallel_transport_mat() is identity when start=end", {
   myvec <- rnorm(6)
   myvec <- myvec/sqrt(sum(myvec^2))
-  expect_equal(rotationmat_amaral(myvec,myvec), diag(6))
-  expect_equal(rotationmat_amaral(myvec,-myvec), diag(6) - 2 * myvec %*% t(myvec))
+  expect_equal(parallel_transport_mat(myvec,myvec), diag(6))
+  expect_equal(parallel_transport_mat(myvec,-myvec), diag(6) - 2 * myvec %*% t(myvec))
 })

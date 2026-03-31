@@ -705,7 +705,7 @@ get_predobspairsdf_nat <- function(mod,
   axisarrows <- lapply(1:nrow(mod$pred), function(idx){
     pred <- mod$pred[idx, ]
     # rotate (parallel transport) arrows to be around predicted mean
-    arrowends <- rotationmat_amaral(mod$G0[,1], pred) %*% arrowends
+    arrowends <- parallel_transport_mat(mod$G0[,1], pred) %*% arrowends
     # include start location too
     names(pred) <- paste0("start", rownames(arrowends))
     as_tibble(t(arrowends), rownames = "Axis") %>%
@@ -861,7 +861,7 @@ get_predobspairsdf <- function(mod,
   axisarrows <- lapply(1:nrow(mod$pred), function(idx){
     pred <- mod$pred[idx, ]
     # rotate (parallel transport) arrows to be around predicted mean, then rotate again for standardised coordinates
-    stdarrowends <- attr(ystd, "std_rotation") %*% rotationmat_amaral(mod$G0[,1], pred) %*% arrowends
+    stdarrowends <- attr(ystd, "std_rotation") %*% parallel_transport_mat(mod$G0[,1], pred) %*% arrowends
     rownames(stdarrowends) <- paste0("Y", 1:ncol(ystd))
     # include start location too
     stdpred <- drop(attr(ystd, "std_rotation") %*% pred)

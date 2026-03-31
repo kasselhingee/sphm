@@ -54,12 +54,13 @@ cayley <- function(x){
   return(P)
 }
 
-#' @title 'North pole' vector
-#' @description The vector \eqn{(1,0,0,...)^\top}{(1,0,0,...)} for given dimension.
+#' @title North pole vector
+#' @description Returns the north pole unit vector \eqn{(1,0,0,...)^\top}{(1,0,0,...)} of length `p`.
+#' This is the default reference direction used for standardising spherical data.
 #' @param p The dimension of the space/length of the vector.
-#' @return A vector of length `p`.
+#' @return A numeric vector of length `p`.
 #' @export
-nthpole <- function(p){c(1, rep(0, p-1))}
+north_pole <- function(p){c(1, rep(0, p-1))}
 
 #' @noRd
 #' @description Standardise sign of columns of a matrix to have positive first element, or unchanged sign if 0 first element

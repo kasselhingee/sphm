@@ -3,13 +3,13 @@
 #' @param mu Mean
 #' @param G The orientation paramter matrix Gamma, which has the mean as the first column.
 #' @details
-#' Both `SvMF_mom_axes()` and `SvMF_prelim_scales()` ignore the component of `y` parallel to `mu`
+#' Both `SvMF_moment_axes()` and `SvMF_prelim_scales()` ignore the component of `y` parallel to `mu`
 #' @name SvMF_prelim
 NULL
 
-#' @describeIn SvMF_prelim `SvMF_mom_axes` follows Scealy and Wood (2019) Section 4.1.1 description
+#' @describeIn SvMF_prelim `SvMF_moment_axes` follows Scealy and Wood (2019) Section 4.1.1 description
 #' @export
-SvMF_mom_axes <- function(y, mu){
+SvMF_moment_axes <- function(y, mu){
   projmat <- diag(length(mu)) - mu %*% t(mu)
   projy <- y %*% t(projmat)
   mom2nd <- t(projy) %*% projy #t() %*% () quickly calculates the sum of projection matrices of rows of projy

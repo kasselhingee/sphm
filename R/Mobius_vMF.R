@@ -135,7 +135,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
   # distances in response space
   pred <- mnlink(xs = preplist$xs, xe = preplist$xe, param = projectedom)
   dists <- acos(rowSums(pred * preplist$y))
-  rresids_tmp <- rotatedresid(preplist$y, pred, nthpole(ncol(preplist$y)))
+  rresids_tmp <- rotatedresid(preplist$y, pred, north_pole(ncol(preplist$y)))
   rresids <- rresids_tmp[, -1]
   attr(rresids, "samehemisphere") <-  attr(rresids_tmp, "samehemisphere")
   colnames(rresids) <- paste0("r", 1:ncol(rresids))
@@ -291,7 +291,7 @@ mobius_vMF_restart <- function(mod_vMF, preseed = 1){
   if (dims[["qe"]] > 0 & mod_vMF$linktype$fix_qe1){
     start$ce <- inparam$ce
     # convert qe1 to nth pole
-    rotmat <- rotationmat_amaral(inparam$qe1, nthpole(dims[["qe"]]))
+    rotmat <- parallel_transport_mat(inparam$qe1, north_pole(dims[["qe"]]))
     # build Qe from deciding it is random in the space orthogonal to qe1
     rotQe <- rbind(0, start$Qe)
     if (ncol(rotQe) == dims["p"]){
@@ -301,12 +301,12 @@ mobius_vMF_restart <- function(mod_vMF, preseed = 1){
     }
     rotQe[1,1] <- 1
     start$Qe <- t(rotmat) %*% rotQe
-    # put inparam$qe1 back in case inparam$qe1 = - nthpole(dims[["qe"]]) and rotmat is then a reflection not a rotation
+    # put inparam$qe1 back in case inparam$qe1 = - north_pole(dims[["qe"]]) and rotmat is then a reflection not a rotation
     start$Qe[,1] <- inparam$qe1
   }
   if (dims[["qs"]] > 0 & mod_vMF$linktype$fix_qs1){
     # convert qs1 to nth pole
-    rotmat <- rotationmat_amaral(inparam$qs1, nthpole(dims[["qs"]]))
+    rotmat <- parallel_transport_mat(inparam$qs1, north_pole(dims[["qs"]]))
     rotQs <- rbind(0, start$Qs)
     if (ncol(rotQs) == dims["p"]){
       rotQs <- cbind(0, rotQs[,-1, drop = FALSE])
@@ -315,7 +315,7 @@ mobius_vMF_restart <- function(mod_vMF, preseed = 1){
     }
     rotQs[1,1] <- 1
     start$Qs <- t(rotmat) %*% rotQs
-    # put inparam$qs1 back in case inparam$qs1 = - nthpole(dims[["qs"]]) and rotmat is then a reflection not a rotation
+    # put inparam$qs1 back in case inparam$qs1 = - north_pole(dims[["qs"]]) and rotmat is then a reflection not a rotation
     start$Qs[,1] <- inparam$qs1
   }
   start <- as_mnlink_Omega(start)

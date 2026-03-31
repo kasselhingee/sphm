@@ -7,15 +7,17 @@ R package for regression where the response is a unit vector (a point on a spher
 ```r
 library(sphm)
 
-# Simulate data on S^2 with a spherical covariate
+# Spherical covariates on S^2
 set.seed(1)
-p <- 3  # response on S^2
-start_params <- rmnlink_cann(p = p, qs = p, qe = 0)
-sim <- rMobius_SvMF(n = 100, mean = start_params,
-                    SvMFpar = SvMFcann(kappa = 5, a = c(1, 1.5, 0.7),
-                                       Gamma = diag(p)))
-y  <- sim$y   # n x p matrix of unit vector responses
-xs <- sim$xs  # n x p matrix of unit vector covariates
+n <- 50;  p <- 3
+xs <- matrix(rnorm(n * p), n, p)
+xs <- xs / sqrt(rowSums(xs^2))
+
+# Simulate responses from the model
+mean_params <- rmnlink_cann(p = p, qs = p, qe = 0)
+sim <- rMobius_SvMF(xs = xs, xe = NULL, mean = mean_params,
+                    k = 5, a = c(1, 2, 0.5), G0 = diag(p))
+y <- sim[, 1:p]
 
 # Step 1: fast preliminary vMF regression (provides good starting values)
 fit_vMF <- mobius_vMF(y = y, xs = xs)

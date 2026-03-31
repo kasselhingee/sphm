@@ -30,10 +30,18 @@
 #' distribution are constructed via parallel transport (see [`parallel_transport_mat()`]).
 #'
 #' ```r
-#' # Example: simulate then fit
+#' # Example: simulate then fit on S^2 with a spherical covariate
 #' set.seed(1)
-#' fit_vMF  <- mobius_vMF(y = y, xs = xs)          # Step 1
-#' fit_SvMF <- mobius_SvMF(y = y, xs = xs,          # Step 2
+#' n <- 50; p <- 3
+#' xs <- matrix(rnorm(n * p), n, p)
+#' xs <- xs / sqrt(rowSums(xs^2))
+#' mean_params <- rmnlink_cann(p = p, qs = p, qe = 0)
+#' sim <- rMobius_SvMF(xs = xs, xe = NULL, mean = mean_params,
+#'                     k = 5, a = c(1, 2, 0.5), G0 = diag(p))
+#' y <- sim[, 1:p]
+#'
+#' fit_vMF  <- mobius_vMF(y = y, xs = xs)           # Step 1
+#' fit_SvMF <- mobius_SvMF(y = y, xs = xs,           # Step 2
 #'                          start = fit_vMF$mean)
 #' ```
 #'

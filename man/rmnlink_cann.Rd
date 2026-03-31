@@ -23,3 +23,9 @@ Uniformly generates orthogonal matrices \code{Qs}, \code{Qe} and \code{P}.
 The diagonal elements of \code{Bs} and \code{Be} are drawn uniformly from between \code{0} and \code{1}.
 The parameter \code{ce} is generated uniformly from between \code{0} and \code{1}.
 }
+\seealso{
+Other link-function: 
+\code{\link{mnlink}()},
+\code{\link{mnlink_params}}
+}
+\concept{link-function}

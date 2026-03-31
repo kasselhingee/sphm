@@ -2,11 +2,11 @@
 % Please edit documentation in R/Mobius_SvMF_prelim.R
 \name{SvMF_prelim}
 \alias{SvMF_prelim}
-\alias{SvMF_mom_axes}
+\alias{SvMF_moment_axes}
 \alias{SvMF_prelim_scales}
 \title{Simple estimators of SvMF Parameters}
 \usage{
-SvMF_mom_axes(y, mu)
+SvMF_moment_axes(y, mu)
 
 SvMF_prelim_scales(y, G)
 }
@@ -21,12 +21,24 @@ SvMF_prelim_scales(y, G)
 Simple estimators of SvMF Parameters
 }
 \details{
-Both \code{SvMF_mom_axes()} and \code{SvMF_prelim_scales()} ignore the component of \code{y} parallel to \code{mu}
+Both \code{SvMF_moment_axes()} and \code{SvMF_prelim_scales()} ignore the component of \code{y} parallel to \code{mu}
 }
 \section{Functions}{
 \itemize{
-\item \code{SvMF_mom_axes()}: \code{SvMF_mom_axes} follows Scealy and Wood (2019) Section 4.1.1 description
+\item \code{SvMF_moment_axes()}: \code{SvMF_moment_axes} follows Scealy and Wood (2019) Section 4.1.1 description
 
 \item \code{SvMF_prelim_scales()}: \code{SvMF_prelim_scales()} follows Scealy and Wood (2019) Proposition 2
 
 }}
+\seealso{
+Other SvMF-distribution: 
+\code{\link{SvMFparams}},
+\code{\link{dSvMF}()},
+\code{\link{rSvMF}()}
+
+Other SvMF-distribution: 
+\code{\link{SvMFparams}},
+\code{\link{dSvMF}()},
+\code{\link{rSvMF}()}
+}
+\concept{SvMF-distribution}

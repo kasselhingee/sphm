@@ -28,3 +28,10 @@ The log-likelihood using this parameterisation is in equation 11 of Scealy and W
 \examples{
 SvMFcann(k = 0.5, a = c(1, rep(1, 5-1)), G = diag(1, 5))
 }
+\seealso{
+Other SvMF-distribution: 
+\code{\link{SvMF_prelim}},
+\code{\link{dSvMF}()},
+\code{\link{rSvMF}()}
+}
+\concept{SvMF-distribution}

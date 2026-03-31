@@ -20,3 +20,12 @@ Given a vMF regression, repeat the optimisation from initial parameters randomly
 \details{
 \code{fix_qe1} and \code{fix_qs1} of \code{mod_vMF} will be respected.
 }
+\seealso{
+Other regression: 
+\code{\link{ldMobius_SvMF}()},
+\code{\link{mobius_DoF}()},
+\code{\link{mobius_SvMF}()},
+\code{\link{mobius_vMF}()},
+\code{\link{rMobius_SvMF}()}
+}
+\concept{regression}

@@ -27,3 +27,9 @@ where
 \deqn{\tilde{y}(x) = \frac{\Omega_s x_s}{1+Q_s[,1]^\top x_s} + \frac{\Omega_e x_e}{c_e+{Q_e[,1]}^\top x_e}}
 and \eqn{x_s} and \eqn{x_e} are the spherical and Euclidean covariate.
 }
+\seealso{
+Other link-function: 
+\code{\link{mnlink_params}},
+\code{\link{rmnlink_cann}()}
+}
+\concept{link-function}

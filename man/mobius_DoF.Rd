@@ -24,3 +24,12 @@ An integer
 The parameters of the Mobius mean link function \code{\link[=mnlink]{mnlink()}} have a number of constraints.
 This function incorporates these constraints to obtain the total degrees of freedom of the parameters.
 }
+\seealso{
+Other regression: 
+\code{\link{ldMobius_SvMF}()},
+\code{\link{mobius_SvMF}()},
+\code{\link{mobius_vMF}()},
+\code{\link{mobius_vMF_restart}()},
+\code{\link{rMobius_SvMF}()}
+}
+\concept{regression}

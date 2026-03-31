@@ -27,3 +27,12 @@ A matrix with two columns and the same number of rows as \code{y}.
 \description{
 The log-density of each row of \code{y} for a given SvMF regression. Two methods are used. The approximate method used in the optimisation of all parameters (labelled \code{Cpp}) and an exact log-density using highly accurate Bessel function implementations from base \code{R} (labelled \code{R}).
 }
+\seealso{
+Other regression: 
+\code{\link{mobius_DoF}()},
+\code{\link{mobius_SvMF}()},
+\code{\link{mobius_vMF}()},
+\code{\link{mobius_vMF_restart}()},
+\code{\link{rMobius_SvMF}()}
+}
+\concept{regression}

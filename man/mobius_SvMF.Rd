@@ -88,3 +88,12 @@ Unless requested by \code{doprelim = FALSE}, a preliminary regression using a vM
 
 When p!=3, the optimisation first approximates the normalising constant of the vMF distribution, then the concentration is optimised seperately.
 }
+\seealso{
+Other regression: 
+\code{\link{ldMobius_SvMF}()},
+\code{\link{mobius_DoF}()},
+\code{\link{mobius_vMF}()},
+\code{\link{mobius_vMF_restart}()},
+\code{\link{rMobius_SvMF}()}
+}
+\concept{regression}

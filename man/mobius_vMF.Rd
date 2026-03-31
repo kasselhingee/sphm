@@ -56,3 +56,12 @@ Before fitting, rotates y, xs and xe into standard form. If supplied, \code{star
 
 If \code{type == "LinEuc"} a column of zeros called \code{'dummyzero'} is added to the front of \code{xe}.
 }
+\seealso{
+Other regression: 
+\code{\link{ldMobius_SvMF}()},
+\code{\link{mobius_DoF}()},
+\code{\link{mobius_SvMF}()},
+\code{\link{mobius_vMF_restart}()},
+\code{\link{rMobius_SvMF}()}
+}
+\concept{regression}

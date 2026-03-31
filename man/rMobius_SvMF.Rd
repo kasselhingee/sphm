@@ -25,3 +25,12 @@ A matrix of \code{p+1} columns and the same number of rows as \code{xs} or \code
 \description{
 Function for simulating data given mean link and SvMF parameters
 }
+\seealso{
+Other regression: 
+\code{\link{ldMobius_SvMF}()},
+\code{\link{mobius_DoF}()},
+\code{\link{mobius_SvMF}()},
+\code{\link{mobius_vMF}()},
+\code{\link{mobius_vMF_restart}()}
+}
+\concept{regression}

@@ -6,6 +6,7 @@
 \alias{as_mnlink_cann}
 \alias{mnlink_Omega}
 \alias{as_mnlink_Omega}
+\alias{cann2Omega}
 \title{Parameterisation Classes for the Scaled Mobius Mean Link}
 \usage{
 mnlink_cann(
@@ -30,6 +31,8 @@ mnlink_Omega(
 )
 
 as_mnlink_Omega(obj)
+
+cann2Omega(obj, check = TRUE)
 }
 \arguments{
 \item{P}{Final rotation matrix on the response sphere: a p x p orthonormal matrix with positive determinant.}
@@ -68,6 +71,9 @@ Actual mean link calculations are performed by other functions.
 
 \item \code{as_mnlink_Omega()}: Represent the parameters of the Mobius mean link \code{\link[=mnlink]{mnlink()}} using the Omega form.
 
+\item \code{cann2Omega()}: For converting between parameterisations of the link function.
+Sign of columns of P and Q are lost by the \code{cann2Omega()} transformation.
+
 }}
 \section{Cannonical Parameterisation}{
 The parameters here are for a mean link defined as
@@ -95,3 +101,25 @@ The link functions are simplified by writing \eqn{\Omega_s = P^* B_s {Q_s^*}^T} 
 This parameterisation helps optimisation as optimisation in Stiefel manifolds is harder than other spaces, and also reflects the sign ambiguity of columns of P with the matching columns of \code{Qe} and \code{Qs}.
 }
 
+\seealso{
+Other link-function: 
+\code{\link{mnlink}()},
+\code{\link{rmnlink_cann}()}
+
+Other link-function: 
+\code{\link{mnlink}()},
+\code{\link{rmnlink_cann}()}
+
+Other link-function: 
+\code{\link{mnlink}()},
+\code{\link{rmnlink_cann}()}
+
+Other link-function: 
+\code{\link{mnlink}()},
+\code{\link{rmnlink_cann}()}
+
+Other link-function: 
+\code{\link{mnlink}()},
+\code{\link{rmnlink_cann}()}
+}
+\concept{link-function}

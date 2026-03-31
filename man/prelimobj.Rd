@@ -14,6 +14,9 @@ prelimobj(y, xs = NULL, xe = NULL, param)
 \item{param}{Parameters of the mean link. As an object of class "mnlink_Omega" or "mnlink_cann". See \code{\link{mnlink_params}}.}
 }
 \description{
+Internal objective function used by \code{\link[=mobius_vMF]{mobius_vMF()}}.
 For given parameters of \code{\link[=mnlink]{mnlink()}}, computes \deqn{\frac{1}{n}\sum_{i=1}^n y_i^T \mu(x_i)}
 where \eqn{y_i} are observed unit vectors and \eqn{\mu(x_i)} is the corresponding predicted unit vector.
+Maximising this is equivalent to maximising the vMF log-likelihood over the mean link parameters.
 }
+\keyword{internal}

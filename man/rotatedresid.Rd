@@ -6,6 +6,31 @@
 \usage{
 rotatedresid(y, ypred, base, path = "geo")
 }
-\description{
-Jupp's Rotated Residuals
+\arguments{
+\item{y}{Matrix of observed unit vectors (one per row).}
+
+\item{ypred}{Matrix of predicted unit vectors (one per row, same size as \code{y}).}
+
+\item{base}{Unit vector giving the base location to transport residuals to.
+Typically the north pole \code{\link{north_pole(p)}}.}
+
+\item{path}{Transport method: \code{"geo"} or \code{"Amaral"} use \code{\link[=parallel_transport_mat]{parallel_transport_mat()}};
+\code{"Jupp"} uses \code{\link[=JuppRmat]{JuppRmat()}} (gives the negative); \code{"Absil"} uses a third formula.}
 }
+\value{
+A matrix of rotated residuals (one per row), with attribute
+\code{"samehemisphere"} indicating observations on the same side as \code{ypred}.
+}
+\description{
+Compute rotated (parallel-transported) residuals on the sphere.
+For each observation, the crude residual (projection of \code{y} onto the tangent
+plane at \code{ypred}) is parallel transported along the geodesic to a common
+\code{base} location, making residuals comparable across observations.
+}
+\seealso{
+\code{\link[=parallel_transport_mat]{parallel_transport_mat()}}, \code{\link[=JuppRmat]{JuppRmat()}}
+
+Other residuals: 
+\code{\link{parallel_transport_mat}()}
+}
+\concept{residuals}

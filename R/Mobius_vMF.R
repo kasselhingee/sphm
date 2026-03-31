@@ -228,7 +228,7 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
   # use the starting parameters om0 to detect whether we have xs and xe as their form is more predictable due to the Omega class
   omfixed <- lapply(om0, function(x) x * 0)
   if (fix_qe1 && (length(om0$qe1) > 0)){
-    # if shogo and Euc, fix some elements
+    # if qe1 is fixed and qe1 is a non-empty vector, then record the corresponding omfixed elements as 1
     omfixed$qe1 <- omfixed$qe1 + 1
     omfixed$ce <- omfixed$ce + 1
   }

@@ -166,7 +166,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
     y = y,
     xs = xs,
     xe = if (!is.null(xe)){if (intercept){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))} else {xe}}, #this recovers any added covariates too
-    pred = destandardise_sph(pred, tG = attr(preplist$y, "std_rotation")),
+    pred = destandardise_sph(pred, rotation = attr(preplist$y, "std_rotation")),
     rresids = rresids,
     dists = dists,
     DoF = DoF,

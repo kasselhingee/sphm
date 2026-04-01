@@ -266,6 +266,7 @@ test_that("mobius_vMF() performs correctly for LinEuc", {
   expect_equal(res3$est, res$est, tolerance = 1E-5)
   res4 <- mobius_vMF_restart(res, preseed = 1)
   expect_equal(res4$nlopt$x0, res3$nlopt$x0)
+  expect_equal(res4$nlopt$solution, res3$nlopt$solution)
   res5 <- mobius_vMF_restart(res, preseed = 2)
   expect_true(vnorm(res5$nlopt$x0 - res3$nlopt$x0) > 1)
 })

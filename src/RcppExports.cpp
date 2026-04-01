@@ -56,15 +56,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// lvMFnormconst_approx
-a1type lvMFnormconst_approx(a1type kappa, int p);
-RcppExport SEXP _sphm_lvMFnormconst_approx(SEXP kappaSEXP, SEXP pSEXP) {
+// vMF_log_norm_const
+a1type vMF_log_norm_const(a1type kappa, int p);
+RcppExport SEXP _sphm_vMF_log_norm_const(SEXP kappaSEXP, SEXP pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< a1type >::type kappa(kappaSEXP);
     Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    rcpp_result_gen = Rcpp::wrap(lvMFnormconst_approx(kappa, p));
+    rcpp_result_gen = Rcpp::wrap(vMF_log_norm_const(kappa, p));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -291,7 +291,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_Omega_constraints", (DL_FUNC) &_sphm_Omega_constraints, 3},
     {"_sphm_besselIasym", (DL_FUNC) &_sphm_besselIasym, 4},
     {"_sphm_besselItrunc", (DL_FUNC) &_sphm_besselItrunc, 4},
-    {"_sphm_lvMFnormconst_approx", (DL_FUNC) &_sphm_lvMFnormconst_approx, 2},
+    {"_sphm_vMF_log_norm_const", (DL_FUNC) &_sphm_vMF_log_norm_const, 2},
     {"_sphm_ldSvMF_cann", (DL_FUNC) &_sphm_ldSvMF_cann, 4},
     {"_sphm_ldSvMF_muV", (DL_FUNC) &_sphm_ldSvMF_muV, 5},
     {"_sphm_besselImixed", (DL_FUNC) &_sphm_besselImixed, 5},

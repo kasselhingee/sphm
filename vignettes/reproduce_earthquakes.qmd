@@ -311,12 +311,11 @@ tecbound <- st_read("PB2002_boundaries.shp")
 mat <- st_intersects(tecbound, st_as_sfc(st_bbox(s4df)))
 tecbound <- tecbound[apply(mat, 1, any), ]
 tecbound <- tecbound %>%
-  mutate(NiceName = case_match(
+  mutate(NiceName = recode(
     Name,
-    "NB-SB" ~ "BSSL",
-    "NB-MN" ~ "BSSL",
-    "MN-SB" ~ "BSSL",
-    "NB-SB" ~ "BSSL",
+    "NB-SB" = "BSSL",
+    "NB-MN" = "BSSL",
+    "MN-SB" = "BSSL",
     .default = "Other"
   ))
 ```

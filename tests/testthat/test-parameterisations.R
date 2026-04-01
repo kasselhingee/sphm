@@ -219,3 +219,9 @@ test_that("check LinEuc conversion", {
   expect_equal(out[2, ] - out[1, ], out[3, ] - out[2, ])
 })
 
+test_that("rmnlink_cann preseed gives identical results on repeated calls", {
+  p1 <- rmnlink_cann(3, 5, 4, preseed = 7)
+  p2 <- rmnlink_cann(3, 5, 4, preseed = 7)
+  expect_equal(p1, p2)
+})
+

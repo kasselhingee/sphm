@@ -120,7 +120,7 @@ prettyX <- (fulldf %>%
 colnames(prettyX) <- paste0("X", 1:3)
 prettyXmean <- colMeans(prettyX)
 prettyXmean <- prettyXmean/vnorm(prettyXmean)
-# denomloc <- drop(prettyrot %*% as_mnlink_cann(mod$mean)$Qs[,1])
+# denomloc <- drop(prettyrot %*% as_mobius_link_cann(mod$mean)$Qs[,1])
 plotdata <- bind_cols(prettyY, prettyX, westedge = fulldf$westedge) %>%
   as_tibble() %>%
   ggplot() +
@@ -140,7 +140,7 @@ plotdata
 ```{r Paine Plot Resids and Dists}
 #| include: false
 calc_Paine_resids <- function(mod){
-  mod$rresids <- rotatedresid(t(mod$Z), t(mod$predmean), base = north_pole(3))[,-1]
+  mod$rresids <- rotated_resid(t(mod$Z), t(mod$predmean), base = north_pole(3))[,-1]
   mod$dists <- acos(rowSums(t(mod$Z) * t(mod$predmean)))
   colnames(mod$rresids) <- c("r1", "r2")
   return(mod)
@@ -168,7 +168,7 @@ The results here are from a local optimisation using gradient from default start
 I've checked that global search for the best vMF regression does not find anything better.
 
 ```{r}
-cann <- as_mnlink_cann(mod$mean)
+cann <- as_mobius_link_cann(mod$mean)
 cann
 ```
 
@@ -240,7 +240,7 @@ predplot <- function(svmfresult){
   tmpxe <- xe_std[,names(svmfresult$mean$qe1)]
   xs <- colMeans(svmfresult$xs)
   xs <- xs/vnorm(xs)
-  eastwestedge <- mnlink(xs = rbind(xs, xs),
+  eastwestedge <- mobius_link(xs = rbind(xs, xs),
          xe = tmpxe,
          param = svmfresult$mean) %*% t(attr(ystd, "std_rotation"))
   outplot <- outplot +
@@ -248,8 +248,8 @@ predplot <- function(svmfresult){
     annotate("point", x = eastwestedge[2, 2], y = eastwestedge[2, 3], fill = "white", shape = 24, size = 2)
   
   # mark prediction when xs = rs1
-  # rs1 <- as_mnlink_cann(svmfresult$mean)$Qs[,1]
-  # eastwestedge_rs1 <- mnlink(xs = rbind(rs1, rs1),
+  # rs1 <- as_mobius_link_cann(svmfresult$mean)$Qs[,1]
+  # eastwestedge_rs1 <- mobius_link(xs = rbind(rs1, rs1),
   #        xe = tmpxe,
   #        param = svmfresult$mean) %*% t(attr(ystd, "std_rotation"))
   # outplot <- outplot +
@@ -257,7 +257,7 @@ predplot <- function(svmfresult){
   #   annotate("point", x = eastwestedge_rs1[2, 2], y = eastwestedge_rs1[2, 3], fill = "white", shape = 24, size = 4)
   
   # mark columns of Qs on the plot
-  prettyQs <- attr(ystd, "std_rotation") %*% as_mnlink_cann(svmfresult$mean)$Qs
+  prettyQs <- attr(ystd, "std_rotation") %*% as_mobius_link_cann(svmfresult$mean)$Qs
   outplot <- outplot +
     annotate("point", x = prettyQs[2,1], y = prettyQs[3,1], shape = 3, size = 2, col = switch(1+(prettyQs[1,1] > 0), "grey", "black")) +
     annotate("point", x = prettyQs[2,2], y = prettyQs[3,2], shape = 4, size = 2, col = switch(1+(prettyQs[1,2] > 0), "grey", "black")) +
@@ -265,7 +265,7 @@ predplot <- function(svmfresult){
   
 if (!is.null(svmfresult$G0)){
   G0proj <- (diag(3) - north_pole(3) %*% t(north_pole(3))) %*% attr(ystd, "std_rotation") %*% svmfresult$G0
-  mnaxes_proj <- (diag(3) - north_pole(3) %*% t(north_pole(3))) %*% attr(ystd, "std_rotation") %*% as_mnlink_cann(svmfresult$mean)$P
+  mnaxes_proj <- (diag(3) - north_pole(3) %*% t(north_pole(3))) %*% attr(ystd, "std_rotation") %*% as_mobius_link_cann(svmfresult$mean)$P
   eps = 0.2
   outplot <- outplot + 
   annotate("segment", x = G0proj[2,1], y = G0proj[3,1],
@@ -353,7 +353,7 @@ plotIAG1 + ggtitle("IAG1") +
 # LOOCV MSE
 ```{r}
 loocvmseSvMF <- function(mod){
-  stopifnot(inherits(mod$mean, "mnlink_Omega"))
+  stopifnot(inherits(mod$mean, "mobius_link_Omega"))
   dists <- pbapply::pblapply(1:nrow(mod$y), function(idx){
     newmod <- mobius_SvMF(mod$y[-idx,],
                 xs = mod$xs[-idx,],
@@ -365,7 +365,7 @@ loocvmseSvMF <- function(mod){
                 k = mod$k,
                 a = mod$a,
                 G0 = mod$G0)
-    pred <- mnlink(xs = mod$xs[idx,, drop = FALSE],
+    pred <- mobius_link(xs = mod$xs[idx,, drop = FALSE],
                    xe = mod$xe[idx,, drop = FALSE],
                    param = newmod$mean)
     obs <- mod$y[idx,]
@@ -491,7 +491,7 @@ These are all positive and non-zero, which confirms that the optimisation routin
 ```{r}
 #| cache: true
 restarts <- pbapply::pblapply(1:100, function(seed){
-  start <- rmnlink_cann(p = 3, qs = 3, qe = ncol(xe) + 2, preseed = seed)
+  start <- rand_mobius_link_cann(p = 3, qs = 3, qe = ncol(xe) + 2, preseed = seed)
   # convert to LinEuc form:
   set.seed(seed+1)
   Qe <- mclust::randomOrthogonalMatrix(ncol(xe)+1, 3-1)
@@ -521,7 +521,7 @@ Other initial parameters have not improved on the default initial parameters.
 ```{r}
 restarts <- pbapply::pblapply(1:100, function(seed){
   # randomly generates a SpEuc-form link
-  start <- rmnlink_cann(p = 3, qs = 3, qe = ncol(xestd) + 2, preseed = seed)
+  start <- rand_mobius_link_cann(p = 3, qs = 3, qe = ncol(xestd) + 2, preseed = seed)
   # convert to LinEuc form:
   set.seed(seed+1)
   Qe <- mclust::randomOrthogonalMatrix(ncol(xestd)+1, 5-1)

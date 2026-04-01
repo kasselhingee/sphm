@@ -14,12 +14,12 @@
 #' @seealso [parallel_transport_mat()]
 #' @family residuals
 #' @export
-rotatedresid <- function(y, ypred, base, path = "geo"){
+rotated_resid <- function(y, ypred, base, path = "geo"){
   #crude residuals
   cresids <- cruderesid(y, ypred)
 
   # rotate them
-  transportmat <- switch(path, Jupp = JuppRmat, geo = parallel_transport_mat, Amaral = parallel_transport_mat, Absil = partransportmat)
+  transportmat <- switch(path, Jupp = JuppRmat, geo = parallel_transport_mat, Amaral = parallel_transport_mat, Absil = parallel_transport_mat_absil)
   rresids <- t(sapply(1:nrow(y), function(i){
     tmat <- transportmat(ypred[i, ], base)
     if (!all(is.finite(tmat))){warning("A predicted mean is at the antipode of the rotated residual base location")}
@@ -43,7 +43,7 @@ cruderesid <- function(y, ypred){
 
 # Jupp (1988) rotation matrix for parallel transport from `y` to `base`.
 # Equivalent to the negative of parallel_transport_mat() — i.e. JuppRmat(a,b) = -parallel_transport_mat(a,b).
-# Used internally by rotatedresid() when path = "Jupp".
+# Used internally by rotated_resid() when path = "Jupp".
 JuppRmat <- function(y, base){
   (y+base) %*% t(y+base)/(1+drop(y%*%base)) - diag(1, length(y))
 }
@@ -62,7 +62,7 @@ JuppRmat <- function(y, base){
 #' @return A square orthogonal matrix.
 #' @details If `end = -start` (antipodal points), there is no unique geodesic and a reflection
 #' matrix in the `end` direction is returned.
-#' @seealso [rotatedresid()]
+#' @seealso [rotated_resid()]
 #' @family residuals
 #' @export
 parallel_transport_mat <- function(start, end){ #assumes a and b are unit vectors
@@ -81,7 +81,7 @@ parallel_transport_mat <- function(start, end){ #assumes a and b are unit vector
 
 # Parallel transport matrix from Absil, Mahony and Sepulchre (2008) equation (8.4).
 # Alternative formula to parallel_transport_mat() and JuppRmat(); used when path = "Absil".
-partransportmat <- function(start, end){
+parallel_transport_mat_absil <- function(start, end){
   alpha <- drop(acos(start %*% end))
   u <- (end - cos(alpha) * start)/sin(alpha)
   out <- diag(length(start)) - sin(alpha) * start %*% t(u) + (cos(alpha) - 1) * u %*% t(u)
@@ -91,7 +91,7 @@ partransportmat <- function(start, end){
 # to the base location G0[,1], then projects onto G0 axes and optionally scales
 # by the SvMF concentration k and scale vector a to give approximately unit-variance residuals.
 resid_SvMF_partransport <- function(y, ypred, k = NULL, a = NULL, G0, scale = TRUE){
-  rresids_std <- rresids_tmp <- rotatedresid(y, ypred, G0[,1])
+  rresids_std <- rresids_tmp <- rotated_resid(y, ypred, G0[,1])
   rresids_std <- rresids_std %*% G0
   rresids_std <- rresids_std[, -1]
   if (scale){rresids_std <- sqrt(k) * rresids_std %*% diag(a[1]/a[-1])}

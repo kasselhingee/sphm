@@ -560,7 +560,7 @@ mod_SvMF$DoF
 ```{r}
 restarts <- pbapply::pblapply(1:100, function(seed){
   # randomly generates a SpEuc-form link
-  start <- rmnlink_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)
+  start <- rand_mobius_link_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)
   # convert to LinEuc form:
   set.seed(seed+1)
   Qe <- mclust::randomOrthogonalMatrix(ncol(xestd)+1, 5-1)
@@ -636,7 +636,7 @@ mykbl
 ```
 
 ```{r}
-cann <- as_mnlink_cann(mod_SvMF$mean)
+cann <- as_mobius_link_cann(mod_SvMF$mean)
 ```
 
 ```{r, results='asis'}
@@ -1122,7 +1122,7 @@ mod_vMF <- mobius_vMF(y = mod_SvMF$y,
                      xs = NULL, 
                      xe = mod_SvMF$xe,
                      type = "LinEuc")
-mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){mobius_vMF_restart(mod_vMF, seed)})
+mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){mobius_vMF_refit(mod_vMF, seed)})
 lapply(mod_vMF_restarts, "[[", "AIC") %>%
   unlist() %>%
   tibble::enframe("seed", "AIC") %>%
@@ -1164,13 +1164,13 @@ getlikR <- function(y){
          vMF = mod1,
          SvMF = mod2))
   }
-  lLik1 <- ldMobius_SvMF(mod1$y, xs = NULL, xe =mod1$xe,
+  lLik1 <- mobius_SvMF_log_lik(mod1$y, xs = NULL, xe =mod1$xe,
               mean = mod1$est,
               k = mod1$k,
               a = rep(1, 5),
               G0 = mod2$G0) %>%
     colSums()
-  lLik2 <- ldMobius_SvMF(mod2$y, xs = NULL, xe =mod2$xe,
+  lLik2 <- mobius_SvMF_log_lik(mod2$y, xs = NULL, xe =mod2$xe,
               mean = mod2$mean,
               k = mod2$k,
               a = mod2$a,

@@ -2,13 +2,13 @@
 % Please edit documentation in R/SvMF_parameterisations.R
 \name{SvMFparams}
 \alias{SvMFparams}
-\alias{SvMFcann}
-\alias{SvMFmuV}
+\alias{SvMF_cann}
+\alias{SvMF_muV}
 \title{SvMF Parameterisations}
 \usage{
-SvMFcann(k, a, G)
+SvMF_cann(k, a, G)
 
-SvMFmuV(k, m, a1, V)
+SvMF_muV(k, m, a1, V)
 }
 \description{
 The SvMF canonical parameterisation is a set of positive real numbers (kappa, \code{a}) and a matrix of orthonormal column vectors \code{Gamma}, where the product of the \code{a} is 1. \code{a_1} and \code{kappa} are not jointly estimatable by MLE, so I'm expecting them to be closely related.
@@ -19,14 +19,14 @@ A fourth represents the above V matrix as an orthogonal matrix and a set of posi
 }
 \section{Functions}{
 \itemize{
-\item \code{SvMFcann()}: The canonical parameterisation of a SvMF using a kappa, a vector and Gamma, as used in equation 7 of Scealy and Wood 2017.
+\item \code{SvMF_cann()}: The canonical parameterisation of a SvMF using a kappa, a vector and Gamma, as used in equation 7 of Scealy and Wood 2017.
 
-\item \code{SvMFmuV()}: The parameterisation of a SvMF that uses a kappa, mean, a_1, and a symmetric positive definite matrix \code{V} with \code{det(V) = 1}. This parameterisation is defined in equations 8 and 9 of Scealy and Wood 2019.
+\item \code{SvMF_muV()}: The parameterisation of a SvMF that uses a kappa, mean, a_1, and a symmetric positive definite matrix \code{V} with \code{det(V) = 1}. This parameterisation is defined in equations 8 and 9 of Scealy and Wood 2019.
 The log-likelihood using this parameterisation is in equation 11 of Scealy and Wood 2019.
 
 }}
 \examples{
-SvMFcann(k = 0.5, a = c(1, rep(1, 5-1)), G = diag(1, 5))
+SvMF_cann(k = 0.5, a = c(1, rep(1, 5-1)), G = diag(1, 5))
 }
 \seealso{
 Other SvMF-distribution: 

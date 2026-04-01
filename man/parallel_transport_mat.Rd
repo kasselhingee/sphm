@@ -29,9 +29,9 @@ If \code{end = -start} (antipodal points), there is no unique geodesic and a ref
 matrix in the \code{end} direction is returned.
 }
 \seealso{
-\code{\link[=rotatedresid]{rotatedresid()}}
+\code{\link[=rotated_resid]{rotated_resid()}}
 
 Other residuals: 
-\code{\link{rotatedresid}()}
+\code{\link{rotated_resid}()}
 }
 \concept{residuals}

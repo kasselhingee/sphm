@@ -9,7 +9,7 @@ rSvMF(n, param, check = TRUE)
 \arguments{
 \item{n}{The number of samples to simulate}
 
-\item{param}{A parameter object. See \code{\link[=SvMFcann]{SvMFcann()}} or \code{\link[=SvMFmuV]{SvMFmuV()}}.}
+\item{param}{A parameter object. See \code{\link[=SvMF_cann]{SvMF_cann()}} or \code{\link[=SvMF_muV]{SvMF_muV()}}.}
 
 \item{check}{If TRUE, will check that the parameters are appropriate for a SvMF model.}
 }

@@ -36,36 +36,36 @@
 #' 
 NULL
 
-#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mnlink()`] using the canonical form.
+#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mobius_link()`] using the canonical form.
 #' @family link-function
 #' @export
-mnlink_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL, check = TRUE){
+mobius_link_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL, check = TRUE){
   stopifnot(is.matrix(P))
   obj <- list(P = P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce)
   obj <- lapply(obj, function(element){if (length(element) == 0){return(NULL)}else{return(element)}})
 
   # export
-  class(obj) <- c("mnlink_cann", class(obj))
-  if (check){mnlink_cann_check(obj)}
+  class(obj) <- c("mobius_link_cann", class(obj))
+  if (check){mobius_link_cann_check(obj)}
   return(obj)
 }
 
-#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mnlink()`] using the canonical form.
+#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mobius_link()`] using the canonical form.
 #' @family link-function
 #' @export
-as_mnlink_cann <- function(obj){
-  if (inherits(obj, "mnlink_cann")){return(obj)}
-  if (inherits(obj, "mnlink_Omega")){return(Omega2cann(obj, check = FALSE))}
-  if (!inherits(obj, "list")){stop("obj isn't a mnlink_cann or mnlink_Omega class, or a list.")}
-  if ("P" %in% names(obj)){return(do.call(mnlink_cann, c(obj, list(check = FALSE))))}
-  if ("p1" %in% names(obj)){return(Omega2cann(do.call(mnlink_Omega, c(obj, list(check = FALSE))), check = FALSE))}
+as_mobius_link_cann <- function(obj){
+  if (inherits(obj, "mobius_link_cann")){return(obj)}
+  if (inherits(obj, "mobius_link_Omega")){return(Omega2cann(obj, check = FALSE))}
+  if (!inherits(obj, "list")){stop("obj isn't a mobius_link_cann or mobius_link_Omega class, or a list.")}
+  if ("P" %in% names(obj)){return(do.call(mobius_link_cann, c(obj, list(check = FALSE))))}
+  if ("p1" %in% names(obj)){return(Omega2cann(do.call(mobius_link_Omega, c(obj, list(check = FALSE))), check = FALSE))}
   return(obj)
 }
 
 # Flatten a canonical mean link object to a named numeric vector. Used for
 # passing parameters to/from C++ optimisers and numerical checks.
-mnlink_cann_vec <- function(obj){
-  stopifnot(inherits(obj, "mnlink_cann"))
+mobius_link_cann_vec <- function(obj){
+  stopifnot(inherits(obj, "mobius_link_cann"))
   Pvec <- as.vector(obj$P)
   names(Pvec) <- as.vector(outer(seq.int(1, nrow(obj$P)), seq.int(1, nrow(obj$P)), 
                                  FUN = paste, sep = ","))
@@ -103,10 +103,10 @@ mnlink_cann_vec <- function(obj){
 #' @param ce The value of \eqn{c_e}.
 NULL
 
-#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mnlink()`] using the Omega form.
+#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mobius_link()`] using the Omega form.
 #' @family link-function
 #' @export
-mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("numeric", 0), ce = vector("numeric", 0), check = TRUE){
+mobius_link_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("numeric", 0), ce = vector("numeric", 0), check = TRUE){
   if (is.null(qs1)){qs1 <- vector("numeric", 0)}
   if (is.null(qe1)){qe1 <- vector("numeric", 0)}
   if (is.null(ce)){ce <- vector("numeric", 0)}
@@ -119,28 +119,28 @@ mnlink_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("nu
   )
 
   #export
-  class(obj) <- c("mnlink_Omega", class(obj))
-  if (check) {mnlink_Omega_check(obj)}
+  class(obj) <- c("mobius_link_Omega", class(obj))
+  if (check) {mobius_link_Omega_check(obj)}
   return(obj)
 }
 
-#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mnlink()`] using the Omega form.
+#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mobius_link()`] using the Omega form.
 #' @family link-function
 #' @export
-as_mnlink_Omega <- function(obj){
-  if (inherits(obj, "mnlink_cann")){return(cann2Omega(obj, check = FALSE))}
-  if (inherits(obj, "mnlink_Omega")){return(obj)}
-  if (!inherits(obj, "list")){stop("obj must be either a mnlink_cann or mnlink_Omega class, or a list.")}
-  if ("P" %in% names(obj)){return(cann2Omega(do.call(mnlink_cann, c(obj, list(check = FALSE))), check = FALSE))}
-  if ("p1" %in% names(obj)){return(do.call(mnlink_Omega, c(obj, list(check = FALSE))))}
+as_mobius_link_Omega <- function(obj){
+  if (inherits(obj, "mobius_link_cann")){return(cann2Omega(obj, check = FALSE))}
+  if (inherits(obj, "mobius_link_Omega")){return(obj)}
+  if (!inherits(obj, "list")){stop("obj must be either a mobius_link_cann or mobius_link_Omega class, or a list.")}
+  if ("P" %in% names(obj)){return(cann2Omega(do.call(mobius_link_cann, c(obj, list(check = FALSE))), check = FALSE))}
+  if ("p1" %in% names(obj)){return(do.call(mobius_link_Omega, c(obj, list(check = FALSE))))}
   return(obj)
 }
 
 #' @noRd
 #' @description Converts Omega parameterisation to a vector.
-#' @param obj An `mnlink_Omega` parameter object.
-mnlink_Omega_vec <- function(obj){
-  stopifnot(inherits(obj, "mnlink_Omega"))
+#' @param obj An `mobius_link_Omega` parameter object.
+mobius_link_Omega_vec <- function(obj){
+  stopifnot(inherits(obj, "mobius_link_Omega"))
   p1 <- obj$p1
   qs1 <- obj$qs1
   qe1 <- obj$qe1
@@ -158,16 +158,16 @@ mnlink_Omega_vec <- function(obj){
   names(qe1) <- paste0("qe1_", seq.int(1, length.out = length(qe1)), recycle0 = TRUE)
   names(ce) <- paste0("ce", seq.int(1, length.out = length(ce)), recycle0 = TRUE)
   out <- c(p1, qs1, qe1, Omegavec, ce)
-  class(out) <- "mnlink_Omega_vec"
+  class(out) <- "mobius_link_Omega_vec"
   return(out)
 }
 
 #' @noRd
-#' @description Inverse of `mnlink_Omega_vec()`
-#' @param vec is a vector created by `mnlink_Omega_vec()`
+#' @description Inverse of `mobius_link_Omega_vec()`
+#' @param vec is a vector created by `mobius_link_Omega_vec()`
 #' @param p The dimension of the response (The dimension of covariates will be infered from `p`).
 #' @param qe Number of Euclidean covariates
-mnlink_Omega_unvec <- function(vec, p, qe = 0, check = TRUE){
+mobius_link_Omega_unvec <- function(vec, p, qe = 0, check = TRUE){
   # length of vec = p + qs + qe + p*(qs + qe) + (qe>0)
   # l - 1*(qe>0) - qe - p*qe = qs + p*qs
   # (l - (qe>0) - qe - p*qe)/(1+p) = qs
@@ -175,7 +175,7 @@ mnlink_Omega_unvec <- function(vec, p, qe = 0, check = TRUE){
   stopifnot(qs == as.integer(qs))
   names(vec) <- NULL
   
-  mnlink_Omega(p1 = vec[1:p],
+  mobius_link_Omega(p1 = vec[1:p],
            qs1 = vec[p + seq.int(1, length.out = qs)],
            qe1 = vec[p + qs + seq.int(1, length.out = qe)],
            Omega = matrix(vec[p + qs + qe + seq.int(1, length.out = p*(qe + qs))], nrow = p, ncol = qs + qe, byrow = FALSE),
@@ -188,7 +188,7 @@ mnlink_Omega_unvec <- function(vec, p, qe = 0, check = TRUE){
 #' @family link-function
 #' @export
 cann2Omega <- function(obj, check = TRUE){
-  if (check){mnlink_cann_check(obj)}
+  if (check){mobius_link_cann_check(obj)}
   p1 <- obj$P[, 1]
   qs1 <- obj$Qs[, 1]
   qe1 <- obj$Qe[, 1]
@@ -201,14 +201,14 @@ cann2Omega <- function(obj, check = TRUE){
     ce <- obj$ce
   }
   Omega <- cbind(Omega_s, Omega_e)
-  return(mnlink_Omega(p1, qs1 = qs1, Omega = Omega, qe1 = qe1, ce = ce, check = FALSE))
+  return(mobius_link_Omega(p1, qs1 = qs1, Omega = Omega, qe1 = qe1, ce = ce, check = FALSE))
 }
 
 #' @noRd
 #' @description Converts an Omega parameterisation to the cannonical parameterisation.
 #' Apart from p1 and q1, sign of columns of P and Q cannot be recovered from Omega.
 Omega2cann <- function(obj, check = TRUE){
-  if (check){mnlink_Omega_check(obj)}
+  if (check){mobius_link_Omega_check(obj)}
   svdres <- svd(obj$Omega, nu = nrow(obj$Omega) - 1, nv = nrow(obj$Omega) - 1)
 
   P <- cbind(obj$p1, svdres$u)
@@ -231,15 +231,15 @@ Omega2cann <- function(obj, check = TRUE){
     ce <- obj$ce
   }
   
-  out <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = check)
+  out <- mobius_link_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = check)
   if (det(out$P) < 0){#if negative determinant, flip an axis to get positive determinant of P (i.e. a rotation matrix)
     out <- P_signswitch(out, ncol(out$P))
   }
   return(out)
 }
 
-mnlink_cann_check <- function(obj){
-  stopifnot(inherits(obj, "mnlink_cann"))
+mobius_link_cann_check <- function(obj){
+  stopifnot(inherits(obj, "mobius_link_cann"))
   
   #check P matrix
   p <- nrow(obj$P)
@@ -280,7 +280,7 @@ mnlink_cann_check <- function(obj){
   return(NULL)
 }
 
-mnlink_Omega_check <- function(obj){
+mobius_link_Omega_check <- function(obj){
   # Check dimensions and nullness of elements
   if (is.null(obj$p1)){stop("p1 should be non-null")}
   if (is.null(obj$qs1)){stop("qs1 should be non-null")}
@@ -301,7 +301,7 @@ mnlink_Omega_check <- function(obj){
     stopifnot(length(obj$ce) == 1)
   }
   
-  vals <- mnlink_Omega_check_numerical(obj)
+  vals <- mobius_link_Omega_check_numerical(obj)
   good <- (vals < sqrt(.Machine$double.eps))
   if (!all(good)){
     stop(paste("The following checks failed.", 
@@ -310,8 +310,8 @@ mnlink_Omega_check <- function(obj){
   }
   return(NULL)
 }
-mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothness
-  stopifnot(inherits(obj, "mnlink_Omega"))
+mobius_link_Omega_check_numerical <- function(obj){ #uses squared values for smoothness
+  stopifnot(inherits(obj, "mobius_link_Omega"))
   # list2env(obj, envir = environment())
   qs <- length(obj$qs1)
   qe <- length(obj$qe1)
@@ -349,7 +349,7 @@ mnlink_Omega_check_numerical <- function(obj){ #uses squared values for smoothne
 # Omega_s to be orthogonal to qs1, and Omega_e to be orthogonal to qe1.
 # Used after small numerical violations during optimisation.
 Omega_proj <- function(obj){
-  stopifnot(inherits(obj, "mnlink_Omega"))
+  stopifnot(inherits(obj, "mobius_link_Omega"))
   # first project orthogonal to p1 (needs p1 unit vector)
   obj$p1 <- obj$p1/vnorm(obj$p1)
   newOmega <- obj$Omega -  (obj$p1 %*% t(obj$p1)) %*% obj$Omega
@@ -374,13 +374,13 @@ Omega_proj <- function(obj){
 # The Euclidean part of the Omega parameterisation is invariant to this sign flip because
 # ce is a free parameter; used to standardise sign conventions when recovering canonical params.
 Euc_signswitch <- function(obj){
-  if (inherits(obj, "mnlink_Omega")){
+  if (inherits(obj, "mobius_link_Omega")){
     obj$qe1 <- -1 * obj$qe1
     obj$ce <- -1 * obj$ce
     obj$Omega[, length(obj$qs1) + (1:length(obj$qe1))] <- -1 * obj$Omega[, length(obj$qs1) + (1:length(obj$qe1))]
     return(obj)
   }
-  if (inherits(obj, "mnlink_cann")){
+  if (inherits(obj, "mobius_link_cann")){
     obj$ce <- -1 * obj$ce
     obj$Qe <- -1 * obj$Qe
     return(obj)
@@ -390,7 +390,7 @@ Euc_signswitch <- function(obj){
 # in a canonical parameter object. Used to enforce a canonical sign convention
 # (e.g. making P a rotation matrix after SVD). Column 1 cannot be switched.
 P_signswitch <- function(obj, cols){
-  stopifnot(inherits(obj, "mnlink_cann"))
+  stopifnot(inherits(obj, "mobius_link_cann"))
   if (is.logical(cols)){cols <- which(cols)}
   if (1 %in% cols){stop("Sign of first column of P cannot be easily swapped")}
   obj$P[, cols] <- -1 * obj$P[,cols]
@@ -410,9 +410,9 @@ P_signswitch <- function(obj, cols){
 #' @param p The length of response vectors
 #' @param qs The length of spherical covariate vectors
 #' @param qe The length of Euclidean covariate vectors
-#' @return A `mnlink_cann` object.
+#' @return A `mobius_link_cann` object.
 #' @export
-rmnlink_cann <- function(p = 3, qs = 5, qe = 4, preseed = 0){
+rand_mobius_link_cann <- function(p = 3, qs = 5, qe = 4, preseed = 0){
   stopifnot((qe==0) | (qe >= p-1))
   stopifnot((qs==0) | (qs >= p-1))
   set.seed(preseed + 1)
@@ -432,16 +432,16 @@ rmnlink_cann <- function(p = 3, qs = 5, qe = 4, preseed = 0){
     set.seed(preseed + 4 + 10)
     ce <- runif(1)
   }
-  paramobj <- mnlink_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = FALSE)
+  paramobj <- mobius_link_cann(P, Bs = Bs, Qs = Qs, Be = Be, Qe = Qe, ce = ce, check = FALSE)
   return(paramobj)
 }
 
 #' @noRd
-#' @description To simplify testing places result of `rmnlink_cann()` into the calling environment.
+#' @description To simplify testing places result of `rand_mobius_link_cann()` into the calling environment.
 #' @details
 #' Places all the parameters in the environment by running list2env(obj, envir = environment())
-rmnlink_cann__place_in_env <- function(p = 3, qs = 5, qe = 4, preseed = 0){
-  paramobj <- rmnlink_cann(p = p, qs = qs, qe = qe, preseed = preseed)
+rand_mobius_link_cann__place_in_env <- function(p = 3, qs = 5, qe = 4, preseed = 0){
+  paramobj <- rand_mobius_link_cann(p = p, qs = qs, qe = qe, preseed = preseed)
   target_env <- if (is.null(environment(-1))) .GlobalEnv else environment(-1)
   list2env(c(paramobj, list(paramobj = paramobj, qs = qs, qe = qe, p = p)), envir = target_env)
   return(NULL)
@@ -450,13 +450,13 @@ rmnlink_cann__place_in_env <- function(p = 3, qs = 5, qe = 4, preseed = 0){
 # Check whether a mean link parameter object uses the "LinEuc" form (linear Euclidean link).
 # In LinEuc form, qe1 = (1,0,...) and ce = 1, so the Euclidean part acts as a linear predictor.
 is_LinEuc <- function(obj, tol = sqrt(.Machine$double.eps)){
-  if (inherits(obj, "mnlink_Omega")){
+  if (inherits(obj, "mobius_link_Omega")){
     if (length(obj$qe1) > 0){
       checks <- c((obj$qe1 - c(1, rep(0, length(obj$qe1) - 1)))^2, (obj$ce - 1)^2)
       if (all(checks < tol)){return(TRUE)}else{return(FALSE)}
     }
   }
-  if (inherits(obj, "mnlink_cann")){
+  if (inherits(obj, "mobius_link_cann")){
     if (!is.null(obj$Qe)){
       checks <-  c((obj$Qe[,1] - c(1, rep(0, nrow(obj$Qe) - 1)))^2, (obj$ce[1] - 1)^2)
       if (all(checks < tol)){return(TRUE)}else{return(FALSE)}
@@ -467,15 +467,15 @@ is_LinEuc <- function(obj, tol = sqrt(.Machine$double.eps)){
 }
 
 #' @title Obtain dimensions corresponding to a mean link parameter set
-#' @param x A mean link parameter object of class `mnlink_Omega` or `mnlink_cann`.
+#' @param x A mean link parameter object of class `mobius_link_Omega` or `mobius_link_cann`.
 #' @return An integer vector of p (length of response unit vectors), qs (length of spherical covariate unit vectors) and qe (length of Euclidean covariate vectors).
 #' @name dim-mnlink_params
 NULL
 
 #' @rdname dim-mnlink_params
 #' @export
-#' @method dim mnlink_cann
-dim.mnlink_cann <- function(x){
+#' @method dim mobius_link_cann
+dim.mobius_link_cann <- function(x){
   c(p = ncol(x$P), 
     qs = switch(1 + is.null(x$Qs), nrow(x$Qs), 0),
     qe = switch(1 + is.null(x$Qe), nrow(x$Qe), 0))
@@ -483,8 +483,8 @@ dim.mnlink_cann <- function(x){
 
 #' @rdname dim-mnlink_params
 #' @export
-#' @method dim mnlink_Omega
-dim.mnlink_Omega <- function(x){
+#' @method dim mobius_link_Omega
+dim.mobius_link_Omega <- function(x){
   c(p = length(x$p1), 
     qs = length(x$qs1),
     qe = length(x$qe1))

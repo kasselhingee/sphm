@@ -42,7 +42,7 @@ mobius_vMF(
 \item{...}{Passed as options to \code{\link[nloptr:nloptr]{nloptr::nloptr()}}.}
 }
 \description{
-Regression of spherical response with vMF error and scaled Mobius link \code{\link[=mnlink]{mnlink()}}.
+Regression of spherical response with vMF error and scaled Mobius link \code{\link[=mobius_link]{mobius_link()}}.
 }
 \details{
 Optimisation of link parameters is by maximising
@@ -58,10 +58,10 @@ If \code{type == "LinEuc"} a column of zeros called \code{'dummyzero'} is added 
 }
 \seealso{
 Other regression: 
-\code{\link{ldMobius_SvMF}()},
-\code{\link{mobius_DoF}()},
 \code{\link{mobius_SvMF}()},
-\code{\link{mobius_vMF_restart}()},
+\code{\link{mobius_SvMF_log_lik}()},
+\code{\link{mobius_dof}()},
+\code{\link{mobius_vMF_refit}()},
 \code{\link{rMobius_SvMF}()}
 }
 \concept{regression}

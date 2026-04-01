@@ -2,16 +2,16 @@
 % Please edit documentation in R/Mobius_link_parameterisations.R
 \name{dim-mnlink_params}
 \alias{dim-mnlink_params}
-\alias{dim.mnlink_cann}
-\alias{dim.mnlink_Omega}
+\alias{dim.mobius_link_cann}
+\alias{dim.mobius_link_Omega}
 \title{Obtain dimensions corresponding to a mean link parameter set}
 \usage{
-\method{dim}{mnlink_cann}(x)
+\method{dim}{mobius_link_cann}(x)
 
-\method{dim}{mnlink_Omega}(x)
+\method{dim}{mobius_link_Omega}(x)
 }
 \arguments{
-\item{x}{A mean link parameter object of class \code{mnlink_Omega} or \code{mnlink_cann}.}
+\item{x}{A mean link parameter object of class \code{mobius_link_Omega} or \code{mobius_link_cann}.}
 }
 \value{
 An integer vector of p (length of response unit vectors), qs (length of spherical covariate unit vectors) and qe (length of Euclidean covariate vectors).

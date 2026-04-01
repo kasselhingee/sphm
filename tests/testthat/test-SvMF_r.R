@@ -4,7 +4,7 @@ test_that("rSvMF runs", {
   a <- runif(p)
   a[p] <- a[p]/prod(a[-1])
   set.seed(1); Gamma <- mclust::randomOrthogonalMatrix(p, p)
-  obj <- SvMFcann(0.5, a, Gamma)
+  obj <- SvMF_cann(0.5, a, Gamma)
   set.seed(2)
   y <- rSvMF(10, obj)
   expect_equal(dim(y), c(10, p))
@@ -20,7 +20,7 @@ test_that("simple estimators correct at high concentration and data", {
   Gamma <- toBigPosElRot_keepfirst(Gamma) # make Gamma consistentish signs, and a rotation matrix
   k <- 200
   
-  obj <- SvMFcann(k, a, Gamma)
+  obj <- SvMF_cann(k, a, Gamma)
   set.seed(3)
   y <- rSvMF(1E4, obj)
   

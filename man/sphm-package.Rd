@@ -44,7 +44,7 @@ set.seed(1)
 n <- 50; p <- 3
 xs <- matrix(rnorm(n * p), n, p)
 xs <- xs / sqrt(rowSums(xs^2))
-mean_params <- rmnlink_cann(p = p, qs = p, qe = 0)
+mean_params <- rand_mobius_link_cann(p = p, qs = p, qe = 0)
 sim <- rMobius_SvMF(xs = xs, xe = NULL, mean = mean_params,
                     k = 5, a = c(1, 2, 0.5), G0 = diag(p))
 y <- sim[, 1:p]
@@ -58,16 +58,16 @@ fit_SvMF <- mobius_SvMF(y = y, xs = xs,           # Step 2
 \section{Key functions}{
 \tabular{ll}{
    Task \tab Function \cr
-   \strong{Fit regression} \tab \code{\link[=mobius_SvMF]{mobius_SvMF()}}, \code{\link[=mobius_vMF]{mobius_vMF()}}, \code{\link[=mobius_vMF_restart]{mobius_vMF_restart()}} \cr
+   \strong{Fit regression} \tab \code{\link[=mobius_SvMF]{mobius_SvMF()}}, \code{\link[=mobius_vMF]{mobius_vMF()}}, \code{\link[=mobius_vMF_refit]{mobius_vMF_refit()}} \cr
    \strong{Simulate data} \tab \code{\link[=rMobius_SvMF]{rMobius_SvMF()}}, \code{\link[=rSvMF]{rSvMF()}} \cr
-   \strong{Evaluate link} \tab \code{\link[=mnlink]{mnlink()}} \cr
-   \strong{Residuals} \tab \code{\link[=rotatedresid]{rotatedresid()}}, \code{\link[=parallel_transport_mat]{parallel_transport_mat()}} \cr
-   \strong{SvMF density} \tab \code{\link[=dSvMF]{dSvMF()}}, \code{\link[=ldMobius_SvMF]{ldMobius_SvMF()}} \cr
+   \strong{Evaluate link} \tab \code{\link[=mobius_link]{mobius_link()}} \cr
+   \strong{Residuals} \tab \code{\link[=rotated_resid]{rotated_resid()}}, \code{\link[=parallel_transport_mat]{parallel_transport_mat()}} \cr
+   \strong{SvMF density} \tab \code{\link[=dSvMF]{dSvMF()}}, \code{\link[=mobius_SvMF_log_lik]{mobius_SvMF_log_lik()}} \cr
    \strong{SvMF prelim. estimates} \tab \code{\link[=SvMF_moment_axes]{SvMF_moment_axes()}}, \code{\link[=SvMF_prelim_scales]{SvMF_prelim_scales()}} \cr
-   \strong{Link parameterisations} \tab \code{\link[=mnlink_cann]{mnlink_cann()}}, \code{\link[=mnlink_Omega]{mnlink_Omega()}}, \code{\link[=cann2Omega]{cann2Omega()}} \cr
-   \strong{SvMF parameterisations} \tab \code{\link[=SvMFcann]{SvMFcann()}}, \code{\link[=SvMFmuV]{SvMFmuV()}} \cr
-   \strong{Data standardisation} \tab \code{\link[=standardise_sph]{standardise_sph()}}, \code{\link[=secondmoment_mat]{secondmoment_mat()}} \cr
-   \strong{Degrees of freedom} \tab \code{\link[=mobius_DoF]{mobius_DoF()}} \cr
+   \strong{Link parameterisations} \tab \code{\link[=mobius_link_cann]{mobius_link_cann()}}, \code{\link[=mobius_link_Omega]{mobius_link_Omega()}}, \code{\link[=cann2Omega]{cann2Omega()}} \cr
+   \strong{SvMF parameterisations} \tab \code{\link[=SvMF_cann]{SvMF_cann()}}, \code{\link[=SvMF_muV]{SvMF_muV()}} \cr
+   \strong{Data standardisation} \tab \code{\link[=standardise_sph]{standardise_sph()}}, \code{\link[=second_moment_mat]{second_moment_mat()}} \cr
+   \strong{Degrees of freedom} \tab \code{\link[=mobius_dof]{mobius_dof()}} \cr
 }
 }
 
@@ -76,15 +76,15 @@ fit_SvMF <- mobius_SvMF(y = y, xs = xs,           # Step 2
 
 The mean link has two equivalent parameterisations:
 \itemize{
-\item \strong{Canonical} (\code{\link[=mnlink_cann]{mnlink_cann()}}): parameters \code{P}, \code{Bs}, \code{Qs}, \code{Be}, \code{Qe}
+\item \strong{Canonical} (\code{\link[=mobius_link_cann]{mobius_link_cann()}}): parameters \code{P}, \code{Bs}, \code{Qs}, \code{Be}, \code{Qe}
 directly match the notation in the manuscript (Equation 1). Use this for
 interpreting fitted results.
-\item \strong{Omega} (\code{\link[=mnlink_Omega]{mnlink_Omega()}}): a reparameterisation that merges the rotation
+\item \strong{Omega} (\code{\link[=mobius_link_Omega]{mobius_link_Omega()}}): a reparameterisation that merges the rotation
 and scale matrices into a single matrix \code{Omega}. Used internally during
 optimisation to avoid working on Stiefel manifolds.
 }
 
-Convert between them with \code{\link[=as_mnlink_cann]{as_mnlink_cann()}}, \code{\link[=as_mnlink_Omega]{as_mnlink_Omega()}}, and
+Convert between them with \code{\link[=as_mobius_link_cann]{as_mobius_link_cann()}}, \code{\link[=as_mobius_link_Omega]{as_mobius_link_Omega()}}, and
 \code{\link[=cann2Omega]{cann2Omega()}}.
 }
 

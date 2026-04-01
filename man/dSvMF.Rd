@@ -9,7 +9,7 @@ dSvMF(y, param, log = FALSE)
 \arguments{
 \item{y}{is row-vectors of data}
 
-\item{param}{is a set of parameters from either \code{\link[=SvMFcann]{SvMFcann()}} or \code{\link[=SvMFmuV]{SvMFmuV()}}.}
+\item{param}{is a set of parameters from either \code{\link[=SvMF_cann]{SvMF_cann()}} or \code{\link[=SvMF_muV]{SvMF_muV()}}.}
 
 \item{log}{Return log density?}
 }

@@ -80,7 +80,7 @@ A list:
 Performs regression for spherical response data with a scaled Mobius mean link and scale von Mises-Fisher error distribution (SvMF).
 }
 \details{
-The mean is assumed to follow \code{\link[=mnlink]{mnlink()}}.
+The mean is assumed to follow \code{\link[=mobius_link]{mobius_link()}}.
 The concentration and scaling in the SvMF is assumed constant across observations.
 The symmetry axes of the SvMF at location \eqn{\mu} are assumed to be the result of parallel transport along the geodesic of axes \code{G0[,-1]} from  \code{G0[,1]} to \eqn{\mu}. The axis at this base location \code{G0[,1]} are estimated.
 
@@ -90,10 +90,10 @@ When p!=3, the optimisation first approximates the normalising constant of the v
 }
 \seealso{
 Other regression: 
-\code{\link{ldMobius_SvMF}()},
-\code{\link{mobius_DoF}()},
+\code{\link{mobius_SvMF_log_lik}()},
+\code{\link{mobius_dof}()},
 \code{\link{mobius_vMF}()},
-\code{\link{mobius_vMF_restart}()},
+\code{\link{mobius_vMF_refit}()},
 \code{\link{rMobius_SvMF}()}
 }
 \concept{regression}

@@ -35,7 +35,7 @@
 #' n <- 50; p <- 3
 #' xs <- matrix(rnorm(n * p), n, p)
 #' xs <- xs / sqrt(rowSums(xs^2))
-#' mean_params <- rmnlink_cann(p = p, qs = p, qe = 0)
+#' mean_params <- rand_mobius_link_cann(p = p, qs = p, qe = 0)
 #' sim <- rMobius_SvMF(xs = xs, xe = NULL, mean = mean_params,
 #'                     k = 5, a = c(1, 2, 0.5), G0 = diag(p))
 #' y <- sim[, 1:p]
@@ -49,29 +49,29 @@
 #'
 #' | Task | Function |
 #' |---|---|
-#' | **Fit regression** | [`mobius_SvMF()`], [`mobius_vMF()`], [`mobius_vMF_restart()`] |
+#' | **Fit regression** | [`mobius_SvMF()`], [`mobius_vMF()`], [`mobius_vMF_refit()`] |
 #' | **Simulate data** | [`rMobius_SvMF()`], [`rSvMF()`] |
-#' | **Evaluate link** | [`mnlink()`] |
-#' | **Residuals** | [`rotatedresid()`], [`parallel_transport_mat()`] |
-#' | **SvMF density** | [`dSvMF()`], [`ldMobius_SvMF()`] |
+#' | **Evaluate link** | [`mobius_link()`] |
+#' | **Residuals** | [`rotated_resid()`], [`parallel_transport_mat()`] |
+#' | **SvMF density** | [`dSvMF()`], [`mobius_SvMF_log_lik()`] |
 #' | **SvMF prelim. estimates** | [`SvMF_moment_axes()`], [`SvMF_prelim_scales()`] |
-#' | **Link parameterisations** | [`mnlink_cann()`], [`mnlink_Omega()`], [`cann2Omega()`] |
-#' | **SvMF parameterisations** | [`SvMFcann()`], [`SvMFmuV()`] |
-#' | **Data standardisation** | [`standardise_sph()`], [`secondmoment_mat()`] |
-#' | **Degrees of freedom** | [`mobius_DoF()`] |
+#' | **Link parameterisations** | [`mobius_link_cann()`], [`mobius_link_Omega()`], [`cann2Omega()`] |
+#' | **SvMF parameterisations** | [`SvMF_cann()`], [`SvMF_muV()`] |
+#' | **Data standardisation** | [`standardise_sph()`], [`second_moment_mat()`] |
+#' | **Degrees of freedom** | [`mobius_dof()`] |
 #'
 #' @section Link function parameterisations:
 #'
 #' The mean link has two equivalent parameterisations:
 #'
-#' - **Canonical** ([`mnlink_cann()`]): parameters `P`, `Bs`, `Qs`, `Be`, `Qe`
+#' - **Canonical** ([`mobius_link_cann()`]): parameters `P`, `Bs`, `Qs`, `Be`, `Qe`
 #'   directly match the notation in the manuscript (Equation 1). Use this for
 #'   interpreting fitted results.
-#' - **Omega** ([`mnlink_Omega()`]): a reparameterisation that merges the rotation
+#' - **Omega** ([`mobius_link_Omega()`]): a reparameterisation that merges the rotation
 #'   and scale matrices into a single matrix `Omega`. Used internally during
 #'   optimisation to avoid working on Stiefel manifolds.
 #'
-#' Convert between them with [`as_mnlink_cann()`], [`as_mnlink_Omega()`], and
+#' Convert between them with [`as_mobius_link_cann()`], [`as_mobius_link_Omega()`], and
 #' [`cann2Omega()`].
 #'
 #' @section C++ and automatic differentiation:

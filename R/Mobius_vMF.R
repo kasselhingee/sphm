@@ -1,13 +1,13 @@
 #' @title Objective function for vMF regression
 #' @description
 #' Internal objective function used by [`mobius_vMF()`].
-#' For given parameters of [`mnlink()`], computes \deqn{\frac{1}{n}\sum_{i=1}^n y_i^T \mu(x_i)}
+#' For given parameters of [`mobius_link()`], computes \deqn{\frac{1}{n}\sum_{i=1}^n y_i^T \mu(x_i)}
 #' where \eqn{y_i} are observed unit vectors and \eqn{\mu(x_i)} is the corresponding predicted unit vector.
 #' Maximising this is equivalent to maximising the vMF log-likelihood over the mean link parameters.
-#' @inheritParams mnlink
+#' @inheritParams mobius_link
 #' @keywords internal
 prelimobj <- function(y, xs = NULL, xe = NULL, param){
-  predictedmeans <- mnlink(xs = xs, xe = xe, param = param, check = FALSE)
+  predictedmeans <- mobius_link(xs = xs, xe = xe, param = param, check = FALSE)
   stopifnot(nrow(y) == nrow(predictedmeans))
   stopifnot(ncol(y) == ncol(predictedmeans))
   return(-mean(rowSums(y * predictedmeans)))
@@ -15,7 +15,7 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 
 #' @title Regression with vMF Error and Scaled Mobius Link
 #' @importClassesFrom scorematchingad Rcpp_ADFun
-#' @description Regression of spherical response with vMF error and scaled Mobius link [`mnlink()`].
+#' @description Regression of spherical response with vMF error and scaled Mobius link [`mobius_link()`].
 #' @details Optimisation of link parameters is by maximising 
 #' \deqn{\sum_i=1^n y_i^T \mu(x_i)}
 #' where \eqn{y_i} are observed unit vectors and \eqn{\mu(x_i)} is the corresponding predicted unit vector.
@@ -55,7 +55,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
   }
 
   ### More detailed preparation ###
-  om0 <- as_mnlink_Omega(preplist$start)
+  om0 <- as_mobius_link_Omega(preplist$start)
   # check inputs:
   check_meanlink(preplist$y, preplist$xs, preplist$xe, om0)
 
@@ -106,7 +106,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
   # Estimate concentration
   # Note that the objective is average of y.ypred
   res <- optimise(function(k){
-    -lvMFnormconst(k, p) + k * (-nlopt$objective) #full vMF log-likelihood (standardised by number of observations)
+    -vMF_log_norm_const_exact(k, p) + k * (-nlopt$objective) #full vMF log-likelihood (standardised by number of observations)
   }, lower = 1E-8, upper = 1E5, maximum = TRUE)
   k <- res$maximum
   
@@ -126,15 +126,15 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
   fullparam <- scorematchingad:::t_sfi2u(nlopt$solution, om0vec, conprep$isfixed)
  
   #project mean pars to have correct orthogonality
-  projectedom <- Omega_proj(mnlink_Omega_unvec(fullparam, p, length(om0$qe1), check = FALSE))
-  try({mnlink_Omega_check(projectedom)})
+  projectedom <- Omega_proj(mobius_link_Omega_unvec(fullparam, p, length(om0$qe1), check = FALSE))
+  try({mobius_link_Omega_check(projectedom)})
 
   ### Making nicer return objects ###
   # Aspects of the fit that are invariant to coordinates used
   # distances in response space
-  pred <- mnlink(xs = preplist$xs, xe = preplist$xe, param = projectedom)
+  pred <- mobius_link(xs = preplist$xs, xe = preplist$xe, param = projectedom)
   dists <- acos(rowSums(pred * preplist$y))
-  rresids_tmp <- rotatedresid(preplist$y, pred, north_pole(ncol(preplist$y)))
+  rresids_tmp <- rotated_resid(preplist$y, pred, north_pole(ncol(preplist$y)))
   rresids <- rresids_tmp[, -1]
   attr(rresids, "samehemisphere") <-  attr(rresids_tmp, "samehemisphere")
   colnames(rresids) <- paste0("r", 1:ncol(rresids))
@@ -150,7 +150,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
   if (isTRUE(est$ce < 0)){est <- Euc_signswitch(est)}
   
   # DoF
-  DoF <- mobius_DoF(p, length(est$qs1), length(est$qe1), fix_qs1 = fix_qs1, fix_qe1 = fix_qe1) + 
+  DoF <- mobius_dof(p, length(est$qs1), length(est$qe1), fix_qs1 = fix_qs1, fix_qe1 = fix_qe1) + 
     1 #concentration
   # AIC using result from concentration search
   AIC <- 2*DoF - 2 * res$objective * nrow(y)
@@ -179,7 +179,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
 }
 
 #' @title Degrees of freedom of the Mobius mean link function
-#' @description The parameters of the Mobius mean link function [`mnlink()`] have a number of constraints.
+#' @description The parameters of the Mobius mean link function [`mobius_link()`] have a number of constraints.
 #' This function incorporates these constraints to obtain the total degrees of freedom of the parameters.
 #' @param p The length of response vectors
 #' @param qs The length of spherical covariate vectors
@@ -189,7 +189,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
 #' @return An integer
 #' @family regression
 #' @export
-mobius_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
+mobius_dof <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
   if (qs == 0){fix_qs1 <- FALSE} #ignore fix_qs1
   if (qe == 0){fix_qe1 <- FALSE} #ignore fix_qs1
   DoF <- DoF_Stiefel(p, p) + #P
@@ -201,7 +201,7 @@ mobius_DoF <- function(p, qs = 0, qe = 0, fix_qs1 = FALSE, fix_qe1 = FALSE){
 }
 
 check_meanlink <- function(y, xs, xe, om0){
-  try(mnlink_Omega_check(om0))
+  try(mobius_link_Omega_check(om0))
   p <- ncol(y)
   stopifnot(p == length(om0$p1))
   if (!is.null(xs)){
@@ -219,7 +219,7 @@ check_meanlink <- function(y, xs, xe, om0){
 
 estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
   dims_in <- c(length(om0$p1), length(om0$qe1))
-  om0vec <- mnlink_Omega_vec(om0)
+  om0vec <- mobius_link_Omega_vec(om0)
  
   # generate tapes 
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", om0vec, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
@@ -240,7 +240,7 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
   }
   
   # update constraint tapes based on omfixed
-  isfixed <- mnlink_Omega_vec(as_mnlink_Omega(omfixed)) > 0.5
+  isfixed <- mobius_link_Omega_vec(as_mobius_link_Omega(omfixed)) > 0.5
   constraint_tape <- scorematchingad::fixindependent(constraint_tape, om0vec, isfixed)
   # drop constraint returns that are constant:
   keep <- which(vapply((1:constraint_tape$range)-1, function(i){!constraint_tape$parameter(i)}, FUN.VALUE = FALSE))
@@ -253,12 +253,12 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
   Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = constraint_tape$domain)
   if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){
     # modify Qs and Qe so that they dont individually form orthogonal vectors by adding a little bit of noise
-    cann <- as_mnlink_cann(om0)
+    cann <- as_mobius_link_cann(om0)
     scalemodifier <- max(abs(rbind(cann$Qs, cann$Qe)))/1E3
     cann$Qs[,-1] <- cann$Qs[,-1] + scalemodifier*savednoisemat[1:nrow(cann$Qs), 1:(ncol(cann$Qs)-1)] #use pregenerated 100 x 100 noise matrix in R/sysdata.rda, built by data-raw/generate-savednoisemat.R
     cann$Qe[,-1] <- cann$Qe[,-1] + scalemodifier*savednoisemat[1:nrow(cann$Qe), 1:(ncol(cann$Qe)-1)] #use pregenerated 100 x 100 noise matrix in R/sysdata.rda, built by data-raw/generate-savednoisemat.R
-    om0new <- as_mnlink_Omega(cann)
-    x0 <- mnlink_Omega_vec(om0new)[!isfixed]
+    om0new <- as_mobius_link_Omega(cann)
+    x0 <- mobius_link_Omega_vec(om0new)[!isfixed]
     }
   Jac_eq <- matrix(constraint_tape$Jacobian(x0), byrow = TRUE, ncol = constraint_tape$domain)
   if (any(abs(svd(Jac_eq)$d) < sqrt(.Machine$double.eps))){
@@ -274,17 +274,17 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
 }
 
 #' @title Try other initial starting parameters for a given regression
-#' @description Given a vMF regression, repeat the optimisation from initial parameters randomly generated by [`rmnlink_cann()`].
+#' @description Given a vMF regression, repeat the optimisation from initial parameters randomly generated by [`rand_mobius_link_cann()`].
 #' @param mod_vMF Result of [`mobius_vMF()`]
-#' @param preseed Passed to [`rmnlink_cann()`]
+#' @param preseed Passed to [`rand_mobius_link_cann()`]
 #' @details `fix_qe1` and `fix_qs1` of `mod_vMF` will be respected.
 #' @return An vMF regression using the same data as `mod_vMF`.
 #' @family regression
 #' @export
-mobius_vMF_restart <- function(mod_vMF, preseed = 1){
-  inparam <- as_mnlink_Omega(mod_vMF$est)
-  dims <- dim.mnlink_Omega(inparam)
-  start <- rmnlink_cann(p = dims["p"], 
+mobius_vMF_refit <- function(mod_vMF, preseed = 1){
+  inparam <- as_mobius_link_Omega(mod_vMF$est)
+  dims <- dim.mobius_link_Omega(inparam)
+  start <- rand_mobius_link_cann(p = dims["p"], 
                            qs = dims[["qs"]] - (dims[["qs"]] > 0 & mod_vMF$linktype$fix_qs1), 
                            qe = dims[["qe"]] - (dims[["qe"]] > 0 & mod_vMF$linktype$fix_qe1), 
                            preseed = preseed)
@@ -319,8 +319,8 @@ mobius_vMF_restart <- function(mod_vMF, preseed = 1){
     # put inparam$qs1 back in case inparam$qs1 = - north_pole(dims[["qs"]]) and rotmat is then a reflection not a rotation
     start$Qs[,1] <- inparam$qs1
   }
-  start <- as_mnlink_Omega(start)
-  stopifnot(all(dim.mnlink_Omega(start) == dims))
+  start <- as_mobius_link_Omega(start)
+  stopifnot(all(dim.mobius_link_Omega(start) == dims))
   mobius_vMF(y = mod_vMF$y,
              xs = mod_vMF$xs,
              xe = mod_vMF$xe,

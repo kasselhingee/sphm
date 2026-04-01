@@ -7,18 +7,18 @@
 #' A fourth represents the above V matrix as an orthogonal matrix and a set of positive real values.
 #' 
 #' @examples 
-#' SvMFcann(k = 0.5, a = c(1, rep(1, 5-1)), G = diag(1, 5))
+#' SvMF_cann(k = 0.5, a = c(1, rep(1, 5-1)), G = diag(1, 5))
 NULL
 
 #' @describeIn SvMFparams The canonical parameterisation of a SvMF using a kappa, a vector and Gamma, as used in equation 7 of Scealy and Wood 2017.
 #' @family SvMF-distribution
 #' @export
-SvMFcann <- function(k, a, G){
+SvMF_cann <- function(k, a, G){
   obj <- list(k = k, a = a, G = G)
-  class(obj) <- c("SvMFcann", class(obj))
+  class(obj) <- c("SvMF_cann", class(obj))
   return(obj)
 }
-SvMFcann_check <- function(obj){
+SvMF_cann_check <- function(obj){
   list2env(obj, envir = environment())
   checks <- c(
   `a length` = length(a) == ncol(G),
@@ -37,12 +37,12 @@ SvMFcann_check <- function(obj){
 
 #' @describeIn SvMFparams The parameterisation of a SvMF that uses a kappa, mean, a_1, and a symmetric positive definite matrix `V` with `det(V) = 1`. This parameterisation is defined in equations 8 and 9 of Scealy and Wood 2019.
 #' The log-likelihood using this parameterisation is in equation 11 of Scealy and Wood 2019.
-SvMFmuV <- function(k, m, a1, V){
+SvMF_muV <- function(k, m, a1, V){
   obj <- list(k = k, m = m, a1 = a1, V = V)
-  class(obj) <- c("SvMFmuV", class(obj))
+  class(obj) <- c("SvMF_muV", class(obj))
   return(obj)
 }
-SvMFmuV_check <- function(obj, tol = sqrt(.Machine$double.eps)){
+SvMF_muV_check <- function(obj, tol = sqrt(.Machine$double.eps)){
   list2env(obj, envir = environment())
   checks <- c(
     `kappa positive` = k > 0,
@@ -58,12 +58,12 @@ SvMFmuV_check <- function(obj, tol = sqrt(.Machine$double.eps)){
   }
   return(NULL)
 }
-as_SvMFmuV <- function(obj){
-  if (inherits(obj, "SvMFmuV")){return(obj)}
-  if (inherits(obj, "SvMFcann")){return(SvMF_cann2muV(obj))}
-  if (!inherits(obj, "list")){stop("obj isn't a SvMFmuV, SvMFcann or a list.")}
-  if ("V" %in% names(obj)){return(do.call(SvMFmuV, obj))}
-  if ("G" %in% names(obj)){return(SvMFmuV(do.call(SvMFcann, obj)))}
+as_SvMF_muV <- function(obj){
+  if (inherits(obj, "SvMF_muV")){return(obj)}
+  if (inherits(obj, "SvMF_cann")){return(SvMF_cann2muV(obj))}
+  if (!inherits(obj, "list")){stop("obj isn't a SvMF_muV, SvMF_cann or a list.")}
+  if ("V" %in% names(obj)){return(do.call(SvMF_muV, obj))}
+  if ("G" %in% names(obj)){return(SvMF_muV(do.call(SvMF_cann, obj)))}
 }
 
 # conversion
@@ -73,7 +73,7 @@ SvMF_cann2muV <- function(obj){
   Hstar <- getHstar(m)
   Kstar <- t(Hstar) %*% G[, -1] #this solves Hstar %*% Kstar = G[, -1] because by orthogonality of H, t(Hstar) %*% Hstar = I.
   V <- Kstar %*% diag(a[-1]^2) %*% t(Kstar)
-  SvMFmuV(k, m, a[1], V)
+  SvMF_muV(k, m, a[1], V)
 }
 SvMF_muV2cann <- function(obj){
   list2env(obj, envir = environment())
@@ -82,7 +82,7 @@ SvMF_muV2cann <- function(obj){
   Kstar <- es$vectors
   G <- cbind(m, Hstar %*% Kstar)
   rownames(G) <- NULL
-  SvMFcann(k, c(a1, sqrt(es$values)), G = G)
+  SvMF_cann(k, c(a1, sqrt(es$values)), G = G)
 }
 
 #' @noRd 

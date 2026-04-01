@@ -1,10 +1,10 @@
 test_that("vMF optimisation works with Euc covars", {
-  rmnlink_cann__place_in_env(qs = 0)
+  rand_mobius_link_cann__place_in_env(qs = 0)
   
   #generate covariates Gaussianly
   set.seed(4)
   x <- matrix(rnorm(1000*qe), nrow = 1000)
-  ymean <- mnlink(xe = x, param = paramobj)
+  ymean <- mobius_link(xe = x, param = paramobj)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
@@ -14,42 +14,42 @@ test_that("vMF optimisation works with Euc covars", {
   # optimise locally using derivative information
   # starting at the optimum
   tmp <- mobius_vMF(y, xe = x, start = paramobj, type = "SpEuc", intercept = FALSE)
-  expect_equal(tmp$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(tmp$est, as_mobius_link_Omega(paramobj), tolerance = 0.05)
   expect_equal(tmp$k, 30, tolerance = 1E-1)
   
   # starting away from optimum, but still within constraints
   set.seed(14)
-  start <- as_mnlink_Omega(mnlink_cann(P = mclust::randomOrthogonalMatrix(p, p),
+  start <- as_mobius_link_Omega(mobius_link_cann(P = mclust::randomOrthogonalMatrix(p, p),
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
                                        ce = 0))
   opt2 <- mobius_vMF(y, xe = x, start = start, type = "SpEuc", intercept = FALSE)
-  if (sign(opt2$est$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
+  if (sign(opt2$est$qe1[1]) != sign(as_mobius_link_Omega(paramobj)$qe1[1])){
     opt2$solution <- Omega_Euc_signswitch(opt2$est)
   }
-  expect_equal(opt2$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(opt2$est, as_mobius_link_Omega(paramobj), tolerance = 0.05)
   expect_equal(opt2$k, 30, tolerance = 1E-1)
 })
 
 test_that("mobius_vMF optimisation works with Sph covars",{
-  rmnlink_cann__place_in_env(p = 4, qs = 5, qe = 0)
-  omegapar <- as_mnlink_Omega(paramobj)
+  rand_mobius_link_cann__place_in_env(p = 4, qs = 5, qe = 0)
+  omegapar <- as_mobius_link_Omega(paramobj)
   
   #generate covariates uniformly on the sphere
   set.seed(4)
   x <- matrix(rnorm(1000*qs), nrow = 1000)
   x <- sweep(x, 1, apply(x, 1, vnorm), FUN = "/")
   
-  ymean <- mnlink(xs = x, param = omegapar)
+  ymean <- mobius_link(xs = x, param = omegapar)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 30*mn)}))
   
-  # objective function in C++ and R should match when omegapar passes mnlink_Omega_check()
+  # objective function in C++ and R should match when omegapar passes mobius_link_Omega_check()
   objval <- prelimobj(y, xs = x, param = omegapar)
-  objvalcpp <-  -mean(prelimobj_cpp(mnlink_Omega_vec(omegapar), vector(), c(p, qe), cbind(y,x)))
+  objvalcpp <-  -mean(prelimobj_cpp(mobius_link_Omega_vec(omegapar), vector(), c(p, qe), cbind(y,x)))
   expect_equal(objvalcpp, objval)
 
   # optimise using pure R
@@ -65,7 +65,7 @@ test_that("mobius_vMF optimisation works with Sph covars",{
   
   # starting away from optimum, but still within constraints
   set.seed(14)
-  start <- as_mnlink_Omega(mnlink_cann(P = mclust::randomOrthogonalMatrix(p, p),
+  start <- as_mobius_link_Omega(mobius_link_cann(P = mclust::randomOrthogonalMatrix(p, p),
           Qs = mclust::randomOrthogonalMatrix(qs, p),
           Bs = diag(sort(runif(p-1), decreasing = TRUE))))
   opt2 <- mobius_vMF(y, xs = x, start = start, type = "SpEuc", intercept = FALSE)
@@ -74,7 +74,7 @@ test_that("mobius_vMF optimisation works with Sph covars",{
 })
 
 test_that("prelim optimisation works with Sph+Euc covars", {
-  rmnlink_cann__place_in_env(4, 5, 4)
+  rand_mobius_link_cann__place_in_env(4, 5, 4)
   
   #generate covariates Gaussianly
   set.seed(4)
@@ -84,7 +84,7 @@ test_that("prelim optimisation works with Sph+Euc covars", {
   xs <- matrix(rnorm(1000*qs), nrow = 1000)
   xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
   
-  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
+  ymean <- mobius_link(xs = xs, xe = xe, param = paramobj)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
@@ -94,38 +94,38 @@ test_that("prelim optimisation works with Sph+Euc covars", {
   # optimise locally using derivative information
   # starting at the optimum
   tmp <- mobius_vMF(y, xs = xs, xe = xe, start = paramobj, type = "SpEuc", intercept = FALSE)
-  expect_equal(tmp$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(tmp$est, as_mobius_link_Omega(paramobj), tolerance = 0.05)
   expect_equal(tmp$k, 30, tolerance = 1E-1)
   # result should also satisfy the commutation constraint
-  expect_silent(mnlink_Omega_check(tmp$est))
-  expect_silent(mnlink_cann_check(as_mnlink_cann(tmp$est)))
+  expect_silent(mobius_link_Omega_check(tmp$est))
+  expect_silent(mobius_link_cann_check(as_mobius_link_cann(tmp$est)))
   
   # starting away from optimum, but still within constraints
   set.seed(14)
-  start <- as_mnlink_Omega(mnlink_cann(P = mclust::randomOrthogonalMatrix(p, p),
+  start <- as_mobius_link_Omega(mobius_link_cann(P = mclust::randomOrthogonalMatrix(p, p),
                                        Qs = mclust::randomOrthogonalMatrix(qs, p),
                                        Bs = diag(sort(runif(p-1), decreasing = TRUE)),
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
                                        Be = diag(sort(runif(p-1), decreasing = TRUE)),
                                        ce = 1))
   opt2 <- mobius_vMF(y, xs = xs, xe = xe, start = start, type = "SpEuc", intercept = FALSE)
-  if (sign(opt2$est$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
+  if (sign(opt2$est$qe1[1]) != sign(as_mobius_link_Omega(paramobj)$qe1[1])){
     opt2$est <- Euc_signswitch(opt2$est)
   }
-  expect_equal(opt2$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(opt2$est, as_mobius_link_Omega(paramobj), tolerance = 0.05)
   expect_equal(opt2$k, 30, tolerance = 1E-1)
-  expect_silent(mnlink_Omega_check(opt2$est))
-  expect_silent(mnlink_cann_check(as_mnlink_cann(opt2$est)))
+  expect_silent(mobius_link_Omega_check(opt2$est))
+  expect_silent(mobius_link_cann_check(as_mobius_link_cann(opt2$est)))
 })
 
 test_that("LinEuc with Sph+Euc covars", {
-  rmnlink_cann__place_in_env(3, 5, 4)
+  rand_mobius_link_cann__place_in_env(3, 5, 4)
   # convert to LinEuc form:
   bigQe <- rbind(0, Qe)
   bigQe[, 1] <- 0
   bigQe[1,1] <- 1
   ce <- 1
-  paramobj <- mnlink_cann(P, Qs = Qs, Bs = Bs, Be = Be, Qe = bigQe, ce = ce)
+  paramobj <- mobius_link_cann(P, Qs = Qs, Bs = Bs, Be = Be, Qe = bigQe, ce = ce)
   expect_true(is_LinEuc(paramobj))
   
   #generate covariates Gaussianly
@@ -136,7 +136,7 @@ test_that("LinEuc with Sph+Euc covars", {
   xs <- matrix(rnorm(1000*qs), nrow = 1000)
   xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
   
-  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
+  ymean <- mobius_link(xs = xs, xe = xe, param = paramobj)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
@@ -146,14 +146,14 @@ test_that("LinEuc with Sph+Euc covars", {
   # optimise locally using derivative information
   # starting at the optimum
   tmp <- mobius_vMF(y, xs = xs, xe = xe[,-1], start = paramobj, type = "LinEuc", intercept = FALSE)
-  expect_equal(tmp$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(tmp$est, as_mobius_link_Omega(paramobj), tolerance = 0.05)
   expect_equal(tmp$k, 30, tolerance = 1E-1)
-  expect_silent(mnlink_Omega_check(tmp$est))
-  expect_silent(mnlink_cann_check(as_mnlink_cann(tmp$est)))
+  expect_silent(mobius_link_Omega_check(tmp$est))
+  expect_silent(mobius_link_cann_check(as_mobius_link_cann(tmp$est)))
   
   # starting away from optimum, but still within constraints
   set.seed(14)
-  start <- as_mnlink_Omega(mnlink_cann(P = mclust::randomOrthogonalMatrix(p, p),
+  start <- as_mobius_link_Omega(mobius_link_cann(P = mclust::randomOrthogonalMatrix(p, p),
                                        Qs = mclust::randomOrthogonalMatrix(qs, p),
                                        Bs = diag(sort(runif(p-1), decreasing = TRUE)),
                                        Qe = mclust::randomOrthogonalMatrix(qe, p),
@@ -164,32 +164,32 @@ test_that("LinEuc with Sph+Euc covars", {
   start$qe1 <- c(1, rep(0, qe))
   start$ce <- 1
   opt2 <- mobius_vMF(y, xs = xs, xe = xe[,-1], start = start, type = "LinEuc", intercept = FALSE)
-  if (sign(opt2$est$qe1[1]) != sign(as_mnlink_Omega(paramobj)$qe1[1])){
+  if (sign(opt2$est$qe1[1]) != sign(as_mobius_link_Omega(paramobj)$qe1[1])){
     opt2$est <- Euc_signswitch(opt2$est)
   }
-  expect_equal(opt2$est, as_mnlink_Omega(paramobj), tolerance = 0.05)
+  expect_equal(opt2$est, as_mobius_link_Omega(paramobj), tolerance = 0.05)
   expect_equal(opt2$k, 30, tolerance = 1E-1)
-  expect_silent(mnlink_Omega_check(opt2$est))
-  expect_silent(mnlink_cann_check(as_mnlink_cann(opt2$est)))
+  expect_silent(mobius_link_Omega_check(opt2$est))
+  expect_silent(mobius_link_cann_check(as_mobius_link_cann(opt2$est)))
 })
 
 
 
 test_that("C++ Omega_constraints() is zero correctly", {
-  rmnlink_cann__place_in_env(3, 0, 4)
-  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)))
+  rand_mobius_link_cann__place_in_env(3, 0, 4)
+  expect_equal(Omega_constraints(mobius_link_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)))
   
-  rmnlink_cann__place_in_env(3, 5, 0)
-  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)))
+  rand_mobius_link_cann__place_in_env(3, 5, 0)
+  expect_equal(Omega_constraints(mobius_link_Omega_vec(cann2Omega(paramobj)), p, qe), rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)))
 
-  rmnlink_cann__place_in_env(5, 5, 6)
-  expect_equal(Omega_constraints(mnlink_Omega_vec(cann2Omega(paramobj)), p, qe),  rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)*(p-1)*(p-2)/2))
+  rand_mobius_link_cann__place_in_env(5, 5, 6)
+  expect_equal(Omega_constraints(mobius_link_Omega_vec(cann2Omega(paramobj)), p, qe),  rep(0, 1 + (qs>0) + (qe>0) + (qs>0)*(qe>0)*(p-1)*(p-2)/2))
   
   # check Jacobian has non-zero singular values when constraint satisfied
   # I suspect NLOPT_LD_SLSQP has issues (a round off error) when the Jacobian has zero singular values
   # Which is highly likely if the constraint is pushing towards this.
   dims_in <- c(p, qe)
-  vec_om0 <- mnlink_Omega_vec(as_mnlink_Omega(paramobj))
+  vec_om0 <- mobius_link_Omega_vec(as_mobius_link_Omega(paramobj))
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", vec_om0, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
   Jac <- matrix(constraint_tape$Jacobian(vec_om0), byrow = TRUE, ncol = length(vec_om0))
   expect_true(all(abs(svd(Jac)$d) > sqrt(.Machine$double.eps)))
@@ -199,29 +199,29 @@ test_that("C++ Omega_constraints() is zero correctly", {
   # because the direction of v[,4], v[,5]... is non-zero in Omega only 
   # round(svd(Jac)$v, 2)
   direction <- svd(Jac)$v[, 4]
-  direction <- mnlink_Omega_unvec(direction, p, qe, check = FALSE)
+  direction <- mobius_link_Omega_unvec(direction, p, qe, check = FALSE)
   expect_equal(direction[c("p1", "qs1", "qe1", "ce")], list(p1 = rep(0, p), qs1 = rep(0, qs), qe1 = rep(0, qe), ce = 0))
 })
 
 test_that("C++ Omega_constraints() and Omega check is non-zero correctly", {
-  rmnlink_cann__place_in_env(5, 5, 6)
-  Om <- as_mnlink_Omega(paramobj)
+  rand_mobius_link_cann__place_in_env(5, 5, 6)
+  Om <- as_mobius_link_Omega(paramobj)
   Om$qe1 <- Om$qe1*2 #check qe1 size
   Om$qs1 <- Om$qs1*2 #check qs1 size
   Om$p1 <- Om$p1 * 2 #check p1 size
   Om$Omega <- matrix(rnorm(p * (qs + qe)), p, qs + qe) #check commutivity
-  expect_true(all(mnlink_Omega_check_numerical(Om) > 1E-3))
-  expect_true(all(abs(Omega_constraints(mnlink_Omega_vec(Om), p, qe)) > 1E-3))
+  expect_true(all(mobius_link_Omega_check_numerical(Om) > 1E-3))
+  expect_true(all(abs(Omega_constraints(mobius_link_Omega_vec(Om), p, qe)) > 1E-3))
 })
 
 test_that("mobius_vMF() performs correctly for LinEuc", {
-  rmnlink_cann__place_in_env(3, 5, 4)
+  rand_mobius_link_cann__place_in_env(3, 5, 4)
   # convert to LinEuc form:
   bigQe <- rbind(0, Qe)
   bigQe[, 1] <- 0
   bigQe[1,1] <- 1
   ce <- 1
-  paramobj <- mnlink_cann(P, Qs = Qs, Bs = Bs, Be = Be, Qe = bigQe, ce = ce)
+  paramobj <- mobius_link_cann(P, Qs = Qs, Bs = Bs, Be = Be, Qe = bigQe, ce = ce)
   expect_true(is_LinEuc(paramobj))
   
   #generate covariates Gaussianly
@@ -234,7 +234,7 @@ test_that("mobius_vMF() performs correctly for LinEuc", {
   xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
   colnames(xs) <- paste0("xs", 1:ncol(xs))
   
-  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
+  ymean <- mobius_link(xs = xs, xe = xe, param = paramobj)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
@@ -249,30 +249,30 @@ test_that("mobius_vMF() performs correctly for LinEuc", {
   # create a reference parameter object that hasnt been standardised, but has the ones covariate
   refpar <- paramobj
   refpar$Qe <- rbind(refpar$Qe, 0)
-  expect_equal(res$est, as_mnlink_Omega(refpar), tolerance = 0.05, ignore_attr = TRUE)
+  expect_equal(res$est, as_mobius_link_Omega(refpar), tolerance = 0.05, ignore_attr = TRUE)
   expect_equal(res$k, 30, tolerance = 1E-1)
   
   # the following checks the start standardisation of supplied starting parameters
   res2 <- mobius_vMF(y, xs = xs, xe = xe[, -1], type = "LinEuc", start = res$est)
-  standardisedsolution <- mnlink_Omega_vec(res$solution)
+  standardisedsolution <- mobius_link_Omega_vec(res$solution)
   estimatedvalues <- !grepl("(^qe|^ce)", names(standardisedsolution))
   expect_equal(res2$nlopt$x0, standardisedsolution[estimatedvalues], ignore_attr = TRUE)
   expect_equal(res2$k, 30, tolerance = 1E-1)
   
   # check random start
-  res3 <- mobius_vMF_restart(res, preseed = 1)
+  res3 <- mobius_vMF_refit(res, preseed = 1)
   expect_true(vnorm(res3$nlopt$x0 - res$nlopt$solution) > 1)
   expect_true(vnorm(res3$nlopt$x0 - res$nlopt$x0) > 1)
   expect_equal(res3$est, res$est, tolerance = 1E-5)
-  res4 <- mobius_vMF_restart(res, preseed = 1)
+  res4 <- mobius_vMF_refit(res, preseed = 1)
   expect_equal(res4$nlopt$x0, res3$nlopt$x0)
   expect_equal(res4$nlopt$solution, res3$nlopt$solution)
-  res5 <- mobius_vMF_restart(res, preseed = 2)
+  res5 <- mobius_vMF_refit(res, preseed = 2)
   expect_true(vnorm(res5$nlopt$x0 - res3$nlopt$x0) > 1)
 })
 
 test_that("mobius_vMF() performs correctly for SpEuc", {
-  rmnlink_cann__place_in_env(3, 5, 4)
+  rand_mobius_link_cann__place_in_env(3, 5, 4)
   #generate covariates Gaussianly
   set.seed(4)
   xe <- matrix(rnorm(1000*qe), nrow = 1000)
@@ -282,7 +282,7 @@ test_that("mobius_vMF() performs correctly for SpEuc", {
   xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
   colnames(xs) <- paste0("xs", 1:ncol(xs))
   
-  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
+  ymean <- mobius_link(xs = xs, xe = xe, param = paramobj)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
@@ -298,7 +298,7 @@ test_that("mobius_vMF() performs correctly for SpEuc", {
                     lb = c(rep(-1, p + qs + qe), rep(-2, 40-qs-qe-p)),
                     ub = c(rep(1, p + qs + qe), rep(4, 40-qs-qe-p))
                     )
-  expect_equal(res$est, as_mnlink_Omega(paramobj), ignore_attr = TRUE, tolerance = 1E-1)
+  expect_equal(res$est, as_mobius_link_Omega(paramobj), ignore_attr = TRUE, tolerance = 1E-1)
   expect_equal(res$k, 30, tolerance = 1E-1)
   
   res2 <- mobius_vMF(y, xs = xs, xe = xe, type = "SpEuc", intercept = FALSE, start = paramobj)
@@ -306,7 +306,7 @@ test_that("mobius_vMF() performs correctly for SpEuc", {
 })
 
 test_that("Hessian eigenvalues match DoF", {
-  rmnlink_cann__place_in_env(3, 4, 3)
+  rand_mobius_link_cann__place_in_env(3, 4, 3)
   
   #generate covariates Gaussianly
   set.seed(4)
@@ -316,7 +316,7 @@ test_that("Hessian eigenvalues match DoF", {
   xs <- matrix(rnorm(1000*qs), nrow = 1000)
   xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
   
-  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
+  ymean <- mobius_link(xs = xs, xe = xe, param = paramobj)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
@@ -381,24 +381,24 @@ test_that("DoF via cann params matches DoF via Omega", {
     -(qs>0)*(qe>0)*(p-1) * (p - 2) / 2 #commutative constraint on Omega
   }
   p <- 3; qs <- 3; qe <- 3
-  expect_equal(DoF_Omega2(p, qs, qe), mobius_DoF(p, qs, qe))
-  expect_equal(DoF_Omega(p, qs, qe), mobius_DoF(p, qs, qe))
+  expect_equal(DoF_Omega2(p, qs, qe), mobius_dof(p, qs, qe))
+  expect_equal(DoF_Omega(p, qs, qe), mobius_dof(p, qs, qe))
   
   p <- 3; qs <- 0; qe <- 5
-  expect_equal(DoF_Omega2(p, qs, qe), mobius_DoF(p, qs, qe))
-  expect_equal(DoF_Omega(p, qs, qe), mobius_DoF(p, qs, qe))
+  expect_equal(DoF_Omega2(p, qs, qe), mobius_dof(p, qs, qe))
+  expect_equal(DoF_Omega(p, qs, qe), mobius_dof(p, qs, qe))
   
   p <- 3; qs <- 7; qe <- 0
-  expect_equal(DoF_Omega2(p, qs, qe), mobius_DoF(p, qs, qe))
-  expect_equal(DoF_Omega(p, qs, qe), mobius_DoF(p, qs, qe))
+  expect_equal(DoF_Omega2(p, qs, qe), mobius_dof(p, qs, qe))
+  expect_equal(DoF_Omega(p, qs, qe), mobius_dof(p, qs, qe))
   
   p <- 5; qs <- 7; qe <- 5
-  expect_equal(DoF_Omega2(p, qs, qe), mobius_DoF(p, qs, qe))
-  expect_equal(DoF_Omega(p, qs, qe), mobius_DoF(p, qs, qe))
+  expect_equal(DoF_Omega2(p, qs, qe), mobius_dof(p, qs, qe))
+  expect_equal(DoF_Omega(p, qs, qe), mobius_dof(p, qs, qe))
 })
 
 test_that("Hessian eigenvalues match DoF for S2S", {
-  rmnlink_cann__place_in_env(3, 4, 0)
+  rand_mobius_link_cann__place_in_env(3, 4, 0)
   
   #generate covariates Gaussianly
   #generate covariates on the sphere
@@ -406,7 +406,7 @@ test_that("Hessian eigenvalues match DoF for S2S", {
   xs <- matrix(rnorm(1000*qs), nrow = 1000)
   xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
   
-  ymean <- mnlink(xs = xs, param = paramobj)
+  ymean <- mobius_link(xs = xs, param = paramobj)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
@@ -425,14 +425,14 @@ test_that("Hessian eigenvalues match DoF for S2S", {
 })
 
 test_that("Hessian eigenvalues match DoF for Euc2S", {
-  rmnlink_cann__place_in_env(4, 0, 4)
+  rand_mobius_link_cann__place_in_env(4, 0, 4)
   
   #generate covariates Gaussianly
   #generate covariates on the sphere
   set.seed(4)
   xe <- matrix(rnorm(1000*qe), nrow = 1000)
   
-  ymean <- mnlink(xe = xe, param = paramobj)
+  ymean <- mobius_link(xe = xe, param = paramobj)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}

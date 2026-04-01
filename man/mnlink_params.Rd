@@ -2,14 +2,14 @@
 % Please edit documentation in R/Mobius_link_parameterisations.R
 \name{mnlink_params}
 \alias{mnlink_params}
-\alias{mnlink_cann}
-\alias{as_mnlink_cann}
-\alias{mnlink_Omega}
-\alias{as_mnlink_Omega}
+\alias{mobius_link_cann}
+\alias{as_mobius_link_cann}
+\alias{mobius_link_Omega}
+\alias{as_mobius_link_Omega}
 \alias{cann2Omega}
 \title{Parameterisation Classes for the Scaled Mobius Mean Link}
 \usage{
-mnlink_cann(
+mobius_link_cann(
   P,
   Bs = NULL,
   Qs = NULL,
@@ -19,9 +19,9 @@ mnlink_cann(
   check = TRUE
 )
 
-as_mnlink_cann(obj)
+as_mobius_link_cann(obj)
 
-mnlink_Omega(
+mobius_link_Omega(
   p1,
   qs1 = vector("numeric", 0),
   Omega,
@@ -30,7 +30,7 @@ mnlink_Omega(
   check = TRUE
 )
 
-as_mnlink_Omega(obj)
+as_mobius_link_Omega(obj)
 
 cann2Omega(obj, check = TRUE)
 }
@@ -63,13 +63,13 @@ Actual mean link calculations are performed by other functions.
 }
 \section{Functions}{
 \itemize{
-\item \code{mnlink_cann()}: Represent the parameters of the Mobius mean link \code{\link[=mnlink]{mnlink()}} using the canonical form.
+\item \code{mobius_link_cann()}: Represent the parameters of the Mobius mean link \code{\link[=mobius_link]{mobius_link()}} using the canonical form.
 
-\item \code{as_mnlink_cann()}: Represent the parameters of the Mobius mean link \code{\link[=mnlink]{mnlink()}} using the canonical form.
+\item \code{as_mobius_link_cann()}: Represent the parameters of the Mobius mean link \code{\link[=mobius_link]{mobius_link()}} using the canonical form.
 
-\item \code{mnlink_Omega()}: Represent the parameters of the Mobius mean link \code{\link[=mnlink]{mnlink()}} using the Omega form.
+\item \code{mobius_link_Omega()}: Represent the parameters of the Mobius mean link \code{\link[=mobius_link]{mobius_link()}} using the Omega form.
 
-\item \code{as_mnlink_Omega()}: Represent the parameters of the Mobius mean link \code{\link[=mnlink]{mnlink()}} using the Omega form.
+\item \code{as_mobius_link_Omega()}: Represent the parameters of the Mobius mean link \code{\link[=mobius_link]{mobius_link()}} using the Omega form.
 
 \item \code{cann2Omega()}: For converting between parameterisations of the link function.
 Sign of columns of P and Q are lost by the \code{cann2Omega()} transformation.
@@ -103,23 +103,23 @@ This parameterisation helps optimisation as optimisation in Stiefel manifolds is
 
 \seealso{
 Other link-function: 
-\code{\link{mnlink}()},
-\code{\link{rmnlink_cann}()}
+\code{\link{mobius_link}()},
+\code{\link{rand_mobius_link_cann}()}
 
 Other link-function: 
-\code{\link{mnlink}()},
-\code{\link{rmnlink_cann}()}
+\code{\link{mobius_link}()},
+\code{\link{rand_mobius_link_cann}()}
 
 Other link-function: 
-\code{\link{mnlink}()},
-\code{\link{rmnlink_cann}()}
+\code{\link{mobius_link}()},
+\code{\link{rand_mobius_link_cann}()}
 
 Other link-function: 
-\code{\link{mnlink}()},
-\code{\link{rmnlink_cann}()}
+\code{\link{mobius_link}()},
+\code{\link{rand_mobius_link_cann}()}
 
 Other link-function: 
-\code{\link{mnlink}()},
-\code{\link{rmnlink_cann}()}
+\code{\link{mobius_link}()},
+\code{\link{rand_mobius_link_cann}()}
 }
 \concept{link-function}

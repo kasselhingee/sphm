@@ -2,18 +2,18 @@
 % Please edit documentation in R/data_standardisation.R
 \name{standardise_sph}
 \alias{standardise_sph}
-\alias{secondmoment_mat}
+\alias{second_moment_mat}
 \title{Standardise Spherical Data}
 \usage{
-standardise_sph(y, rotation = t(secondmoment_mat(y)))
+standardise_sph(y, rotation = t(second_moment_mat(y)))
 
-secondmoment_mat(y)
+second_moment_mat(y)
 }
 \arguments{
 \item{y}{Matrix of row vectors representing data on the sphere as unit vectors in Cartesian coordinates.}
 
-\item{rotation}{The rotation matrix to apply to \code{y}, as returned by \code{\link[=secondmoment_mat]{secondmoment_mat()}}
-(or its transpose). Defaults to \code{t(secondmoment_mat(y))}, which computes the rotation
+\item{rotation}{The rotation matrix to apply to \code{y}, as returned by \code{\link[=second_moment_mat]{second_moment_mat()}}
+(or its transpose). Defaults to \code{t(second_moment_mat(y))}, which computes the rotation
 from \code{y} itself. Supply this to apply the same rotation to a second dataset, e.g.
 \code{standardise_sph(xs, rotation = attr(standardise_sph(y), "std_rotation"))}.}
 }
@@ -26,12 +26,12 @@ projected perpendicular to the mean direction. Standardised data have mean of (1
 }
 \details{
 Each returned data point is \code{rotation \%*\% y}. The mean direction of this returned
-data will be (1, 0, 0, ...) and \code{\link[=secondmoment_mat]{secondmoment_mat()}} of this standardised data will
+data will be (1, 0, 0, ...) and \code{\link[=second_moment_mat]{second_moment_mat()}} of this standardised data will
 return the identity matrix. The rotation used is stored as the \code{"std_rotation"} attribute
 of the returned matrix.
 }
 \section{Functions}{
 \itemize{
-\item \code{secondmoment_mat()}: Returns a matrix with columns that are the mean direction and then eigenvectors of \eqn{\sum_{i=1}^n y_i y_i^\top} projected orthogonal to the mean.
+\item \code{second_moment_mat()}: Returns a matrix with columns that are the mean direction and then eigenvectors of \eqn{\sum_{i=1}^n y_i y_i^\top} projected orthogonal to the mean.
 
 }}

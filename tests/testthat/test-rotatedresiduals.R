@@ -10,7 +10,7 @@ test_that("rotatedresiduals() rotates residuals to the northpole along a geodesi
                  c(0, 1, 0) + eps * c(1/sqrt(2), 0, 1/sqrt(2)), #pi/4 off from geodesic
                  c(0, 0, 1) + eps * c(1, 0, 0), #tangent to geodesic
                  c(0, 1/sqrt(2), 1/sqrt(2)) + eps * c(1, 0, 0)) #tangent to geodesic
-  rresid <- rotatedresid(y = y, ypred = ypred, base = c(1, 0, 0), path = "Absil")
+  rresid <- rotated_resid(y = y, ypred = ypred, base = c(1, 0, 0), path = "Absil")
   expect_equal(rresid[1, ], eps * c(0, -1, 0))
   expect_equal(rresid[2, ], eps * c(0, 0, 1))
   c(1/sqrt(2), 0, 1/sqrt(2)) %*% c(0, 0, 1)
@@ -19,7 +19,7 @@ test_that("rotatedresiduals() rotates residuals to the northpole along a geodesi
   expect_equal(rresid[5, ], eps * c(0, -1, -1)/sqrt(2))
   
   #and actually Jupp's transport seems to give the reflected residual of geodesic transport
-  rresid2 <- rotatedresid(y = y, ypred = ypred, base = c(1, 0, 0), path = "Jupp")
+  rresid2 <- rotated_resid(y = y, ypred = ypred, base = c(1, 0, 0), path = "Jupp")
   expect_equal(rresid2, -rresid)
 })
 

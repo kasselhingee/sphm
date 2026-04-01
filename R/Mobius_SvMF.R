@@ -2,7 +2,7 @@
 #' @description
 #' Performs regression for spherical response data with a scaled Mobius mean link and scale von Mises-Fisher error distribution (SvMF).
 #' @details
-#' The mean is assumed to follow [`mnlink()`].
+#' The mean is assumed to follow [`mobius_link()`].
 #' The concentration and scaling in the SvMF is assumed constant across observations.
 #' The symmetry axes of the SvMF at location \eqn{\mu} are assumed to be the result of parallel transport along the geodesic of axes `G0[,-1]` from  `G0[,1]` to \eqn{\mu}. The axis at this base location `G0[,1]` are estimated.
 #'
@@ -90,7 +90,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
     a = a, 
     G0 = G0
   )
-  SvMFcann_check(SvMFcann(k = initial$k, a = initial$a, G = initial$G0))
+  SvMF_cann_check(SvMF_cann(k = initial$k, a = initial$a, G = initial$G0))
 
   p <- ncol(y)
   preplist <- list(y = y, xs = xs, xe = xe, start = mean)
@@ -112,7 +112,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   }
 
   ### More detailed preparation ###
-  om0 <- as_mnlink_Omega(preplist$start)
+  om0 <- as_mobius_link_Omega(preplist$start)
   # check inputs:
   check_meanlink(preplist$y, preplist$xs, preplist$xe, om0)
   stopifnot(length(preplist$a) == p)
@@ -216,8 +216,8 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
                                                   G01 = preplist$G0[,1])
   
   #project mean pars to have correct orthogonality
-  projectedom <- Omega_proj(mnlink_Omega_unvec(estparamlist$omvec, p, length(om0$qe1), check = FALSE))
-  try({mnlink_Omega_check(projectedom)})
+  projectedom <- Omega_proj(mobius_link_Omega_unvec(estparamlist$omvec, p, length(om0$qe1), check = FALSE))
+  try({mobius_link_Omega_check(projectedom)})
 
   # make sure aremaining is in decreasing order
   aord <- order(estparamlist$aremaining, decreasing = TRUE)
@@ -225,7 +225,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   estparamlist$G0[,-1] <- estparamlist$G0[,-1][, aord]
   
   # Polishing optimisation of just concentration if vMF normalising constant being approximated
-  pred <- mnlink(xs = preplist$xs, xe = preplist$xe, param = projectedom)
+  pred <- mobius_link(xs = preplist$xs, xe = preplist$xe, param = projectedom)
   if (p!=3){
     result <- mobius_SvMF_konly(y = preplist$y, ymean = pred, a = c(a1, aremaining), G0 = estparamlist$G0)
     # update parameters
@@ -242,7 +242,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   # get residuals as coordinates wrt G0. So under high concentration these residuals follow something multivariate normal.
   rresids_std <- resid_SvMF_partransport(preplist$y, pred, estparamlist$k, c(a1, estparamlist$aremaining), estparamlist$G0, scale = TRUE)
   rresids_G0 <- resid_SvMF_partransport(preplist$y, pred, G0 = estparamlist$G0, scale = FALSE) # par transport to G01, coords G0
-  rresids_I_tmp <- rotatedresid(preplist$y, pred, north_pole(ncol(preplist$y))) # par transport to nthpole, coords cannonical
+  rresids_I_tmp <- rotated_resid(preplist$y, pred, north_pole(ncol(preplist$y))) # par transport to nthpole, coords cannonical
   rresids_I <- rresids_I_tmp[, -1]
   attr(rresids_I, "samehemisphere") <-  attr(rresids_I_tmp, "samehemisphere")
   colnames(rresids_I) <- paste0("r", 1:ncol(rresids_I))
@@ -264,11 +264,11 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   G0 <- t(attr(preplist$y, "std_rotation")) %*% G0
   #For axes G0 standardise the return by
   # (1) make first element of each vector positive (except the first column)
-  G0[,-1] <- toBigPosEl(G0[,-1])
+  G0[,-1] <- standardise_col_signs(G0[,-1])
   # (2) make rotation matrix by flipping final column according to determinant
   if (det(G0) < 0){G0[,p] <- -G0[,p]}
   # DoF
-  DoF <- mobius_DoF(p, length(est$qs1), length(est$qe1), fix_qs1 = fix_qs1, fix_qe1 = fix_qe1) + 
+  DoF <- mobius_dof(p, length(est$qs1), length(est$qe1), fix_qs1 = fix_qs1, fix_qe1 = fix_qe1) + 
     1 + #concentration
     (p-1)-1 + #aremaining given that prod(aremaining) = 1
     if (G01behaviour == "free"){ #G0 freedom
@@ -286,7 +286,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   }
   
   #Scealy and Wood (2019) Proposition 1 check for unimodality
-  SvMFcann_check(SvMFcann(k = estparamlist$k, a = c(a1, aremaining), G = G0))
+  SvMF_cann_check(SvMF_cann(k = estparamlist$k, a = c(a1, aremaining), G = G0))
   
   niceout <- list(
     mean = est,
@@ -320,7 +320,7 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G
              start = mean, 
              type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1, intercept = intercept, ...)
   # update starting values accordingly
-  mean <- as_mnlink_Omega(prelim$est)
+  mean <- as_mobius_link_Omega(prelim$est)
   k <- prelim$k
   p <- ncol(y)
   
@@ -331,7 +331,7 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G
          free = if(is.null(G0)){prelim$est$p1}else{G0[,1]},
          fixed = G0[,1])
   # get rotated residuals
-  rresid <- rotatedresid(y, prelim$pred, base = G01)
+  rresid <- rotated_resid(y, prelim$pred, base = G01)
   if (!is.null(G0) && all(!is.na(G0))){
     # if G0 fully supplied just use rresid to approximate scales a using the high concentration approximation
     if (G01behaviour == "p1"){
@@ -361,9 +361,9 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G
 mobius_SvMF_konly <- function(y, ymean, a, G0){
   yrot <- undo_partransport(y = y, ymean = ymean, G01 = G0[,1])
   res <- optimise(function(k){
-    sum(SvMF_ll_cann(yrot, SvMFcann(k = k, a = a, G = G0)))
+    sum(SvMF_log_lik_cann(yrot, SvMF_cann(k = k, a = a, G = G0)))
   }, lower = 1E-8, upper = 1E5, maximum = TRUE)
-  SvMFcann_check(SvMFcann(k = res$maximum, a = a, G = G0))
+  SvMF_cann_check(SvMF_cann(k = res$maximum, a = a, G = G0))
   if (res$maximum == 1E-8){warning("Concentration at numerical lower limit of 1E-8")}
   if (res$maximum == 1E5){warning("Concentration at numerical upper limit of 1E5")}
   return(list(
@@ -375,17 +375,17 @@ mobius_SvMF_konly <- function(y, ymean, a, G0){
 }
 
 #' @title Function for simulating data given mean link and SvMF parameters
-#' @inheritParams ldMobius_SvMF
+#' @inheritParams mobius_SvMF_log_lik
 #' @return A matrix of `p+1` columns and the same number of rows as `xs` or `xe`. The final column is the log-density of the simulated response.
 #' @family regression
 #' @export
 rMobius_SvMF <- function(xs, xe, mean, k, a, G0){
-  ymean <- mnlink(xs = xs, xe = xe, param = mean)
+  ymean <- mobius_link(xs = xs, xe = xe, param = mean)
   
   # simulate noise
   y_ld <- t(apply(ymean, 1, function(mn){
     G <- cbind(mn, -JuppRmat(G0[,1], mn) %*% G0[,-1])
-    obs <- rSvMF(1, SvMFcann(k, a, G))
+    obs <- rSvMF(1, SvMF_cann(k, a, G))
     ld <- ldSvMF_cann(obs, k = k, a = a, G = G)
     return(c(obs, ld))
   }))
@@ -416,14 +416,14 @@ undo_partransport <- function(y, ymean, G01){
 #' @return A matrix with two columns and the same number of rows as `y`.
 #' @family regression
 #' @export
-ldMobius_SvMF <- function(y, xs, xe, mean, k, a, G0){
-  ymean <- mnlink(xs = xs, xe = xe, param = mean)
-  diff <- lvMFnormconst_approx(k, ncol(y)) - lvMFnormconst(k, ncol(y))
+mobius_SvMF_log_lik <- function(y, xs, xe, mean, k, a, G0){
+  ymean <- mobius_link(xs = xs, xe = xe, param = mean)
+  diff <- vMF_log_norm_const(k, ncol(y)) - vMF_log_norm_const_exact(k, ncol(y))
   
   #rotate all observations so that ymean --> G0[,1]
   yrot <- undo_partransport(y, ymean, G01 = G0[,1])
   ldCpp <- ldSvMF_cann(yrot, k = k, a = a, G = G0)
-  ldR <- SvMF_ll_cann(yrot, SvMFcann(k = k, a = a, G = G0))
+  ldR <- SvMF_log_lik_cann(yrot, SvMF_cann(k = k, a = a, G = G0))
   ld <- cbind(Cpp = ldCpp, R = ldR)
   attr(ld, "error") <- diff
   return(ld)

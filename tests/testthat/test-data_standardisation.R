@@ -1,5 +1,5 @@
 test_that("standardise spherical data gives data with correct moments", {
-  rmnlink_cann__place_in_env(3, 5, 4)
+  rand_mobius_link_cann__place_in_env(3, 5, 4)
   
   #generate covariates Gaussianly
   set.seed(4)
@@ -9,25 +9,25 @@ test_that("standardise spherical data gives data with correct moments", {
   xs <- matrix(rnorm(100*qs), nrow = 100)
   xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
   
-  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
+  ymean <- mobius_link(xs = xs, xe = xe, param = paramobj)
   
   # generate noise
   if (!requireNamespace("movMF", quietly = TRUE)){skip("Need movMF package")}
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn){movMF::rmovMF(1, 2*mn)}))
   
-  mat1 <- secondmoment_mat(y)
+  mat1 <- second_moment_mat(y)
   y2 <- standardise_sph(y, rotation = t(mat1))
   expect_equal(colMeans(y2)[-1], rep(0, p-1))
   # standardisation should do nothing up to sign:
-  expect_equal(secondmoment_mat(y2), diag(diag(secondmoment_mat(y2))), ignore_attr = TRUE)
+  expect_equal(second_moment_mat(y2), diag(diag(second_moment_mat(y2))), ignore_attr = TRUE)
   
   # undo standardisation
   expect_equal(destandardise_sph(y2, t(mat1)), y)
 })
 
 test_that("standadise_Euc works seemlessly when covariates are all 0 or 1", {
-  rmnlink_cann__place_in_env(3, 5, 4, preseed = 3)
+  rand_mobius_link_cann__place_in_env(3, 5, 4, preseed = 3)
   
   #generate covariates Gaussianly
   set.seed(4)
@@ -50,7 +50,7 @@ test_that("standadise_Euc works seemlessly when covariates are all 0 or 1", {
 })
 
 test_that("recoordination of parameters work", {
-  rmnlink_cann__place_in_env(3, 5, 4)
+  rand_mobius_link_cann__place_in_env(3, 5, 4)
   
   #generate covariates Gaussianly
   set.seed(4)
@@ -63,9 +63,9 @@ test_that("recoordination of parameters work", {
   # add dummy covariates
   xe <- cbind(zeros = 0, ones = 1, xe)
   paramobj$Qe <- rbind(0, 0, paramobj$Qe)
-  mnlink_cann_check(paramobj)
+  mobius_link_cann_check(paramobj)
   
-  ymean <- mnlink(xs = xs, xe = xe, param = paramobj)
+  ymean <- mobius_link(xs = xs, xe = xe, param = paramobj)
   
   
   #standardise xs, xe and response and compute paramobj that includes the reverse
@@ -74,13 +74,13 @@ test_that("recoordination of parameters work", {
   ystd <- standardise_sph(ymean)
   
   # standardise omega version
-  omstd <- recoordinate_Omega(as_mnlink_Omega(paramobj), 
+  omstd <- recoordinate_Omega(as_mobius_link_Omega(paramobj), 
                                 yrot = attr(ystd, "std_rotation"),
                                 xsrot = attr(xsstd, "std_rotation"),
                                 xerot = attr(xestd, "std_rotation"),
                                 xecenter = attr(xestd, "std_center"),
                                 onescovaridx = 2)
-  expect_equal(mnlink(xsstd,  xestd, param = omstd), ystd, ignore_attr = "std_rotation")
+  expect_equal(mobius_link(xsstd,  xestd, param = omstd), ystd, ignore_attr = "std_rotation")
   
   # given parameters for standardised data, solve for the corresponding parameters of the non-standard data
   om2 <- undo_recoordinate_Omega(omstd,  
@@ -89,6 +89,6 @@ test_that("recoordination of parameters work", {
                           xerot = attr(xestd, "std_rotation"), 
                           xecenter = attr(xestd, "std_center"),
                           onescovaridx = 2)
-  expect_equal(om2, as_mnlink_Omega(paramobj), ignore_attr = TRUE)
+  expect_equal(om2, as_mobius_link_Omega(paramobj), ignore_attr = TRUE)
 })
 

@@ -4,17 +4,17 @@
 #' @description Rotate spherical data according to the eigenvectors of the second moment of the data
 #' projected perpendicular to the mean direction. Standardised data have mean of (1, 0, 0,...). See Scealy and Wood (2019, Section 4.1.3) for details.
 #' @param y Matrix of row vectors representing data on the sphere as unit vectors in Cartesian coordinates.
-#' @param rotation The rotation matrix to apply to `y`, as returned by [`secondmoment_mat()`]
-#'   (or its transpose). Defaults to `t(secondmoment_mat(y))`, which computes the rotation
+#' @param rotation The rotation matrix to apply to `y`, as returned by [`second_moment_mat()`]
+#'   (or its transpose). Defaults to `t(second_moment_mat(y))`, which computes the rotation
 #'   from `y` itself. Supply this to apply the same rotation to a second dataset, e.g.
 #'   `standardise_sph(xs, rotation = attr(standardise_sph(y), "std_rotation"))`.
 #' @details Each returned data point is `rotation %*% y`. The mean direction of this returned
-#'   data will be (1, 0, 0, ...) and [`secondmoment_mat()`] of this standardised data will
+#'   data will be (1, 0, 0, ...) and [`second_moment_mat()`] of this standardised data will
 #'   return the identity matrix. The rotation used is stored as the `"std_rotation"` attribute
 #'   of the returned matrix.
 #' @return A matrix of the same dimension as `y`.
 #' @export
-standardise_sph <- function(y, rotation = t(secondmoment_mat(y))){
+standardise_sph <- function(y, rotation = t(second_moment_mat(y))){
   ystd <- y %*% t(rotation)
   ystd <- unname(ystd)
   attr(ystd, "std_rotation") <- rotation
@@ -31,7 +31,7 @@ destandardise_sph <- function(y, rotation){
 
 #' @describeIn standardise_sph Returns a matrix with columns that are the mean direction and then eigenvectors of \eqn{\sum_{i=1}^n y_i y_i^\top} projected orthogonal to the mean.
 #' @export
-secondmoment_mat <- function(y){
+second_moment_mat <- function(y){
   p <- ncol(y)
   mn <- colMeans(y)
   mn <- mn/sqrt(sum(mn^2))
@@ -53,7 +53,7 @@ secondmoment_mat <- function(y){
   }
   Ghat <- cbind(mn, eigen(projmom2)$vectors[, 1:(p-1)])
   # standardise Ghat by first making rows positive
-  Ghat[,-1] <- toBigPosEl(Ghat[,-1])
+  Ghat[,-1] <- standardise_col_signs(Ghat[,-1])
   # make sure that Ghat is a rotation matrix, by making sure determinant is 1
   if (det(Ghat) < 0){Ghat[, p] <- -Ghat[, p]}
   return(Ghat)
@@ -109,9 +109,9 @@ destandardise_Euc <- function(xe, center, rotation){
 #' This function computes those parameters.
 #' @details
 #' Suppose spherical \eqn{xs} and Euclidean covariate \eqn{xe} are related to a spherical 
-#' response \eqn{y} by [`mnlink()`].
+#' response \eqn{y} by [`mobius_link()`].
 #' Then `xsrot %*% xs` and `xerot %*% (xe - xecenter)` are related to
-#' \eqn{`yrot` \times y} according to `mnlink()` with parameters given by
+#' \eqn{`yrot` \times y} according to `mobius_link()` with parameters given by
 #' `recoordinate_Omega()`.
 #'
 #' Reversing this coordinate change can be performed by `undo_recoordinate_Omega()`.
@@ -127,7 +127,7 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
                                xerot = diag(length(param$qe1)), 
                                xecenter = rep(0, length(param$qe1)),
                                onescovaridx = 0){
-  stopifnot(inherits(param, "mnlink_Omega"))
+  stopifnot(inherits(param, "mobius_link_Omega"))
   # in case arguments passed are NULL set to default
   if (is.null(yrot)){yrot <- diag(length(param$p1))}
   if (is.null(xsrot)){xsrot <- diag(length(param$qs1))}
@@ -177,7 +177,7 @@ undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
                                     xerot = diag(length(param$qe1)), 
                                     xecenter = rep(0, length(param$qe1)),
                                     onescovaridx = 0){
-  stopifnot(inherits(param, "mnlink_Omega"))
+  stopifnot(inherits(param, "mobius_link_Omega"))
   # in case arguments passed are NULL set to default
   if (is.null(yrot)){yrot <- diag(length(param$p1))}
   if (is.null(xsrot)){xsrot <- diag(length(param$qs1))}
@@ -225,7 +225,7 @@ standardise_data <- function(preplist, intercept){
   
   # update starting coordinates if provided
   if (!is.null(preplist$start)){
-    preplist$start <- recoordinate_Omega(as_mnlink_Omega(preplist$start), 
+    preplist$start <- recoordinate_Omega(as_mobius_link_Omega(preplist$start), 
                                 yrot = attr(preplist$y, "std_rotation"), 
                                 xsrot = attr(preplist$xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
                                 xerot = attr(preplist$xe, "std_rotation"), 
@@ -240,7 +240,7 @@ destandardise_data <- function(preplist, intercept){
   preplist$y = destandardise_sph(preplist$y, attr(preplist$y, "std_rotation"))
   preplist$xs = if (!is.null(preplist$xs)){destandardise_sph(preplist$xs, attr(preplist$xs, "std_rotation"))}
   preplist$xe = if (!is.null(preplist$xe)){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))}
-  preplist$start <- undo_recoordinate_Omega(as_mnlink_Omega(preplist$start), 
+  preplist$start <- undo_recoordinate_Omega(as_mobius_link_Omega(preplist$start), 
                           yrot = attr(preplist$y, "std_rotation"), 
                           xsrot = attr(preplist$xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
                           xerot = attr(preplist$xe, "std_rotation"), 
@@ -278,7 +278,7 @@ addEuccovars <- function(preplist, type, intercept){
       preplist$xe <- cbind(preplist$xe, "ones" = 1)
       onescovaridx <- ncol(preplist$xe)
       if (!is.null(preplist$start)){
-        preplist$start <- as_mnlink_cann(preplist$start)
+        preplist$start <- as_mobius_link_cann(preplist$start)
         # if start is wrong dimension add a row of zeros
         if (dim(preplist$start)["qe"] != ncol(preplist$xe)){
           stopifnot(dim(preplist$start)["qe"] == ncol(preplist$xe) - 1)
@@ -302,7 +302,7 @@ defaultstart <- function(preplist, type){
     p <- ncol(preplist$y)
     if (!is.null(preplist$xe)){stopifnot(ncol(preplist$xe) >= p)}
     if (!is.null(preplist$xs)){stopifnot(ncol(preplist$xs) >= p)}
-    preplist$start <- mnlink_cann(
+    preplist$start <- mobius_link_cann(
                 P = diag(p),
                 Bs = if (!is.null(preplist$xs)){diag(0.9, p-1)},
                 Qs = if (!is.null(preplist$xs)){diag(1, ncol(preplist$xs), p)},

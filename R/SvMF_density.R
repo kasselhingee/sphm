@@ -1,22 +1,22 @@
 #' Log-likelihood of SvMF
 #' @param y is row-vectors of data
-#' @param param is a set of parameters from either [`SvMFcann()`] or [`SvMFmuV()`].
+#' @param param is a set of parameters from either [`SvMF_cann()`] or [`SvMF_muV()`].
 #' @param log Return log density?
 #' @family SvMF-distribution
 #' @export
 #' @return A vector of values.
 dSvMF <- function(y, param, log = FALSE){
-  if (inherits(param, "SvMFmuV")){ll <- SvMF_ll_muV(y, param)}
-  if (inherits(param, "SvMFcann")){ll <- SvMF_ll_cann(y, param)}
+  if (inherits(param, "SvMF_muV")){ll <- SvMF_log_lik_muV(y, param)}
+  if (inherits(param, "SvMF_cann")){ll <- SvMF_log_lik_cann(y, param)}
   if (log){return(ll)}
   else {return(exp(ll))}
 }
 
 
-SvMF_ll_cann <- function(y, param){
+SvMF_log_lik_cann <- function(y, param){
   list2env(param, envir = environment())
   p <- nrow(G)
-  lconst <- -lvMFnormconst(k, p) - log(a[1]) #from Scealy and Wood 2019, this nice and simple for p = 3
+  lconst <- -vMF_log_norm_const_exact(k, p) - log(a[1]) #from Scealy and Wood 2019, this nice and simple for p = 3
   Gscal <- t(t(G)/a) #scale columns of Gamma by a
   denom <- sqrt(rowSums((y %*% Gscal)^2)) #the denominator in the density exponent
   
@@ -24,10 +24,10 @@ SvMF_ll_cann <- function(y, param){
   return(ll)
 }
 
-SvMF_ll_muV <- function(y, param){
+SvMF_log_lik_muV <- function(y, param){
   list2env(param, envir = environment())
   p <- length(m)
-  lconst <- -lvMFnormconst(k, p) - log(a1) #from Scealy and Wood 2019, this nice and simple for p = 3
+  lconst <- -vMF_log_norm_const_exact(k, p) - log(a1) #from Scealy and Wood 2019, this nice and simple for p = 3
   Hstar <- getHstar(m)
   ystarstarL <- y %*% Hstar
   denom <- sqrt(drop((y %*% m/a1)^2) + rowSums((ystarstarL %*% solve(V))*ystarstarL))
@@ -37,7 +37,7 @@ SvMF_ll_muV <- function(y, param){
 }
 
 # This is the __log__ of the normalising constant w.r.t. the Lebesgue measure on the sphere.
-lvMFnormconst <- function(k, p, method = 'base'){
+vMF_log_norm_const_exact <- function(k, p, method = 'base'){
   if (p == 3){return(log(2*pi) + log(1 - exp(-2*k)) + k - log(k))} #from Scealy and Wood 2019, this nice and simple for p = 3, with exponential scaling to avoid Inf at large k: log(exp(k) - exp(-k)) = log(1-exp(-2k)) + k
     if (method == 'base'){
       # formula in Scealy and Wood 2019

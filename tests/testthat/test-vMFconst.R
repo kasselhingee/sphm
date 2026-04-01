@@ -44,29 +44,29 @@ test_that("differentiation of besselImixed() works and allows x below and above 
   expect_equal(mytape$Jacobian(x), drop(attr(numericDeriv(quote(besselImixed(x, 0.5, 10, 15)), "x"), "gradient")))
 })
 
-test_that("evaluation of lvMFnormconst_approx() runs and is close to lvMFnormconst()", {
+test_that("evaluation of vMF_log_norm_const() runs and is close to vMF_log_norm_const_exact()", {
   # should be exact at p=3
-  expect_equal(lvMFnormconst_approx(9, 3), lvMFnormconst(9, 3))
+  expect_equal(vMF_log_norm_const(9, 3), vMF_log_norm_const_exact(9, 3))
   
   # for p=4
-  expect_equal(lvMFnormconst_approx(9 , 4), lvMFnormconst(9 , 4))
-  expect_equal(lvMFnormconst_approx(11, 4), lvMFnormconst(11, 4))
-  expect_equal(lvMFnormconst_approx(15, 4), lvMFnormconst(15, 4))
-  expect_equal(lvMFnormconst_approx(pi/4 , 4), lvMFnormconst(pi/4, 4))
+  expect_equal(vMF_log_norm_const(9 , 4), vMF_log_norm_const_exact(9 , 4))
+  expect_equal(vMF_log_norm_const(11, 4), vMF_log_norm_const_exact(11, 4))
+  expect_equal(vMF_log_norm_const(15, 4), vMF_log_norm_const_exact(15, 4))
+  expect_equal(vMF_log_norm_const(pi/4 , 4), vMF_log_norm_const_exact(pi/4, 4))
   
   # for p = 5, much less exact
-  expect_equal(lvMFnormconst_approx(9 , 5), lvMFnormconst(9 , 5), tolerance = 1E-1)
-  expect_equal(lvMFnormconst_approx(11, 5), lvMFnormconst(11, 5), tolerance = 1E-1)
-  expect_equal(lvMFnormconst_approx(15, 5), lvMFnormconst(15, 5), tolerance = 1E-1)
+  expect_equal(vMF_log_norm_const(9 , 5), vMF_log_norm_const_exact(9 , 5), tolerance = 1E-1)
+  expect_equal(vMF_log_norm_const(11, 5), vMF_log_norm_const_exact(11, 5), tolerance = 1E-1)
+  expect_equal(vMF_log_norm_const(15, 5), vMF_log_norm_const_exact(15, 5), tolerance = 1E-1)
 })
 
-test_that("p=3 lvMFnormconst_approx() is close to lvMFnormconst()", {
-  expect_true(is.finite(lvMFnormconst_approx(1E-15, 3)))
-  expect_equal(lvMFnormconst_approx(1E-15, 3), lvMFnormconst(1E-15, 3))
-  expect_equal(lvMFnormconst_approx(1E-10, 3), lvMFnormconst(1E-10, 3))
-  expect_equal(lvMFnormconst_approx(0.1, 3), lvMFnormconst(0.1, 3))
-  expect_equal(lvMFnormconst_approx(300, 3), lvMFnormconst(300, 3))
-  expect_equal(lvMFnormconst_approx(700, 3), lvMFnormconst(700, 3))
-  expect_equal(lvMFnormconst_approx(900, 3), lvMFnormconst(900, 3))
-  expect_equal(lvMFnormconst_approx(1200, 3), lvMFnormconst(1200, 3))
+test_that("p=3 vMF_log_norm_const() is close to vMF_log_norm_const_exact()", {
+  expect_true(is.finite(vMF_log_norm_const(1E-15, 3)))
+  expect_equal(vMF_log_norm_const(1E-15, 3), vMF_log_norm_const_exact(1E-15, 3))
+  expect_equal(vMF_log_norm_const(1E-10, 3), vMF_log_norm_const_exact(1E-10, 3))
+  expect_equal(vMF_log_norm_const(0.1, 3), vMF_log_norm_const_exact(0.1, 3))
+  expect_equal(vMF_log_norm_const(300, 3), vMF_log_norm_const_exact(300, 3))
+  expect_equal(vMF_log_norm_const(700, 3), vMF_log_norm_const_exact(700, 3))
+  expect_equal(vMF_log_norm_const(900, 3), vMF_log_norm_const_exact(900, 3))
+  expect_equal(vMF_log_norm_const(1200, 3), vMF_log_norm_const_exact(1200, 3))
 })

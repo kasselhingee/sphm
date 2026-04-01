@@ -78,7 +78,7 @@ topos1strow <- function(mat){
 #' This should not change the signs of diagonal elements in diagonal matrices.
 #' @param mat A matrix
 #' @export
-toBigPosEl <- function(mat){
+standardise_col_signs <- function(mat){
   maxidx <- apply(abs(mat), 2, which.max)
   neg <- mat[cbind(maxidx, 1:length(maxidx))] < -.Machine$double.eps #only negative values found
   mat[,neg] <- -mat[,neg]
@@ -90,16 +90,16 @@ toBigPosEl <- function(mat){
 #' by switching sign of final column to make determinant positive
 #' @param mat an orthogonal matrix
 #' @export
-toRot <- function(mat){
+as_rotation_mat <- function(mat){
   mat[,ncol(mat)] <- sign(det(mat)) * mat[,ncol(mat)] #make mat a rotation matrix
   return(mat)
 }
 
 #' @noRd
-#' @description Applies toBigPosEl() and toRot, not doing any sign switchin on the first column
+#' @description Applies standardise_col_signs() and as_rotation_mat, not doing any sign switchin on the first column
 toBigPosElRot_keepfirst <- function(mat){
-  mat[,-1] <- toBigPosEl(mat[,-1]) # make Gamma consistentish signs, and a rotation matrix
-  mat <- toRot(mat)
+  mat[,-1] <- standardise_col_signs(mat[,-1]) # make Gamma consistentish signs, and a rotation matrix
+  mat <- as_rotation_mat(mat)
   return(mat)
 }
 

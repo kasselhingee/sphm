@@ -9,9 +9,9 @@
 // [[Rcpp::depends(RcppEigen)]]
 
 
-// Define the templated C++ struct for the mnlink_Omega parametetrisation
+// Define the templated C++ struct for the mobius_link_Omega parameterisation
 template <typename T>
-struct mnlink_Omega_cpp {
+struct mobius_link_Omega_cpp {
     Eigen::Matrix<T, Eigen::Dynamic, 1> p1;
     Eigen::Matrix<T, Eigen::Dynamic, 1> qs1; //uninitialised these vectors have 0 length
     Eigen::Matrix<T, Eigen::Dynamic, 1> qe1; //uninitialised these vectors have 0 length
@@ -21,7 +21,7 @@ struct mnlink_Omega_cpp {
     int qs = 0;
     int qe = 0;
 
-    mnlink_Omega_cpp(Eigen::Matrix<T, Eigen::Dynamic, 1> p1_,
+    mobius_link_Omega_cpp(Eigen::Matrix<T, Eigen::Dynamic, 1> p1_,
                      Eigen::Matrix<T, Eigen::Dynamic, 1> qs1_,
                      Eigen::Matrix<T, Eigen::Dynamic, 1> qe1_,
                      Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega_, 
@@ -41,9 +41,9 @@ struct mnlink_Omega_cpp {
 };
 
 
-// Function to vectorize an mnlink_Omega_cpp object - to match mnlink_Omega_vec
+// Function to vectorize a mobius_link_Omega_cpp object - to match mobius_link_Omega_vec
 template <typename T>
-Eigen::Matrix<T, Eigen::Dynamic, 1> mnlink_Omega_cpp_vec(const mnlink_Omega_cpp<T>& obj) {
+Eigen::Matrix<T, Eigen::Dynamic, 1> mobius_link_Omega_cpp_vec(const mobius_link_Omega_cpp<T>& obj) {
     int p1_size = obj.p1.size();
     int Omega_size = obj.Omega.size();
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Omega = obj.Omega;

@@ -25,7 +25,7 @@ The parameter \code{ce} is generated uniformly from between \code{0} and \code{1
 }
 \seealso{
 Other link-function: 
-\code{\link{mnlink_params}},
+\code{\link{mobius_link_params}},
 \code{\link{mobius_link}()}
 }
 \concept{link-function}

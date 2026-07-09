@@ -1,4 +1,4 @@
-#' @name mnlink_params
+#' @name mobius_link_params
 #' @title Parameterisation Classes for the Scaled Mobius Mean Link
 #' @description Parameterisations of the link functions.
 #' These methods, create, check and convert between parameterisations of the mean link.
@@ -36,7 +36,7 @@
 #' 
 NULL
 
-#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mobius_link()`] using the canonical form.
+#' @describeIn mobius_link_params Represent the parameters of the Mobius mean link [`mobius_link()`] using the canonical form.
 #' @family link-function
 #' @export
 mobius_link_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce = NULL, check = TRUE){
@@ -50,7 +50,7 @@ mobius_link_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce =
   return(obj)
 }
 
-#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mobius_link()`] using the canonical form.
+#' @describeIn mobius_link_params Represent the parameters of the Mobius mean link [`mobius_link()`] using the canonical form.
 #' @family link-function
 #' @export
 as_mobius_link_cann <- function(obj){
@@ -94,7 +94,7 @@ mobius_link_cann_vec <- function(obj){
 
 
 
-#' @name mnlink_params
+#' @name mobius_link_params
 #' @param p1 First column of the P matrix (vector of length `p`)
 #' @param qe1 First column of the Qe matrix (vector of length `qe`). `NULL` if no Euc covariates.
 #' @param qs1 First column of the Qs matrix (vector of length `qs`). `NULL` if no Sph covariates.
@@ -103,7 +103,7 @@ mobius_link_cann_vec <- function(obj){
 #' @param ce The value of \eqn{c_e}.
 NULL
 
-#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mobius_link()`] using the Omega form.
+#' @describeIn mobius_link_params Represent the parameters of the Mobius mean link [`mobius_link()`] using the Omega form.
 #' @family link-function
 #' @export
 mobius_link_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vector("numeric", 0), ce = vector("numeric", 0), check = TRUE){
@@ -124,7 +124,7 @@ mobius_link_Omega <- function(p1, qs1 = vector("numeric", 0), Omega, qe1 = vecto
   return(obj)
 }
 
-#' @describeIn mnlink_params Represent the parameters of the Mobius mean link [`mobius_link()`] using the Omega form.
+#' @describeIn mobius_link_params Represent the parameters of the Mobius mean link [`mobius_link()`] using the Omega form.
 #' @family link-function
 #' @export
 as_mobius_link_Omega <- function(obj){
@@ -183,7 +183,7 @@ mobius_link_Omega_unvec <- function(vec, p, qe = 0, check = TRUE){
            check = check)
 }
 
-#' @describeIn mnlink_params For converting between parameterisations of the link function.
+#' @describeIn mobius_link_params For converting between parameterisations of the link function.
 #' Sign of columns of P and Q are lost by the `cann2Omega()` transformation.
 #' @family link-function
 #' @export
@@ -469,10 +469,10 @@ is_LinEuc <- function(obj, tol = sqrt(.Machine$double.eps)){
 #' @title Obtain dimensions corresponding to a mean link parameter set
 #' @param x A mean link parameter object of class `mobius_link_Omega` or `mobius_link_cann`.
 #' @return An integer vector of p (length of response unit vectors), qs (length of spherical covariate unit vectors) and qe (length of Euclidean covariate vectors).
-#' @name dim-mnlink_params
+#' @name dim-mobius_link_params
 NULL
 
-#' @rdname dim-mnlink_params
+#' @rdname dim-mobius_link_params
 #' @export
 #' @method dim mobius_link_cann
 dim.mobius_link_cann <- function(x){
@@ -481,7 +481,7 @@ dim.mobius_link_cann <- function(x){
     qe = switch(1 + is.null(x$Qe), nrow(x$Qe), 0))
 }
 
-#' @rdname dim-mnlink_params
+#' @rdname dim-mobius_link_params
 #' @export
 #' @method dim mobius_link_Omega
 dim.mobius_link_Omega <- function(x){

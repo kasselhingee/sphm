@@ -112,67 +112,53 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// mnlink_cpp
-mata1 mnlink_cpp(const mata1& xs, const mata1& xe, const veca1& vec, const int p);
-RcppExport SEXP _sphm_mnlink_cpp(SEXP xsSEXP, SEXP xeSEXP, SEXP vecSEXP, SEXP pSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const mata1& >::type xs(xsSEXP);
-    Rcpp::traits::input_parameter< const mata1& >::type xe(xeSEXP);
-    Rcpp::traits::input_parameter< const veca1& >::type vec(vecSEXP);
-    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
-    rcpp_result_gen = Rcpp::wrap(mnlink_cpp(xs, xe, vec, p));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cayleyTransform
-mata1 cayleyTransform(const mata1& A);
-RcppExport SEXP _sphm_cayleyTransform(SEXP ASEXP) {
+// cayley_transform
+mata1 cayley_transform(const mata1& A);
+RcppExport SEXP _sphm_cayley_transform(SEXP ASEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const mata1& >::type A(ASEXP);
-    rcpp_result_gen = Rcpp::wrap(cayleyTransform(A));
+    rcpp_result_gen = Rcpp::wrap(cayley_transform(A));
     return rcpp_result_gen;
 END_RCPP
 }
-// inverseCayleyTransform
-mata1 inverseCayleyTransform(const mata1& M);
-RcppExport SEXP _sphm_inverseCayleyTransform(SEXP MSEXP) {
+// inverse_cayley_transform
+mata1 inverse_cayley_transform(const mata1& M);
+RcppExport SEXP _sphm_inverse_cayley_transform(SEXP MSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const mata1& >::type M(MSEXP);
-    rcpp_result_gen = Rcpp::wrap(inverseCayleyTransform(M));
+    rcpp_result_gen = Rcpp::wrap(inverse_cayley_transform(M));
     return rcpp_result_gen;
 END_RCPP
 }
-// vectorizeLowerTriangle
-veca1 vectorizeLowerTriangle(const mata1& A);
-RcppExport SEXP _sphm_vectorizeLowerTriangle(SEXP ASEXP) {
+// vectorize_lower_triangle
+veca1 vectorize_lower_triangle(const mata1& A);
+RcppExport SEXP _sphm_vectorize_lower_triangle(SEXP ASEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const mata1& >::type A(ASEXP);
-    rcpp_result_gen = Rcpp::wrap(vectorizeLowerTriangle(A));
+    rcpp_result_gen = Rcpp::wrap(vectorize_lower_triangle(A));
     return rcpp_result_gen;
 END_RCPP
 }
-// inverseVectorizeLowerTriangle
-mata1 inverseVectorizeLowerTriangle(const veca1& vec);
-RcppExport SEXP _sphm_inverseVectorizeLowerTriangle(SEXP vecSEXP) {
+// inverse_vectorize_lower_triangle
+mata1 inverse_vectorize_lower_triangle(const veca1& vec);
+RcppExport SEXP _sphm_inverse_vectorize_lower_triangle(SEXP vecSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const veca1& >::type vec(vecSEXP);
-    rcpp_result_gen = Rcpp::wrap(inverseVectorizeLowerTriangle(vec));
+    rcpp_result_gen = Rcpp::wrap(inverse_vectorize_lower_triangle(vec));
     return rcpp_result_gen;
 END_RCPP
 }
-// Mobius_SvMF_partan_nota1_tovecparams
-veca1 Mobius_SvMF_partan_nota1_tovecparams(veca1& omvec, a1type k, veca1 aremaining, mata1 G0, matd referencecoords, std::string G01behaviour);
-RcppExport SEXP _sphm_Mobius_SvMF_partan_nota1_tovecparams(SEXP omvecSEXP, SEXP kSEXP, SEXP aremainingSEXP, SEXP G0SEXP, SEXP referencecoordsSEXP, SEXP G01behaviourSEXP) {
+// mobius_SvMF_partransport_nota1_tovecparams
+veca1 mobius_SvMF_partransport_nota1_tovecparams(veca1& omvec, a1type k, veca1 aremaining, mata1 G0, matd referencecoords, std::string G01behaviour);
+RcppExport SEXP _sphm_mobius_SvMF_partransport_nota1_tovecparams(SEXP omvecSEXP, SEXP kSEXP, SEXP aremainingSEXP, SEXP G0SEXP, SEXP referencecoordsSEXP, SEXP G01behaviourSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -182,13 +168,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< mata1 >::type G0(G0SEXP);
     Rcpp::traits::input_parameter< matd >::type referencecoords(referencecoordsSEXP);
     Rcpp::traits::input_parameter< std::string >::type G01behaviour(G01behaviourSEXP);
-    rcpp_result_gen = Rcpp::wrap(Mobius_SvMF_partan_nota1_tovecparams(omvec, k, aremaining, G0, referencecoords, G01behaviour));
+    rcpp_result_gen = Rcpp::wrap(mobius_SvMF_partransport_nota1_tovecparams(omvec, k, aremaining, G0, referencecoords, G01behaviour));
     return rcpp_result_gen;
 END_RCPP
 }
-// Mobius_SvMF_partan_nota1_fromvecparamsR
-Rcpp::List Mobius_SvMF_partan_nota1_fromvecparamsR(const veca1& mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, Rcpp::Nullable<vecd> G01);
-RcppExport SEXP _sphm_Mobius_SvMF_partan_nota1_fromvecparamsR(SEXP mainvecSEXP, SEXP pSEXP, SEXP qsSEXP, SEXP qeSEXP, SEXP referencecoordsSEXP, SEXP G01behaviourSEXP, SEXP G01SEXP) {
+// mobius_SvMF_partransport_nota1_fromvecparams_forR
+Rcpp::List mobius_SvMF_partransport_nota1_fromvecparams_forR(const veca1& mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, Rcpp::Nullable<vecd> G01);
+RcppExport SEXP _sphm_mobius_SvMF_partransport_nota1_fromvecparams_forR(SEXP mainvecSEXP, SEXP pSEXP, SEXP qsSEXP, SEXP qeSEXP, SEXP referencecoordsSEXP, SEXP G01behaviourSEXP, SEXP G01SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -199,13 +185,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< matd >::type referencecoords(referencecoordsSEXP);
     Rcpp::traits::input_parameter< std::string >::type G01behaviour(G01behaviourSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<vecd> >::type G01(G01SEXP);
-    rcpp_result_gen = Rcpp::wrap(Mobius_SvMF_partan_nota1_fromvecparamsR(mainvec, p, qs, qe, referencecoords, G01behaviour, G01));
+    rcpp_result_gen = Rcpp::wrap(mobius_SvMF_partransport_nota1_fromvecparams_forR(mainvec, p, qs, qe, referencecoords, G01behaviour, G01));
     return rcpp_result_gen;
 END_RCPP
 }
-// ld_Mobius_SvMF_partran_forR
-veca1 ld_Mobius_SvMF_partran_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0);
-RcppExport SEXP _sphm_ld_Mobius_SvMF_partran_forR(SEXP ySEXP, SEXP xsSEXP, SEXP xeSEXP, SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP G0SEXP) {
+// ld_mobius_SvMF_partransport_forR
+veca1 ld_mobius_SvMF_partransport_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0);
+RcppExport SEXP _sphm_ld_mobius_SvMF_partransport_forR(SEXP ySEXP, SEXP xsSEXP, SEXP xeSEXP, SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP G0SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -217,13 +203,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< a1type >::type a1(a1SEXP);
     Rcpp::traits::input_parameter< veca1 >::type aremaining(aremainingSEXP);
     Rcpp::traits::input_parameter< mata1 >::type G0(G0SEXP);
-    rcpp_result_gen = Rcpp::wrap(ld_Mobius_SvMF_partran_forR(y, xs, xe, omvec, k, a1, aremaining, G0));
+    rcpp_result_gen = Rcpp::wrap(ld_mobius_SvMF_partransport_forR(y, xs, xe, omvec, k, a1, aremaining, G0));
     return rcpp_result_gen;
 END_RCPP
 }
-// tape_ld_Mobius_SvMF_partran_nota1
-pADFun tape_ld_Mobius_SvMF_partran_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0star, vecd& p_in, vecd& qe_in, matd& yx, matd referencecoords, std::string G01behaviour);
-RcppExport SEXP _sphm_tape_ld_Mobius_SvMF_partran_nota1(SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP G0starSEXP, SEXP p_inSEXP, SEXP qe_inSEXP, SEXP yxSEXP, SEXP referencecoordsSEXP, SEXP G01behaviourSEXP) {
+// tape_ld_mobius_SvMF_partransport_nota1
+pADFun tape_ld_mobius_SvMF_partransport_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0star, vecd& p_in, vecd& qe_in, matd& yx, matd referencecoords, std::string G01behaviour);
+RcppExport SEXP _sphm_tape_ld_mobius_SvMF_partransport_nota1(SEXP omvecSEXP, SEXP kSEXP, SEXP a1SEXP, SEXP aremainingSEXP, SEXP G0starSEXP, SEXP p_inSEXP, SEXP qe_inSEXP, SEXP yxSEXP, SEXP referencecoordsSEXP, SEXP G01behaviourSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -237,7 +223,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< matd& >::type yx(yxSEXP);
     Rcpp::traits::input_parameter< matd >::type referencecoords(referencecoordsSEXP);
     Rcpp::traits::input_parameter< std::string >::type G01behaviour(G01behaviourSEXP);
-    rcpp_result_gen = Rcpp::wrap(tape_ld_Mobius_SvMF_partran_nota1(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour));
+    rcpp_result_gen = Rcpp::wrap(tape_ld_mobius_SvMF_partransport_nota1(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mobius_link_cpp
+mata1 mobius_link_cpp(const mata1& xs, const mata1& xe, const veca1& vec, const int p);
+RcppExport SEXP _sphm_mobius_link_cpp(SEXP xsSEXP, SEXP xeSEXP, SEXP vecSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const mata1& >::type xs(xsSEXP);
+    Rcpp::traits::input_parameter< const mata1& >::type xe(xeSEXP);
+    Rcpp::traits::input_parameter< const veca1& >::type vec(vecSEXP);
+    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(mobius_link_cpp(xs, xe, vec, p));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -295,15 +295,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sphm_ldSvMF_cann", (DL_FUNC) &_sphm_ldSvMF_cann, 4},
     {"_sphm_ldSvMF_muV", (DL_FUNC) &_sphm_ldSvMF_muV, 5},
     {"_sphm_besselImixed", (DL_FUNC) &_sphm_besselImixed, 5},
-    {"_sphm_mnlink_cpp", (DL_FUNC) &_sphm_mnlink_cpp, 4},
-    {"_sphm_cayleyTransform", (DL_FUNC) &_sphm_cayleyTransform, 1},
-    {"_sphm_inverseCayleyTransform", (DL_FUNC) &_sphm_inverseCayleyTransform, 1},
-    {"_sphm_vectorizeLowerTriangle", (DL_FUNC) &_sphm_vectorizeLowerTriangle, 1},
-    {"_sphm_inverseVectorizeLowerTriangle", (DL_FUNC) &_sphm_inverseVectorizeLowerTriangle, 1},
-    {"_sphm_Mobius_SvMF_partan_nota1_tovecparams", (DL_FUNC) &_sphm_Mobius_SvMF_partan_nota1_tovecparams, 6},
-    {"_sphm_Mobius_SvMF_partan_nota1_fromvecparamsR", (DL_FUNC) &_sphm_Mobius_SvMF_partan_nota1_fromvecparamsR, 7},
-    {"_sphm_ld_Mobius_SvMF_partran_forR", (DL_FUNC) &_sphm_ld_Mobius_SvMF_partran_forR, 8},
-    {"_sphm_tape_ld_Mobius_SvMF_partran_nota1", (DL_FUNC) &_sphm_tape_ld_Mobius_SvMF_partran_nota1, 10},
+    {"_sphm_cayley_transform", (DL_FUNC) &_sphm_cayley_transform, 1},
+    {"_sphm_inverse_cayley_transform", (DL_FUNC) &_sphm_inverse_cayley_transform, 1},
+    {"_sphm_vectorize_lower_triangle", (DL_FUNC) &_sphm_vectorize_lower_triangle, 1},
+    {"_sphm_inverse_vectorize_lower_triangle", (DL_FUNC) &_sphm_inverse_vectorize_lower_triangle, 1},
+    {"_sphm_mobius_SvMF_partransport_nota1_tovecparams", (DL_FUNC) &_sphm_mobius_SvMF_partransport_nota1_tovecparams, 6},
+    {"_sphm_mobius_SvMF_partransport_nota1_fromvecparams_forR", (DL_FUNC) &_sphm_mobius_SvMF_partransport_nota1_fromvecparams_forR, 7},
+    {"_sphm_ld_mobius_SvMF_partransport_forR", (DL_FUNC) &_sphm_ld_mobius_SvMF_partransport_forR, 8},
+    {"_sphm_tape_ld_mobius_SvMF_partransport_nota1", (DL_FUNC) &_sphm_tape_ld_mobius_SvMF_partransport_nota1, 10},
+    {"_sphm_mobius_link_cpp", (DL_FUNC) &_sphm_mobius_link_cpp, 4},
     {"_sphm_prelimobj_cpp", (DL_FUNC) &_sphm_prelimobj_cpp, 4},
     {"_sphm_tape_besselImixed", (DL_FUNC) &_sphm_tape_besselImixed, 5},
     {"_sphm_tape_namedfun", (DL_FUNC) &_sphm_tape_namedfun, 6},

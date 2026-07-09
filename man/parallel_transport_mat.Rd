@@ -21,7 +21,7 @@ that vector to the corresponding tangent vector at \code{end}. When applied to \
 it returns \code{end}.
 
 This is the matrix from Amaral et al. (2007, Lemma 2), which is equivalent to the negative
-of Jupp's (1988) rotation matrix (internal function \code{JuppRmat()}). Both perform the same
+of Jupp's (1988) rotation matrix (internal function \code{jupp_Rmat()}). Both perform the same
 parallel transport; this version uses a rotation-based formula.
 }
 \details{

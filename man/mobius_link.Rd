@@ -11,7 +11,7 @@ mobius_link(xs = NULL, xe = NULL, param = NULL, check = TRUE)
 
 \item{xe}{A matrix of row-vectors of the Euclidean covariates.}
 
-\item{param}{Parameters of the mean link. As an object of class "mobius_link_Omega" or "mobius_link_cann". See \code{\link{mnlink_params}}.}
+\item{param}{Parameters of the mean link. As an object of class "mobius_link_Omega" or "mobius_link_cann". See \code{\link{mobius_link_params}}.}
 }
 \description{
 Implements mean link:
@@ -19,7 +19,7 @@ Implements mean link:
 }
 \details{
 This general form of the mean link encompases the primary form of the mean link in "Regression for spherical responses with linear and spherical covariates using a scaled link function" and a more general form that uses the a stereographic-like projection of the Euclidean covariates.
-See \code{\link{mnlink_params}} for further details.
+See \code{\link{mobius_link_params}} for further details.
 
 If \code{param} is of class "mobius_link_Omega" then means are computed as
 \deqn{\mu(x) = \frac{(1-\|\tilde{y}(x)\|^2) P[,1] + 2 \tilde{y}(x)}{1+\|\tilde{y}(x)\|^2}}
@@ -29,7 +29,7 @@ and \eqn{x_s} and \eqn{x_e} are the spherical and Euclidean covariate.
 }
 \seealso{
 Other link-function: 
-\code{\link{mnlink_params}},
+\code{\link{mobius_link_params}},
 \code{\link{rand_mobius_link_cann}()}
 }
 \concept{link-function}

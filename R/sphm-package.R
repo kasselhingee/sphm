@@ -36,7 +36,7 @@
 #' xs <- matrix(rnorm(n * p), n, p)
 #' xs <- xs / sqrt(rowSums(xs^2))
 #' mean_params <- rand_mobius_link_cann(p = p, qs = p, qe = 0)
-#' sim <- rMobius_SvMF(xs = xs, xe = NULL, mean = mean_params,
+#' sim <- rmobius_SvMF(xs = xs, xe = NULL, mean = mean_params,
 #'                     k = 5, a = c(1, 2, 0.5), G0 = diag(p))
 #' y <- sim[, 1:p]
 #'
@@ -50,7 +50,7 @@
 #' | Task | Function |
 #' |---|---|
 #' | **Fit regression** | [`mobius_SvMF()`], [`mobius_vMF()`], [`mobius_vMF_refit()`] |
-#' | **Simulate data** | [`rMobius_SvMF()`], [`rSvMF()`] |
+#' | **Simulate data** | [`rmobius_SvMF()`], [`rSvMF()`] |
 #' | **Evaluate link** | [`mobius_link()`] |
 #' | **Residuals** | [`rotated_resid()`], [`parallel_transport_mat()`] |
 #' | **SvMF density** | [`dSvMF()`], [`mobius_SvMF_log_lik()`] |

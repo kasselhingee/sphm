@@ -114,8 +114,8 @@ a1type vMF_log_norm_const(a1type kappa, int p) {
   }
 }
 
-// Helper getHstar
-mata1 getHstar(veca1 m) {
+// Helper get_Hstar
+mata1 get_Hstar(veca1 m) {
   a1type m1 = m(0);  // First element of m
   veca1 mL = m.tail(m.size() - 1);  // Vector m without the first element
   
@@ -150,7 +150,7 @@ veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V) {
   int p = m.size();
   a1type lconst = - vMF_log_norm_const(k, p) - CppAD::log(a1);
   
-  mata1 Hstar = getHstar(m);
+  mata1 Hstar = get_Hstar(m);
   
   mata1 ystarstarL = y * Hstar;
   veca1 denomA = (y * m / a1).array().square();

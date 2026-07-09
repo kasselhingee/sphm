@@ -70,14 +70,14 @@ as_SvMF_muV <- function(obj){
 SvMF_cann2muV <- function(obj){
   list2env(obj, envir = environment())
   m <- G[, 1]
-  Hstar <- getHstar(m)
+  Hstar <- get_Hstar(m)
   Kstar <- t(Hstar) %*% G[, -1] #this solves Hstar %*% Kstar = G[, -1] because by orthogonality of H, t(Hstar) %*% Hstar = I.
   V <- Kstar %*% diag(a[-1]^2) %*% t(Kstar)
   SvMF_muV(k, m, a[1], V)
 }
 SvMF_muV2cann <- function(obj){
   list2env(obj, envir = environment())
-  Hstar <- getHstar(m)
+  Hstar <- get_Hstar(m)
   es <- eigen(V)
   Kstar <- es$vectors
   G <- cbind(m, Hstar %*% Kstar)
@@ -87,15 +87,15 @@ SvMF_muV2cann <- function(obj){
 
 #' @noRd 
 #' @description Get the Hstar matrix from Scealy and Wood (2019, Section 3) for a mean vector m
-getHstar <- function(m){
+get_Hstar <- function(m){
   m1 <- m[1]
   mL <- m[-1]
   Hstar <- rbind(mL, (1/(1+m1)) * mL %*% t(mL) - diag(1, length(mL)))
   return(Hstar)
 }
 
-getH <- function(m){
-  cbind(m, getHstar(m))
+get_H <- function(m){
+  cbind(m, get_Hstar(m))
 }
 
 #Scealy and Wood (2019) Proposition 1 check for unimodality

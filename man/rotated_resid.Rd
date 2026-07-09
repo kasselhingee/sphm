@@ -15,7 +15,7 @@ rotated_resid(y, ypred, base, path = "geo")
 Typically \code{north_pole(p)} (see \code{\link[=north_pole]{north_pole()}}).}
 
 \item{path}{Transport method: \code{"geo"} or \code{"Amaral"} use \code{\link[=parallel_transport_mat]{parallel_transport_mat()}};
-\code{"Jupp"} uses \code{JuppRmat()} (internal; gives the negative); \code{"Absil"} uses a third formula.}
+\code{"Jupp"} uses \code{jupp_Rmat()} (internal; gives the negative); \code{"Absil"} uses a third formula.}
 }
 \value{
 A matrix of rotated residuals (one per row), with attribute

@@ -8,7 +8,7 @@
 #' @param base Unit vector giving the base location to transport residuals to.
 #'   Typically `north_pole(p)` (see [`north_pole()`]).
 #' @param path Transport method: `"geo"` or `"Amaral"` use [`parallel_transport_mat()`];
-#'   `"Jupp"` uses `JuppRmat()` (internal; gives the negative); `"Absil"` uses a third formula.
+#'   `"Jupp"` uses `jupp_Rmat()` (internal; gives the negative); `"Absil"` uses a third formula.
 #' @return A matrix of rotated residuals (one per row), with attribute
 #'   `"samehemisphere"` indicating observations on the same side as `ypred`.
 #' @seealso [parallel_transport_mat()]
@@ -19,7 +19,7 @@ rotated_resid <- function(y, ypred, base, path = "geo"){
   cresids <- cruderesid(y, ypred)
 
   # rotate them
-  transportmat <- switch(path, Jupp = JuppRmat, geo = parallel_transport_mat, Amaral = parallel_transport_mat, Absil = parallel_transport_mat_absil)
+  transportmat <- switch(path, Jupp = jupp_Rmat, geo = parallel_transport_mat, Amaral = parallel_transport_mat, Absil = parallel_transport_mat_absil)
   rresids <- t(sapply(1:nrow(y), function(i){
     tmat <- transportmat(ypred[i, ], base)
     if (!all(is.finite(tmat))){warning("A predicted mean is at the antipode of the rotated residual base location")}
@@ -42,9 +42,9 @@ cruderesid <- function(y, ypred){
 }
 
 # Jupp (1988) rotation matrix for parallel transport from `y` to `base`.
-# Equivalent to the negative of parallel_transport_mat() — i.e. JuppRmat(a,b) = -parallel_transport_mat(a,b).
+# Equivalent to the negative of parallel_transport_mat() — i.e. jupp_Rmat(a,b) = -parallel_transport_mat(a,b).
 # Used internally by rotated_resid() when path = "Jupp".
-JuppRmat <- function(y, base){
+jupp_Rmat <- function(y, base){
   (y+base) %*% t(y+base)/(1+drop(y%*%base)) - diag(1, length(y))
 }
 
@@ -55,7 +55,7 @@ JuppRmat <- function(y, base){
 #' it returns `end`.
 #'
 #' This is the matrix from Amaral et al. (2007, Lemma 2), which is equivalent to the negative
-#' of Jupp's (1988) rotation matrix (internal function `JuppRmat()`). Both perform the same
+#' of Jupp's (1988) rotation matrix (internal function `jupp_Rmat()`). Both perform the same
 #' parallel transport; this version uses a rotation-based formula.
 #' @param start Starting location as a unit vector.
 #' @param end End location as a unit vector.
@@ -80,7 +80,7 @@ parallel_transport_mat <- function(start, end){ #assumes a and b are unit vector
 }
 
 # Parallel transport matrix from Absil, Mahony and Sepulchre (2008) equation (8.4).
-# Alternative formula to parallel_transport_mat() and JuppRmat(); used when path = "Absil".
+# Alternative formula to parallel_transport_mat() and jupp_Rmat(); used when path = "Absil".
 parallel_transport_mat_absil <- function(start, end){
   alpha <- drop(acos(start %*% end))
   u <- (end - cos(alpha) * start)/sin(alpha)

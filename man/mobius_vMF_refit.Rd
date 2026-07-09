@@ -26,6 +26,6 @@ Other regression:
 \code{\link{mobius_SvMF_log_lik}()},
 \code{\link{mobius_dof}()},
 \code{\link{mobius_vMF}()},
-\code{\link{rMobius_SvMF}()}
+\code{\link{rmobius_SvMF}()}
 }
 \concept{regression}

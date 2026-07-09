@@ -5,7 +5,7 @@
 
 //G0 specifies the axes of the SvMF.
 //G0star is pararallel transported along G01 -> predicted mean
-veca1 ld_Mobius_SvMF_partran(mata1 y, mata1 xs, mata1 xe, mobius_link_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 G0){
+veca1 ld_mobius_SvMF_partransport(mata1 y, mata1 xs, mata1 xe, mobius_link_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 G0){
   int p = om.p1.size();
   //check that ncol(y) == p
   if (y.cols() != p){Rcpp::stop("width of y does not equal length of p1");}
@@ -16,7 +16,7 @@ veca1 ld_Mobius_SvMF_partran(mata1 y, mata1 xs, mata1 xe, mobius_link_Omega_cpp<
 
   //get mean
   mata1 ypred;
-  ypred = mnlink_cpp(xs, xe, omvec_projected, p); 
+  ypred = mobius_link_cpp(xs, xe, omvec_projected, p); 
 
   //evaluate SvMF density of each observation
   veca1 ld(y.rows());
@@ -28,7 +28,7 @@ veca1 ld_Mobius_SvMF_partran(mata1 y, mata1 xs, mata1 xe, mobius_link_Omega_cpp<
   a.segment(1, p-1) = aremaining;
   for (int i = 0; i < y.rows(); ++i){
     G.col(0) = ypred.row(i);
-    G.block(0, 1, p, p-1) = JuppRmat(G0.col(0), ypred.row(i)) * G0star;
+    G.block(0, 1, p, p-1) = jupp_Rmat(G0.col(0), ypred.row(i)) * G0star;
     ld(i) = ldSvMF_cann(y.row(i), k, a, G)(0);
   }
   return ld;
@@ -36,9 +36,9 @@ veca1 ld_Mobius_SvMF_partran(mata1 y, mata1 xs, mata1 xe, mobius_link_Omega_cpp<
 
 
 
-veca1 ld_Mobius_SvMF_partran_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0){
+veca1 ld_mobius_SvMF_partransport_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0){
    mobius_link_Omega_cpp<a1type> om = mobius_link_Omega_cpp_unvec(omvec, y.cols(), xe.cols());
-   veca1 ld = ld_Mobius_SvMF_partran(y, xs, xe, om, k, a1, aremaining, G0);
+   veca1 ld = ld_mobius_SvMF_partransport(y, xs, xe, om, k, a1, aremaining, G0);
    return ld;
 }
 
@@ -46,7 +46,7 @@ veca1 ld_Mobius_SvMF_partran_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1ty
 // Cayley Transform: C(A) = (I - A)^{-1} * (I + A)
 // A is skew symmetric
 // [[Rcpp::export]]
-mata1 cayleyTransform(const mata1 &A) {
+mata1 cayley_transform(const mata1 &A) {
   int n = A.rows();  // Size of the matrix
   
   // Identity matrix
@@ -65,7 +65,7 @@ mata1 cayleyTransform(const mata1 &A) {
 // Inverse Cayley Transform: C^{-1}(M) = (M - I) * (M + I)^{-1}
 // M must be orthogonal and determinant of not -1
 // [[Rcpp::export]]
-mata1 inverseCayleyTransform(const mata1 &M) {
+mata1 inverse_cayley_transform(const mata1 &M) {
   int n = M.rows();  // Size of the matrix
   
   // Identity matrix
@@ -83,7 +83,7 @@ mata1 inverseCayleyTransform(const mata1 &M) {
 
 
 // [[Rcpp::export]]
-veca1 vectorizeLowerTriangle(const mata1 &A) {
+veca1 vectorize_lower_triangle(const mata1 &A) {
   int n = A.rows();  // Size of the matrix
   int num_elements = (n * (n - 1)) / 2;  // Number of elements in the lower triangle
 
@@ -104,7 +104,7 @@ veca1 vectorizeLowerTriangle(const mata1 &A) {
 }
 
 // [[Rcpp::export]]
-mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
+mata1 inverse_vectorize_lower_triangle(const veca1 &vec) {
   // n is the size of the skew-symmetric matrix to reconstruct
   int n = (1 + std::sqrt(8*vec.size() + 1))/2;
   mata1 A = mata1::Zero(n, n);  // Initialize an n x n matrix with zeros
@@ -130,7 +130,7 @@ mata1 inverseVectorizeLowerTriangle(const veca1 &vec) {
 //' @param G0 are the orientation axes of SvMF in cannonical coordinate (p x p matrix). Ideally G0 is close to the referencecoords axes. G0 must be a rotation matrix (det > 0) so that the Cayley transform representation works.
 //' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms. It is best if referencecoords is close to the best G0 (so rG0 is close the identity) and it will fail if `G01` is the antepode of `referencoords[,1]`.
 // [[Rcpp::export]]
-veca1 Mobius_SvMF_partan_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 G0, matd referencecoords, std::string G01behaviour){
+veca1 mobius_SvMF_partransport_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremaining, mata1 G0, matd referencecoords, std::string G01behaviour){
   int p = aremaining.size() + 1;
   // check G01behaviour
   if ((G01behaviour != "p1") && (G01behaviour != "fixed") && (G01behaviour != "free")){Rcpp::stop("G01behaviour not understood");}
@@ -154,14 +154,14 @@ veca1 Mobius_SvMF_partan_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremai
   //if G01 is fixed or p1 then get a p-1 x p-1 matrix reprensenting the remaining free columns
   if ((G01behaviour == "p1") || (G01behaviour == "fixed")){
     //parallel transport along p1 to referencecoords[,1] so that first row of G0star is zeros
-    mata1 G0star = -JuppRmat(G0.col(0), veca1::Unit(p,0)) * G0.rightCols(p-1);
+    mata1 G0star = -jupp_Rmat(G0.col(0), veca1::Unit(p,0)) * G0.rightCols(p-1);
     //drop first row of zeros
     rotmat = G0star.bottomRows(p-1);
   } else if (G01behaviour == "free") {
     rotmat = G0;
   }
   if (CppAD::Value(rotmat.determinant()) < 0.) {Rcpp::stop("Determinant is negative. Please change the sign of one of G0's columns.");}
-  veca1 vecCayaxes = vectorizeLowerTriangle(inverseCayleyTransform(rotmat)); 
+  veca1 vecCayaxes = vectorize_lower_triangle(inverse_cayley_transform(rotmat)); 
 
   // put everything into a vector
   veca1 result(omvec.size() + 1 + aremaining.size() - 1 + vecCayaxes.size());
@@ -180,7 +180,7 @@ veca1 Mobius_SvMF_partan_nota1_tovecparams(veca1 & omvec, a1type k, veca1 aremai
 // @param G01behaviour the behaviour of G01 ('fixed', 'free' or identified with 'p1')
 // @param G01 First column of G01 - only needed in the G01behaviour == "fixed" situation to recover full parameter set
 // @returns A tuple of the mean link parameters (vectorised Omega form), concentration, scales a (omitting first a[1] that is fixed), and SvMF orientation matrix G0.
-std::tuple<veca1, a1type, veca1, mata1> Mobius_SvMF_partan_nota1_fromvecparams(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, vecd G01 = vecd(0)) {
+std::tuple<veca1, a1type, veca1, mata1> mobius_SvMF_partransport_nota1_fromvecparams(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, vecd G01 = vecd(0)) {
   // check G01behaviour
   if ((G01behaviour != "p1") && (G01behaviour != "fixed") && (G01behaviour != "free")){Rcpp::stop("G01behaviour not understood");}
 
@@ -204,7 +204,7 @@ std::tuple<veca1, a1type, veca1, mata1> Mobius_SvMF_partan_nota1_fromvecparams(c
   //Recovery of G0
   //get back rotmat from vecCay
   veca1 vecCayaxes = mainvec.tail(vecCay_length);
-  mata1 rotmat = cayleyTransform(inverseVectorizeLowerTriangle(vecCayaxes));
+  mata1 rotmat = cayley_transform(inverse_vectorize_lower_triangle(vecCayaxes));
 
   // get back G0
   mata1 G0 = mata1::Zero(p,p);
@@ -215,7 +215,7 @@ std::tuple<veca1, a1type, veca1, mata1> Mobius_SvMF_partan_nota1_fromvecparams(c
     mata1 G0star = mata1::Zero(p, p-1);
     G0star.bottomRows(p-1) = rotmat;
     //undo: parallel transport along p1 to referencecoords[,1] so that first row of G0star is zeros
-    G0star = JuppRmat(G0.col(0), veca1::Unit(p,0)).transpose() * G0star;
+    G0star = jupp_Rmat(G0.col(0), veca1::Unit(p,0)).transpose() * G0star;
     G0.rightCols(p-1) = G0star;
   } else if (G01behaviour == "free") {
     G0 = rotmat;
@@ -228,12 +228,12 @@ std::tuple<veca1, a1type, veca1, mata1> Mobius_SvMF_partan_nota1_fromvecparams(c
 
 //export the reverse function
 // [[Rcpp::export]]
-Rcpp::List Mobius_SvMF_partan_nota1_fromvecparamsR(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, Rcpp::Nullable<vecd> G01 = R_NilValue) {
+Rcpp::List mobius_SvMF_partransport_nota1_fromvecparams_forR(const veca1 & mainvec, int p, int qs, int qe, matd referencecoords, std::string G01behaviour, Rcpp::Nullable<vecd> G01 = R_NilValue) {
   vecd G01_;
   if (G01.isNotNull()){G01_ = Rcpp::as<vecd>(G01);}
   else {G01_ = vecd();}
 
-  auto result = Mobius_SvMF_partan_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour, G01_);
+  auto result = mobius_SvMF_partransport_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour, G01_);
   veca1 omvec = std::get<0>(result);
   a1type k = std::get<1>(result);
   veca1 aremaining = std::get<2>(result);
@@ -250,7 +250,7 @@ Rcpp::List Mobius_SvMF_partan_nota1_fromvecparamsR(const veca1 & mainvec, int p,
 
 
 //G0 are the orientation axes of SvMF in cannonical coordinate (p x p) matrix
-pADFun tape_ld_Mobius_SvMF_partran_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0, vecd & p_in, vecd & qe_in, matd & yx, matd referencecoords, std::string G01behaviour){
+pADFun tape_ld_mobius_SvMF_partransport_nota1(veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0, vecd & p_in, vecd & qe_in, matd & yx, matd referencecoords, std::string G01behaviour){
   int p = int(p_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qe = int(qe_in(0) + 0.1); //0.1 to make sure p_in is above the integer it represents
   int qs = yx.cols() - qe - p; 
@@ -271,14 +271,14 @@ pADFun tape_ld_Mobius_SvMF_partran_nota1(veca1 omvec, a1type k, a1type a1, veca1
 
 
   // Get all parameters except a1 into a vector
-  veca1 mainvec = Mobius_SvMF_partan_nota1_tovecparams(omvec, k, aremaining, G0, referencecoords, G01behaviour);
+  veca1 mainvec = mobius_SvMF_partransport_nota1_tovecparams(omvec, k, aremaining, G0, referencecoords, G01behaviour);
   veca1 a1vec(1);
   a1vec(0) = a1;
 
   // tape with main vector and a1 as a dynamic
   CppAD::Independent(mainvec, a1vec);
   // split mainvec into parts, overwriting passed arguments
-  auto result = Mobius_SvMF_partan_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour, tapeG01);//final argument only used if G01behaviour == "fixed"
+  auto result = mobius_SvMF_partransport_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour, tapeG01);//final argument only used if G01behaviour == "fixed"
   omvec = std::get<0>(result);
   k = std::get<1>(result);
   aremaining = std::get<2>(result);
@@ -286,13 +286,13 @@ pADFun tape_ld_Mobius_SvMF_partran_nota1(veca1 omvec, a1type k, a1type a1, veca1
   
   mobius_link_Omega_cpp<a1type> om = mobius_link_Omega_cpp_unvec(omvec, p, qe);
 
-  veca1 ld = ld_Mobius_SvMF_partran(y, xs, xe, om, k, a1, aremaining, G0);
+  veca1 ld = ld_mobius_SvMF_partransport(y, xs, xe, om, k, a1, aremaining, G0);
 
   CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
   tape.Dependent(mainvec, ld);
   tape.check_for_nan(false);
 
-  pADFun out(tape, mainvec, a1vec, "ld_Mobius_SvMF_partran_nota1");
+  pADFun out(tape, mainvec, a1vec, "ld_mobius_SvMF_partransport_nota1");
   return(out);
 }
 

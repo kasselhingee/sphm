@@ -4,10 +4,10 @@
 #' \deqn{\mu(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  \frac{B_e\left(Q_e[,-1]^\top x_e\right)}{Qe[,1]^\top x_e + c_e}\right).}
 #' @param xs A matrix of row-vectors of the spherical covariate.
 #' @param xe A matrix of row-vectors of the Euclidean covariates.
-#' @param param Parameters of the mean link. As an object of class "mobius_link_Omega" or "mobius_link_cann". See [`mnlink_params`]. 
+#' @param param Parameters of the mean link. As an object of class "mobius_link_Omega" or "mobius_link_cann". See [`mobius_link_params`]. 
 #' @details
 #' This general form of the mean link encompases the primary form of the mean link in "Regression for spherical responses with linear and spherical covariates using a scaled link function" and a more general form that uses the a stereographic-like projection of the Euclidean covariates.
-#' See [`mnlink_params`] for further details.
+#' See [`mobius_link_params`] for further details.
 #'
 #' If `param` is of class "mobius_link_Omega" then means are computed as
 #' \deqn{\mu(x) = \frac{(1-\|\tilde{y}(x)\|^2) P[,1] + 2 \tilde{y}(x)}{1+\|\tilde{y}(x)\|^2}}
@@ -35,7 +35,7 @@ mobius_link <- function(xs = NULL, xe = NULL, param = NULL, check = TRUE){
     stopifnot(ncol(xs) == length(param$qs1))
     stopifnot(ncol(xe) == length(param$qe1))
     # Evaluate
-    out <- mnlink_cpp(xs, xe, mobius_link_Omega_vec(param), length(param$p1))
+    out <- mobius_link_cpp(xs, xe, mobius_link_Omega_vec(param), length(param$p1))
   } else if (inherits(param, "mobius_link_cann")){
     out <- mobius_link_pred_cann(xs, xe, param)
   } else {

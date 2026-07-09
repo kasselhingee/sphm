@@ -135,7 +135,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   om0vec <- scorematchingad:::t_sfi2u(conprep$x0, conprep$om0vec, conprep$isfixed)
   
   # Prepare objective tape
-  objtape_ind <- tape_ld_Mobius_SvMF_partran_nota1(omvec = om0vec, k = preplist$k,
+  objtape_ind <- tape_ld_mobius_SvMF_partransport_nota1(omvec = om0vec, k = preplist$k,
                                        a1 = a1, 
                                        aremaining = aremaining,
                                        G0 = preplist$G0,
@@ -210,7 +210,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   fullparam <- c(meanpars, nlopt$solution[-(1:length(conprep$x0))])
 
   
-  estparamlist <- Mobius_SvMF_partan_nota1_fromvecparamsR(fullparam, p, qs, qe, 
+  estparamlist <- mobius_SvMF_partransport_nota1_fromvecparams_forR(fullparam, p, qs, qe, 
                                                   referencecoords = G0reference,
                                                   G01behaviour = G01behaviour,
                                                   G01 = preplist$G0[,1])
@@ -335,7 +335,7 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G
   if (!is.null(G0) && all(!is.na(G0))){
     # if G0 fully supplied just use rresid to approximate scales a using the high concentration approximation
     if (G01behaviour == "p1"){
-      G0 <- cbind(G01, -JuppRmat(G0[,1], G01) %*% G0[,-1])
+      G0 <- cbind(G01, -jupp_Rmat(G0[,1], G01) %*% G0[,-1])
     }
     aremaining <- SvMF_prelim_scales(rresid, G0)
   } else {
@@ -379,12 +379,12 @@ mobius_SvMF_konly <- function(y, ymean, a, G0){
 #' @return A matrix of `p+1` columns and the same number of rows as `xs` or `xe`. The final column is the log-density of the simulated response.
 #' @family regression
 #' @export
-rMobius_SvMF <- function(xs, xe, mean, k, a, G0){
+rmobius_SvMF <- function(xs, xe, mean, k, a, G0){
   ymean <- mobius_link(xs = xs, xe = xe, param = mean)
   
   # simulate noise
   y_ld <- t(apply(ymean, 1, function(mn){
-    G <- cbind(mn, -JuppRmat(G0[,1], mn) %*% G0[,-1])
+    G <- cbind(mn, -jupp_Rmat(G0[,1], mn) %*% G0[,-1])
     obs <- rSvMF(1, SvMF_cann(k, a, G))
     ld <- ldSvMF_cann(obs, k = k, a = a, G = G)
     return(c(obs, ld))
@@ -407,7 +407,7 @@ undo_partransport <- function(y, ymean, G01){
 }
 
 #' @title log-density of data for a given SvMF regression
-#' @param mean Parameter object (see [`mnlink_params`]) specifying mean link.
+#' @param mean Parameter object (see [`mobius_link_params`]) specifying mean link.
 #' @param k Concentration of the SvMF error distribution
 #' @param a Scales of the SvMF error distribution
 #' @param G0 The base location of parallel transport along with axes \eqn{\gamma_{0j}}, \eqn{j=2,...,p}.

@@ -28,7 +28,7 @@ SvMF_log_lik_muV <- function(y, param){
   list2env(param, envir = environment())
   p <- length(m)
   lconst <- -vMF_log_norm_const_exact(k, p) - log(a1) #from Scealy and Wood 2019, this nice and simple for p = 3
-  Hstar <- getHstar(m)
+  Hstar <- get_Hstar(m)
   ystarstarL <- y %*% Hstar
   denom <- sqrt(drop((y %*% m/a1)^2) + rowSums((ystarstarL %*% solve(V))*ystarstarL))
 

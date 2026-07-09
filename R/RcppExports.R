@@ -80,24 +80,20 @@ besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
     .Call(`_sphm_besselImixed`, x, nu, threshold, order, log_result)
 }
 
-mnlink_cpp <- function(xs, xe, vec, p) {
-    .Call(`_sphm_mnlink_cpp`, xs, xe, vec, p)
+cayley_transform <- function(A) {
+    .Call(`_sphm_cayley_transform`, A)
 }
 
-cayleyTransform <- function(A) {
-    .Call(`_sphm_cayleyTransform`, A)
+inverse_cayley_transform <- function(M) {
+    .Call(`_sphm_inverse_cayley_transform`, M)
 }
 
-inverseCayleyTransform <- function(M) {
-    .Call(`_sphm_inverseCayleyTransform`, M)
+vectorize_lower_triangle <- function(A) {
+    .Call(`_sphm_vectorize_lower_triangle`, A)
 }
 
-vectorizeLowerTriangle <- function(A) {
-    .Call(`_sphm_vectorizeLowerTriangle`, A)
-}
-
-inverseVectorizeLowerTriangle <- function(vec) {
-    .Call(`_sphm_inverseVectorizeLowerTriangle`, vec)
+inverse_vectorize_lower_triangle <- function(vec) {
+    .Call(`_sphm_inverse_vectorize_lower_triangle`, vec)
 }
 
 #' @noRd
@@ -106,12 +102,12 @@ inverseVectorizeLowerTriangle <- function(vec) {
 #' @details The scales `aremaining` are constrained to have a product of `1` and be positive. This function encodes these restrictions by dropping the first element of `aremaining` and converting the other elements to \eqn{log(a_j)} etc.
 #' @param G0 are the orientation axes of SvMF in cannonical coordinate (p x p matrix). Ideally G0 is close to the referencecoords axes. G0 must be a rotation matrix (det > 0) so that the Cayley transform representation works.
 #' @param referencecoords is a p x p orthonormal matrix specifying the reference coordinates for the Cayley transforms. It is best if referencecoords is close to the best G0 (so rG0 is close the identity) and it will fail if `G01` is the antepode of `referencoords[,1]`.
-Mobius_SvMF_partan_nota1_tovecparams <- function(omvec, k, aremaining, G0, referencecoords, G01behaviour) {
-    .Call(`_sphm_Mobius_SvMF_partan_nota1_tovecparams`, omvec, k, aremaining, G0, referencecoords, G01behaviour)
+mobius_SvMF_partransport_nota1_tovecparams <- function(omvec, k, aremaining, G0, referencecoords, G01behaviour) {
+    .Call(`_sphm_mobius_SvMF_partransport_nota1_tovecparams`, omvec, k, aremaining, G0, referencecoords, G01behaviour)
 }
 
-Mobius_SvMF_partan_nota1_fromvecparamsR <- function(mainvec, p, qs, qe, referencecoords, G01behaviour, G01 = NULL) {
-    .Call(`_sphm_Mobius_SvMF_partan_nota1_fromvecparamsR`, mainvec, p, qs, qe, referencecoords, G01behaviour, G01)
+mobius_SvMF_partransport_nota1_fromvecparams_forR <- function(mainvec, p, qs, qe, referencecoords, G01behaviour, G01 = NULL) {
+    .Call(`_sphm_mobius_SvMF_partransport_nota1_fromvecparams_forR`, mainvec, p, qs, qe, referencecoords, G01behaviour, G01)
 }
 
 #' @noRd
@@ -131,12 +127,16 @@ Mobius_SvMF_partan_nota1_fromvecparamsR <- function(mainvec, p, qs, qe, referenc
 #' The function projects the parameter object `om` such that the matrix Omega is orthogonal to p1, qs1 and qe1.
 NULL
 
-ld_Mobius_SvMF_partran_forR <- function(y, xs, xe, omvec, k, a1, aremaining, G0) {
-    .Call(`_sphm_ld_Mobius_SvMF_partran_forR`, y, xs, xe, omvec, k, a1, aremaining, G0)
+ld_mobius_SvMF_partransport_forR <- function(y, xs, xe, omvec, k, a1, aremaining, G0) {
+    .Call(`_sphm_ld_mobius_SvMF_partransport_forR`, y, xs, xe, omvec, k, a1, aremaining, G0)
 }
 
-tape_ld_Mobius_SvMF_partran_nota1 <- function(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour) {
-    .Call(`_sphm_tape_ld_Mobius_SvMF_partran_nota1`, omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour)
+tape_ld_mobius_SvMF_partransport_nota1 <- function(omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour) {
+    .Call(`_sphm_tape_ld_mobius_SvMF_partransport_nota1`, omvec, k, a1, aremaining, G0star, p_in, qe_in, yx, referencecoords, G01behaviour)
+}
+
+mobius_link_cpp <- function(xs, xe, vec, p) {
+    .Call(`_sphm_mobius_link_cpp`, xs, xe, vec, p)
 }
 
 #' @noRd

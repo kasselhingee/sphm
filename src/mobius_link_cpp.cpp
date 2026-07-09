@@ -2,7 +2,7 @@
 #include "mobius_link_cpp.h"
 #include "Omega.h"
 
-mata1 mnlink_cpp(const mata1 &xs, const mata1 &xe, const veca1 &vec, const int p) {
+mata1 mobius_link_cpp(const mata1 &xs, const mata1 &xe, const veca1 &vec, const int p) {
   int qe = xe.cols();
   // Convert vector to a mobius_link_Omega_cpp object
   mobius_link_Omega_cpp<a1type> ompar = mobius_link_Omega_cpp_unvec(vec, p, qe);

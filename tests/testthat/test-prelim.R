@@ -330,7 +330,7 @@ test_that("Hessian eigenvalues match DoF", {
   #qs1 size, 
   #qe1 size, 
   #Omega orthogonal to qs1 and qe1
-  #maybe more in mnlink_cpp()?
+  #maybe more in mobius_link_cpp()?
   #So far it is omitting the commutativity constraints on Omega
   #which have (p-1) * (p - 2) / 2 DoF
   evals <- eigen(fit$nlopt$solution_Hes_f, symmetric = TRUE, only.values = TRUE)$values

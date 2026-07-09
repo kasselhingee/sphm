@@ -37,7 +37,7 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
     mata1 commutediff = OmOm * OmpartOmpart - OmpartOmpart * OmOm; //OmOm etc are always symmetric, so commutediff is always antisymmetric
     //rotate commutediff so that p1 is the northpole
     veca1 nthpole = vecd::Unit(ompar_proj.p, 0);
-    mata1 rotmat = JuppRmat(ompar_proj.p1, nthpole);
+    mata1 rotmat = jupp_Rmat(ompar_proj.p1, nthpole);
     commutediff = rotmat * commutediff * (rotmat.transpose());
     // place lower triangular elements into commutecheck
     // ignoring elements that must be zero because nthpole * commutediff = 0.

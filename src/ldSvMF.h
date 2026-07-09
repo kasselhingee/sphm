@@ -22,7 +22,7 @@ veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V);
 
 //' @noRd 
 //' @description Get the Hstar matrix from Scealy and Wood (2019, Section 3) for a mean vector m
-mata1 getHstar(veca1 m);
+mata1 get_Hstar(veca1 m);
 
 //' @noRd
 //' @description

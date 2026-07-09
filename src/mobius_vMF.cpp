@@ -17,7 +17,7 @@ veca1 prelimobj_cpp(veca1 & omvec, veca1 & dyn, vecd & dims_in, matd & yx){
   omvec_projected = mobius_link_Omega_cpp_vec(om_projected);  
 
   mata1 ypred;
-  ypred = mnlink_cpp(xs, xe, omvec_projected, p);
+  ypred = mobius_link_cpp(xs, xe, omvec_projected, p);
   veca1 obj;
   // obj is mu.x = (log(vMF density) - log(vMF norm const(k)))/k
   // therefor the gradient of obj wrt mu is: grad(mu.x) = grad(log(vMF density))/k

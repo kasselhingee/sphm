@@ -13,7 +13,7 @@ mobius_SvMF_log_lik(y, xs, xe, mean, k, a, G0)
 
 \item{xe}{Covariate data in Euclidean Space}
 
-\item{mean}{Parameter object (see \code{\link{mnlink_params}}) specifying mean link.}
+\item{mean}{Parameter object (see \code{\link{mobius_link_params}}) specifying mean link.}
 
 \item{k}{Concentration of the SvMF error distribution}
 
@@ -33,6 +33,6 @@ Other regression:
 \code{\link{mobius_dof}()},
 \code{\link{mobius_vMF}()},
 \code{\link{mobius_vMF_refit}()},
-\code{\link{rMobius_SvMF}()}
+\code{\link{rmobius_SvMF}()}
 }
 \concept{regression}

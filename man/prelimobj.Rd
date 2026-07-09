@@ -11,7 +11,7 @@ prelimobj(y, xs = NULL, xe = NULL, param)
 
 \item{xe}{A matrix of row-vectors of the Euclidean covariates.}
 
-\item{param}{Parameters of the mean link. As an object of class "mobius_link_Omega" or "mobius_link_cann". See \code{\link{mnlink_params}}.}
+\item{param}{Parameters of the mean link. As an object of class "mobius_link_Omega" or "mobius_link_cann". See \code{\link{mobius_link_params}}.}
 }
 \description{
 Internal objective function used by \code{\link[=mobius_vMF]{mobius_vMF()}}.

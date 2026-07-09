@@ -23,7 +23,7 @@ rSvMF <- function(n, param, check = TRUE)
 	muv[1]=1
 	K=diag(p)
 	#simulated sample from von mises fisher distribution:
-	sims=simKent(n, kappav,betav,muv,K)
+	sims=sim_kent(n, kappav,betav,muv,K)
 	yv=sims$y
 
 	a=eigen(V)$values
@@ -76,9 +76,9 @@ rSvMF <- function(n, param, check = TRUE)
 }
 
 
-##simKent simulates a value of y from the Kent distribution.
+##sim_kent simulates a value of y from the Kent distribution.
 ##kappa,beta,mu and K are the values of the parameters
-simKent=function(n, kappa,beta,mu,K)
+sim_kent=function(n, kappa,beta,mu,K)
 {
   p <- length(mu)
   skappa=matrix(kappa,n,1)

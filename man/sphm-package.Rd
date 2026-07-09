@@ -45,7 +45,7 @@ n <- 50; p <- 3
 xs <- matrix(rnorm(n * p), n, p)
 xs <- xs / sqrt(rowSums(xs^2))
 mean_params <- rand_mobius_link_cann(p = p, qs = p, qe = 0)
-sim <- rMobius_SvMF(xs = xs, xe = NULL, mean = mean_params,
+sim <- rmobius_SvMF(xs = xs, xe = NULL, mean = mean_params,
                     k = 5, a = c(1, 2, 0.5), G0 = diag(p))
 y <- sim[, 1:p]
 
@@ -59,7 +59,7 @@ fit_SvMF <- mobius_SvMF(y = y, xs = xs,           # Step 2
 \tabular{ll}{
    Task \tab Function \cr
    \strong{Fit regression} \tab \code{\link[=mobius_SvMF]{mobius_SvMF()}}, \code{\link[=mobius_vMF]{mobius_vMF()}}, \code{\link[=mobius_vMF_refit]{mobius_vMF_refit()}} \cr
-   \strong{Simulate data} \tab \code{\link[=rMobius_SvMF]{rMobius_SvMF()}}, \code{\link[=rSvMF]{rSvMF()}} \cr
+   \strong{Simulate data} \tab \code{\link[=rmobius_SvMF]{rmobius_SvMF()}}, \code{\link[=rSvMF]{rSvMF()}} \cr
    \strong{Evaluate link} \tab \code{\link[=mobius_link]{mobius_link()}} \cr
    \strong{Residuals} \tab \code{\link[=rotated_resid]{rotated_resid()}}, \code{\link[=parallel_transport_mat]{parallel_transport_mat()}} \cr
    \strong{SvMF density} \tab \code{\link[=dSvMF]{dSvMF()}}, \code{\link[=mobius_SvMF_log_lik]{mobius_SvMF_log_lik()}} \cr

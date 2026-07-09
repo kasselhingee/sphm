@@ -14,13 +14,13 @@ test_that("to and from vecparams functions correctly", {
   referencecoords[, p] <- det(referencecoords) * referencecoords[,p]
   
   # G01 identified with p1
-  G01_p1 <- cbind(omegapar$p1, -JuppRmat(G0[,1], omegapar$p1) %*% G0[,-1])
-  vecparams <- Mobius_SvMF_partan_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
+  G01_p1 <- cbind(omegapar$p1, -jupp_Rmat(G0[,1], omegapar$p1) %*% G0[,-1])
+  vecparams <- mobius_SvMF_partransport_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
                                             aremaining = a[-1],
                                             G0 = G01_p1,
                                             referencecoords = referencecoords,
                                             G01behaviour = "p1")
-  expect_equal(Mobius_SvMF_partan_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "p1"),
+  expect_equal(mobius_SvMF_partransport_nota1_fromvecparams_forR(vecparams, p, qs, qe, referencecoords, G01behaviour = "p1"),
                list(omvec = mobius_link_Omega_vec(omegapar),
                     k = k,
                     aremaining = a[-1],
@@ -29,13 +29,13 @@ test_that("to and from vecparams functions correctly", {
   vecparams_p1 <- vecparams
   
   # G01 fixed
-  vecparams <- Mobius_SvMF_partan_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
+  vecparams <- mobius_SvMF_partransport_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
                                             aremaining = a[-1],
                                             G0 = G0,
                                             referencecoords = referencecoords,
                                             G01behaviour = "fixed")
   expect_equal(length(vecparams), veclength)
-  expect_equal(Mobius_SvMF_partan_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "fixed", G01 = G0[,1]),
+  expect_equal(mobius_SvMF_partransport_nota1_fromvecparams_forR(vecparams, p, qs, qe, referencecoords, G01behaviour = "fixed", G01 = G0[,1]),
                list(omvec = mobius_link_Omega_vec(omegapar),
                     k = k,
                     aremaining = a[-1],
@@ -43,13 +43,13 @@ test_that("to and from vecparams functions correctly", {
   vecparams_fixed <- vecparams
   
   # G01 free
-  vecparams <- Mobius_SvMF_partan_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
+  vecparams <- mobius_SvMF_partransport_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
                                             aremaining = a[-1],
                                             G0 = G0,
                                             referencecoords = referencecoords,
                                             G01behaviour = "free")
   expect_equal(length(vecparams), veclength + p-1)
-  expect_equal(Mobius_SvMF_partan_nota1_fromvecparamsR(vecparams, p, qs, qe, referencecoords, G01behaviour = "free"),
+  expect_equal(mobius_SvMF_partransport_nota1_fromvecparams_forR(vecparams, p, qs, qe, referencecoords, G01behaviour = "free"),
                list(omvec = mobius_link_Omega_vec(omegapar),
                     k = k,
                     aremaining = a[-1],
@@ -83,17 +83,17 @@ test_that("MLE with p1 = G01", {
   set.seed(5)
   G0_other <- mclust::randomOrthogonalMatrix(p, p) #axes around a random location
   G0_other[, p] <- det(G0_other) * G0_other[,p]
-  G0 <- cbind(omegapar$p1, -JuppRmat(G0_other[,1], omegapar$p1) %*% G0_other[,-1])
+  G0 <- cbind(omegapar$p1, -jupp_Rmat(G0_other[,1], omegapar$p1) %*% G0_other[,-1])
   
   # simulate observations
   set.seed(7)
   k <- 30
   a <- c(1, seq(1, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
-  y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
+  y_ld <- rmobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
 
-  # check ld_Mobius_SvMF_partran in C++
-  ldCpp <- ld_Mobius_SvMF_partran_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mobius_link_Omega_vec(omegapar), k = k,
+  # check ld_mobius_SvMF_partransport in C++
+  ldCpp <- ld_mobius_SvMF_partransport_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mobius_link_Omega_vec(omegapar), k = k,
                                a1 = a[1], aremaining = a[-1], G0 = G0)
   expect_equal(ldCpp, y_ld[, p+1])
   
@@ -102,12 +102,12 @@ test_that("MLE with p1 = G01", {
   set.seed(7)
   referencecoords <- mclust::randomOrthogonalMatrix(p, p)
   referencecoords[, p] <- det(referencecoords) * referencecoords[,p]
-  vecparams <- Mobius_SvMF_partan_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
+  vecparams <- mobius_SvMF_partransport_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
                                             aremaining = a[-1],
                                             G0 = G0, 
                                             referencecoords = referencecoords,
                                             G01behaviour = "p1")
-  expect_warning({ulltape <- tape_ld_Mobius_SvMF_partran_nota1(omvec = mobius_link_Omega_vec(omegapar), k = k,
+  expect_warning({ulltape <- tape_ld_mobius_SvMF_partransport_nota1(omvec = mobius_link_Omega_vec(omegapar), k = k,
                                                        a1 = a[1], aremaining = a[-1],
                                                        G0 = G0,
                                                        p, qe,
@@ -122,9 +122,9 @@ test_that("MLE with p1 = G01", {
   set.seed(18)
   G0_other <- mclust::randomOrthogonalMatrix(p, p) #axes around a random location
   G0_other[, p] <- det(G0_other) * G0_other[,p]
-  G0stardifferent <- -JuppRmat(G0_other[,1], omegapar$p1) %*% G0_other[,-1]
+  G0stardifferent <- -jupp_Rmat(G0_other[,1], omegapar$p1) %*% G0_other[,-1]
   badll <- sum(ulltape$forward(0, 
-                               Mobius_SvMF_partan_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
+                               mobius_SvMF_partransport_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
                                                             aremaining = a[-1], 
                                                             G0 = cbind(omegapar$p1, G0stardifferent),
                                                             referencecoords = referencecoords,
@@ -178,10 +178,10 @@ test_that("MLE with G01 fixed", {
   k <- 30
   a <- c(1, seq(1, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
-  y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
+  y_ld <- rmobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
   
-  # check ld_Mobius_SvMF_partran in C++
-  ldCpp <- ld_Mobius_SvMF_partran_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mobius_link_Omega_vec(omegapar), k = k,
+  # check ld_mobius_SvMF_partransport in C++
+  ldCpp <- ld_mobius_SvMF_partransport_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mobius_link_Omega_vec(omegapar), k = k,
                                a1 = a[1], aremaining = a[-1], G0 = G0)
   expect_equal(ldCpp, y_ld[, p+1])
   
@@ -190,12 +190,12 @@ test_that("MLE with G01 fixed", {
   set.seed(7)
   referencecoords <- mclust::randomOrthogonalMatrix(p, p)
   referencecoords[, p] <- det(referencecoords) * referencecoords[,p]
-  vecparams <- Mobius_SvMF_partan_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
+  vecparams <- mobius_SvMF_partransport_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
                                             aremaining = a[-1],
                                             G0 = G0, 
                                             referencecoords = referencecoords,
                                             G01behaviour = "fixed")
-  expect_warning({ulltape <- tape_ld_Mobius_SvMF_partran_nota1(omvec = mobius_link_Omega_vec(omegapar), k = k,
+  expect_warning({ulltape <- tape_ld_mobius_SvMF_partransport_nota1(omvec = mobius_link_Omega_vec(omegapar), k = k,
                                                        a1 = a[1], aremaining = a[-1],
                                                        G0 = G0,
                                                        p, qe,
@@ -210,9 +210,9 @@ test_that("MLE with G01 fixed", {
   set.seed(18)
   G0_other <- mclust::randomOrthogonalMatrix(p, p) #axes around a random location
   G0_other[, p] <- det(G0_other) * G0_other[,p]
-  G0stardifferent <- -JuppRmat(G0_other[,1], G0[,1]) %*% G0_other[,-1]
+  G0stardifferent <- -jupp_Rmat(G0_other[,1], G0[,1]) %*% G0_other[,-1]
   badll <- sum(ulltape$forward(0, 
-                               Mobius_SvMF_partan_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
+                               mobius_SvMF_partransport_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
                                                             aremaining = a[-1], 
                                                             G0 = cbind(G0[,1], G0stardifferent),
                                                             referencecoords = referencecoords,
@@ -264,10 +264,10 @@ test_that("MLE with G01 free, p=5", {
   a <- c(1, seq(0.8, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
   SvMF_cann_check(SvMF_cann(k, a, G0))
-  y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
+  y_ld <- rmobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
   
-  # check ld_Mobius_SvMF_partran in C++
-  ldCpp <- ld_Mobius_SvMF_partran_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mobius_link_Omega_vec(omegapar), k = k,
+  # check ld_mobius_SvMF_partransport in C++
+  ldCpp <- ld_mobius_SvMF_partransport_forR(y = y_ld[, 1:p], xs = x$xs, xe = x$xe, omvec = mobius_link_Omega_vec(omegapar), k = k,
                                a1 = a[1], aremaining = a[-1], G0 = G0)
   expect_equal(ldCpp, y_ld[, p+1])
   
@@ -276,12 +276,12 @@ test_that("MLE with G01 free, p=5", {
   set.seed(7)
   referencecoords <- mclust::randomOrthogonalMatrix(p, p)
   referencecoords[, p] <- det(referencecoords) * referencecoords[,p]
-  vecparams <- Mobius_SvMF_partan_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
+  vecparams <- mobius_SvMF_partransport_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
                                             aremaining = a[-1],
                                             G0 = G0, 
                                             referencecoords = referencecoords,
                                             G01behaviour = "free")
-  expect_warning({ulltape <- tape_ld_Mobius_SvMF_partran_nota1(omvec = mobius_link_Omega_vec(omegapar), k = k,
+  expect_warning({ulltape <- tape_ld_mobius_SvMF_partransport_nota1(omvec = mobius_link_Omega_vec(omegapar), k = k,
                                                        a1 = a[1], aremaining = a[-1],
                                                        G0 = G0,
                                                        p, qe,
@@ -297,7 +297,7 @@ test_that("MLE with G01 free, p=5", {
   G0_other <- mclust::randomOrthogonalMatrix(p, p) #axes around a random location
   G0_other[, p] <- det(G0_other) * G0_other[,p]
   badll <- sum(ulltape$forward(0, 
-                               Mobius_SvMF_partan_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
+                               mobius_SvMF_partransport_nota1_tovecparams(omvec = mobius_link_Omega_vec(omegapar), k = k,
                                                             aremaining = a[-1], 
                                                             G0 = G0_other,
                                                             referencecoords = referencecoords,
@@ -331,13 +331,13 @@ test_that("Cayley transform and vectorisation works", {
   p <- 3
   set.seed(100)
   M <- mclust::randomOrthogonalMatrix(p, p)
-  A <- inverseCayleyTransform(M)
+  A <- inverse_cayley_transform(M)
   expect_equal(A[upper.tri(A)], -A[lower.tri(A)])
   expect_equal(diag(A), rep(0, p))
-  expect_equal(cayleyTransform(A), M)
+  expect_equal(cayley_transform(A), M)
   
-  expect_equal(vectorizeLowerTriangle(A), A[lower.tri(A)])
-  expect_equal(inverseVectorizeLowerTriangle(vectorizeLowerTriangle(A)), A)
+  expect_equal(vectorize_lower_triangle(A), A[lower.tri(A)])
+  expect_equal(inverse_vectorize_lower_triangle(vectorize_lower_triangle(A)), A)
 })
 
 test_that("Under high concentration, standardised residuals are the correct MVN", {
@@ -354,7 +354,7 @@ test_that("Under high concentration, standardised residuals are the correct MVN"
   k <- 500
   a <- c(1, seq(5, 0.2, length.out = p-1))
   a[-1] <- a[-1]/prod(a[-1])^(1/(p-1))
-  y_ld <- rMobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
+  y_ld <- rmobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
   
   exactresids <- resid_SvMF_partransport(y_ld[, 1:p], mobius_link(xs = x$xs, xe = x$xe, param = omegapar), k, a, G0)
   expect_gt(ks.test(rowSums(exactresids^2), "pchisq", df = ncol(exactresids))$p.value, 0.05)

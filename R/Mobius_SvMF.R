@@ -73,7 +73,7 @@ mobius_SvMF <- function(y, xs = NULL, xe = NULL, mean = NULL, k = NULL, a = NULL
   }
 
   # Explicit caller-supplied k, a, G0reference take precedence over the prelim estimates.
-  finalest <- optim_constV(y, xs, xe,
+  finalest <- mobius_SvMF_joint_fit(y, xs, xe,
                            mean = preest$mean,
                            k = if(!is.null(k)){k}else{preest$k},
                            a = if(!is.null(a)){a}else{preest$a},
@@ -89,7 +89,7 @@ mobius_SvMF <- function(y, xs = NULL, xe = NULL, mean = NULL, k = NULL, a = NULL
 # scale structure (a and G0 are estimated, but the constraint prod(a[-1]) = 1 is enforced).
 # Called by mobius_SvMF() after the preliminary vMF estimate. Uses automatic differentiation
 # (CppAD via scorematchingad) and a gradient-based solver (nloptr/SLSQP).
-optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "LinEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, lb = NULL, ub = NULL, ...){
+mobius_SvMF_joint_fit <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "LinEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, lb = NULL, ub = NULL, ...){
   initial <-  list(
     mean = mean,
     k = k, 

@@ -132,7 +132,7 @@ test_that("MLE with p1 = G01", {
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "p1", 
+  expect_warning({est1 <- mobius_SvMF_joint_fit(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "p1", 
                                        type = "SpEuc", intercept = FALSE)}, "p!=3")
   expect_equal(est1$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
@@ -144,7 +144,7 @@ test_that("MLE with p1 = G01", {
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mobius_link_Omega(rand_mobius_link_cann(p, qs, qe, preseed = 2))
   preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "SpEuc", G01behaviour = "p1", intercept = FALSE)
-  expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, 
+  expect_warning({est2 <- mobius_SvMF_joint_fit(y_ld[, 1:p], x$xs, x$xe, 
                                        mean = preest$mean, k = preest$k, a = preest$a, G0 = preest$G0,
                                        G01behaviour = "p1",
                                        type = "SpEuc", intercept = FALSE)}, "p!=3")
@@ -220,7 +220,7 @@ test_that("MLE with G01 fixed", {
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "fixed",
+  expect_warning({est1 <- mobius_SvMF_joint_fit(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "fixed",
                                        type = "SpEuc", intercept = FALSE)}, "p!=3")
   expect_equal(est1$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
@@ -230,7 +230,7 @@ test_that("MLE with G01 fixed", {
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mobius_link_Omega(rand_mobius_link_cann(p, qs, qe, preseed = 2))
   preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "SpEuc", G0 = cbind(G0[,1], matrix(NA, p, p-1)), G01behaviour = "fixed", intercept = FALSE)
-  expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, 
+  expect_warning({est2 <- mobius_SvMF_joint_fit(y_ld[, 1:p], x$xs, x$xe, 
                                        mean = preest$mean, k = preest$k, a = preest$a, G0 = preest$G0,
                                        G01behaviour = "fixed",
                                        type = "SpEuc", intercept = FALSE)}, "p!=3")
@@ -305,7 +305,7 @@ test_that("MLE with G01 free, p=5", {
   expect_lt(badll, exactll)
   
   ## now try optimisation starting at true values ##
-  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "free",
+  expect_warning({est1 <- mobius_SvMF_joint_fit(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = referencecoords, G01behaviour = "free",
                                        type = "SpEuc", intercept = FALSE)}, "p!=3")
   expect_equal(est1$mean, omegapar, tolerance = 1E-1)
   expect_equal(est1[c("k", "a")], list(k = k, a = a), tolerance = 1E-1)
@@ -318,7 +318,7 @@ test_that("MLE with G01 free, p=5", {
   ## now starting optimisation away from starting parameters ##
   bad_om <- as_mobius_link_Omega(rand_mobius_link_cann(p, qs, qe, preseed = 2))
   preest <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe, mean = bad_om, type = "SpEuc", intercept = FALSE, G01behaviour = "free")
-  expect_warning({est2 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, 
+  expect_warning({est2 <- mobius_SvMF_joint_fit(y_ld[, 1:p], x$xs, x$xe, 
                                        mean = preest$mean, k = preest$k, a = preest$a, G0 = preest$G0,
                                        G01behaviour = "free",
                                        type = "SpEuc", intercept = FALSE)}, "p!=3")
@@ -359,7 +359,7 @@ test_that("Under high concentration, standardised residuals are the correct MVN"
   exactresids <- resid_SvMF_partransport(y_ld[, 1:p], mobius_link(xs = x$xs, xe = x$xe, param = omegapar), k, a, G0)
   expect_gt(ks.test(rowSums(exactresids^2), "pchisq", df = ncol(exactresids))$p.value, 0.05)
   
-  expect_warning({est1 <- optim_constV(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = G0, G01behaviour = "fixed",
+  expect_warning({est1 <- mobius_SvMF_joint_fit(y_ld[, 1:p], x$xs, x$xe, omegapar, k, a, G0, xtol_rel = 1E-4, G0reference = G0, G01behaviour = "fixed",
                                        type = "SpEuc", intercept = FALSE)}, "p!=3")
   
   expect_gt(ks.test(rowSums(est1$rresids_std^2), "pchisq", df = ncol(est1$rresids_std))$p.value, 0.05)

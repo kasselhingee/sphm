@@ -59,9 +59,16 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
   # check inputs:
   check_meanlink(preplist$y, preplist$xs, preplist$xe, om0)
 
-  # Prepare constraint tape
+  # Set up constraints: tape, fixed-parameter mask, and (possibly perturbed) starting point
   conprep <- estprep_meanconstraints(om0, fix_qs1, fix_qe1)
-  # below updates om0vec with x0 values according to isfixed
+  # conprep$om0vec          - starting parameters as a vector: c(p1, qs1, qe1, Omega, ce)
+  # conprep$isfixed         - logical mask: which positions in om0vec are held fixed
+  # conprep$x0              - free-parameter starting values (om0vec[!isfixed]), possibly
+  #                           perturbed to avoid a singular constraint Jacobian
+  # conprep$constraint_tape - AD tape for orthonormality constraints on P, Qs, Qe
+  # Rebuild om0vec incorporating any perturbation in conprep$x0. om0vec then serves as the
+  # fixed-value carrier in the later t_sfi2u call: t_sfi2u(nlopt$solution, om0vec, isfixed)
+  # reconstructs the full parameter vector after optimisation using om0vec's fixed positions.
   om0vec <- scorematchingad:::t_sfi2u(conprep$x0, conprep$om0vec, conprep$isfixed)
 
   # Prepare objective tape.
@@ -217,6 +224,35 @@ check_meanlink <- function(y, xs, xe, om0){
   }
 }
 
+#' @title Prepare mean-link constraint setup for optimisation
+#' @description
+#' Prepares the constraint tape, fixed-parameter mask, and starting point for constrained
+#' optimisation of the Mobius mean link parameters in [`mobius_vMF()`].
+#' Specifically, the function:
+#' 1. Vectorises `om0` to `om0vec`, the starting parameters as `c(p1, qs1, qe1, Omega, ce)`.
+#' 2. Creates an AD constraint tape evaluating the orthonormality constraints on `P`, `Qs`,
+#'    `Qe` and their Jacobians.
+#' 3. Determines `isfixed` — a logical mask of which positions in `om0vec` are held constant,
+#'    based on `fix_qs1` and `fix_qe1`.
+#' 4. Reduces the tape via `fixindependent` and `keeprange`, dropping constraint outputs that
+#'    become constant once fixed parameters are removed.
+#' 5. Computes `x0 = om0vec[!isfixed]`, the free-parameter starting vector.
+#' 6. Checks the constraint Jacobian at `x0` for singularity (near-zero singular values).
+#' 7. If singular, perturbs `x0` by adding small noise (from a pregenerated matrix in
+#'    `R/sysdata.rda`) to the off-diagonal columns of `Qs` and `Qe`, then recomputes `x0`.
+#' @param om0 Starting [`mobius_link_Omega`] object.
+#' @param fix_qs1 Logical; whether to hold the first column of `Qs` fixed.
+#' @param fix_qe1 Logical; whether to hold `ce` and the first column of `Qe` fixed.
+#' @return A list:
+#' \describe{
+#'   \item{om0vec}{Starting parameters as a flat vector: `c(p1, qs1, qe1, Omega, ce)`.}
+#'   \item{isfixed}{Logical vector marking fixed positions in `om0vec`.}
+#'   \item{x0}{Starting values for the free (non-fixed) parameters, possibly perturbed to
+#'     avoid a singular constraint Jacobian.}
+#'   \item{constraint_tape}{AD tape evaluating orthonormality constraints on `P`, `Qs`, `Qe`
+#'     and their Jacobians, with fixed-parameter dimensions already reduced.}
+#' }
+#' @keywords internal
 estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
   dims_in <- c(length(om0$p1), length(om0$qe1))
   om0vec <- mobius_link_Omega_vec(om0)

@@ -161,19 +161,29 @@ tape_besselImixed <- function(x, nu, threshold, order, log_result = TRUE) {
 }
 
 #' @noRd
-#' @title Function for taping a general function. 
-#' @description The function must have signature
-#' `veca1 fun(const veca1 & independent, const veca2 & dynamic, const vecd & constvec, const matd & constmat)`.
-#' Differentiation of `fun` will occur with respect to the independent arguments. The taping will keep of dependence on the dynamic arguments so that the value of the dynamic arguments can be changed in the tape. The constants (constvec and constmat) will be baked into the tape (to change these constants `tapefun` will have to be called again.
-#' 
-#' If some of the arguments are unwanted, I'm hoping I can write the function so that vectors of length zero are okay.
+#' @title Create a CppAD automatic differentiation tape of a named C++ function
+#' @description
+#' Records the computation of a named C++ function using CppAD operator overloading, producing
+#' a `pADFun` tape object that supports fast evaluation and exact differentiation.
+#' The returned tape supports `$forward(0, x)` (evaluate), `$Jacobian(x)`, and `$Hessian0(x)`.
 #'
-#' @param fun A function with the correct signature.
-#' @param ind_t The value of the independent argument to use for taping.
-#' @param dyn_t The value of the dynamic argument to use for taping.
-#' @param constants The value of the constants argument.
-#' @param check_for_nan Should the tape watch for nan values when in use? This can be useful to let the tape pass nan back to R
-#' @param func_name Name of function to tape. Name must be in the internal `function_map` object.
+#' The `func_name` must be a key in the internal `function_map` (see `src/function_map.h`):
+#' - `"prelimobj_cpp"` — vMF preliminary objective
+#' - `"Omega_constraints_wrap"` — Omega orthonormality equality constraints
+#' - `"Omega_ineqconstraints"` — Omega inequality constraints
+#'
+#' Eventually this function is expected to be replaced by bespoke tape functions (as was done
+#' for the SvMF objective via `tape_ld_mobius_SvMF_partransport_nota1`).
+#'
+#' @param func_name Name of the C++ function to tape.
+#' @param ind_t Independent variables at their taping values. Differentiation is with respect
+#'   to these.
+#' @param dyn_t Dynamic variables at their taping values. These can be updated after taping
+#'   without re-taping (use `$new_dynamic()`).
+#' @param constvec Constant vector baked into the tape. Re-taping is needed to change these.
+#' @param constmat Constant matrix baked into the tape. Re-taping is needed to change these.
+#' @param check_for_nan If `TRUE`, the tape detects NaN values during evaluation (useful for
+#'   debugging but slower).
 tape_namedfun <- function(func_name, ind_t, dyn_t, constvec, constmat, check_for_nan) {
     .Call(`_sphm_tape_namedfun`, func_name, ind_t, dyn_t, constvec, constmat, check_for_nan)
 }

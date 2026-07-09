@@ -41,14 +41,19 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, lb = NULL, ub = NULL, ...){
   p <- ncol(y)
   preplist <- list(y = y, xs = xs, xe = xe, start = start)
-  # if needed, add Euclidean covariates and update start accordingly
+  # For LinEuc: prepend a dummy-zero column to xe so the first covariate direction is always
+  # fixed at the north pole (required by the LinEuc parameterisation); also append an
+  # intercept column of ones if intercept = TRUE. Updates start to match the augmented xe.
   preplist <- addEuccovars(preplist, type = type, intercept = intercept)
-  # standardise y, xe and xe and update start accordingly. Dont standardise xe if intercept = FALSE
+  # Rotate y so its empirical mean direction aligns with the north pole; center and whiten xe
+  # (if intercept = TRUE). Update start to match the new coordinates. This makes the default
+  # starting point (near-identity matrices) a sensible initial guess.
   preplist <- standardise_data(preplist, intercept)
   # If start not supplied, choose start close to identities since data standardised
   preplist <- defaultstart(preplist, type)
 
-  # Check LinEuc link initiated properly
+  # For LinEuc: verify that qe1 equals the north pole (is_LinEuc) and that the dummy column
+  # of xe is numerically zero, both required by the LinEuc parameterisation.
   if ((type == "LinEuc") && (!is.null(preplist$xe))){
     stopifnot(is_LinEuc(preplist$start))
     stopifnot(all(preplist$xe[, 1]^2 < sqrt(.Machine$double.eps)))
@@ -79,12 +84,18 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
   objtape <- tape_namedfun("prelimobj_cpp", om0vec, vector(mode = "numeric"), c(p, length(om0$qe1)), cbind(preplist$y,preplist$xs,preplist$xe), check_for_nan = FALSE)
   objtape <- scorematchingad::avgrange(objtape) #objtape initially returns a value for each measurement. Average here to get average over all data.
   
-  # update objtape based on fixed values
+  # Re-tape the objective with fixed parameters baked in as constants, reducing the tape's
+  # domain from length(om0vec) to sum(!isfixed) (free parameters only).
   objtape <- scorematchingad::fixindependent(objtape, objtape$xtape, conprep$isfixed)
-  # using tapeing values as starting parameters
+  # Use the taping values as the starting point for optimisation. These are the (possibly
+  # perturbed) starting values baked into the tape by estprep_meanconstraints.
   x0 <- objtape$xtape
   
   # prepare nloptr options
+  # NLOPT_LD_SLSQP: Sequential Least Squares Programming; gradient-based constrained
+  # optimiser suited here because the AD tapes supply exact gradients at low cost.
+  # tol_constraints_eq = 1E-1: constraints (orthonormality) are satisfied only approximately
+  # during optimisation; exact orthonormality is restored afterwards by Omega_proj.
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",
                 xtol_rel = 1E-10, #1E-04,
                 tol_constraints_eq = rep(1E-1, conprep$constraint_tape$range),
@@ -99,6 +110,7 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
   
   # Optimisation
   # current dynamic parameter values of tapes will be used
+  # nloptr minimises; the objective sum_i y_i . mu(x_i) is to be maximised, hence the negation.
   nlopt <- nloptr::nloptr(
     x0 = x0,
     eval_f = function(theta){
@@ -114,8 +126,12 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
   )
   if (!(nlopt$status %in% 1:4)){warning(nlopt$message)}
   
-  # Estimate concentration
-  # Note that the objective is average of y.ypred
+  # Estimate concentration k by a separate 1D search.
+  # Given the optimised mean link, the per-observation vMF log-likelihood is
+  #   -log_norm_const(k, p) + k * mean(y . ypred).
+  # The first term depends only on k and p; the second is k times the already-maximised
+  # objective (-nlopt$objective = mean(y . ypred)). So k can be found by a scalar optimise
+  # over k, treating mean(y . ypred) as fixed.
   res <- optimise(function(k){
     -vMF_log_norm_const_exact(k, p) + k * (-nlopt$objective) #full vMF log-likelihood (standardised by number of observations)
   }, lower = 1E-8, upper = 1E5, maximum = TRUE)
@@ -136,28 +152,35 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
   # insert any fixed values of mean parameters
   fullparam <- scorematchingad:::t_sfi2u(nlopt$solution, om0vec, conprep$isfixed)
  
-  #project mean pars to have correct orthogonality
+  # SLSQP satisfies orthonormality constraints only up to tol_constraints_eq = 1E-1;
+  # Omega_proj projects P, Qs, Qe back onto the exact Stiefel manifold.
   projectedom <- Omega_proj(mobius_link_Omega_unvec(fullparam, p, length(om0$qe1), check = FALSE))
   try({mobius_link_Omega_check(projectedom)})
 
   ### Making nicer return objects ###
-  # Aspects of the fit that are invariant to coordinates used
-  # distances in response space
+  # Residuals and distances are computed in the standardised coordinate system (before
+  # reverting), since they are invariant to the choice of coordinates.
   pred <- mobius_link(xs = preplist$xs, xe = preplist$xe, param = projectedom)
   dists <- acos(rowSums(pred * preplist$y))
+  # rotated_resid parallel-transports each observation to the north pole. The returned matrix
+  # has p columns: the first is the (normalised) response direction (always ~1 for small
+  # residuals). [, -1] drops it, keeping only the p-1 tangent components.
   rresids_tmp <- rotated_resid(preplist$y, pred, north_pole(ncol(preplist$y)))
   rresids <- rresids_tmp[, -1]
   attr(rresids, "samehemisphere") <-  attr(rresids_tmp, "samehemisphere")
   colnames(rresids) <- paste0("r", 1:ncol(rresids))
   
-  ### revert estimated parameters and pred to pre-standardisation coordinates ###
-  est <- undo_recoordinate_Omega(projectedom, 
-                          yrot = attr(preplist$y, "std_rotation"), 
+  # Invert the rotations and centering applied by standardise_data, expressing the estimated
+  # parameters in the original user-supplied coordinates.
+  est <- undo_recoordinate_Omega(projectedom,
+                          yrot = attr(preplist$y, "std_rotation"),
                           xsrot = attr(preplist$xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
-                          xerot = attr(preplist$xe, "std_rotation"), 
+                          xerot = attr(preplist$xe, "std_rotation"),
                           xecenter = attr(preplist$xe, "std_center"),
                           onescovaridx = preplist$onescovaridx)
-  ### Stabilise sign of Euc est based on ce ###
+  # The Euclidean link has an inherent sign ambiguity: replacing (ce, Qe, Be) with
+  # (-ce, -Qe, -Be) leaves the mean link unchanged. Convention is ce >= 0; Euc_signswitch
+  # flips all three if ce < 0.
   if (isTRUE(est$ce < 0)){est <- Euc_signswitch(est)}
   
   # DoF
@@ -176,7 +199,9 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
     nlopt = nlopt,
     y = y,
     xs = xs,
-    xe = if (!is.null(xe)){if (intercept){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))} else {xe}}, #this recovers any added covariates too
+    # destandardise_Euc inverts the centering and whitening from standardise_data; using
+    # preplist$xe also recovers any columns added by addEuccovars (dummy-zero and intercept).
+    xe = if (!is.null(xe)){if (intercept){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))} else {xe}},
     pred = destandardise_sph(pred, rotation = attr(preplist$y, "std_rotation")),
     rresids = rresids,
     dists = dists,
@@ -281,10 +306,15 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
     omfixed$qs1 <- omfixed$qs1 + 1
   }
   
-  # update constraint tapes based on omfixed
+  # Vectorise the omfixed marker through the Omega class so the logical mask aligns exactly
+  # with the positions in om0vec.
   isfixed <- mobius_link_Omega_vec(as_mobius_link_Omega(omfixed)) > 0.5
+  # Bake the fixed-parameter values into the constraint tape, reducing its domain to free
+  # parameters only (so the constraint Jacobian is over free parameters only).
   constraint_tape <- scorematchingad::fixindependent(constraint_tape, om0vec, isfixed)
-  # drop constraint returns that are constant:
+  # After fixing parameters, some constraint equations become identically zero (e.g. the
+  # orthonormality constraint on a fixed column is pre-satisfied). Drop those to keep the
+  # constraint Jacobian full-rank.
   keep <- which(vapply((1:constraint_tape$range)-1, function(i){!constraint_tape$parameter(i)}, FUN.VALUE = FALSE))
   constraint_tape <- scorematchingad::keeprange(constraint_tape, keep)
   
@@ -330,13 +360,20 @@ mobius_vMF_refit <- function(mod_vMF, preseed = 1){
                            qs = dims[["qs"]] - (dims[["qs"]] > 0 & mod_vMF$linktype$fix_qs1), 
                            qe = dims[["qe"]] - (dims[["qe"]] > 0 & mod_vMF$linktype$fix_qe1), 
                            preseed = preseed)
-  # for sitatuations with fixed elements, treat simulated matrices as part of the full matrix
+  # Goal: for each fixed first column (qe1 or qs1), construct a random starting matrix whose
+  # first column equals the fixed value and whose remaining columns are random in the
+  # orthogonal complement. Strategy:
+  #   1. rand_mobius_link_cann already generated a random matrix for the free columns only.
+  #   2. Prepend a zero placeholder column to form the full p x qe (or p x qs) matrix.
+  #   3. Apply the inverse parallel transport from the north pole to qe1 (or qs1), mapping
+  #      the placeholder first column to qe1 and rotating the free columns accordingly.
+  #   4. Overwrite the first column with the exact fixed value (guards against the edge case
+  #      where qe1 = -north_pole and parallel transport is a reflection, not a rotation).
   if (dims[["qe"]] > 0 & mod_vMF$linktype$fix_qe1){
     start$ce <- inparam$ce
-    # convert qe1 to nth pole
     rotmat <- parallel_transport_mat(inparam$qe1, north_pole(dims[["qe"]]))
-    # build Qe from deciding it is random in the space orthogonal to qe1
     rotQe <- rbind(0, start$Qe)
+    # Two cases depending on whether rand_mobius_link_cann returned a square or tall matrix
     if (ncol(rotQe) == dims["p"]){
       rotQe <- cbind(0, rotQe[,-1, drop = FALSE])
     } else if (ncol(rotQe) == dims["p"] - 1) { #case when qe=p and fix_qe1=TRUE
@@ -344,11 +381,10 @@ mobius_vMF_refit <- function(mod_vMF, preseed = 1){
     }
     rotQe[1,1] <- 1
     start$Qe <- t(rotmat) %*% rotQe
-    # put inparam$qe1 back in case inparam$qe1 = - north_pole(dims[["qe"]]) and rotmat is then a reflection not a rotation
+    # Overwrite first column: parallel transport may be a reflection when qe1 = -north_pole
     start$Qe[,1] <- inparam$qe1
   }
   if (dims[["qs"]] > 0 & mod_vMF$linktype$fix_qs1){
-    # convert qs1 to nth pole
     rotmat <- parallel_transport_mat(inparam$qs1, north_pole(dims[["qs"]]))
     rotQs <- rbind(0, start$Qs)
     if (ncol(rotQs) == dims["p"]){
@@ -358,7 +394,7 @@ mobius_vMF_refit <- function(mod_vMF, preseed = 1){
     }
     rotQs[1,1] <- 1
     start$Qs <- t(rotmat) %*% rotQs
-    # put inparam$qs1 back in case inparam$qs1 = - north_pole(dims[["qs"]]) and rotmat is then a reflection not a rotation
+    # Overwrite first column: parallel transport may be a reflection when qs1 = -north_pole
     start$Qs[,1] <- inparam$qs1
   }
   start <- as_mobius_link_Omega(start)

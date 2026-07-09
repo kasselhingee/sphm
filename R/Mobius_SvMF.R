@@ -49,31 +49,37 @@
 #' @export
 mobius_SvMF <- function(y, xs = NULL, xe = NULL, mean = NULL, k = NULL, a = NULL, G0 = NULL, G0reference = NULL, G01behaviour = "p1", type = "LinEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, doprelim = TRUE, ...){
 
+  # Two-phase estimation:
+  # Phase 1 (prelim): vMF regression for the mean link, followed by moment estimation of G0
+  # and a. This provides a warm start for the joint optimisation.
+  # Phase 2 (finalest): joint maximum likelihood over all parameters (mean, k, a, G0).
   if (doprelim){
-  preest <- mobius_SvMF_partransport_prelim(y, xs, xe, 
-                                            mean = mean,
-                                            G0 = G0, G01behaviour = G01behaviour, 
-                                            type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
-                                            intercept = intercept, ...)
+    preest <- mobius_SvMF_partransport_prelim(y, xs, xe,
+                                              mean = mean,
+                                              G0 = G0, G01behaviour = G01behaviour,
+                                              type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
+                                              intercept = intercept, ...)
   } else {
-     stopifnot(!is.null(mean))
-     stopifnot(!is.null(k))
-     stopifnot(!is.null(a))
-     stopifnot(!is.null(G0))
-     preest <- list(
-       mean = mean,
-       k = k,
-       a = a,
-       G0 = G0)
+    # doprelim = FALSE: caller must supply all starting values directly.
+    stopifnot(!is.null(mean))
+    stopifnot(!is.null(k))
+    stopifnot(!is.null(a))
+    stopifnot(!is.null(G0))
+    preest <- list(
+      mean = mean,
+      k = k,
+      a = a,
+      G0 = G0)
   }
 
-  finalest <- optim_constV(y, xs, xe, 
+  # Explicit caller-supplied k, a, G0reference take precedence over the prelim estimates.
+  finalest <- optim_constV(y, xs, xe,
                            mean = preest$mean,
                            k = if(!is.null(k)){k}else{preest$k},
                            a = if(!is.null(a)){a}else{preest$a},
-                           G0 = preest$G0, 
+                           G0 = preest$G0,
                            G0reference = if(!is.null(G0reference)){G0reference}else{preest$G0},
-                           G01behaviour = G01behaviour, 
+                           G01behaviour = G01behaviour,
                            type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
                            intercept = intercept, ...)
   return(c(finalest, list(preest = preest)))
@@ -98,10 +104,12 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   preplist <- addEuccovars(preplist, type = type, intercept = intercept)
   # standardise y, xe and xe and update start accordingly. Dont standardise xe if intercept = FALSE
   preplist <- standardise_data(preplist, intercept)
-  if (!is.null(G0)){preplist$G0 <- attr(preplist$y, "std_rotation") %*% G0} #update G0 too
-  if (!is.null(G0reference)){preplist$G0reference <- attr(preplist$y, "std_rotation") %*% G0reference} #update G0 too
+  # G0 lives in the same space as y, so it must be rotated by the same std_rotation used on y.
+  if (!is.null(G0)){preplist$G0 <- attr(preplist$y, "std_rotation") %*% G0}
+  if (!is.null(G0reference)){preplist$G0reference <- attr(preplist$y, "std_rotation") %*% G0reference}
   # If start not supplied, choose start close to identities since data standardised
   preplist <- defaultstart(preplist, type)
+  # Caller-supplied a and k take precedence over any defaults set by defaultstart.
   if (!is.null(a)){preplist$a <- a}
   if (!is.null(k)){preplist$k <- k}
 
@@ -129,29 +137,47 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   qe <- length(om0$qe1)
 
 
-  # Prepare constraint tape
+  # Set up constraints: tape, fixed-parameter mask, and (possibly perturbed) starting point
   conprep <- estprep_meanconstraints(om0, fix_qs1, fix_qe1)
-  # below updates om0vec with x0 values according to isfixed
+  # conprep$om0vec          - starting parameters as a vector: c(p1, qs1, qe1, Omega, ce)
+  # conprep$isfixed         - logical mask: which positions in om0vec are held fixed
+  # conprep$x0              - free-parameter starting values (om0vec[!isfixed]), possibly
+  #                           perturbed to avoid a singular constraint Jacobian
+  # conprep$constraint_tape - AD tape for orthonormality constraints on P, Qs, Qe
+  # Rebuild om0vec incorporating any perturbation in conprep$x0. om0vec then serves as the
+  # fixed-value carrier in the later t_sfi2u call: t_sfi2u(meanpars, om0vec, isfixed)
+  # reconstructs the full mean-link parameter vector after optimisation.
   om0vec <- scorematchingad:::t_sfi2u(conprep$x0, conprep$om0vec, conprep$isfixed)
   
-  # Prepare objective tape
+  # Prepare objective tape.
+  # tape_ld_mobius_SvMF_partransport_nota1 records the full SvMF log-density under CppAD.
+  # Independent variables (differentiated w.r.t.): free mean-link parameters from om0vec,
+  # followed by k, aremaining, and the Cayley-transform coordinates of G0 — all in one flat
+  # vector. The Cayley transform maps the rotation manifold to an unconstrained space, so G0
+  # requires no extra constraints in the optimiser.
+  # Constants baked in: data (y, xs, xe), dimensions, G0reference, G01behaviour.
   objtape_ind <- tape_ld_mobius_SvMF_partransport_nota1(omvec = om0vec, k = preplist$k,
-                                       a1 = a1, 
+                                       a1 = a1,
                                        aremaining = aremaining,
                                        G0 = preplist$G0,
-                                       p = p, qe = qe, 
+                                       p = p, qe = qe,
                                        yx = cbind(preplist$y, preplist$xs, preplist$xe),
                                        referencecoords = G0reference,
                                        G01behaviour = G01behaviour)
-  # update objtape based on fixed values
+  # Re-tape with fixed mean-link parameters baked in. The isfixed vector is padded with zeros
+  # for the non-mean-link components (k, aremaining, Cayley G0) since those are always free.
   objtape_ind <- scorematchingad::fixindependent(objtape_ind, objtape_ind$xtape, c(conprep$isfixed, rep(0, length(objtape_ind$xtape) - length(conprep$isfixed))))
- 
-  #objtape initially returns a value for each measurement. Average here to get average over all data.
+
+  # objtape initially returns a value for each measurement. Average here to get average over all data.
   objtape <- scorematchingad::avgrange(objtape_ind)
-  # using tapeing values as starting parameters
+  # Use the taping values as the starting point for optimisation.
   x0 <- objtape$xtape
 
   # prepare nloptr options
+  # NLOPT_LD_SLSQP: Sequential Least Squares Programming; gradient-based constrained
+  # optimiser suited here because the AD tapes supply exact gradients at low cost.
+  # tol_constraints_eq = 1E-1: constraints (orthonormality) are satisfied only approximately
+  # during optimisation; exact orthonormality is restored afterwards by Omega_proj.
   default_opts <- list(algorithm = "NLOPT_LD_SLSQP",
                        xtol_rel = 1E-10, #1E-04,
                        tol_constraints_eq = rep(1E-1, conprep$constraint_tape$range),
@@ -160,8 +186,9 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
                        maxeval = 1E4)
   ellipsis_args <- list(...)
   combined_opts <- utils::modifyList(default_opts, ellipsis_args)
-  
-  # set lower bound for concentration k, unless lb passed manually
+
+  # The free mean-link parameters occupy positions 1:length(conprep$x0) in the flat vector;
+  # position length(conprep$x0) + 1 is k. Enforce k > 0 as a lower bound.
   if (is.null(lb)){
     lb <- rep(-Inf, objtape$domain)
     lb[length(conprep$x0) + 1] <- 0
@@ -173,6 +200,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   
   # Optimisation
   # current dynamic parameter values of tapes will be used
+  # nloptr minimises; the SvMF log-likelihood is to be maximised, hence the negation.
   nlopt <- nloptr::nloptr(
     x0 = x0,
     eval_f = function(theta){
@@ -182,6 +210,9 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
     lb = lb,
     ub = ub,
     eval_g_eq =  function(theta){list(
+      # Orthonormality constraints apply only to the mean-link parameters (first
+      # constraint_tape$domain elements of theta). The zero padding gives zero Jacobian
+      # for k, aremaining, and the Cayley G0 components, which are unconstrained.
       constraints = conprep$constraint_tape$forward(0, theta[1:conprep$constraint_tape$domain]),
       jacobian = cbind(matrix(conprep$constraint_tape$Jacobian(theta[1:conprep$constraint_tape$domain]), byrow = TRUE, ncol = conprep$constraint_tape$domain),
              matrix(0, nrow = conprep$constraint_tape$range, ncol = length(theta) - conprep$constraint_tape$domain))
@@ -204,13 +235,15 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   # remove the tapes from the return to save on memory
   nlopt$eval_f <- nlopt$eval_g_eq <- nlopt$eval_g_ineq <- nlopt$nloptr_environment <- NULL
 
-  # insert any fixed values of mean parameters
+  # The solution vector is partitioned as [free mean-link | k | aremaining | Cayley G0].
+  # Reinsert fixed mean-link values (t_sfi2u uses om0vec's fixed positions as the template).
   meanpars <- nlopt$solution[1:length(conprep$x0)]
   meanpars <- scorematchingad:::t_sfi2u(meanpars, om0vec, conprep$isfixed)
   fullparam <- c(meanpars, nlopt$solution[-(1:length(conprep$x0))])
 
-  
-  estparamlist <- mobius_SvMF_partransport_nota1_fromvecparams_forR(fullparam, p, qs, qe, 
+  # Reconstruct the full typed parameter list (om, k, aremaining, G0) from the flat vector,
+  # applying the inverse Cayley transform to recover G0 from its unconstrained coordinates.
+  estparamlist <- mobius_SvMF_partransport_nota1_fromvecparams_forR(fullparam, p, qs, qe,
                                                   referencecoords = G0reference,
                                                   G01behaviour = G01behaviour,
                                                   G01 = preplist$G0[,1])
@@ -219,54 +252,65 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   projectedom <- Omega_proj(mobius_link_Omega_unvec(estparamlist$omvec, p, length(om0$qe1), check = FALSE))
   try({mobius_link_Omega_check(projectedom)})
 
-  # make sure aremaining is in decreasing order
+  # The model is identifiable only up to permutation of (a_j, G0[:,j]) pairs. By convention
+  # the scales are returned in decreasing order with the G0 columns reordered to match.
   aord <- order(estparamlist$aremaining, decreasing = TRUE)
   aremaining <- estparamlist$aremaining[aord]
   estparamlist$G0[,-1] <- estparamlist$G0[,-1][, aord]
-  
-  # Polishing optimisation of just concentration if vMF normalising constant being approximated
+
   pred <- mobius_link(xs = preplist$xs, xe = preplist$xe, param = projectedom)
   if (p!=3){
+    # When p != 3 the joint AD optimisation uses a numerical approximation to the vMF
+    # normalising constant (required for AD differentiability). After convergence,
+    # mobius_SvMF_konly refines k by an exact univariate search using the more accurate
+    # Bessel function implementation in base R, correcting for the approximation error in k.
     result <- mobius_SvMF_konly(y = preplist$y, ymean = pred, a = c(a1, aremaining), G0 = estparamlist$G0)
-    # update parameters
     estparamlist$k <- result$k
-    # update log-likelood
     lLik <- result$lLik
   }
   
   ### Making nicer return objects ###
-  # Aspects of the fit that are invariant to coordinates used
-  # distances in response space
-  
+  # Residuals and distances are computed in the standardised coordinate system (before
+  # reverting), since they are invariant to the choice of coordinates.
   dists <- acos(rowSums(pred * preplist$y))
-  # get residuals as coordinates wrt G0. So under high concentration these residuals follow something multivariate normal.
+  # rresids_std: parallel-transported to G0[:,1] and scaled by sqrt(k)*a[1]/a[j] —
+  # under high concentration these are approximately i.i.d. standard normal.
   rresids_std <- resid_SvMF_partransport(preplist$y, pred, estparamlist$k, c(a1, estparamlist$aremaining), estparamlist$G0, scale = TRUE)
-  rresids_G0 <- resid_SvMF_partransport(preplist$y, pred, G0 = estparamlist$G0, scale = FALSE) # par transport to G01, coords G0
-  rresids_I_tmp <- rotated_resid(preplist$y, pred, north_pole(ncol(preplist$y))) # par transport to nthpole, coords cannonical
+  # rresids_G0: same parallel transport to G0[:,1] but unscaled.
+  rresids_G0 <- resid_SvMF_partransport(preplist$y, pred, G0 = estparamlist$G0, scale = FALSE)
+  # rresids_I: parallel-transported to the north pole; [, -1] drops the response component
+  # (always ~1 for small residuals), keeping only the p-1 tangent components.
+  rresids_I_tmp <- rotated_resid(preplist$y, pred, north_pole(ncol(preplist$y)))
   rresids_I <- rresids_I_tmp[, -1]
   attr(rresids_I, "samehemisphere") <-  attr(rresids_I_tmp, "samehemisphere")
   colnames(rresids_I) <- paste0("r", 1:ncol(rresids_I))
 
-  ### revert estimated parameters and pred to pre-standardisation coordinates ###
-  est <- undo_recoordinate_Omega(projectedom, 
-                          yrot = attr(preplist$y, "std_rotation"), 
+  # Invert the rotations and centering applied by standardise_data, expressing the estimated
+  # mean-link parameters in the original user-supplied coordinates.
+  est <- undo_recoordinate_Omega(projectedom,
+                          yrot = attr(preplist$y, "std_rotation"),
                           xsrot = attr(preplist$xs, "std_rotation"), #if xs/xe is NULL then attr(xs/xe, ..) is NULL too
-                          xerot = attr(preplist$xe, "std_rotation"), 
+                          xerot = attr(preplist$xe, "std_rotation"),
                           xecenter = attr(preplist$xe, "std_center"),
                           onescovaridx = preplist$onescovaridx)
-  ### Stabilise sign of Euc est based on ce ###
+  # The Euclidean link has an inherent sign ambiguity: replacing (ce, Qe, Be) with
+  # (-ce, -Qe, -Be) leaves the mean link unchanged. Convention is ce >= 0; Euc_signswitch
+  # flips all three if ce < 0.
   if (isTRUE(est$ce < 0)){est <- Euc_signswitch(est)}
 
-  #put G0 into same coordinates as y
+  # G0 is in standardised y coordinates; t(std_rotation) reverts it to the original space.
   G0 <- estparamlist$G0
   G0 <- t(attr(preplist$y, "std_rotation")) %*% G0
-  #For axes G0 standardise the return by
-  # (1) make first element of each vector positive (except the first column)
+  # Sign convention for G0 axes:
+  # (1) make first element of each non-first column positive, removing the per-axis sign ambiguity
   G0[,-1] <- standardise_col_signs(G0[,-1])
-  # (2) make rotation matrix by flipping final column according to determinant
+  # (2) ensure G0 is a proper rotation matrix (det = +1) by flipping the final column if needed
   if (det(G0) < 0){G0[,p] <- -G0[,p]}
-  # DoF
-  DoF <- mobius_dof(p, length(est$qs1), length(est$qe1), fix_qs1 = fix_qs1, fix_qe1 = fix_qe1) + 
+  # DoF: mean link + concentration + scales + G0 axes
+  # (p-1)-1: aremaining has p-1 components but prod(aremaining) = 1 removes one degree of freedom
+  # G0: DoF_Stiefel(p,p) when G0[,1] is free; DoF_Stiefel(p-1, p-1) when G0[,1] is
+  #     identified with p1 or fixed (one fewer free column)
+  DoF <- mobius_dof(p, length(est$qs1), length(est$qe1), fix_qs1 = fix_qs1, fix_qe1 = fix_qe1) +
     1 + #concentration
     (p-1)-1 + #aremaining given that prod(aremaining) = 1
     if (G01behaviour == "free"){ #G0 freedom
@@ -295,7 +339,9 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
     nlopt = nlopt,
     y = y,
     xs = xs,
-    xe = if (!is.null(xe)){if (intercept){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))} else {xe}}, #this recovers any added covariates too
+    # destandardise_Euc inverts the centering and whitening from standardise_data; using
+    # preplist$xe also recovers any columns added by addEuccovars (dummy-zero and intercept).
+    xe = if (!is.null(xe)){if (intercept){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))} else {xe}},
     pred = destandardise_sph(pred, rotation = attr(preplist$y, "std_rotation")),
     rresids_I = rresids_I,
     rresids_G0 = rresids_G0,
@@ -330,15 +376,18 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G
   # get rotated residuals
   rresid <- rotated_resid(y, prelim$pred, base = G01)
   if (!is.null(G0) && all(!is.na(G0))){
-    # if G0 fully supplied just use rresid to approximate scales a using the high concentration approximation
+    # G0 is supplied: re-express its axes relative to the new G01 (prelim$est$p1) using the
+    # Jupp rotation, which maps the old G0[,1] to the new G01. The minus sign arises from
+    # Jupp's rotation convention. Then estimate scales from the rotated residuals.
     if (G01behaviour == "p1"){
       G0 <- cbind(G01, -jupp_Rmat(G0[,1], G01) %*% G0[,-1])
     }
     aremaining <- SvMF_prelim_scales(rresid, G0)
   } else {
-    # axes:
+    # G0 not supplied: estimate principal-axis directions from the sample second-moment
+    # matrix of the rotated residuals (Scealy & Wood 2019, §4.1).
     G0 <- SvMF_moment_axes(rresid, G01)
-    # estimate the scales
+    # Estimate scale parameters a using the high-concentration approximation.
     aremaining <- SvMF_prelim_scales(rresid, G0)
   }
   
@@ -381,6 +430,8 @@ rmobius_SvMF <- function(xs, xe, mean, k, a, G0){
   
   # simulate noise
   y_ld <- t(apply(ymean, 1, function(mn){
+    # Construct local axes at the predicted mean mn by parallel-transporting G0 to mn.
+    # The Jupp rotation maps G0[,1] to mn; the remaining columns are carried along.
     G <- cbind(mn, -jupp_Rmat(G0[,1], mn) %*% G0[,-1])
     obs <- rSvMF(1, SvMF_cann(k, a, G))
     ld <- ldSvMF_cann(obs, k = k, a = a, G = G)
@@ -393,7 +444,10 @@ rmobius_SvMF <- function(xs, xe, mean, k, a, G0){
 # @param y matrix of observations
 # @param ymean matrix of predicted means
 # @param G01 first column of the G0 matrix
-# Parallel transports and rotates y so that it has ymean = G01
+# Parallel-transports each observation y[i,] back from ymean[i,] to G01, bringing all
+# observations into a common reference frame (as if they all had mean direction G01).
+# This is required to evaluate the pooled SvMF log-likelihood via SvMF_log_lik_cann /
+# ldSvMF_cann, which assume the mean direction is G01.
 undo_partransport <- function(y, ymean, G01){
   #rotate all observations to reverse the transport from G0[,1] to ymean
   yrot <- lapply(1:nrow(y), function(idx){
@@ -415,11 +469,14 @@ undo_partransport <- function(y, ymean, G01){
 #' @export
 mobius_SvMF_log_lik <- function(y, xs, xe, mean, k, a, G0){
   ymean <- mobius_link(xs = xs, xe = xe, param = mean)
+  # diff: the discrepancy between the approximate normalising constant used in the C++ AD tape
+  # and the exact value; stored as an attribute for diagnostic use.
   diff <- vMF_log_norm_const(k, ncol(y)) - vMF_log_norm_const_exact(k, ncol(y))
-  
-  #rotate all observations so that ymean --> G0[,1]
+
   yrot <- undo_partransport(y, ymean, G01 = G0[,1])
+  # ldCpp: uses the same approximation as the optimiser (fast, suitable for AD).
   ldCpp <- ldSvMF_cann(yrot, k = k, a = a, G = G0)
+  # ldR: uses exact Bessel functions from base R (accurate, not AD-differentiable).
   ldR <- SvMF_log_lik_cann(yrot, SvMF_cann(k = k, a = a, G = G0))
   ld <- cbind(Cpp = ldCpp, R = ldR)
   attr(ld, "error") <- diff

@@ -72,6 +72,10 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
   om0vec <- scorematchingad:::t_sfi2u(conprep$x0, conprep$om0vec, conprep$isfixed)
 
   # Prepare objective tape.
+  # tape_namedfun records prelimobj_cpp under CppAD, producing a tape that evaluates the
+  # objective and its gradient at any parameter value via $forward(0, x) and $Jacobian(x).
+  # om0vec is the independent (differentiable) variable; the data (y, xs, xe) and dimensions
+  # (p, qe) are baked in as constants.
   objtape <- tape_namedfun("prelimobj_cpp", om0vec, vector(mode = "numeric"), c(p, length(om0$qe1)), cbind(preplist$y,preplist$xs,preplist$xe), check_for_nan = FALSE)
   objtape <- scorematchingad::avgrange(objtape) #objtape initially returns a value for each measurement. Average here to get average over all data.
   
@@ -257,7 +261,9 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
   dims_in <- c(length(om0$p1), length(om0$qe1))
   om0vec <- mobius_link_Omega_vec(om0)
  
-  # generate tapes 
+  # generate tapes
+  # tape_namedfun records Omega_constraints_wrap under CppAD: evaluates the orthonormality
+  # constraints and their Jacobian at any om0vec via $forward(0, x) and $Jacobian(x).
   constraint_tape <- tape_namedfun("Omega_constraints_wrap", om0vec, vector(mode = "numeric"), dims_in, matrix(nrow = 0, ncol = 0), check_for_nan = FALSE)
 
   # fix mean link parameters depending on arguments

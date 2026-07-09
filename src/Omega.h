@@ -55,12 +55,12 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> mobius_link_Omega_cpp_vec(const mobius_link_
     return out;
 }
 
-// Function to unvectorize into an mnlink_Omega_cpp object
+// Function to unvectorize into a mobius_link_Omega_cpp object
 template <typename T>
-mnlink_Omega_cpp<T> mnlink_Omega_cpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vec, const int p, const int qe = 0) {
+mobius_link_Omega_cpp<T> mobius_link_Omega_cpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vec, const int p, const int qe = 0) {
     int qs = (vec.size() - p - (qe > 0) - qe - p * qe) / (1 + p);
-   
-    return mnlink_Omega_cpp<T>(vec.segment(0, p), //p1
+
+    return mobius_link_Omega_cpp<T>(vec.segment(0, p), //p1
                         vec.segment(p, qs), //qs1
                         vec.segment(p + qs, qe), //qe1
                         Eigen::Map<const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> >(vec.segment(p + qs + qe, p * (qs + qe)).data(), p, qs + qe), //Omega
@@ -70,8 +70,8 @@ mnlink_Omega_cpp<T> mnlink_Omega_cpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic
 
 // Function to project the Omega in an Omega parameterisation to be perpendicular to p1 and qs1 and qe1
 template <typename T>
-mnlink_Omega_cpp<T> Omega_proj_cpp(const mnlink_Omega_cpp<T>& inobj) {
-    mnlink_Omega_cpp<T> obj = inobj;
+mobius_link_Omega_cpp<T> Omega_proj_cpp(const mobius_link_Omega_cpp<T>& inobj) {
+    mobius_link_Omega_cpp<T> obj = inobj;
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> newOmega;
 
     // First project orthogonal to p1 (needs p1 as a unit vector)

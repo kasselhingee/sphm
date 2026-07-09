@@ -20,7 +20,7 @@
 //' For a given mean direction `mu`, the axes of the SvMF error distribution are obtained by parallel transport of `G0[,-1]` along the geodesic from `G0[,1]` to `mu`.
 //' 
 //' The function projects the parameter object `om` such that the matrix Omega is orthogonal to p1, qs1 and qe1.
-veca1 ld_Mobius_SvMF_partran(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 G0);
+veca1 ld_Mobius_SvMF_partran(mata1 y, mata1 xs, mata1 xe, mobius_link_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 G0);
 
 // for checking ld_Mobius_SvMF_partran via unit testing
 // [[Rcpp::export]]

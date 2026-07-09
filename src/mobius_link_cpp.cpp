@@ -1,11 +1,11 @@
 
-#include "mnlink_cpp.h"
+#include "mobius_link_cpp.h"
 #include "Omega.h"
 
 mata1 mnlink_cpp(const mata1 &xs, const mata1 &xe, const veca1 &vec, const int p) {
   int qe = xe.cols();
-  // Convert vector to a mnlink_Omega_cpp object
-  mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p, qe);
+  // Convert vector to a mobius_link_Omega_cpp object
+  mobius_link_Omega_cpp<a1type> ompar = mobius_link_Omega_cpp_unvec(vec, p, qe);
 
   mata1 xs_t = xs.transpose(); //since xs, xe are matrices of row vectors, xs_t etc are matrics of column vectors
   mata1 xe_t = xe.transpose();

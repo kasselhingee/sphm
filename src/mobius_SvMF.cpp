@@ -1,18 +1,18 @@
 #include "mobius_SvMF.h"
-#include "mnlink_cpp.h"
+#include "mobius_link_cpp.h"
 #include "ldSvMF.h"
 #include "utils.h"
 
 //G0 specifies the axes of the SvMF.
 //G0star is pararallel transported along G01 -> predicted mean
-veca1 ld_Mobius_SvMF_partran(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 G0){
+veca1 ld_Mobius_SvMF_partran(mata1 y, mata1 xs, mata1 xe, mobius_link_Omega_cpp<a1type> om, a1type k, a1type a1, veca1 aremaining, mata1 G0){
   int p = om.p1.size();
   //check that ncol(y) == p
   if (y.cols() != p){Rcpp::stop("width of y does not equal length of p1");}
 
   // project Omega matrix to satisfy orthogonality to p1 and q1
-  mnlink_Omega_cpp<a1type> om_projected = Omega_proj_cpp(om);
-  veca1 omvec_projected = mnlink_Omega_cpp_vec(om_projected);
+  mobius_link_Omega_cpp<a1type> om_projected = Omega_proj_cpp(om);
+  veca1 omvec_projected = mobius_link_Omega_cpp_vec(om_projected);
 
   //get mean
   mata1 ypred;
@@ -37,7 +37,7 @@ veca1 ld_Mobius_SvMF_partran(mata1 y, mata1 xs, mata1 xe, mnlink_Omega_cpp<a1typ
 
 
 veca1 ld_Mobius_SvMF_partran_forR(mata1 y, mata1 xs, mata1 xe, veca1 omvec, a1type k, a1type a1, veca1 aremaining, mata1 G0){
-   mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, y.cols(), xe.cols());
+   mobius_link_Omega_cpp<a1type> om = mobius_link_Omega_cpp_unvec(omvec, y.cols(), xe.cols());
    veca1 ld = ld_Mobius_SvMF_partran(y, xs, xe, om, k, a1, aremaining, G0);
    return ld;
 }
@@ -284,7 +284,7 @@ pADFun tape_ld_Mobius_SvMF_partran_nota1(veca1 omvec, a1type k, a1type a1, veca1
   aremaining = std::get<2>(result);
   G0 = std::get<3>(result);
   
-  mnlink_Omega_cpp<a1type> om = mnlink_Omega_cpp_unvec(omvec, p, qe);
+  mobius_link_Omega_cpp<a1type> om = mobius_link_Omega_cpp_unvec(omvec, p, qe);
 
   veca1 ld = ld_Mobius_SvMF_partran(y, xs, xe, om, k, a1, aremaining, G0);
 

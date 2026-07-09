@@ -2,8 +2,8 @@
 #include "utils.h"
 
 veca1 Omega_constraints(veca1 & vec, int p, int qe) {
-  // Convert vector to a mnlink_Omega_cpp object
-  mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p, qe);
+  // Convert vector to a mobius_link_Omega_cpp object
+  mobius_link_Omega_cpp<a1type> ompar = mobius_link_Omega_cpp_unvec(vec, p, qe);
 
   // design so that function returns zero vector when constraints satisfied
   
@@ -26,7 +26,7 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
   // See ExtraOmegaConstraint.pdf for more maths behind this expression of this Omega constraint.
   veca1 commutecheck(0);
   if ((ompar.qs > 0) && (ompar.qe > 0)){
-    mnlink_Omega_cpp<a1type> ompar_proj = Omega_proj_cpp(ompar);
+    mobius_link_Omega_cpp<a1type> ompar_proj = Omega_proj_cpp(ompar);
     commutecheck.resize((ompar_proj.p-1) * (ompar_proj.p - 2) / 2);
     // Compute Omega * Omega^T for commutivity constraint
     mata1 OmOm = ompar_proj.Omega * ompar_proj.Omega.transpose();
@@ -71,8 +71,8 @@ veca1 Omega_ineqconstraints(veca1 & vec, veca1 & ignore1, vecd & dims_in, matd &
   if (dims_in.size() != 2){Rcpp::stop("dims_in must have two entries");}
   int p = int(dims_in(0) + 0.1);
   int qe = int(dims_in(1) + 0.1);
-  // Convert vector to a mnlink_Omega_cpp object
-  mnlink_Omega_cpp<a1type> ompar = mnlink_Omega_cpp_unvec(vec, p, qe);
+  // Convert vector to a mobius_link_Omega_cpp object
+  mobius_link_Omega_cpp<a1type> ompar = mobius_link_Omega_cpp_unvec(vec, p, qe);
   a1type ssq_sv = (ompar.Omega.transpose() * ompar.Omega).diagonal().sum();
   veca1 out(1);
   out(0) = ssq_sv - ((ompar.qs>0) + (ompar.qe>0)) * (p-1.);

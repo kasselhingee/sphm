@@ -469,10 +469,10 @@ is_LinEuc <- function(obj, tol = sqrt(.Machine$double.eps)){
 #' @title Obtain dimensions corresponding to a mean link parameter set
 #' @param x A mean link parameter object of class `mobius_link_Omega` or `mobius_link_cann`.
 #' @return An integer vector of p (length of response unit vectors), qs (length of spherical covariate unit vectors) and qe (length of Euclidean covariate vectors).
-#' @name dim-mobius_link_params
+#' @name dim_mobius_link_params
 NULL
 
-#' @rdname dim-mobius_link_params
+#' @rdname dim_mobius_link_params
 #' @export
 #' @method dim mobius_link_cann
 dim.mobius_link_cann <- function(x){
@@ -481,7 +481,7 @@ dim.mobius_link_cann <- function(x){
     qe = switch(1 + is.null(x$Qe), nrow(x$Qe), 0))
 }
 
-#' @rdname dim-mobius_link_params
+#' @rdname dim_mobius_link_params
 #' @export
 #' @method dim mobius_link_Omega
 dim.mobius_link_Omega <- function(x){

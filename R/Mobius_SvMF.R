@@ -376,9 +376,9 @@ mobius_SvMF_partransport_prelim <- function(y, xs, xe, mean = NULL, G0 = NULL, G
   # get rotated residuals
   rresid <- rotated_resid(y, prelim$pred, base = G01)
   if (!is.null(G0) && all(!is.na(G0))){
-    # G0 is supplied: re-express its axes relative to the new G01 (prelim$est$p1) using the
-    # Jupp rotation, which maps the old G0[,1] to the new G01. The minus sign arises from
-    # Jupp's rotation convention. Then estimate scales from the rotated residuals.
+    # G0 is supplied: re-express its axes relative to the new G01 (prelim$est$p1) by parallel-
+    # transporting the columns of G0[,-1] from G0[,1] to G01. The minus sign is because
+    # -jupp_Rmat(a,b) equals parallel_transport_mat(a,b). Then estimate scales from the rotated residuals.
     if (G01behaviour == "p1"){
       G0 <- cbind(G01, -jupp_Rmat(G0[,1], G01) %*% G0[,-1])
     }
@@ -430,8 +430,8 @@ rmobius_SvMF <- function(xs, xe, mean, k, a, G0){
   
   # simulate noise
   y_ld <- t(apply(ymean, 1, function(mn){
-    # Construct local axes at the predicted mean mn by parallel-transporting G0 to mn.
-    # The Jupp rotation maps G0[,1] to mn; the remaining columns are carried along.
+    # Construct local axes at the predicted mean mn by parallel-transporting the columns of
+    # G0[,-1] from G0[,1] to mn. (-jupp_Rmat(a,b) equals parallel_transport_mat(a,b).)
     G <- cbind(mn, -jupp_Rmat(G0[,1], mn) %*% G0[,-1])
     obs <- rSvMF(1, SvMF_cann(k, a, G))
     ld <- ldSvMF_cann(obs, k = k, a = a, G = G)

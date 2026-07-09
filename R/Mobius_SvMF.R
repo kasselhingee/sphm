@@ -116,8 +116,8 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   # check inputs:
   check_meanlink(preplist$y, preplist$xs, preplist$xe, om0)
   stopifnot(length(preplist$a) == p)
-  a1 = preplist$a[1]
-  aremaining = preplist$a[-1]
+  a1 <- preplist$a[1]
+  aremaining <- preplist$a[-1]
   stopifnot(isTRUE(all.equal(prod(aremaining), 1)))
   if (is.null(preplist$G0reference)){
     G0reference <- preplist$G0
@@ -246,9 +246,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
   rresids_I <- rresids_I_tmp[, -1]
   attr(rresids_I, "samehemisphere") <-  attr(rresids_I_tmp, "samehemisphere")
   colnames(rresids_I) <- paste0("r", 1:ncol(rresids_I))
-  
 
-  
   ### revert estimated parameters and pred to pre-standardisation coordinates ###
   est <- undo_recoordinate_Omega(projectedom, 
                           yrot = attr(preplist$y, "std_rotation"), 
@@ -277,7 +275,7 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
       DoF_Stiefel(p-1, p-1)
     }
   # AIC
-  AIC = 2*DoF - 2 * lLik
+  AIC <- 2*DoF - 2 * lLik
   
   if (p==3) {
     if (estparamlist$k < 1E-15){
@@ -299,7 +297,6 @@ optim_constV <- function(y, xs, xe, mean, k, a, G0 = NULL, G0reference = NULL, G
     xs = xs,
     xe = if (!is.null(xe)){if (intercept){destandardise_Euc(preplist$xe, attr(preplist$xe, "std_center"), attr(preplist$xe, "std_rotation"))} else {xe}}, #this recovers any added covariates too
     pred = destandardise_sph(pred, rotation = attr(preplist$y, "std_rotation")),
-    rresids = rresids_I,
     rresids_I = rresids_I,
     rresids_G0 = rresids_G0,
     rresids_std = rresids_std,

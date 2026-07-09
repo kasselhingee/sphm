@@ -66,7 +66,7 @@ A list:
 \item{xs}{Spherical covariate values}
 \item{xe}{Euclidean covariate values (including any automatically added columns like dummy zeros and an intercept)}
 \item{pred}{Predicted values on sphere}
-\item{rresids, rresids_I}{Residuals rotated (by parallel transport) to the north pole}
+\item{rresids_I}{Residuals rotated (by parallel transport) to the north pole}
 \item{rresids_G0, rresids_std}{Residuals rotated to \code{G0[,1]} and expressed according to the axes given by \code{G0[,-1]}. \code{rresids_std} additionaly scales the rotated residuals by \eqn{\sqrt{k} a[1]/a[j]}.}
 \item{dists}{Residual geodesic distances (geodesic distance between predicted value and observed value)}
 \item{DoF}{Degrees of freedom of the optimisation}

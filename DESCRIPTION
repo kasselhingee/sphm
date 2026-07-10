@@ -1,6 +1,6 @@
 Package: sphm
 Title: Spherical Regression by Scaled Mobius Link
-Version: 0.0.17
+Version: 0.0.18
 Authors@R: 
     person("Kassel Liam", "Hingee", email = "kassel.hingee@anu.edu.au", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-9894-2407"))

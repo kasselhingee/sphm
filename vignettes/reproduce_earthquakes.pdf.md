@@ -9,25 +9,20 @@ format:
     fig-width: 6.5
 ---
 
+
+
 # Preparation
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
-library(ggplot2)
-library(dplyr)
-library(GGally)
-library(patchwork)
-library(sphm)
-library(sf)
-library("rnaturalearth")
-library("rnaturalearthdata")
-library(kableExtra)
-packageVersion("sphm")
-```
+
+
+
 
 ## Raw Data
 This data is copied directly from Hejrani et al (2017) Table 1.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 raw=read.table(file="./papua20240709.csv",
                header=T,sep=",", numerals = "warn.loss",
                colClasses = c(Origin.Time = "character"))
@@ -38,6 +33,29 @@ head(raw) %>%
   knitr::kable() %>%
   kableExtra::kable_styling(font_size = 8)
 ```
+
+::: {.cell-output-display}
+\begingroup\fontsize{8}{10}\selectfont
+
+\begin{longtable}[t]{rlrrrrrrrrrrrr}
+\toprule
+Number & Origin.Time & Lon & Lat & Depth & Mrr & Mtt & Mff & Mrt & Mrf & Mtf & Exp & Mw & Dcper\\
+\midrule
+1 & 200602.. & 149.8 & -6.4 & 35 & 2.86 & -2.83 & -0.03 & 1.14 & 0.17 & 0.02 & 17 & 5.6 & 97.4\\
+2 & 200603.. & 150.0 & -4.8 & 11 & -2.93 & 3.81 & -0.88 & -1.79 & -2.49 & 1.05 & 17 & 5.7 & 96.8\\
+3 & 200603.. & 151.4 & -6.0 & 27 & 1.76 & -0.22 & -1.54 & -0.52 & 0.24 & 0.77 & 17 & 5.4 & 94.4\\
+4 & 200603.. & 143.2 & -3.2 & 3 & 7.65 & -5.29 & -2.36 & 6.74 & 5.21 & 8.99 & 17 & 6.0 & 75.4\\
+5 & 200605.. & 154.8 & -7.8 & 7 & -0.15 & 1.29 & -1.14 & 0.69 & -0.57 & 0.36 & 17 & 5.4 & 95.8\\
+\addlinespace
+6 & 200606.. & 151.8 & -5.2 & 43 & 9.63 & -8.84 & -0.78 & 3.01 & 0.92 & -2.24 & 16 & 5.3 & 96.0\\
+\bottomrule
+\end{longtable}
+\endgroup{}
+
+
+:::
+:::
+
 
 In this raw data:
 
@@ -51,17 +69,25 @@ In this raw data:
 
 For later lets record the names of the `M**` columns in the same order as the symmetric-matrix vectorisation function `vech`:
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 elementnames <- c("Mrr", "Mrt", "Mrf",
                   "Mtt", "Mtf",
                   "Mff")
 ```
+:::
+
 
 ## Transform to $S^4$
 ### Enforce Trace=0 and Scale=1
 The moment tensors have traces that are nearly 0.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 traces <- rowSums(raw[, c("Mrr", "Mtt", "Mff")])
 traces %>%
   tibble::enframe(value = "trace") %>%
@@ -70,15 +96,29 @@ traces %>%
   geom_rug(aes(x = trace))
 ```
 
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-3-1.pdf){fig-pos='H'}
+:::
+:::
+
+
 Here I'll make the trace exactly zero.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 stddf <- raw %>%
   mutate(Mff = -Mrr - Mtt)
 ```
+:::
+
 
 Now we scale the moment tensors to have a Frobenius norm of 1. The function `gettr2()` below is a fast way to compute the square of the Frobenius norm without winding the 6 `M**` columns up into individual 3 x 3 matrices.
-```{r tr2}
+
+::: {.cell}
+
+```{.r .cell-code}
 gettr2 <- function(ms){
   I2 <- ms[, 1] * ms[, 4] + ms[, 4] * ms[, 6] + ms[,1] * ms[,6] -
     ms[, 2]^2 - ms[, 5]^2 - ms[,3]^2
@@ -91,10 +131,15 @@ stddf <- stddf %>%
   mutate(Fnorm = Fnorm) %>%
   mutate(across(starts_with("M"), ~.x/Fnorm))
 ```
+:::
+
 
 Lets verify the result of these transformations on the first earthquake.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 elementvalues <- unlist(stddf[1, elementnames])
 tmpM <- matrix(NA, 3, 3)
 tmpM[lower.tri(tmpM, diag = TRUE)] <- elementvalues
@@ -102,10 +147,61 @@ tmpM[upper.tri(tmpM)] <- t(tmpM)[upper.tri(tmpM)]
 colnames(tmpM) <- rownames(tmpM) <- c("r", "t", "f")
 
 elementvalues
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+         Mrr          Mrt          Mrf          Mtt          Mtf          Mff 
+ 0.658783349  0.262591964  0.039158451 -0.651873034  0.004606877 -0.006910315 
+```
+
+
+:::
+
+```{.r .cell-code}
 tmpM
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+           r            t            f
+r 0.65878335  0.262591964  0.039158451
+t 0.26259196 -0.651873034  0.004606877
+f 0.03915845  0.004606877 -0.006910315
+```
+
+
+:::
+
+```{.r .cell-code}
 sqrt(sum(tmpM^2))
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 1
+```
+
+
+:::
+
+```{.r .cell-code}
 sum(diag(tmpM))
 ```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] -3.035766e-17
+```
+
+
+:::
+:::
+
 
 The trace and norm are exactly 0 and 1 as desired.
 
@@ -113,36 +209,76 @@ The trace and norm are exactly 0 and 1 as desired.
 The diagonal elements must sum to zero, which puts them on a plane through the origin.
 I'll use the Helmert submatrix to express these diagonal elements with respect to an orthonormal basis on this plane. The plane is two dimensions, so I'll call these new coordinates `s1` and `s2`.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 H <- rbind(c(1,-1, 0), c(1,1,-2))
 H <- H/sqrt(rowSums(H^2))
 diagproj <- t(H %*% t(stddf[, c("Mrr", "Mtt", "Mff")]))
 colnames(diagproj) <- c("s1", "s2")
 ```
+:::
+
 
 I'll scale the off diagonal elements by $\sqrt{2}$ because off-diagonal elements are counted twice in the Frobenius norm.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 offdiag <- stddf %>%
   mutate(sMrt = sqrt(2) * Mrt,
          sMrf = sqrt(2) * Mrf,
          sMtf = sqrt(2) * Mtf) %>%
   select(sMrt, sMrf, sMtf)
 ```
+:::
+
 
 Combined these are unit vectors in $R^5$
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 sqrt(rowSums(cbind(diagproj, offdiag)^2))
 ```
 
+::: {.cell-output .cell-output-stdout}
+
+```
+  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ [38] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ [75] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+[112] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+[149] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+[186] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+[223] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+[260] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+[297] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+```
+
+
+:::
+:::
+
+
 Lets add these unit vectors into full data frame
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 s4df <- bind_cols(diagproj, offdiag, raw)
 ```
+:::
+
 
 ## Hejrani et al (2017)'s Regions
 Here I have captured the regions from Fig 16 of Hejrani et al (2017) by visual assessment.
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 ptmatrix <- function(xmin, xmax, ymin, ymax){
   matrix(c(xmin, ymax,   
            xmax, ymax,
@@ -162,15 +298,33 @@ regions <- st_sfc(st_polygon(list(ptmatrix(141, 144, -4, -2))),
        crs = 4326)
 regions <- st_sf(region = factor(1:8, ordered = TRUE), geom = regions)
 ```
+:::
+
 
 ## Keep Only Shallow Earthquakes in Regions 2-4
 The below keeps only earthquakes in regions 2 to 4 with depth smaller than 20.
 It assumes that the longitude and latitude are follow the GPS coordinate system.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 s4df <- sf::st_as_sf(s4df, coords = c("Longitude", "Latitude"), remove = FALSE)
 sf::st_crs(s4df) <- 4326
 s4df <- st_intersection(s4df, regions) 
+```
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning: attribute variables are assumed to be spatially constant throughout
+all geometries
+```
+
+
+:::
+
+```{.r .cell-code}
 s4df <- mutate(s4df, region = as.factor(region))
 s4df <- s4df %>% 
   filter(region %in% 2:4) %>%
@@ -178,10 +332,24 @@ s4df <- s4df %>%
 nrow(s4df)
 ```
 
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 50
+```
+
+
+:::
+:::
+
+
 ## $S^4$ Plot Helpers
 Below makes circles for plotting the edge of S^4 later.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 # Create data for the unit circle
 theta <- seq(0, 2 * pi, length.out = 100)
 circle_df <- data.frame(x = cos(theta), y = sin(theta))
@@ -204,10 +372,15 @@ pair_dfs <- lapply(colpairs, function(pair) {
 })
 circle_df_long <- bind_rows(pair_dfs)
 ```
+:::
+
 
 And the following is useful for orthogonal projection of locations on to pairs of axes:
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 pivot_coordpairs <- function(df, 
                              coordnames = paste0("Y",1:5),
                              colpairs = combn(coordnames, 2, simplify = FALSE)){
@@ -278,20 +451,32 @@ pairedplotggprep <- function(df){
         legend.position = "bottom")
 }
 ```
+:::
+
 
 
 ## Pairwise Projections of Earthquake Moment Tensors (SI Figure)
-```{r}
-#| fig.width: 12
-#| fig.height: 13
+
+::: {.cell}
+
+```{.r .cell-code}
 s4df %>%
   pivot_coordpairs(coordnames = c("s1", "s2", "sMrf", "sMrt", "sMtf")) %>%
   pairedplotggprep() +
   geom_point(aes(col = Longitude)) +
   scale_shape_manual(guide = "none", values = c(4, 16)) +
   scale_color_viridis_c()
+```
+
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-14-1.pdf){fig-pos='H'}
+:::
+
+```{.r .cell-code}
 ggsave("earthq_mtensors.pdf", width = 12, height = 13)
 ```
+:::
+
 
 ## Additional Covariates
 For each earthquake we find the distance to the BSSL and also the direction (up to $\pm \pi$) of the fault at this closest point.
@@ -300,15 +485,39 @@ This direction is known as the strike in seismology (For BSSL, the fault plane i
 ### Distance to BSSL
 Plate information was obtained from github `https://github.com/fraxen/tectonicplates`.
 
-```{r}
-#| eval: false
+
+::: {.cell}
+
+```{.r .cell-code}
 tmp <- paste0("https://github.com/fraxen/tectonicplates/raw/refs/heads/master/PB2002_boundaries.", c("dbf", "prj", "sbn", "sbx", "shp", "shp.xml", "shx")) |>
   lapply(function(x){download.file(x, basename(x))})
 ```
+:::
 
-```{r}
+::: {.cell}
+
+```{.r .cell-code}
 world <- ne_countries(scale = "medium", returnclass = "sf")
 tecbound <- st_read("PB2002_boundaries.shp")
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+Reading layer `PB2002_boundaries' from data source 
+  `/home/kassel/Documents/professional/ANU_Compositional/SphericalRegression_mobius/SphRegByMobiusLink/vignettes/PB2002_boundaries.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 241 features and 6 fields
+Geometry type: LINESTRING
+Dimension:     XY
+Bounding box:  xmin: -180 ymin: -66.1632 xmax: 180 ymax: 86.8049
+Geodetic CRS:  WGS 84
+```
+
+
+:::
+
+```{.r .cell-code}
 mat <- st_intersects(tecbound, st_as_sfc(st_bbox(s4df)))
 tecbound <- tecbound[apply(mat, 1, any), ]
 tecbound <- tecbound %>%
@@ -320,8 +529,11 @@ tecbound <- tecbound %>%
     .default = "Other"
   ))
 ```
+:::
 
-```{r}
+::: {.cell}
+
+```{.r .cell-code}
 dist_BSSL <- tecbound %>%
   filter(NiceName == "BSSL") %>%
   st_union() %>%
@@ -331,12 +543,17 @@ dist_BSSL <- tecbound %>%
 s4df <- s4df %>%
   mutate(dist = dist_BSSL)
 ```
+:::
+
 
 ### Strike of BSSL
 The strike (up to $\pm \pi$) of the faults at the closest point to each earthquake.
 
 First need to split the faults into segments
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 tecbound_interest <- tecbound %>%
   filter(NiceName == "BSSL")
 teccoords <- tecbound_interest %>%
@@ -363,17 +580,20 @@ segs <- segs[teccoords[-nrow(teccoords), "L1"] - teccoords[-1, "L1"] >= -0.5, ]
 segs$FaultName <- tecbound_interest$Name[segs$fault]
 segs$NiceName <- tecbound_interest$NiceName[segs$fault]
 ```
+:::
 
+::: {.cell}
 
-```{r}
+```{.r .cell-code}
 segs <- segs %>%
    mutate(strike = case_when(strike > pi ~ strike - pi,
                              TRUE ~ strike))
 ```
+:::
 
-```{r}
-#| fig.width: 8
-#| fig.height: 2
+::: {.cell}
+
+```{.r .cell-code}
 segs %>%
   # mutate(strike = cut(strike, c(0,1.7,2.5, pi), include.lowest = TRUE)) %>%
   ggplot() +
@@ -381,18 +601,30 @@ segs %>%
   scale_color_viridis_c() +
   coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
 ```
+
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-20-1.pdf){fig-pos='H'}
+:::
+:::
+
 Find closest segment to each earthquake and use that for strike.
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 segidx <- st_nearest_feature(s4df, segs)
 strike_BSSL <- segs$strike[segidx, drop = TRUE]
 s4df <- bind_cols(s4df, fstrike = strike_BSSL)
 ```
+:::
+
 
 Below plots the assigned fault's strike (`fstrike`) closest to each earthquake
 
-```{r}
-#| fig.width: 8
-#| fig.height: 2
+
+::: {.cell}
+
+```{.r .cell-code}
 segs %>%
   ggplot() +
   geom_sf(aes(col = strike), linewidth = 2) +
@@ -405,6 +637,12 @@ segs %>%
   coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
 ```
 
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-22-1.pdf){fig-pos='H'}
+:::
+:::
+
+
 ## Look for Outliers (SI Figure)
 Here I'll look for outliers.
 I'll view the moment tensors orthogonally projected onto axes determined by the first and second moment of the data such that
@@ -415,10 +653,10 @@ Point colour is given by earthquake longitude.
 Background colour is the average earthquake longitude for that part of projected $S^4$.
 The identified outliers are labelled.
 
-```{r}
-#| fig.width: 12
-#| fig.height: 13
 
+::: {.cell}
+
+```{.r .cell-code}
 outliers <- c(
   "182" = "general",
   "306" = "general",
@@ -456,8 +694,17 @@ s4df %>%
                             box.padding = 1,
                             show.legend = FALSE) +
   scale_colour_manual(values = c("black", "grey"))
+```
+
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-23-1.pdf){fig-pos='H'}
+:::
+
+```{.r .cell-code}
 ggsave("earthq_mtensors_outlier.pdf", width = 12, height = 13)
 ```
+:::
+
 
 From these plots we can see 6 earthquakes very different to the rest in at least some of the coordinates Y1 - Y5.
 Earthquakes 182, 306, 76, 87 and 169 were outlying in Y1.
@@ -470,7 +717,10 @@ There also appears to be a shift in earthquake moment tensors with longitude < 1
 
 ## Remove Outliers
 The outliers by region are:
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 outliers <- outliers %>% #remove duplicates
   group_by(Number) %>%
   summarise(outlier = paste0(outlier, collapse = ","))
@@ -483,19 +733,63 @@ s4df %>%
   arrange(region)
 ```
 
+::: {.cell-output .cell-output-stdout}
 
-```{r}
+```
+  Number region   outlier
+1     76      2   general
+2    182      2   general
+3    254      2   general
+4    306      2   general
+5     87      4   general
+6    169      4   general
+7    175      4 longitude
+8    260      4 longitude
+```
+
+
+:::
+:::
+
+::: {.cell}
+
+```{.r .cell-code}
 s4df_clean <- s4df %>%
   left_join(outliers, by = "Number") %>%
   filter(is.na(outlier))
 nrow(s4df_clean)
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 42
+```
+
+
+:::
+
+```{.r .cell-code}
 s4df_clean$Depth %>% as.factor() %>% summary()
 ```
 
+::: {.cell-output .cell-output-stdout}
+
+```
+ 3  7 11 15 19 
+ 5 14 11  9  3 
+```
+
+
+:::
+:::
+
+
 ## Main Figure: Earthquake Locations
-```{r}
-#| fig.width: 7
-#| fig.height: 2
+
+::: {.cell}
+
+```{.r .cell-code}
 ggplot() +
   geom_sf(data = world) +
   geom_point(data = s4df %>% left_join(outliers, by = "Number") %>% filter(!is.na(outlier)),
@@ -515,18 +809,30 @@ ggplot() +
   theme_bw() +
   theme(axis.title = element_blank()) +
   coord_sf(xlim = c(144.0, 153), ylim = c(-4.5, -2))
+```
+
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-26-1.pdf){fig-pos='H'}
+:::
+
+```{.r .cell-code}
 ggsave("earthquakelocations.pdf", width = 7, height = 2)
 ```
+:::
+
 
 
 Caption: Shallow earthquake locations near the Bismarck Sea Seismic Lineation (solid line).
 Some jitter has been introduced because
-`r s4df %>% select(Latitude, Longitude) %>% duplicated() %>% sum()` are colocated.
+12 are colocated.
 
 ## Build covariates
 Scale and center all Euclidean covariates to have mean 0 and sd of 1.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 xe <- s4df_clean %>%
   st_drop_geometry() %>%
   select(fstrike,
@@ -541,8 +847,26 @@ xestd <- xe %>%
 cor(xestd)
 ```
 
+::: {.cell-output .cell-output-stdout}
+
+```
+                  fstrike   Latitude  Longitude Longitude.L148
+fstrike         1.0000000 -0.1801471  0.4575706      0.5725929
+Latitude       -0.1801471  1.0000000 -0.4904033     -0.5022031
+Longitude       0.4575706 -0.4904033  1.0000000      0.8926280
+Longitude.L148  0.5725929 -0.5022031  0.8926280      1.0000000
+```
+
+
+:::
+:::
+
+
 # Default Start for SvMF Regression
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 mod_SvMF <- mobius_SvMF(s4df_clean %>% 
                         select(s1, s2, sMrt, sMrf, sMtf) %>% 
                         st_drop_geometry() %>% 
@@ -551,14 +875,79 @@ mod_SvMF <- mobius_SvMF(s4df_clean %>%
                       xe = xestd %>% as.matrix(),
                       type = "LinEuc",
                       G01behaviour = "free")
+```
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in tape_ld_mobius_SvMF_partransport_nota1(omvec = om0vec, k =
+preplist$k, : This function approximates the vMF normalising constant when
+p!=3.
+```
+
+
+:::
+
+```{.r .cell-code}
 mod_SvMF$k
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 56.94665
+```
+
+
+:::
+
+```{.r .cell-code}
 mod_SvMF$AIC
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] -137.0572
+```
+
+
+:::
+
+```{.r .cell-code}
 mod_SvMF$a
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+                                                  
+1.0000000 2.0910088 1.2106586 0.9542765 0.4139503 
+```
+
+
+:::
+
+```{.r .cell-code}
 mod_SvMF$DoF
 ```
 
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 38
+```
+
+
+:::
+:::
+
+
 # SI Figure: Random Starts
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 restarts <- pbapply::pblapply(1:100, function(seed){
   # randomly generates a SpEuc-form link
   start <- rand_mobius_link_cann(p = 5, qs = 0, qe = ncol(xestd) + 2, preseed = seed)
@@ -583,8 +972,11 @@ restarts <- pbapply::pblapply(1:100, function(seed){
 badrestarts <- unlist(lapply(restarts, inherits, "try-error"))
 restarts <- restarts[!badrestarts]
 ```
+:::
 
-```{r}
+::: {.cell}
+
+```{.r .cell-code}
 lapply(restarts, "[[", "AIC") %>%
   unlist() %>%
   tibble::enframe("seed", "AIC") %>%
@@ -592,24 +984,73 @@ lapply(restarts, "[[", "AIC") %>%
   geom_histogram(aes(x = AIC), bins = 30) +
   geom_vline(xintercept = mod_SvMF$AIC, col = "blue") +
   geom_rug(aes(x = AIC))
-
-ggsave("earthq_restarts.pdf", width = 7, height = 5)
 ```
 
-```{r}
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-30-1.pdf){fig-pos='H'}
+:::
+
+```{.r .cell-code}
+ggsave("earthq_restarts.pdf", width = 7, height = 5)
+```
+:::
+
+::: {.cell}
+
+```{.r .cell-code}
 idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
 mod_SvMF <- restarts[[idx]]
 ```
+:::
+
 
 # SI Table: Estimated Parameters
 Below is the estimated concentration, the AIC and degrees of freedom of this regression.
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 mod_SvMF$k
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 59.31133
+```
+
+
+:::
+
+```{.r .cell-code}
 mod_SvMF$AIC
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] -144.7217
+```
+
+
+:::
+
+```{.r .cell-code}
 mod_SvMF$DoF
 ```
 
-```{r, results='asis'}
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 38
+```
+
+
+:::
+:::
+
+
+```{.r .cell-code}
 df <- data.frame(t(mod_SvMF$a))
 colnames(df) <- 1:ncol(df)
 mykbl <- df %>%
@@ -619,7 +1060,19 @@ mykbl <- df %>%
 mykbl
 ```
 
-```{r, results='asis'}
+
+\begin{tabular}[t]{lllll}
+\toprule
+\multicolumn{5}{c}{Scales} \\
+\cmidrule(l{3pt}r{3pt}){1-5}
+1 & 2 & 3 & 4 & 5\\
+\midrule
+1.00 & 2.08 & 1.40 & 1.00 & 0.34\\
+\bottomrule
+\end{tabular}
+
+
+```{.r .cell-code}
 df <- data.frame(mod_SvMF$G0)
 label_map <- c(
   s1 = "(Mrr - Mtt)/$\\sqrt{2}$",
@@ -636,11 +1089,28 @@ mykbl <- df %>%
 mykbl
 ```
 
-```{r}
+
+\begin{tabular}[t]{llllll}
+\toprule
+  & $\gamma_{01}$ & $\gamma_{02}$ & $\gamma_{03}$ & $\gamma_{04}$ & $\gamma_{05}$\\
+\midrule
+(Mrr - Mtt)/$\sqrt{2}$ & 0.13 & -0.51 & 0.21 & 0.81 & -0.13\\
+(Mrr + Mtt - 2Mff)/$\sqrt{6}$ & 0.22 & 0.51 & -0.59 & 0.49 & 0.31\\
+Mrt /$\sqrt{2}$ & -0.10 & 0.49 & 0.75 & 0.19 & 0.38\\
+Mrf /$\sqrt{2}$ & 0.78 & 0.28 & 0.20 & -0.08 & -0.51\\
+Mtf /$\sqrt{2}$ & -0.56 & 0.39 & -0.04 & 0.24 & -0.69\\
+\bottomrule
+\end{tabular}
+
+::: {.cell}
+
+```{.r .cell-code}
 cann <- as_mobius_link_cann(mod_SvMF$mean)
 ```
+:::
 
-```{r, results='asis'}
+
+```{.r .cell-code}
 df <- data.frame(cann$Be)
 colnames(df) <- paste0("col", 1:ncol(df))
 mykbl <- df %>%
@@ -653,9 +1123,24 @@ mykbl <- df %>%
 mykbl
 ```
 
+
+\begin{tabular}[t]{llll}
+\toprule
+\multicolumn{4}{c}{$B_e$} \\
+\cmidrule(l{3pt}r{3pt}){1-4}
+2.76 & 0 & 0 & 0\\
+0 & 1.39 & 0 & 0\\
+0 & 0 & 0.59 & 0\\
+0 & 0 & 0 & 0.06\\
+\bottomrule
+\end{tabular}
+
+
 Below I ignore a dummy zero-valued covariate that is automatically added by the software for compatibility with a link that has a denominator below $B_e R_e^\top$ ("SpEuc" type link).
 
-```{r, results='asis'}
+
+
+```{.r .cell-code}
 df <- data.frame(cann$Qe[-1,-1])
 colnames(df) <- paste0("col", 1:ncol(df))
 rownames(df)[1] <- "Strike"
@@ -669,7 +1154,21 @@ mykbl <- df %>%
 mykbl
 ```
 
-```{r, results='asis'}
+
+\begin{tabular}[t]{lllll}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{4}{c}{$R_e$} \\
+\cmidrule(l{3pt}r{3pt}){2-5}
+Strike & 0.07 & 0.05 & 0.21 & -0.97\\
+Latitude & 0.02 & 0.04 & -0.14 & 0.09\\
+Longitude & 0.49 & 0.08 & -0.84 & -0.16\\
+Longitude.L148 & -0.57 & 0.78 & -0.24 & -0.06\\
+ones & -0.65 & -0.62 & -0.41 & -0.17\\
+\bottomrule
+\end{tabular}
+
+
+```{.r .cell-code}
 label_map <- c(
   s1 = "(Mrr - Mtt)/$\\sqrt{2}$",
   s2 = "(Mrr + Mtt - 2Mff)/$\\sqrt{6}$",
@@ -688,8 +1187,25 @@ mykbl <- df %>%
 mykbl
 ```
 
+
+\begin{tabular}[t]{llllll}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{5}{c}{$B_0$} \\
+\cmidrule(l{3pt}r{3pt}){2-6}
+(Mrr - Mtt)/$\sqrt{2}$ & 0.05 & 0.55 & -0.13 & 0.41 & 0.72\\
+(Mrr + Mtt - 2Mff)/$\sqrt{6}$ & -0.04 & -0.5 & 0.7 & 0.02 & 0.5\\
+Mrt /$\sqrt{2}$ & 0.24 & -0.46 & -0.22 & 0.81 & -0.17\\
+Mrf /$\sqrt{2}$ & 0.27 & 0.48 & 0.65 & 0.29 & -0.43\\
+Mtf /$\sqrt{2}$ & -0.93 & 0.07 & 0.09 & 0.31 & -0.15\\
+\bottomrule
+\end{tabular}
+
+
 # SI Figure: Predictions
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 get_predobspairsdf_nat <- function(mod,
                                extra = NULL,
                                colpairs = combn(c("s1", "s2", "sMrf", "sMrt", "sMtf"), 2, simplify = FALSE)){
@@ -750,10 +1266,11 @@ get_predobspairsdf_nat <- function(mod,
   pairsdf
 }
 ```
+:::
 
-```{r}
-#| fig.width: 12
-#| fig.height: 13
+::: {.cell}
+
+```{.r .cell-code}
 get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s"))) %>%
   pairedplotggprep() +
   geom_segment(aes(x=p_A, y=p_B, xend=A, yend=B, col = Longitude),
@@ -768,11 +1285,23 @@ get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s"))) %>%
   scale_fill_viridis_c() +
   scale_color_viridis_c() +
   ggtitle("Predictions")
-ggsave("earthq_predictions.pdf", width = 12, height = 13)
 ```
 
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-40-1.pdf){fig-pos='H'}
+:::
+
+```{.r .cell-code}
+ggsave("earthq_predictions.pdf", width = 12, height = 13)
+```
+:::
+
+
 # Main Figure: Observed and Predicted
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 obsplots <- get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s")),
                      colpairs = strsplit(c("s1-s2", "sMtf-s2", "sMrt-s2"), "-")) %>%
     pairedplotggprep() +
@@ -813,19 +1342,56 @@ predplots <- paireddf %>%
 obsplots/
   predplots + 
   plot_layout(guides = "collect")
+```
+
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-41-1.pdf){fig-pos='H'}
+:::
+
+```{.r .cell-code}
 ggsave("earthquake_results.pdf", width = 7, height = 4)
 ```
+:::
+
 
 # Angles to $b_{01}$ and $\gamma_{01}$
 The range of the angle between predicted mean and estimated $b_{01}$ is:
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 range(acos(mod_SvMF$pred %*% mod_SvMF$mean$p1))
 ```
 
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 1.763871 2.570258
+```
+
+
+:::
+:::
+
+
 The range of the angle between predicted mean and estimated $\gamma_{01}$ is:
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 range(acos(mod_SvMF$pred %*% mod_SvMF$G0[,1]))
 ```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 1.839712 3.065784
+```
+
+
+:::
+:::
+
 
 # Predictions in Standardised Coordinates
 
@@ -833,7 +1399,10 @@ Below I plot the predictions in standardised coordinates.
 In the first plot the residuals are coloured arrows and the orientation axes for each prediction are shown in grey.
 In the second plot the residuals are still coloured arrows, but the orientation axes are shown as strong blued, red, purple etc lines.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 get_predobspairsdf <- function(mod,
                                extra = NULL,
                                colpairs = combn(paste0("Y",1:5), 2, simplify = FALSE),
@@ -908,8 +1477,11 @@ get_predobspairsdf <- function(mod,
   pairsdf
 }
 ```
+:::
 
-```{r}
+::: {.cell}
+
+```{.r .cell-code}
 getG0arrows <- function(mod_SvMF){
   names(mod_SvMF$a) <- paste0("G0", 1:length(mod_SvMF$a))
   tibble::enframe(mod_SvMF$a, name = "Axis", value = "scale")
@@ -934,10 +1506,11 @@ getG0arrows <- function(mod_SvMF){
   return(orientations)
 }
 ```
+:::
 
-```{r}
-#| fig.width: 15
-#| fig.height: 13
+::: {.cell}
+
+```{.r .cell-code}
 defaultplot_pred <- function(mod_SvMF, s4df_clean, focusaxes = FALSE, focusresponse = FALSE){
   plotobj <- get_predobspairsdf(mod_SvMF, bind_cols(s4df_clean, rdist = mod_SvMF$dists, rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x)))) %>%
     pairedplotggprep() 
@@ -1003,16 +1576,30 @@ addaxes <- function(plotobj, mod_SvMF, axiscolour = c("red", "green", "blue", "p
                  # arrow = grid::arrow(length = unit(0.02, "npc"), type = "closed")) 
 }
 defaultplot_pred(mod_SvMF, s4df_clean)
+```
+
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-46-1.pdf){fig-pos='H'}
+:::
+
+```{.r .cell-code}
 defaultplot_pred(mod_SvMF, s4df_clean, focusaxes = TRUE)
 ```
+
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-46-2.pdf){fig-pos='H'}
+:::
+:::
+
 
 # Model Diagnostics
 ## Rotated Residuals (SI Figure)
 Here we plot the rotated residuals against each of the axes defined by $\Gamma_0$. We can see the ellipsiodal nature of Scaled von Mises Fisher residuals. The maximum size of a rotated residual is $1$ (grey circular boundary).
 
-```{r}
-#| fig.width: 8
-#| fig.height: 7
+
+::: {.cell}
+
+```{.r .cell-code}
 mod_SvMF$rresids_G0 %>%
   as_tibble() %>%
   bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
@@ -1025,15 +1612,26 @@ mod_SvMF$rresids_G0 %>%
   geom_point(aes(fill = Longitude), size = 2, shape = 21) +
   scale_fill_viridis_c(name = "Longitude") +
   scale_color_viridis_c(name = "Longitude")
+```
 
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-47-1.pdf){fig-pos='H'}
+:::
+
+```{.r .cell-code}
 ggsave("earthq_rresids.pdf", width = 8, height = 7)
 ```
+:::
+
 
 
 ## Residual Mean by Covariates (SI Figure)
 Below is the residuals in each of the basis coordinates given by the SvMF orientation against covariate values.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
   st_drop_geometry() %>%
   tidyr::pivot_longer(matches("^r.$"), names_to = "raxis", values_to = "value") %>%
@@ -1049,15 +1647,545 @@ bind_cols(mod_SvMF$rresids_G0, s4df_clean) %>%
   stat_summary(fun.data = mean_se, geom = "errorbar", width = 1.5, col = "blue", data = ~filter(.x, covariate == "Depth")) +
   scale_y_continuous(name = "Residual") +
   scale_x_continuous(name = "Covariate Value")
+```
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: pseudoinverse used at -3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: reciprocal condition number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
+-3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : reciprocal condition
+number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: pseudoinverse used at -3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: reciprocal condition number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
+-3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : reciprocal condition
+number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: pseudoinverse used at -3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: reciprocal condition number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
+-3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : reciprocal condition
+number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: pseudoinverse used at -3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: reciprocal condition number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
+-3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : reciprocal condition
+number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-48-1.pdf){fig-pos='H'}
+:::
+
+```{.r .cell-code}
 ggsave("earthq_rresids2.pdf", width = 8, height = 6)
 ```
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: pseudoinverse used at -3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: reciprocal condition number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
+-3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : reciprocal condition
+number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: pseudoinverse used at -3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: reciprocal condition number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
+-3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : reciprocal condition
+number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: pseudoinverse used at -3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: reciprocal condition number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
+-3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : reciprocal condition
+number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: pseudoinverse used at -3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+: reciprocal condition number 7.3434e-17
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
+-3.4
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius 0.2
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+else if (is.data.frame(newdata))
+as.matrix(model.frame(delete.response(terms(object)), : reciprocal condition
+number 7.3434e-17
+```
+
+
+:::
+:::
+
 
 ## Standardised Residuals
 Below the same residuals are transformed using the estimated concentration and Scale von Mises Fisher scales so that, at high-concentrations, the residuals should be close to a standard multivariate Normal (Scealy and Wood, 2019, Proposition 2).
 
-```{r}
-#| fig.width: 6
-#| fig.height: 5
+
+::: {.cell}
+
+```{.r .cell-code}
 mod_SvMF$rresids_std %>%
   as_tibble() %>%
   bind_cols(s4df_clean, rdist = mod_SvMF$dists) %>%
@@ -1075,10 +2203,17 @@ mod_SvMF$rresids_std %>%
   coord_fixed()
 ```
 
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-49-1.pdf){fig-pos='H'}
+:::
+:::
+
+
 ## Standardised Residual Distance (SI Figure)
-```{r}
-#| fig.width: 5
-#| fig.height: 2
+
+::: {.cell}
+
+```{.r .cell-code}
 stdrdist <- sqrt(rowSums(mod_SvMF$rresids_std^2))
 stdrdist[!attr(mod_SvMF$rresids_std, "samehemisphere")] <- NA_real_
 p1 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
@@ -1095,13 +2230,23 @@ p2 <- bind_cols(srdist = stdrdist, rdist = mod_SvMF$dists, s4df_clean) %>%
   xlab("Strike")
 
 p1 + p2 + plot_layout(axes = "collect")
-ggsave("earthq_srdist.pdf", width = 5, height = 2)
 ```
 
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-50-1.pdf){fig-pos='H'}
+:::
+
+```{.r .cell-code}
+ggsave("earthq_srdist.pdf", width = 5, height = 2)
+```
+:::
+
+
 ## Residual Distance (Unstandardised)
-```{r}
-#| fig.width: 5
-#| fig.height: 2
+
+::: {.cell}
+
+```{.r .cell-code}
 p1 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
   bind_cols(rename_with(as_tibble(mod_SvMF$rresids_std), ~paste0("std", .x))) %>%
   ggplot(aes(y=rdist, x = Longitude)) +
@@ -1115,15 +2260,40 @@ p2 <- bind_cols(rdist = mod_SvMF$dists, s4df_clean) %>%
 p1 + p2
 ```
 
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-51-1.pdf){fig-pos='H'}
+:::
+:::
+
+
 # Likelihood Ratio Test of vMF vs SvMF
 
 First get best vMF model
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 mod_vMF <- mobius_vMF(y = mod_SvMF$y,
                      xs = NULL, 
                      xe = mod_SvMF$xe,
                      type = "LinEuc")
 mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){mobius_vMF_refit(mod_vMF, seed)})
+```
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in mobius_vMF(y = mod_vMF$y, xs = mod_vMF$xs, xe = mod_vMF$xe, fix_qs1
+= mod_vMF$linktype$fix_qs1, : NLOPT_ROUNDOFF_LIMITED: Roundoff errors led to a
+breakdown of the optimization algorithm. In this case, the returned minimum may
+still be useful. (e.g. this error occurs in NEWUOA if one tries to achieve a
+tolerance too close to machine precision.)
+```
+
+
+:::
+
+```{.r .cell-code}
 lapply(mod_vMF_restarts, "[[", "AIC") %>%
   unlist() %>%
   tibble::enframe("seed", "AIC") %>%
@@ -1131,15 +2301,48 @@ lapply(mod_vMF_restarts, "[[", "AIC") %>%
   geom_freqpoly(aes(x = AIC), bins = 30) +
   geom_vline(xintercept = mod_vMF$AIC, col = "blue") +
   geom_rug(aes(x = AIC))
+```
+
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-52-1.pdf){fig-pos='H'}
+:::
+
+```{.r .cell-code}
 idx <- which.min(lapply(mod_vMF_restarts, "[[", "AIC") %>% unlist())
 mod_vMF <- mod_vMF_restarts[[idx]]  
 mod_vMF$k
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 38.64599
+```
+
+
+:::
+
+```{.r .cell-code}
 mod_vMF$AIC
 ```
 
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] -91.61656
+```
+
+
+:::
+:::
+
+
 Below is plot for comparing likelihoods for give simulated response `y`.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 getlikR <- function(y){
   mod1 <- mobius_vMF(y,
                      xs = NULL, 
@@ -1183,10 +2386,15 @@ getlikR <- function(y){
        SvMF = mod2)
 }
 ```
+:::
+
 
 Now we simulate the response 1000 times from the best vMF model and compare the likelihood of the vMF model to the likelihood of the SvMF model on each simulated data.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 null_likRs <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
   y_ld <- rmobius_SvMF(xs = NULL,
@@ -1199,30 +2407,101 @@ null_likRs <- pbapply::pblapply(1:1000, function(seed){
   y <- y_ld[,-6]
   getlikR(y)
 })
+```
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in mobius_vMF(y = y, xs = xs, xe = xe, start = mean, type = type, :
+NLOPT_MAXEVAL_REACHED: Optimization stopped because maxeval (above) was
+reached.
+Warning in mobius_vMF(y = y, xs = xs, xe = xe, start = mean, type = type, :
+NLOPT_MAXEVAL_REACHED: Optimization stopped because maxeval (above) was
+reached.
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in mobius_SvMF_joint_fit(y, xs, xe, mean = preest$mean, k = if
+(!is.null(k)) {: NLOPT_MAXEVAL_REACHED: Optimization stopped because maxeval
+(above) was reached.
+```
+
+
+:::
+
+```{.r .cell-code}
 obs <- getlikR(s4df_clean %>% 
                         select(s1, s2, sMrt, sMrf, sMtf) %>% 
                         st_drop_geometry() %>% 
                         as.matrix())
 ```
+:::
 
-```{r}
+::: {.cell}
+
+```{.r .cell-code}
 null_likRs_vec <- lapply(null_likRs, "[[", "likR") %>% unlist()
 sum(is.na(null_likRs_vec))
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 1
+```
+
+
+:::
+
+```{.r .cell-code}
 sum(!is.na(null_likRs_vec))
 ```
 
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 999
+```
+
+
+:::
+:::
+
+
 There were a few cases where the regression did not converge, and these have been discarded.
 p-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 mean(null_likRs_vec > obs$likR, na.rm = TRUE)
 ```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 0
+```
+
+
+:::
+:::
+
 This small $p$-value suggests that the data was not drawn from a vMF regression.
 
 # Parametric Bootstrap Regions for `a`
 Lets look at the CI for the scales of the SvMF.
 We do this by simulating from the fitted SvMF model 1000 times, and refitting a SvMF regression each time.
 
-```{r}
+
+::: {.cell}
+
+```{.r .cell-code}
 Bests <- pbapply::pblapply(1:1000, function(seed){
   set.seed(seed)
   y <- rmobius_SvMF(xs = NULL,
@@ -1248,9 +2527,11 @@ Bests <- pbapply::pblapply(1:1000, function(seed){
   return(newmod[c("mean", "k", "a", "G0")])
 }, cl = 2)
 ```
+:::
 
+::: {.cell}
 
-```{r}
+```{.r .cell-code}
 Bests_a <- lapply(Bests, "[[", "a") %>%
   simplify2array() %>%
   t()
@@ -1258,8 +2539,27 @@ colnames(Bests_a) <- paste0("a", 1:5)
 summary(Bests_a)
 ```
 
+::: {.cell-output .cell-output-stdout}
+
+```
+       a1          a2              a3               a4               a5        
+ Min.   :1   Min.   :1.694   Min.   :0.9795   Min.   :0.5848   Min.   :0.1353  
+ 1st Qu.:1   1st Qu.:2.269   1st Qu.:1.3957   1st Qu.:0.8999   1st Qu.:0.2427  
+ Median :1   Median :2.454   Median :1.5175   Median :0.9890   Median :0.2755  
+ Mean   :1   Mean   :2.463   Mean   :1.5335   Mean   :0.9931   Mean   :0.2788  
+ 3rd Qu.:1   3rd Qu.:2.644   3rd Qu.:1.6707   3rd Qu.:1.0776   3rd Qu.:0.3105  
+ Max.   :1   Max.   :3.616   Max.   :2.2851   Max.   :1.4721   Max.   :0.5947  
+```
+
+
+:::
+:::
+
+
 ## 95% CI for a (SI Table)
-```{r, results='asis'}
+
+
+```{.r .cell-code}
 df <- rbind(mod_SvMF$a[-1],
             apply(Bests_a[,-1], 2, quantile, probs = c(0.025, 0.975)) %>%
   round(2)) %>%
@@ -1272,3 +2572,16 @@ mykbl <- df %>%
   add_header_above(c(" "=1, "Scales" = 4), escape = FALSE)
 mykbl
 ```
+
+
+\begin{tabular}[t]{lllll}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{4}{c}{Scales} \\
+\cmidrule(l{3pt}r{3pt}){2-5}
+  & a2 & a3 & a4 & a5\\
+\midrule
+Estimate & 2.08 & 1.40 & 1.00 & 0.34\\
+Lower & 1.97 & 1.15 & 0.75 & 0.18\\
+Upper & 3.04 & 1.97 & 1.29 & 0.41\\
+\bottomrule
+\end{tabular}

@@ -1,5 +1,6 @@
 ---
 title: "Mid-Atlantic Regression"
+keep-md: true
 format:
   pdf:
     toc: true

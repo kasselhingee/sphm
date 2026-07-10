@@ -1,6 +1,8 @@
 #include "utils.h"
 
 mata1 jupp_Rmat(const veca1 & y1, const veca1 & y2){
+  // (y1+y2)(y1+y2)^T / (1 + y1.y2) - I
+  // Negating this gives parallel_transport_mat(y1, y2) — see R/rotatedresiduals.R.
   veca1 sum = y1 + y2;
   a1type denom = 1.0 + y1.dot(y2);//(y1.transpose() * y2).coeff(0,0)
   mata1 ident = mata1::Identity(y1.size(), y1.size());

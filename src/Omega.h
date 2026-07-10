@@ -9,7 +9,17 @@
 // [[Rcpp::depends(RcppEigen)]]
 
 
-// Define the templated C++ struct for the mobius_link_Omega parameterisation
+// Möbius mean-link parameters in the Omega parameterisation (C++ counterpart of
+// mobius_link_Omega in R). Fields:
+//   p1    — base point on S^{p-1}: the mean direction when covariates are zero.
+//   qs1   — "north-pole" direction in spherical covariate space; must satisfy
+//            qs1^T Omega_s = 0 and ||qs1|| = 1. Empty (size 0) if no spherical covariate.
+//   qe1   — "south-pole" reference direction in Euclidean covariate space; must satisfy
+//            qe1^T Omega_e = 0 and ||qe1|| = 1. Empty if no Euclidean covariate.
+//   Omega — p x (qs+qe) coefficient matrix, orthogonal to p1: p1^T Omega = 0.
+//   ce    — scalar denominator offset for the Euclidean term (length 1 when qe>0, else empty).
+// The flat vector layout used by mobius_link_Omega_cpp_vec is:
+//   [p1 (p) | qs1 (qs) | qe1 (qe) | vec(Omega) (p*(qs+qe)) | ce (qe>0)]
 template <typename T>
 struct mobius_link_Omega_cpp {
     Eigen::Matrix<T, Eigen::Dynamic, 1> p1;
@@ -55,7 +65,10 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> mobius_link_Omega_cpp_vec(const mobius_link_
     return out;
 }
 
-// Function to unvectorize into a mobius_link_Omega_cpp object
+// Function to unvectorize into a mobius_link_Omega_cpp object.
+// The flat vector layout is [p1 (p) | qs1 (qs) | qe1 (qe) | vec(Omega) (p*(qs+qe)) | ce (qe>0)].
+// Given total length = p + qs + qe + p*(qs+qe) + (qe>0), solve for qs:
+//   qs = (vec.size() - p - (qe>0) - qe - p*qe) / (1 + p)
 template <typename T>
 mobius_link_Omega_cpp<T> mobius_link_Omega_cpp_unvec(const Eigen::Matrix<T, Eigen::Dynamic, 1>& vec, const int p, const int qe = 0) {
     int qs = (vec.size() - p - (qe > 0) - qe - p * qe) / (1 + p);

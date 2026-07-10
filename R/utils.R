@@ -13,12 +13,16 @@ vnorm=function(x) sqrt(vnorm2(x))
 vnorm2=function(x) sum(x^2)
 
 #' @noRd
-#' @title Stereographic projection
-#' @param x is a matrix of row vectors
+#' @title Stereographic projection from north pole
+#' @description Stereographic projection from the north pole `e1 = (1,0,...,0)` of
+#' S^{p-1} to R^{p-1}: for x = (x_1,...,x_p) on the sphere,
+#' `Sp(x)_j = x_{j+1} / (1 + x_1)` for j = 1,...,p-1.
+#' Undefined at the north pole (projection point); those rows are set to 1e9.
+#' @param x is a matrix of row vectors on the sphere
 #' @noRd
 Sp=function(x) {
   if (is.vector(x)){x <- matrix(x, nrow = 1)}
-  # detect -e1 vectors, remembering the x may be in a disc
+  # detect north-pole vectors (x = e1 = (1,0,...,0)), where the projection is undefined
   is_me1 <- colSums(t(x) != c(1, rep(0, ncol(x) - 1))) == 0
   out <- x[, -1, drop = FALSE]
   out[is_me1, ] <- 1e+9
@@ -28,11 +32,14 @@ Sp=function(x) {
 }
 
 #' @noRd
-#' @title Inverse stereographic projection
-#' @param y is a matrix of row vectors
+#' @title Inverse stereographic projection from north pole
+#' @description Inverse of `Sp()`: maps y in R^{p-1} back to S^{p-1} via
+#' `(1 - ||y||^2, 2*y) / (1 + ||y||^2)`.
+#' @param y is a matrix of row vectors in R^{p-1}
 iSp=function(y){
   if (is.vector(y)){y <- matrix(y, nrow = 1)}
   norms2 <- rowSums(y^2)
+  # inverse stereographic formula from the north pole: (1-||y||^2, 2y) / (1+||y||^2)
   out <- cbind(1-norms2, 2*y)/(1+norms2)
   if (nrow(out) == 1){return(as.vector(out))}
   else {return(out)}
@@ -40,16 +47,22 @@ iSp=function(y){
 
 #' @noRd
 #' @title Cayley Transform
-#' @description Map the upper triangle of a skew-symmetric matrix to an
-#' orthogonal matrix with (non-negative) determinant.
+#' @description Maps the upper-triangle entries (in vector form) of a skew-symmetric
+#' matrix A to the orthogonal matrix `(I - A)(I + A)^{-1}`. The Cayley transform is
+#' guaranteed to produce an orthogonal matrix for any skew-symmetric A, making it useful
+#' for parameterising rotation matrices without explicit orthogonality constraints.
+#' The inverse operation is `inverse_cayley_transform()` (exported from C++).
+#' @param x numeric vector of length `d*(d-1)/2`: the upper-triangle entries of a
+#'   `d x d` skew-symmetric matrix, filled column-by-column.
 #' @examples
 #' x <- 1:3
 cayley <- function(x){
-  # length(x) <- d * (d-1)/2
+  # length(x) = d*(d-1)/2; recover d from the quadratic formula
   d <- (1 + sqrt(8*length(x) + 1))/2
   p <- matrix(0., d, d)
   p[upper.tri(p, diag = FALSE)] <- x
   p[lower.tri(p, diag = FALSE)] <- -t(p)[lower.tri(p, diag = FALSE)]
+  # Cayley transform: (I - A)(I + A)^{-1}, guaranteed orthogonal for skew-symmetric A
   P=(diag(1,d)-p)%*%solve(diag(1,d)+p)
   return(P)
 }

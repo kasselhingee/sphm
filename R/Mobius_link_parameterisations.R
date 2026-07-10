@@ -194,6 +194,8 @@ cann2Omega <- function(obj, check = TRUE){
   qe1 <- obj$Qe[, 1]
   Omega_s <- Omega_e <- ce <- NULL
   if (!is.null(qs1)){
+    # P[,-1] and Qs[,-1] are the P* and Qs* sub-matrices (columns 2:p of P and Qs);
+    # column 1 of each is the base-point direction and does not appear in Omega.
     Omega_s <- obj$P[,-1] %*% obj$Bs %*% t(obj$Qs[, -1])
   }
   if (!is.null(qe1)){
@@ -216,6 +218,8 @@ Omega2cann <- function(obj, check = TRUE){
   # much of the rest uses the SVD of Omega as written in the Euclidean link document (not ce)
   Qs <- Qe <- Bs <- Be <- ce <- NULL
   if (length(obj$qs1) > 0){
+    # svdres$v rows carry unnormalised Qs* columns; their norms encode the singular values
+    # of Omega, so Bs = diag(norms * singular_values) recovers the diagonal scale matrix.
     Qs_unnorm <- svdres$v[seq.int(1, length.out = length(obj$qs1)), , drop = FALSE]
     Qs_norms <- sqrt(colSums(Qs_unnorm^2))
     Qsstar <- t(t(Qs_unnorm)/ Qs_norms)
@@ -333,12 +337,17 @@ mobius_link_Omega_check_numerical <- function(obj){ #uses squared values for smo
       Omegaqe1 = (obj$Omega[, qs + seq.int(1, qe)] %*% obj$qe1)^2
     )
   }
-  if ((qs > 0) & (qe > 0)) {# for commutivity check
-    OmOm <- obj$Omega %*% t(obj$Omega) 
-    Is_tilde <- diag(1, qs + qe, qs) # for commutivity check
-    OmpartOmpart <- obj$Omega %*% (Is_tilde %*% t(Is_tilde)) %*% t(obj$Omega) # for commutivity check
-    Omega_comm = (sum((OmOm %*% OmpartOmpart - OmpartOmpart %*% OmOm)^2)^2) # for commutivity check - Frobenius norm of 0
-    # above second ^2 is a hack to make Omega_comm be on a similar scale to all the other tests. See the C++ implementation of this constraint for a vector that is a more refined representation of the constraint
+  if ((qs > 0) & (qe > 0)) {
+    # Commutativity check: the Möbius link is well-defined only when the spherical and
+    # Euclidean sub-matrices of Omega commute under the products OmOm and OmpartOmpart.
+    # This ensures the link's stereographic and Euclidean components compose consistently.
+    # See ExtraOmegaConstraint.pdf for the derivation; the C++ version in Omega.cpp gives
+    # a more refined vector-valued constraint used in the optimiser.
+    OmOm <- obj$Omega %*% t(obj$Omega)
+    Is_tilde <- diag(1, qs + qe, qs)
+    OmpartOmpart <- obj$Omega %*% (Is_tilde %*% t(Is_tilde)) %*% t(obj$Omega)
+    Omega_comm = (sum((OmOm %*% OmpartOmpart - OmpartOmpart %*% OmOm)^2)^2)
+    # second ^2 is a scaling hack to match the magnitude of other checks; see C++ for refined version
     checkvals <- c(checkvals, Omega_comm = Omega_comm)
   }
   return(checkvals)

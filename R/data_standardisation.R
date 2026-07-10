@@ -46,7 +46,10 @@ second_moment_mat <- function(y){
   eig_projmom2 <- eigen(projmom2)
   degeneratedirections <- abs(eig_projmom2$values) <= sqrt(.Machine$double.eps)
   if (sum(degeneratedirections) > 1){
-    # making the mom2 a little ridgier, then project again to remove the mean and continue
+    # Ridge perturbation: add decreasing amounts to degenerate eigenvalues to break ties and
+    # give a stable, well-defined eigenbasis. The divisors 2, 3, ... ensure the perturbation
+    # decreases, so the result is still a valid (approximate) second-moment matrix. Scale is the
+    # smallest non-degenerate eigenvalue so the perturbation is small relative to the data spread.
     eig_projmom2$values[degeneratedirections] <- eig_projmom2$values[degeneratedirections] + min(eig_projmom2$values[!degeneratedirections])/seq.int(2, length.out = sum(degeneratedirections))
     projmom2 <- mnproj %*% eig_projmom2$vectors %*% diag(eig_projmom2$values) %*% t(eig_projmom2$vectors) %*% mnproj
     eig_projmom2 <- eigen(projmom2)
@@ -151,20 +154,23 @@ recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
     }
   }
   
-  # update for centering first
+  # Update for centering first: ce absorbs the shift so that Qe1^T (xe - center) + ce_new
+  # equals Qe1^T xe + ce_old. The Omega column for the constant covariate is updated
+  # to preserve the linear term after centering.
   omstd$ce <- om$ce + drop(omstd$qe1 %*% xecenter) 
   if ((onescovaridx > 0) && (onescovaridx < qe)){
     omstd$Omega[, qs + onescovaridx] <- om$Omega[, qs + onescovaridx, drop = FALSE] + om$Omega[,seq.int(qs + 1, length.out = qe)] %*% xecenter
   }
   # Here unclear how to update qe1 based on centering if qe1[onescovaridx] is non-zero
   
-  # update based on rotations xsrot and xerot
+  # Rotate pole vectors by their respective standardisation rotations, and post-multiply
+  # the Omega columns by the transposes (to account for the row-vector convention in the data).
   omstd$qs1 <- drop(xsrot %*% omstd$qs1)
   omstd$qe1 <- drop(xerot %*% omstd$qe1)
   omstd$Omega[, seq.int(1, length.out = qs)] <- omstd$Omega[, seq.int(1, length.out = qs)] %*% t(xsrot)
   omstd$Omega[, seq.int(qs + 1, length.out = qe)] <- omstd$Omega[, seq.int(qs + 1, length.out = qe)] %*% t(xerot)
-  
-  # add yrot change
+
+  # Pre-multiply Omega and rotate p1 by the y-rotation.
   omstd$Omega <- yrot %*% omstd$Omega
   omstd$p1 <- drop(yrot %*% omstd$p1)
   return(omstd)
@@ -217,6 +223,9 @@ undo_recoordinate_Omega <- function(param, yrot = diag(length(param$p1)),
 
 # Standardise all data in preplist (y, xs, xe) and update the starting link parameters
 # to match the standardised coordinate system. If intercept = FALSE, xe is not standardised.
+# Standardisation rotates y and xs so their sample mean is at the north pole, and applies
+# PCA whitening to xe. All transformations are stored as attributes ("std_rotation",
+# "std_center") so that undo_recoordinate_Omega() can invert the effect on link parameters.
 standardise_data <- function(preplist, intercept){
   # standardise inputs
   preplist$y <- standardise_sph(preplist$y)
@@ -310,7 +319,10 @@ defaultstart <- function(preplist, type){
                 Qe = if (!is.null(preplist$xe)){diag(1, ncol(preplist$xe), p)},
                 ce = if (!is.null(preplist$xe)){1}
     )
-    if ((type == "SpEuc") && !is.null(preplist$xe)){ #default to be larger an all values of -xe
+    if ((type == "SpEuc") && !is.null(preplist$xe)){
+      # Ensure the denominator Qe[,1]^T xe + ce is strictly positive for all training points
+      # (the link is undefined when the denominator is zero or negative). max(-xe) + 0.1*IQR(xe)
+      # places ce just above the largest negative value in xe.
       preplist$start$ce[1] <- max(-preplist$xe)  +  0.1*IQR(preplist$xe)
     }
   }

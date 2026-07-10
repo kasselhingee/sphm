@@ -16,7 +16,8 @@ SvMF_moment_axes <- function(y, mu){
   mom2nd <- t(projy) %*% projy #t() %*% () quickly calculates the sum of projection matrices of rows of projy
   mon2ndeigen <- eigen(mom2nd, symmetric = TRUE)
   Gest <- cbind(mu, mon2ndeigen$vectors[,-length(mu)])
-  #Put Gest into somewhat standard from
+  # Sign-standardise the eigenvectors (eigen() returns arbitrary-sign columns) and ensure
+  # Gest has positive determinant, making the result a proper rotation matrix.
   Gest <- toBigPosElRot_keepfirst(Gest)
   return(Gest)
 }
@@ -33,7 +34,8 @@ SvMF_prelim_scales <- function(y, G){
   # at high concentrations staryL is Gaussian with a diagonal matrix related to the scales a
   # such that the variance is (a_i/(k *a_1))^2
   aremaining <- apply(staryL, 2, sd) #this is actually a_i/(k *a_1)
-  # since we know they must multiply to 1 we can avoid knowing k and a_1
+  # Normalise to enforce the identifiability constraint prod(aremaining) = 1. Dividing by
+  # the geometric mean removes the common k*a_1 factor without needing to know k or a_1.
   aremaining <- aremaining/prod(aremaining)^(1/length(aremaining))
   return(aremaining)
 }

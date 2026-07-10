@@ -22,14 +22,16 @@ a1type besselIasym(const a1type& x, const double & nu, int order, bool log_resul
   // Precompute 8*x for efficiency
   a1type x8 = 8.0 * x;
   
-  // Compute the asymptotic series for f(x, nu) up to order
-  a1type d = 0.0; // Initialize d
+  // Evaluate the A&S 9.7.1 correction factor f(z) by Horner's method, iterating backwards
+  // from k = order down to k = 1. Here mu (= term1*term2) is the k-th A&S coefficient
+  // 4*a^2 for that term (not to be confused with the distribution mean); d accumulates the
+  // nested product so that after the loop d = the total correction to subtract from 1.
+  a1type d = 0.0;
   if (order >= 1) {
     for (int k = order; k >= 1; --k) {
-      // mu = (2*(nu-k)+1)*(2*(nu+k)-1)
       a1type term1 = 2.0 * (nu - k) + 1.0;
       a1type term2 = 2.0 * (nu + k) - 1.0;
-      a1type mu = term1 * term2;
+      a1type mu = term1 * term2;  // A&S 4*a^2 coefficient for order k
       d = (1.0 - d) * mu / (k * x8);
     }
   }
@@ -78,8 +80,9 @@ a1type besselItrunc(const a1type& x, const double & nu, int order, bool log_resu
 
 // description of this function in corresponding header file
 a1type besselImixed(const a1type & x, const double & nu, double threshold, int order, bool log_result) {
-  // CppAD::CondExpLe returns one of two T‐typed branches
-  // depending on x <= threshold
+  // CppAD::CondExpLe is required instead of a plain if/else: it evaluates BOTH branches
+  // with the AD type, keeping the CppAD tape differentiable through the threshold switch.
+  // A plain if/else would break the tape by creating a non-differentiable branch.
   a1type thresh = threshold;
   return CppAD::CondExpLe(
     x,                          // condition: x <= threshold?
@@ -114,7 +117,9 @@ a1type vMF_log_norm_const(a1type kappa, int p) {
   }
 }
 
-// Helper get_Hstar
+// H* is the orthonormal basis for the tangent space at m on S^{p-1}, constructed via the
+// south-pole stereographic projection (Scealy & Wood 2019, Section 3). Its columns span the
+// tangent plane at m and are used to express the SvMF density in local coordinates.
 mata1 get_Hstar(veca1 m) {
   a1type m1 = m(0);  // First element of m
   veca1 mL = m.tail(m.size() - 1);  // Vector m without the first element
@@ -149,10 +154,13 @@ veca1 ldSvMF_cann(mata1 y, a1type k, veca1 a, mata1 G) {
 veca1 ldSvMF_muV(mata1 y, a1type k, veca1 m, a1type a1, mata1 V) {
   int p = m.size();
   a1type lconst = - vMF_log_norm_const(k, p) - CppAD::log(a1);
-  
+
   mata1 Hstar = get_Hstar(m);
-  
+  // ystarstarL = y * H* projects y onto the tangent space at m.
   mata1 ystarstarL = y * Hstar;
+  // denomA = (y.m / a1)^2 is the squared contribution from the mean direction,
+  // denomB = ystarstarL * V^{-1} * ystarstarL^T is the tangential quadratic form,
+  // denom = sqrt(denomA + denomB) is the effective radius used in the density formula.
   veca1 denomA = (y * m / a1).array().square();
   veca1 denomB = ((ystarstarL * V.inverse()).array() * ystarstarL.array()).rowwise().sum();
   veca1 denom = (denomA + denomB).array().sqrt();

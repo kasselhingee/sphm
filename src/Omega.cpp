@@ -18,12 +18,13 @@ veca1 Omega_constraints(veca1 & vec, int p, int qe) {
     Euccheck(0) = ompar.qe1.squaredNorm() - 1.;
   }
 
-  // commutivity constraint check // because OmOm = OmpartOmpart(Euc) + OmpartOmpart(Sph), checking both is redundant
-  // only needed when BOTH qe > 0 and qs > 0
-  // require that commutivity of the *projected* Omega holds
-  // Since projected to be orthogonal to p1, there are only (p-1) vectors to be orthogonal to each other -->
-  // I suspect that means only (p-1)*(p-2)/2 unique constraints, which ones though!?? a sum would avoid this
-  // See ExtraOmegaConstraint.pdf for more maths behind this expression of this Omega constraint.
+  // Commutativity constraint: required only when both spherical and Euclidean covariates
+  // are present. The Möbius link is well-defined only when the spherical and Euclidean
+  // sub-blocks of Omega commute under OmOm = Omega*Omega^T. Specifically, OmOm and
+  // OmpartOmpart (the contribution from the spherical sub-block) must commute.
+  // After rotating so that p1 = e1 (north pole), only the lower (p-1)x(p-1) block is
+  // non-trivial, giving (p-1)*(p-2)/2 independent scalar constraints.
+  // See ExtraOmegaConstraint.pdf for the derivation.
   veca1 commutecheck(0);
   if ((ompar.qs > 0) && (ompar.qe > 0)){
     mobius_link_Omega_cpp<a1type> ompar_proj = Omega_proj_cpp(ompar);

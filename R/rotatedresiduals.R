@@ -36,6 +36,8 @@ cruderesid <- function(y, ypred){
     projmat <- ypred[i,] %*% t(ypred[i, ])
     y[i, ] - projmat %*% y[i, ]
   }))
+  # dot product >= 0 means y and ypred are in the same open hemisphere (angle < 90 degrees);
+  # stored as an attribute and used downstream to flag potentially unreliable residuals.
   samehemisphere <- rowSums(y * ypred) >= 0
   attr(out, "samehemisphere") <- samehemisphere
   return(out)
@@ -69,12 +71,12 @@ parallel_transport_mat <- function(start, end){ #assumes a and b are unit vector
   ab <- (end %*% start)[[1]]
   if (ab > 1){ab <- min(ab, 1)}
   if (ab < -1){ab <- max(ab, -1)}
-  alpha <- acos(ab)
-  cvec <- start - end*ab
+  alpha <- acos(ab)          # geodesic angle from end to start
+  cvec <- start - end*ab     # unit tangent vector at end pointing toward start (after normalising)
   if ((cvec %*% cvec)[[1]] > 0){
     cvec <- cvec/sqrt(cvec %*% cvec)[[1]] #if statement here is useful when start==end
   }
-  A <- end%o%cvec - cvec%o%end
+  A <- end%o%cvec - cvec%o%end  # skew-symmetric generator of the geodesic rotation
   Q = diag(length(end)) + sin(alpha)*A + (cos(alpha) - 1)*(end%o%end + cvec%o%cvec)
   return(Q)
 }
@@ -94,6 +96,8 @@ resid_SvMF_partransport <- function(y, ypred, k = NULL, a = NULL, G0, scale = TR
   rresids_std <- rresids_tmp <- rotated_resid(y, ypred, G0[,1])
   rresids_std <- rresids_std %*% G0
   rresids_std <- rresids_std[, -1]
+  # sqrt(k) * diag(a[1]/a[-1]) inverts the asymptotic SvMF covariance a_i^2/(k*a_1^2),
+  # making the scaled residuals approximately i.i.d. standard normal under high concentration.
   if (scale){rresids_std <- sqrt(k) * rresids_std %*% diag(a[1]/a[-1])}
   attr(rresids_std, "samehemisphere") <-  attr(rresids_tmp, "samehemisphere")
   colnames(rresids_std) <- paste0("r", 1:ncol(rresids_std))

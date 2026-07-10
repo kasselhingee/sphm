@@ -28,6 +28,8 @@ veca1 ld_mobius_SvMF_partransport(mata1 y, mata1 xs, mata1 xe, mobius_link_Omega
   a.segment(1, p-1) = aremaining;
   for (int i = 0; i < y.rows(); ++i){
     G.col(0) = ypred.row(i);
+    // Parallel-transport the non-first G0 columns from G0[,1] to ypred[i]:
+    // -jupp_Rmat(G0[,1], ypred[i]) = parallel_transport_mat(G0[,1], ypred[i]) (see utils.h).
     G.block(0, 1, p, p-1) = jupp_Rmat(G0.col(0), ypred.row(i)) * G0star;
     ld(i) = ldSvMF_cann(y.row(i), k, a, G)(0);
   }
@@ -153,7 +155,10 @@ veca1 mobius_SvMF_partransport_nota1_tovecparams(veca1 & omvec, a1type k, veca1 
   mata1 rotmat; //rot matrix to represent using a Cayley transform
   //if G01 is fixed or p1 then get a p-1 x p-1 matrix reprensenting the remaining free columns
   if ((G01behaviour == "p1") || (G01behaviour == "fixed")){
-    //parallel transport along p1 to referencecoords[,1] so that first row of G0star is zeros
+    // Parallel-transport G0[,-1] from G0[,1] to the north pole (referencecoords[,1] = e1),
+    // so the first row of G0star is zero (the north pole component is carried to itself).
+    // Dropping the first row gives a square (p-1)x(p-1) matrix, which can be represented
+    // by the Cayley transform without additional constraints.
     mata1 G0star = -jupp_Rmat(G0.col(0), veca1::Unit(p,0)) * G0.rightCols(p-1);
     //drop first row of zeros
     rotmat = G0star.bottomRows(p-1);
@@ -194,6 +199,9 @@ std::tuple<veca1, a1type, veca1, mata1> mobius_SvMF_partransport_nota1_fromvecpa
   
   veca1 omvec = mainvec.segment(0,  Omega_veclength(p, qs, qe));
   a1type k = mainvec(omvec.size());
+  // Recover aremaining from its log-scale encoding. The first element satisfies
+  // prod(aremaining) = 1, so aremaining[0] = exp(-sum(log(aremaining[1:])));
+  // the remaining elements are stored as their log values.
   veca1 laremaining_m1(p - 2); //convert log remaining to full aremaining
   laremaining_m1 = mainvec.segment(omvec.size() + 1, p - 2);
   veca1 aremaining(p-1);
@@ -275,7 +283,8 @@ pADFun tape_ld_mobius_SvMF_partransport_nota1(veca1 omvec, a1type k, a1type a1, 
   veca1 a1vec(1);
   a1vec(0) = a1;
 
-  // tape with main vector and a1 as a dynamic
+  // a1 is made a dynamic parameter (not independent): it is fixed during optimisation and
+  // derivatives w.r.t. it are not needed, but it must still flow through the tape.
   CppAD::Independent(mainvec, a1vec);
   // split mainvec into parts, overwriting passed arguments
   auto result = mobius_SvMF_partransport_nota1_fromvecparams(mainvec, p, qs, qe, referencecoords, G01behaviour, tapeG01);//final argument only used if G01behaviour == "fixed"
@@ -290,6 +299,9 @@ pADFun tape_ld_mobius_SvMF_partransport_nota1(veca1 omvec, a1type k, a1type a1, 
 
   CppAD::ADFun<double> tape;  //copying the change_parameter example, a1type is used in constructing f, even though the input and outputs to f are both a2type.
   tape.Dependent(mainvec, ld);
+  // Disable NaN checks: CondExpLe in besselImixed evaluates both branches, producing NaN
+  // in the asymptotic branch for small x. This is expected and harmless since only the
+  // converged branch contributes to the result.
   tape.check_for_nan(false);
 
   pADFun out(tape, mainvec, a1vec, "ld_mobius_SvMF_partransport_nota1");

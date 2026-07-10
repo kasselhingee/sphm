@@ -52,14 +52,20 @@ mobius_link_pred_cann <- function(xs = NULL, xe = NULL, paramobj){
   y <- matrix(0, nrow = max(nrow(xs), nrow(xe)), ncol = ncol(paramobj$P) - 1)
   
   if (!is.null(paramobj$Qs)){
+    # xs stored as row vectors, so xs %*% Qs right-multiplies; Sp is applied row-wise.
     y <- y + Sp(xs %*% paramobj$Qs) %*% paramobj$Bs
   }
   if (!is.null(paramobj$Qe)){
     xetilde <- xe %*% paramobj$Qe #first column is used in denominator
+    # xetilde[,1] = Qe[,1]^T xe acts as the denominator in the stereographic-like Euclidean
+    # projection; Qe[,1] is the "south-pole" reference direction in covariate space, and
+    # ce is an offset ensuring the denominator stays positive for all training points.
     numerator <- (xetilde[, -1, drop = FALSE]) %*% paramobj$Be
     denominator <- xetilde[,1] + paramobj$ce
     y <- y + (numerator/denominator)
   }
+  # iSp maps the accumulated displacement y back to S^{p-1}; t(P) rotates the result
+  # to the target orientation (transpose because the output is stored as a row vector).
   out <- iSp(y) %*% t(paramobj$P)
   return(out)
 }

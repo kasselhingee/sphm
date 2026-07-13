@@ -20,7 +20,7 @@ format:
 
 ---
 
-__Code version: 0.0.17__
+__Code version: 0.0.18__
 
 
 
@@ -34,6 +34,28 @@ __Code version: 0.0.17__
 
 
 
+
+
+# Angular Distance Between Observations
+
+::: {.cell}
+
+```{.r .cell-code}
+Y <- fulldf %>%
+  select(starts_with("Y")) %>%
+  as.matrix()
+ang_dist <- acos(pmin(Y %*% t(Y), 1)) # pmin clamps dot products to <=1, preventing NaN from acos due to floating-point rounding
+tibble::enframe(ang_dist[lower.tri(ang_dist)], value = "ang_dist") %>%
+  ggplot() +
+  geom_histogram(aes(x = ang_dist), bins = 30) +
+  geom_rug(aes(x = ang_dist)) +
+  scale_x_continuous(name = "Angular Distance (radians)")
+```
+
+::: {.cell-output-display}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-1-1.pdf){fig-pos='H'}
+:::
+:::
 
 
 # Euc Covariates
@@ -106,7 +128,7 @@ plotdata
 ```
 
 ::: {.cell-output-display}
-![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-2-1.pdf){fig-pos='H'}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-3-1.pdf){fig-pos='H'}
 :::
 :::
 
@@ -274,7 +296,26 @@ Note that we have not optimised Q for ESAG2 because optimisation did not converg
 
 ::: {.cell}
 ::: {.cell-output-display}
-![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-6-1.pdf)
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-7-1.pdf)
+:::
+:::
+
+
+# Angular Distance Between Predictions
+
+::: {.cell}
+
+```{.r .cell-code}
+pred_ang_dist <- acos(pmin(mod$pred %*% t(mod$pred), 1))
+tibble::enframe(pred_ang_dist[lower.tri(pred_ang_dist)], value = "ang_dist") %>%
+  ggplot() +
+  geom_histogram(aes(x = ang_dist), bins = 30) +
+  geom_rug(aes(x = ang_dist)) +
+  scale_x_continuous(name = "Angular Distance (radians)")
+```
+
+::: {.cell-output-display}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-8-1.pdf){fig-pos='H'}
 :::
 :::
 
@@ -339,7 +380,7 @@ Geodesic distance between predicted mean and observation
 
 ::: {.cell messages='false'}
 ::: {.cell-output-display}
-![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-8-1.pdf)
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-10-1.pdf)
 :::
 :::
 
@@ -387,7 +428,7 @@ Geodesic distance between predicted mean and observation
 ```
 
 ::: {.cell-output-display}
-![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-11-1.pdf){fig-pos='H'}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-13-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -468,7 +509,7 @@ lapply(restarts, "[[", "obj") %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-13-1.pdf){fig-pos='H'}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-15-1.pdf){fig-pos='H'}
 :::
 :::
 
@@ -510,7 +551,7 @@ lapply(restarts, "[[", "AIC") %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-14-1.pdf){fig-pos='H'}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-16-1.pdf){fig-pos='H'}
 :::
 :::
 

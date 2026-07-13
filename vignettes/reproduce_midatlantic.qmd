@@ -83,6 +83,19 @@ fulldf <- bind_cols(t(raw$X), t(raw$Y)) %>%
   mutate(westedge = Y2 < -0.3)
 ```
 
+# Angular Distance Between Observations
+```{r}
+Y <- fulldf %>%
+  select(starts_with("Y")) %>%
+  as.matrix()
+ang_dist <- acos(pmin(Y %*% t(Y), 1)) # pmin clamps dot products to <=1, preventing NaN from acos due to floating-point rounding
+tibble::enframe(ang_dist[lower.tri(ang_dist)], value = "ang_dist") %>%
+  ggplot() +
+  geom_histogram(aes(x = ang_dist), bins = 30) +
+  geom_rug(aes(x = ang_dist)) +
+  scale_x_continuous(name = "Angular Distance (radians)")
+```
+
 # Euc Covariates
 ```{r}
 xe <- fulldf %>% 
@@ -349,6 +362,16 @@ plotours + ggtitle("Ours") + theme(legend.position = "none") +
 plotIAG1 + ggtitle("IAG1") + 
   plotESAG1 + ggtitle("ESAG1") + 
   plotESAG2 + ggtitle("ESAG2")
+```
+
+# Angular Distance Between Predictions
+```{r}
+pred_ang_dist <- acos(pmin(mod$pred %*% t(mod$pred), 1))
+tibble::enframe(pred_ang_dist[lower.tri(pred_ang_dist)], value = "ang_dist") %>%
+  ggplot() +
+  geom_histogram(aes(x = ang_dist), bins = 30) +
+  geom_rug(aes(x = ang_dist)) +
+  scale_x_continuous(name = "Angular Distance (radians)")
 ```
 
 # LOOCV MSE

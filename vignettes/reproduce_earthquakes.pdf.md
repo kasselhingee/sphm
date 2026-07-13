@@ -785,6 +785,29 @@ s4df_clean$Depth %>% as.factor() %>% summary()
 :::
 
 
+## Angular Distance Between Earthquakes
+
+::: {.cell}
+
+```{.r .cell-code}
+Y <- s4df_clean %>%
+  st_drop_geometry() %>%
+  select(s1, s2, sMrt, sMrf, sMtf) %>%
+  as.matrix()
+ang_dist <- acos(pmin(Y %*% t(Y), 1)) # pmin clamps dot products to <=1, preventing NaN from acos due to floating-point rounding
+tibble::enframe(ang_dist[lower.tri(ang_dist)], value = "ang_dist") %>%
+  ggplot() +
+  geom_histogram(aes(x = ang_dist), bins = 30) +
+  geom_rug(aes(x = ang_dist)) +
+  scale_x_continuous(name = "Angular Distance (radians)")
+```
+
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-26-1.pdf){fig-pos='H'}
+:::
+:::
+
+
 ## Main Figure: Earthquake Locations
 
 ::: {.cell}
@@ -812,7 +835,7 @@ ggplot() +
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-26-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-27-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -987,7 +1010,7 @@ lapply(restarts, "[[", "AIC") %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-30-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-31-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1288,7 +1311,7 @@ get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s"))) %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-40-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-41-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1345,7 +1368,7 @@ obsplots/
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-41-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-42-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1389,6 +1412,25 @@ range(acos(mod_SvMF$pred %*% mod_SvMF$G0[,1]))
 ```
 
 
+:::
+:::
+
+
+# Angular Distance Between Predictions
+
+::: {.cell}
+
+```{.r .cell-code}
+pred_ang_dist <- acos(pmin(mod_SvMF$pred %*% t(mod_SvMF$pred), 1))
+tibble::enframe(pred_ang_dist[lower.tri(pred_ang_dist)], value = "ang_dist") %>%
+  ggplot() +
+  geom_histogram(aes(x = ang_dist), bins = 30) +
+  geom_rug(aes(x = ang_dist)) +
+  scale_x_continuous(name = "Angular Distance (radians)")
+```
+
+::: {.cell-output-display}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-45-1.pdf){fig-pos='H'}
 :::
 :::
 
@@ -1579,7 +1621,7 @@ defaultplot_pred(mod_SvMF, s4df_clean)
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-46-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-48-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1587,7 +1629,7 @@ defaultplot_pred(mod_SvMF, s4df_clean, focusaxes = TRUE)
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-46-2.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-48-2.pdf){fig-pos='H'}
 :::
 :::
 
@@ -1615,7 +1657,7 @@ mod_SvMF$rresids_G0 %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-47-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-49-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1910,7 +1952,7 @@ number 7.3434e-17
 :::
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-48-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-50-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -2204,7 +2246,7 @@ mod_SvMF$rresids_std %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-49-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-51-1.pdf){fig-pos='H'}
 :::
 :::
 
@@ -2233,7 +2275,7 @@ p1 + p2 + plot_layout(axes = "collect")
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-50-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-52-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -2261,7 +2303,7 @@ p1 + p2
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-51-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-53-1.pdf){fig-pos='H'}
 :::
 :::
 
@@ -2304,7 +2346,7 @@ lapply(mod_vMF_restarts, "[[", "AIC") %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-52-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-54-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}

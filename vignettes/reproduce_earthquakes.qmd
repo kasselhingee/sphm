@@ -492,6 +492,20 @@ nrow(s4df_clean)
 s4df_clean$Depth %>% as.factor() %>% summary()
 ```
 
+## Angular Distance Between Earthquakes
+```{r}
+Y <- s4df_clean %>%
+  st_drop_geometry() %>%
+  select(s1, s2, sMrt, sMrf, sMtf) %>%
+  as.matrix()
+ang_dist <- acos(pmin(Y %*% t(Y), 1)) # pmin clamps dot products to <=1, preventing NaN from acos due to floating-point rounding
+tibble::enframe(ang_dist[lower.tri(ang_dist)], value = "ang_dist") %>%
+  ggplot() +
+  geom_histogram(aes(x = ang_dist), bins = 30) +
+  geom_rug(aes(x = ang_dist)) +
+  scale_x_continuous(name = "Angular Distance (radians)")
+```
+
 ## Main Figure: Earthquake Locations
 ```{r}
 #| fig.width: 7
@@ -825,6 +839,16 @@ range(acos(mod_SvMF$pred %*% mod_SvMF$mean$p1))
 The range of the angle between predicted mean and estimated $\gamma_{01}$ is:
 ```{r}
 range(acos(mod_SvMF$pred %*% mod_SvMF$G0[,1]))
+```
+
+# Angular Distance Between Predictions
+```{r}
+pred_ang_dist <- acos(pmin(mod_SvMF$pred %*% t(mod_SvMF$pred), 1))
+tibble::enframe(pred_ang_dist[lower.tri(pred_ang_dist)], value = "ang_dist") %>%
+  ggplot() +
+  geom_histogram(aes(x = ang_dist), bins = 30) +
+  geom_rug(aes(x = ang_dist)) +
+  scale_x_continuous(name = "Angular Distance (radians)")
 ```
 
 # Predictions in Standardised Coordinates

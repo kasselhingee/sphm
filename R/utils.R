@@ -13,17 +13,17 @@ vnorm=function(x) sqrt(vnorm2(x))
 vnorm2=function(x) sum(x^2)
 
 #' @noRd
-#' @title Stereographic projection from north pole
-#' @description Stereographic projection from the north pole `e1 = (1,0,...,0)` of
+#' @title Stereographic projection from south pole
+#' @description Stereographic projection from the south pole `-e1 = (-1,0,...,0)` of
 #' S^{p-1} to R^{p-1}: for x = (x_1,...,x_p) on the sphere,
 #' `Sp(x)_j = x_{j+1} / (1 + x_1)` for j = 1,...,p-1.
-#' Undefined at the north pole (projection point); those rows are set to 1e9.
+#' Undefined at the south pole (projection point); those rows are set to 1e9.
 #' @param x is a matrix of row vectors on the sphere
 #' @noRd
 Sp=function(x) {
   if (is.vector(x)){x <- matrix(x, nrow = 1)}
-  # detect north-pole vectors (x = e1 = (1,0,...,0)), where the projection is undefined
-  is_me1 <- colSums(t(x) != c(1, rep(0, ncol(x) - 1))) == 0
+  # detect south-pole vectors (x = -e1 = (-1,0,...,0)), where the projection is undefined
+  is_me1 <- colSums(t(x) != c(-1, rep(0, ncol(x) - 1))) == 0
   out <- x[, -1, drop = FALSE]
   out[is_me1, ] <- 1e+9
   out[!is_me1, ] <- out[!is_me1, , drop = FALSE]/(1+x[!is_me1, 1, drop = TRUE])
@@ -32,14 +32,14 @@ Sp=function(x) {
 }
 
 #' @noRd
-#' @title Inverse stereographic projection from north pole
+#' @title Inverse stereographic projection from south pole
 #' @description Inverse of `Sp()`: maps y in R^{p-1} back to S^{p-1} via
 #' `(1 - ||y||^2, 2*y) / (1 + ||y||^2)`.
 #' @param y is a matrix of row vectors in R^{p-1}
 iSp=function(y){
   if (is.vector(y)){y <- matrix(y, nrow = 1)}
   norms2 <- rowSums(y^2)
-  # inverse stereographic formula from the north pole: (1-||y||^2, 2y) / (1+||y||^2)
+  # inverse stereographic formula from the south pole: (1-||y||^2, 2y) / (1+||y||^2)
   out <- cbind(1-norms2, 2*y)/(1+norms2)
   if (nrow(out) == 1){return(as.vector(out))}
   else {return(out)}

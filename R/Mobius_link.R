@@ -58,8 +58,9 @@ mobius_link_pred_cann <- function(xs = NULL, xe = NULL, paramobj){
   if (!is.null(paramobj$Qe)){
     xetilde <- xe %*% paramobj$Qe #first column is used in denominator
     # xetilde[,1] = Qe[,1]^T xe acts as the denominator in the stereographic-like Euclidean
-    # projection; Qe[,1] is the "south-pole" reference direction in covariate space, and
-    # ce is an offset ensuring the denominator stays positive for all training points.
+    # projection; Qe[,1] is the "north-pole" reference direction in covariate space (the
+    # singular direction is -Qe[,1]), and ce is an offset ensuring the denominator stays
+    # positive for all training points.
     numerator <- (xetilde[, -1, drop = FALSE]) %*% paramobj$Be
     denominator <- xetilde[,1] + paramobj$ce
     y <- y + (numerator/denominator)

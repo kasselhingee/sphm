@@ -27,7 +27,8 @@ mata1 mobius_link_cpp(const mata1 &xs, const mata1 &xe, const veca1 &vec, const 
 
   if (ompar.qs > 0){
     // Stereographic projection step: Omega_s * xs / (qs1^T xs + 1).
-    // qs1 is the "north-pole" direction in spherical covariate space.
+    // qs1 is the "north-pole" direction in spherical covariate space: it maps to the
+    // origin of the projected space, and the projection runs from -qs1 (south-pole analog).
     mata1 numerator = (Omega_s * xs_t); //p x xs_t.cols()
     veca1 denominator = (qs1.transpose() * xs_t).array() + 1.0;
     mata1 sph_res = numerator.array().rowwise()/denominator.transpose().array();//broadcast the denominator along each row

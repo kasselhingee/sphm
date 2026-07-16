@@ -12,10 +12,12 @@
 // Möbius mean-link parameters in the Omega parameterisation (C++ counterpart of
 // mobius_link_Omega in R). Fields:
 //   p1    — base point on S^{p-1}: the mean direction when covariates are zero.
-//   qs1   — "north-pole" direction in spherical covariate space; must satisfy
-//            qs1^T Omega_s = 0 and ||qs1|| = 1. Empty (size 0) if no spherical covariate.
-//   qe1   — "south-pole" reference direction in Euclidean covariate space; must satisfy
-//            qe1^T Omega_e = 0 and ||qe1|| = 1. Empty if no Euclidean covariate.
+//   qs1   — "north-pole" direction in spherical covariate space: maps to the origin
+//            of the projected space; the stereographic projection runs from -qs1.
+//            Must satisfy qs1^T Omega_s = 0 and ||qs1|| = 1. Empty if no spherical covariate.
+//   qe1   — "north-pole" reference direction in Euclidean covariate space: plays the
+//            same role as qs1 in the Euclidean denominator term; singular at -qe1.
+//            Must satisfy qe1^T Omega_e = 0 and ||qe1|| = 1. Empty if no Euclidean covariate.
 //   Omega — p x (qs+qe) coefficient matrix, orthogonal to p1: p1^T Omega = 0.
 //   ce    — scalar denominator offset for the Euclidean term (length 1 when qe>0, else empty).
 // The flat vector layout used by mobius_link_Omega_cpp_vec is:

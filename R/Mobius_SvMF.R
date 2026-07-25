@@ -85,6 +85,55 @@ mobius_SvMF <- function(y, xs = NULL, xe = NULL, mean = NULL, k = NULL, a = NULL
   return(c(finalest, list(preest = preest)))
 }
 
+#' @title SvMF regression with vMF multistart mean initialisation
+#' @description Fits the SvMF regression in five phases:
+#' (1-3) the mean link is found via \code{\link{mobius_vMF_multistart}} (coarse initial
+#' fit, sign-flip sweep at the same tolerance, tight final vMF);
+#' (4) preliminary moment estimates of \eqn{k}, \eqn{G_0}, and \eqn{a} are obtained
+#' from the best mean;
+#' (5) a tight joint SvMF optimisation over all parameters.
+#' @param y,xs,xe,G0,G0reference,G01behaviour,type,fix_qs1,fix_qe1,intercept,lb,ub
+#'   As in \code{\link{mobius_SvMF}}.
+#' @param xtol_rel Relative tolerance for the mean-link exploration phases (1 and 2,
+#'   default \code{1e-4}).
+#' @param maxeval Maximum evaluations per fit in the exploration phases (default \code{500}).
+#' @param ... Additional arguments forwarded to every internal \code{\link{mobius_vMF}}
+#'   and \code{\link{mobius_SvMF_joint_fit}} call.
+#' @return Same structure as \code{\link{mobius_SvMF}}.
+#' @family regression
+#' @export
+mobius_SvMF_multistart <- function(y, xs = NULL, xe = NULL,
+                                    G0 = NULL, G0reference = NULL,
+                                    G01behaviour = "p1",
+                                    type = "LinEuc", fix_qs1 = FALSE,
+                                    fix_qe1 = (type == "LinEuc"),
+                                    intercept = TRUE, lb = NULL, ub = NULL,
+                                    xtol_rel = 1e-4, maxeval = 500, ...){
+  # Phases 1-3: find best mean via vMF multistart (coarse fit + sign-flip sweep + tight final)
+  best_mean <- mobius_vMF_multistart(y, xs = xs, xe = xe,
+                                      type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
+                                      intercept = intercept, lb = lb, ub = ub,
+                                      xtol_rel = xtol_rel, maxeval = maxeval, ...)
+  # Phase 4: SvMF prelim from best mean (moment estimates of k, G0, a).
+  # Use coarse tolerance: best_mean$est is already tight, so the internal vMF converges
+  # immediately, and we want the tight fit to come from the joint optimisation below.
+  preest <- mobius_SvMF_partransport_prelim(y, xs, xe,
+                                             mean = best_mean$est,
+                                             G0 = G0, G01behaviour = G01behaviour,
+                                             type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
+                                             intercept = intercept,
+                                             xtol_rel = xtol_rel, maxeval = maxeval, ...)
+  # Phase 5: tight SvMF joint optimisation from the prelim starting values
+  finalest <- mobius_SvMF_joint_fit(y, xs, xe,
+                                     mean = preest$mean,
+                                     k = preest$k, a = preest$a, G0 = preest$G0,
+                                     G0reference = if (!is.null(G0reference)) G0reference else preest$G0,
+                                     G01behaviour = G01behaviour,
+                                     type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
+                                     intercept = intercept, lb = lb, ub = ub, ...)
+  return(c(finalest, list(preest = preest)))
+}
+
 # Joint maximum likelihood optimisation of all SvMF regression parameters for fixed
 # scale structure (a and G0 are estimated, but the constraint prod(a[-1]) = 1 is enforced).
 # Called by mobius_SvMF() after the preliminary vMF estimate. Uses automatic differentiation

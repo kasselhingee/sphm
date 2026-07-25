@@ -495,7 +495,7 @@ mobius_vMF_signflip_refit <- function(mod_vMF, xtol_rel = 1e-4, maxeval = 500, .
 #' @return A \code{mobius_vMF} result from the final tight optimisation.
 #' @family regression
 #' @export
-mobius_vMF_robustfit <- function(y, xs = NULL, xe = NULL, start = NULL,
+mobius_vMF_multistart <- function(y, xs = NULL, xe = NULL, start = NULL,
                                   type = "SpEuc", fix_qs1 = FALSE,
                                   fix_qe1 = (type == "LinEuc"),
                                   intercept = TRUE, lb = NULL, ub = NULL,

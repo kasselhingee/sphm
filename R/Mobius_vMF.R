@@ -408,3 +408,77 @@ mobius_vMF_refit <- function(mod_vMF, preseed = 1){
              intercept = mod_vMF$linktype$intercept,
              start = start)
 }
+
+#' @title Sign-flip refit for a vMF regression
+#' @description Re-runs the optimisation from starting points obtained by flipping the
+#' signs of the three "pole" directions (p1, qs1, qe1) in the fitted canonical
+#' parameters.  These are the only elements of the Omega parameterisation that are
+#' not part of the Omega matrix itself; flipping them gives genuinely different
+#' basins without perturbing the scale structure (Bs, Be, Omega_s, Omega_e).
+#' At most 8 restarts are tried (2 × 2 × 2 for p1/qs1/qe1); fewer when xs or xe
+#' is absent or when \code{fix_qs1}/\code{fix_qe1} is \code{TRUE}.
+#' @param mod_vMF Result of \code{\link{mobius_vMF}}.
+#' @param xtol_rel Relative convergence tolerance passed to nloptr (default \code{1e-4},
+#'   coarser than the default \code{1e-10} so enumeration is fast).
+#' @param maxeval Maximum number of objective evaluations per restart (default 500).
+#' @param ... Additional arguments passed to \code{\link{mobius_vMF}}.
+#' @return The \code{mobius_vMF} fit with the lowest objective value across all
+#'   sign-flip restarts (including the original).
+#' @family regression
+#' @export
+mobius_vMF_signflip_refit <- function(mod_vMF, xtol_rel = 1e-4, maxeval = 500, ...){
+  cann0 <- as_mobius_link_cann(mod_vMF$est)
+  p <- ncol(cann0$P)
+  fix_qs1 <- mod_vMF$linktype$fix_qs1
+  fix_qe1 <- mod_vMF$linktype$fix_qe1
+  has_xs <- !is.null(cann0$Qs)
+  has_xe <- !is.null(cann0$Qe)
+
+  fqs1_opts <- if (has_xs && !fix_qs1) c(FALSE, TRUE) else FALSE
+  fqe1_opts <- if (has_xe && !fix_qe1) c(FALSE, TRUE) else FALSE
+
+  starts <- vector("list", 2L * length(fqs1_opts) * length(fqe1_opts))
+  idx <- 0L
+  for (fp1 in c(FALSE, TRUE)){
+    for (fqs1 in fqs1_opts){
+      for (fqe1 in fqe1_opts){
+        idx <- idx + 1L
+        cann_trial <- cann0
+        if (fqs1) cann_trial$Qs[, 1L] <- -cann_trial$Qs[, 1L]
+        if (fqe1) cann_trial$Qe[, 1L] <- -cann_trial$Qe[, 1L]
+        # p1 flip: negate P[:,1] and P[:,p] together to keep det(P) = +1
+        if (fp1 && p >= 2L){
+          cann_trial$P[, 1L] <- -cann_trial$P[, 1L]
+          cann_trial$P[, p]  <- -cann_trial$P[, p]
+        }
+        starts[[idx]] <- cann_trial
+      }
+    }
+  }
+
+  best_fit <- NULL
+  best_obj <- Inf
+  for (cann_trial in starts){
+    fit <- tryCatch(
+      mobius_vMF(
+        y         = mod_vMF$y,
+        xs        = mod_vMF$xs,
+        xe        = mod_vMF$xe,
+        start     = cann_trial,
+        type      = mod_vMF$linktype$type,
+        fix_qs1   = fix_qs1,
+        fix_qe1   = fix_qe1,
+        intercept = mod_vMF$linktype$intercept,
+        xtol_rel  = xtol_rel,
+        maxeval   = maxeval,
+        ...
+      ),
+      error = function(e) NULL
+    )
+    if (!is.null(fit) && fit$nlopt$objective < best_obj){
+      best_obj <- fit$nlopt$objective
+      best_fit <- fit
+    }
+  }
+  return(best_fit)
+}

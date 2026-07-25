@@ -482,3 +482,38 @@ mobius_vMF_signflip_refit <- function(mod_vMF, xtol_rel = 1e-4, maxeval = 500, .
   }
   return(best_fit)
 }
+
+#' @title Robust vMF regression with sign-flip exploration
+#' @description Fits the Möbius vMF mean-link regression in three phases:
+#' (1) a coarse initial optimisation to establish a starting basin,
+#' (2) sign-flip restarts using the same coarse settings to find the best basin,
+#' (3) a final tight optimisation from the best starting point found.
+#' @param y,xs,xe,start,type,fix_qs1,fix_qe1,intercept,lb,ub As in \code{\link{mobius_vMF}}.
+#' @param xtol_rel Relative tolerance for phases 1 and 2 (default \code{1e-4}).
+#' @param maxeval Maximum evaluations per fit in phases 1 and 2 (default \code{500}).
+#' @param ... Additional arguments forwarded to every \code{\link{mobius_vMF}} call.
+#' @return A \code{mobius_vMF} result from the final tight optimisation.
+#' @family regression
+#' @export
+mobius_vMF_robustfit <- function(y, xs = NULL, xe = NULL, start = NULL,
+                                  type = "SpEuc", fix_qs1 = FALSE,
+                                  fix_qe1 = (type == "LinEuc"),
+                                  intercept = TRUE, lb = NULL, ub = NULL,
+                                  xtol_rel = 1e-4, maxeval = 500, ...){
+  # Phase 1: coarse initial fit
+  mod0 <- mobius_vMF(y, xs = xs, xe = xe, start = start,
+                     type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
+                     intercept = intercept, lb = lb, ub = ub,
+                     xtol_rel = xtol_rel, maxeval = maxeval, ...)
+
+  # Phase 2: sign-flip sweep with the same coarse settings
+  mod1 <- mobius_vMF_signflip_refit(mod0, xtol_rel = xtol_rel, maxeval = maxeval, ...)
+
+  # Pick the best basin from phases 1 and 2
+  best <- if (!is.null(mod1) && mod1$nlopt$objective < mod0$nlopt$objective) mod1 else mod0
+
+  # Phase 3: tight final optimisation from the best starting point
+  mobius_vMF(y, xs = xs, xe = xe, start = best$est,
+             type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
+             intercept = intercept, lb = lb, ub = ub, ...)
+}

@@ -305,26 +305,71 @@ addEuccovars <- function(preplist, type, intercept){
 
 # Generate default starting parameters for the mean link optimisation when no start is supplied.
 # Assumes data have been standardised (so identity-like starting values are sensible).
-# Sets P = I, Bs = 0.9 I, Be = 0.9 I, Qs and Qe to the first p columns of identity.
-defaultstart <- function(preplist, type){
+# Sets P = I, Qs and Qe to the first p columns of identity.
+# Usually (when estimatescales = TRUE) estimates the diagonal elements of the scaling matrices B_s and B_e
+# using classical linear regression to minimise the error \mathcal{E} in:
+# \deqn{\mathcal{S}\left(P^{-1}y \right) + \mathcal{E} = B_s \mathcal{S}(Q_s^\top x_s)  +  \frac{B_e\left(Q_e[,-1]^\top x_e\right)}{Qe[,1]^\top x_e + c_e}.}
+# If estimatesscales = FALSE, then Bs = 0.9 I, Be = 0.9 I.
+defaultstart <- function(preplist, type, estimatescales = TRUE){
   if (is.null(preplist$start)){
     p <- ncol(preplist$y)
-    if (!is.null(preplist$xe)){stopifnot(ncol(preplist$xe) >= p)}
-    if (!is.null(preplist$xs)){stopifnot(ncol(preplist$xs) >= p)}
-    preplist$start <- mobius_link_cann(
-                P = diag(p),
-                Bs = if (!is.null(preplist$xs)){diag(0.9, p-1)},
-                Qs = if (!is.null(preplist$xs)){diag(1, ncol(preplist$xs), p)},
-                Be = if (!is.null(preplist$xe)){diag(0.9, p-1)},
-                Qe = if (!is.null(preplist$xe)){diag(1, ncol(preplist$xe), p)},
-                ce = if (!is.null(preplist$xe)){1}
-    )
+    startP <- diag(p)
+    if (!is.null(preplist$xe)){
+	    stopifnot(ncol(preplist$xe) >= p)
+            startQe <- if (!is.null(preplist$xe)){diag(1, ncol(preplist$xe), p)}
+    }
+    if (!is.null(preplist$xs)){
+	    stopifnot(ncol(preplist$xs) >= p)
+            startQs <- if (!is.null(preplist$xs)){diag(1, ncol(preplist$xs), p)}
+    }
+    startce <- 1
     if ((type == "SpEuc") && !is.null(preplist$xe)){
       # Ensure the denominator Qe[,1]^T xe + ce is strictly positive for all training points
       # (the link is undefined when the denominator is zero or negative). max(-xe) + 0.1*IQR(xe)
       # places ce just above the largest negative value in xe.
-      preplist$start$ce[1] <- max(-preplist$xe)  +  0.1*IQR(preplist$xe)
+      startce <- max(-preplist$xe)  +  0.1*IQR(preplist$xe)
     }
+
+    if (estimatescales){
+    # Use linear regression to choose initial scaling paramaters
+      olsY <- Sp(preplist$y %*% t(solve(startP)))
+      if (!is.null(preplist$xs)){
+        olsX1 <- Sp(preplist$xs %*% startQs)
+      }
+      if (!is.null(preplist$xe)){
+        olsX2 <- (preplist$xe %*% startQe[,-1]) /
+                  drop(preplist$xe %*% startQe[,1, drop = FALSE] + startce)
+      }
+      diag_fits <- lapply(seq_len(p - 1), function(i) {
+        df <- data.frame(y = olsY[, i])
+        if (!is.null(preplist$xs)) df$xs <- olsX1[, i]
+        if (!is.null(preplist$xe)) df$xe <- olsX2[, i]
+        lm(y ~ . - 1, data = df)
+      })
+      if (!is.null(preplist$xs)){
+        bs_vals <- sapply(diag_fits, function(f) coef(f)["xs"])
+        startQs[, which(bs_vals < 0) + 1] <- -startQs[, which(bs_vals < 0) + 1]
+        startBs <- diag(abs(bs_vals), p - 1)
+      }
+      if (!is.null(preplist$xe)){
+        be_vals <- sapply(diag_fits, function(f) coef(f)["xe"])
+        startQe[, which(be_vals < 0) + 1] <- -startQe[, which(be_vals < 0) + 1]
+        startBe <- diag(abs(be_vals), p - 1)
+      }
+    }
+
+    if (!estimatescales){
+      startBs <- if (!is.null(preplist$xs)){diag(0.9, p-1)}
+      startBe <- if (!is.null(preplist$xe)){diag(0.9, p-1)}
+    }
+    preplist$start <- mobius_link_cann(
+                P = diag(p),
+                Bs = if (!is.null(preplist$xs)){startBs},
+                Qs = if (!is.null(preplist$xs)){startQs},
+                Be = if (!is.null(preplist$xe)){startBe},
+                Qe = if (!is.null(preplist$xe)){startQe},
+                ce = if (!is.null(preplist$xe)){startce}
+		)
   }
   return(preplist)
 }

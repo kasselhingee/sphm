@@ -444,3 +444,33 @@ test_that("Hessian eigenvalues match DoF for Euc2S", {
   expect_equal(sum(evals > sqrt(.Machine$double.eps)), fit$DoF-1 + 0)
   expect_gt(min(evals), -sqrt(.Machine$double.eps))
 })
+
+test_that("mobius_vMF_signflip_refit improves bad-sign fit and mobius_vMF_multistart recovers truth", {
+  rand_mobius_link_cann__place_in_env(4, 5, 4, preseed = 1)
+  omegapar <- as_mobius_link_Omega(paramobj)
+  set.seed(4)
+  xe <- matrix(rnorm(1000 * qe), nrow = 1000)
+  set.seed(4)
+  xs <- matrix(rnorm(1000 * qs), nrow = 1000)
+  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
+  ymean <- mobius_link(xs = xs, xe = xe, param = omegapar)
+  if (!requireNamespace("movMF", quietly = TRUE)) skip("Need movMF package")
+  set.seed(5)
+  y <- t(apply(ymean, 1, function(mn) movMF::rmovMF(1, 30 * mn)))
+
+  # sign-flip refit: force a stuck wrong-sign fit, then check refit improves it
+  cann_bad <- as_mobius_link_cann(omegapar)
+  cann_bad$Qs[, 1] <- -cann_bad$Qs[, 1]
+  mod_bad <- mobius_vMF(y, xs = xs, xe = xe, start = cann_bad,
+                        type = "SpEuc", intercept = FALSE,
+                        xtol_rel = 0.5, maxeval = 20)
+  mod_refitted <- mobius_vMF_signflip_refit(mod_bad)
+  expect_false(is.null(mod_refitted))
+  expect_lt(mod_refitted$nlopt$objective, mod_bad$nlopt$objective)
+  expect_equal(mobius_link(xs, xe, mod_refitted$est), ymean, tolerance = 0.1)
+
+  # multistart: recovers truth from default starts
+  mod_mult <- mobius_vMF_multistart(y, xs = xs, xe = xe,
+                                    type = "SpEuc", intercept = FALSE)
+  expect_equal(mobius_link(xs, xe, mod_mult$est), ymean, tolerance = 0.1)
+})

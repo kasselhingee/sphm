@@ -154,8 +154,8 @@ test_that("MLE with p1 = G01", {
   expect_equal(est2$a, est1$a, tolerance = 1E-1, ignore_attr = "names")
   expect_equal(axis_distance(acos(colSums(est2$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
   
-  # from default starts with prelim estimate
-  expect_warning({est3 <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe,
+  # from default starts with vMF multistart
+  expect_warning({est3 <- mobius_SvMF_multistart(y_ld[, 1:p], x$xs, x$xe,
                        G01behaviour = "p1",
                        type = "SpEuc", intercept = FALSE)}, "p!=3")
   expect_equal(est3$mean, est1$mean, tolerance = 1E-1)
@@ -238,8 +238,8 @@ test_that("MLE with G01 fixed", {
   expect_equal(est2[c("k", "a")], est1[c("k", "a")], tolerance = 1E-1, ignore_attr = "names")
   expect_equal(est2$G0, est1$G0, tolerance = 1E-2, ignore_attr = TRUE)
   
-  # from default starts with prelim estimate
-  expect_warning({est3 <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe, 
+  # from default starts with vMF multistart
+  expect_warning({est3 <- mobius_SvMF_multistart(y_ld[, 1:p], x$xs, x$xe,
                       G0 = cbind(G0[,1], matrix(NA, p, p-1)),
                       G01behaviour = "fixed",
                       type = "SpEuc", intercept = FALSE)}, "p!=3")
@@ -247,24 +247,6 @@ test_that("MLE with G01 fixed", {
   expect_equal(est3$k, est1$k, tolerance = 0.2)
   expect_equal(est3$a, est1$a, tolerance = 1E-1, ignore_attr = "names")
   expect_equal(axis_distance(acos(pmin(colSums(est3$G0 * est1$G0),1))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
-
-  # demonstrate mobius_vMF_signflip_refit on the mean-link subproblem
-  mod_mean  <- mobius_vMF(y_ld[, 1:p], xs = x$xs, xe = x$xe,
-                           type = "SpEuc", intercept = FALSE)
-  best_mean <- mobius_vMF_signflip_refit(mod_mean)
-  preest_sfr <- mobius_SvMF_partransport_prelim(y_ld[, 1:p], x$xs, x$xe,
-                                                 mean = best_mean$est,
-                                                 type = "SpEuc",
-                                                 G0 = cbind(G0[, 1], matrix(NA, p, p - 1)),
-                                                 G01behaviour = "fixed",
-                                                 intercept = FALSE)
-  expect_warning({est_sfr <- mobius_SvMF_joint_fit(y_ld[, 1:p], x$xs, x$xe,
-                                mean = preest_sfr$mean, k = preest_sfr$k, a = preest_sfr$a, G0 = preest_sfr$G0,
-                                G01behaviour = "fixed",
-                                type = "SpEuc", intercept = FALSE)}, "p!=3")
-  expect_equal(est_sfr$mean, est1$mean, tolerance = 1E-1)
-  expect_equal(est_sfr$k, est1$k, tolerance = 0.2)
-  expect_equal(est_sfr$a, est1$a, tolerance = 1E-1, ignore_attr = "names")
 })
 
 test_that("MLE with G01 free, p=5", {

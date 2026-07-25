@@ -109,21 +109,29 @@ mobius_SvMF_multistart <- function(y, xs = NULL, xe = NULL,
                                     fix_qe1 = (type == "LinEuc"),
                                     intercept = TRUE, lb = NULL, ub = NULL,
                                     xtol_rel = 1e-4, maxeval = 500, ...){
-  # Phases 1-3: find best mean via vMF multistart (coarse fit + sign-flip sweep + tight final)
+  # Phases 1-3: find the best mean-link via vMF multistart.
+  # This runs a coarse vMF fit, explores sign-flips of p1/qs1/qe1, then does a
+  # tight final vMF fit. The result is a fully converged mean-link estimate.
   best_mean <- mobius_vMF_multistart(y, xs = xs, xe = xe,
                                       type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
                                       intercept = intercept, lb = lb, ub = ub,
                                       xtol_rel = xtol_rel, maxeval = maxeval, ...)
-  # Phase 4: SvMF prelim from best mean (moment estimates of k, G0, a).
-  # Use coarse tolerance: best_mean$est is already tight, so the internal vMF converges
-  # immediately, and we want the tight fit to come from the joint optimisation below.
+
+  # Phase 4: moment-based preliminary estimates of k, G0, and a.
+  # We pass the coarse xtol_rel/maxeval so that the internal vMF re-optimisation
+  # inside prelim converges immediately (best_mean$est is already tight), keeping
+  # computation cheap. The precise values come from the joint fit in phase 5.
   preest <- mobius_SvMF_partransport_prelim(y, xs, xe,
                                              mean = best_mean$est,
                                              G0 = G0, G01behaviour = G01behaviour,
                                              type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
                                              intercept = intercept,
                                              xtol_rel = xtol_rel, maxeval = maxeval, ...)
-  # Phase 5: tight SvMF joint optimisation from the prelim starting values
+
+  # Phase 5: tight joint SvMF optimisation over all parameters simultaneously.
+  # G0reference: the reference frame used to parameterise G0 in the optimiser.
+  # If not supplied by the caller, use the prelim's own G0 as reference
+  # (it is already close to the optimum, making the parameterisation well-conditioned).
   finalest <- mobius_SvMF_joint_fit(y, xs, xe,
                                      mean = preest$mean,
                                      k = preest$k, a = preest$a, G0 = preest$G0,
@@ -131,6 +139,9 @@ mobius_SvMF_multistart <- function(y, xs = NULL, xe = NULL,
                                      G01behaviour = G01behaviour,
                                      type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
                                      intercept = intercept, lb = lb, ub = ub, ...)
+
+  # Attach prelim estimates as $preest so callers can inspect moment-based
+  # starting values separately from the final joint MLE.
   return(c(finalest, list(preest = preest)))
 }
 

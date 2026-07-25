@@ -446,31 +446,51 @@ test_that("Hessian eigenvalues match DoF for Euc2S", {
 })
 
 test_that("mobius_vMF_signflip_refit improves bad-sign fit and mobius_vMF_multistart recovers truth", {
+  # Use the same p=4, qs=5, qe=4 scenario as the existing SpEuc prelim tests.
   rand_mobius_link_cann__place_in_env(4, 5, 4, preseed = 1)
   omegapar <- as_mobius_link_Omega(paramobj)
+
+  # Generate covariates and compute true response means under omegapar.
   set.seed(4)
   xe <- matrix(rnorm(1000 * qe), nrow = 1000)
   set.seed(4)
   xs <- matrix(rnorm(1000 * qs), nrow = 1000)
-  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
+  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")  # project to unit sphere
   ymean <- mobius_link(xs = xs, xe = xe, param = omegapar)
+
   if (!requireNamespace("movMF", quietly = TRUE)) skip("Need movMF package")
+  # Simulate vMF observations with concentration k=30 around each true mean direction.
   set.seed(5)
   y <- t(apply(ymean, 1, function(mn) movMF::rmovMF(1, 30 * mn)))
 
-  # sign-flip refit: force a stuck wrong-sign fit, then check refit improves it
+  # --- Test mobius_vMF_signflip_refit ---
+
+  # Build a start with qs1 (the spherical pole direction) flipped relative to truth.
+  # This puts the optimizer in a different basin of the log-likelihood.
   cann_bad <- as_mobius_link_cann(omegapar)
   cann_bad$Qs[, 1] <- -cann_bad$Qs[, 1]
+
+  # Run a very coarse vMF fit from the bad start so it stays stuck near cann_bad.
+  # (xtol_rel = 0.5 and maxeval = 20 let the optimizer take only a few steps.)
   mod_bad <- mobius_vMF(y, xs = xs, xe = xe, start = cann_bad,
                         type = "SpEuc", intercept = FALSE,
                         xtol_rel = 0.5, maxeval = 20)
+
+  # Sign-flip refit should find the correct-sign basin and improve the objective.
   mod_refitted <- mobius_vMF_signflip_refit(mod_bad)
-  expect_false(is.null(mod_refitted))
-  expect_lt(mod_refitted$nlopt$objective, mod_bad$nlopt$objective)
+  expect_false(is.null(mod_refitted))            # at least one restart must succeed
+  expect_lt(mod_refitted$nlopt$objective,        # lower objective = better log-lik
+            mod_bad$nlopt$objective)
+  # Predicted means under the refitted model should be close to the true means.
   expect_equal(mobius_link(xs, xe, mod_refitted$est), ymean, tolerance = 0.1)
 
-  # multistart: recovers truth from default starts
-  mod_mult <- mobius_vMF_multistart(y, xs = xs, xe = xe,
+  # --- Test mobius_vMF_multistart ---
+
+  # Start the full multistart pipeline from the same sign-flipped start.
+  # Phase 1 (coarse) converges in the wrong-sign basin; phase 2 (sign-flip sweep)
+  # crosses to the correct basin; phase 3 (tight) refines to the MLE.
+  mod_mult <- mobius_vMF_multistart(y, xs = xs, xe = xe, start = cann_bad,
                                     type = "SpEuc", intercept = FALSE)
+  # The full pipeline should recover the true predicted means despite the bad start.
   expect_equal(mobius_link(xs, xe, mod_mult$est), ymean, tolerance = 0.1)
 })

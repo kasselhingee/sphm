@@ -427,26 +427,42 @@ mobius_vMF_refit <- function(mod_vMF, preseed = 1){
 #' @family regression
 #' @export
 mobius_vMF_signflip_refit <- function(mod_vMF, xtol_rel = 1e-4, maxeval = 500, ...){
+  # Work in canonical form so p1, qs1, qe1 are directly accessible.
+  # (The Omega form compresses them into Omega_s / Omega_e matrices.)
   cann0 <- as_mobius_link_cann(mod_vMF$est)
-  p <- ncol(cann0$P)
+  p     <- ncol(cann0$P)
+
+  # Recover which poles were held fixed during the original fit.
   fix_qs1 <- mod_vMF$linktype$fix_qs1
   fix_qe1 <- mod_vMF$linktype$fix_qe1
-  has_xs <- !is.null(cann0$Qs)
-  has_xe <- !is.null(cann0$Qe)
+  has_xs  <- !is.null(cann0$Qs)
+  has_xe  <- !is.null(cann0$Qe)
 
+  # Only enumerate sign flips for poles that (a) exist and (b) were free during fitting.
+  # Flipping a fixed pole would move outside the model constraint.
   fqs1_opts <- if (has_xs && !fix_qs1) c(FALSE, TRUE) else FALSE
   fqe1_opts <- if (has_xe && !fix_qe1) c(FALSE, TRUE) else FALSE
 
+  # Pre-allocate: 2 (p1) x 2 (qs1) x 2 (qe1) = up to 8 starting points.
   starts <- vector("list", 2L * length(fqs1_opts) * length(fqe1_opts))
   idx <- 0L
   for (fp1 in c(FALSE, TRUE)){
     for (fqs1 in fqs1_opts){
       for (fqe1 in fqe1_opts){
-        idx <- idx + 1L
+        idx        <- idx + 1L
         cann_trial <- cann0
+
+        # Flip the spherical-covariate pole direction.
+        # qs1 = Qs[,1] determines the stereographic projection axis for xs;
+        # flipping it moves to a genuinely different basin of the likelihood.
         if (fqs1) cann_trial$Qs[, 1L] <- -cann_trial$Qs[, 1L]
+
+        # Same for the Euclidean-covariate pole direction qe1 = Qe[,1].
         if (fqe1) cann_trial$Qe[, 1L] <- -cann_trial$Qe[, 1L]
-        # p1 flip: negate P[:,1] and P[:,p] together to keep det(P) = +1
+
+        # Flip the response pole p1 = P[,1].
+        # Negating only column 1 would make det(P) = -1 (breaking SO(p));
+        # negating both column 1 and column p restores det(P) = +1.
         if (fp1 && p >= 2L){
           cann_trial$P[, 1L] <- -cann_trial$P[, 1L]
           cann_trial$P[, p]  <- -cann_trial$P[, p]
@@ -459,8 +475,13 @@ mobius_vMF_signflip_refit <- function(mod_vMF, xtol_rel = 1e-4, maxeval = 500, .
   best_fit <- NULL
   best_obj <- Inf
   for (cann_trial in starts){
+    # suppressWarnings: with a small maxeval budget, nloptr often hits the
+    # evaluation limit (status 5 = NLOPT_MAXEVAL_REACHED) and emits a warning.
+    # That is expected here — we only need an approximate basin location.
+    # tryCatch: a sign-flipped start can be numerically ill-conditioned
+    # (e.g. qs1 pointing directly at a data point); skip those silently.
     fit <- tryCatch(
-      mobius_vMF(
+      suppressWarnings(mobius_vMF(
         y         = mod_vMF$y,
         xs        = mod_vMF$xs,
         xe        = mod_vMF$xe,
@@ -472,9 +493,10 @@ mobius_vMF_signflip_refit <- function(mod_vMF, xtol_rel = 1e-4, maxeval = 500, .
         xtol_rel  = xtol_rel,
         maxeval   = maxeval,
         ...
-      ),
+      )),
       error = function(e) NULL
     )
+    # nloptr minimises -log-lik, so a lower objective = better fit.
     if (!is.null(fit) && fit$nlopt$objective < best_obj){
       best_obj <- fit$nlopt$objective
       best_fit <- fit
@@ -500,19 +522,26 @@ mobius_vMF_multistart <- function(y, xs = NULL, xe = NULL, start = NULL,
                                   fix_qe1 = (type == "LinEuc"),
                                   intercept = TRUE, lb = NULL, ub = NULL,
                                   xtol_rel = 1e-4, maxeval = 500, ...){
-  # Phase 1: coarse initial fit
-  mod0 <- mobius_vMF(y, xs = xs, xe = xe, start = start,
+  # Phase 1: coarse initial fit to establish a starting basin.
+  # suppressWarnings: the coarse maxeval budget is expected to be exhausted
+  # (nloptr status NLOPT_MAXEVAL_REACHED); that warning is not actionable here.
+  mod0 <- suppressWarnings(mobius_vMF(y, xs = xs, xe = xe, start = start,
                      type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
                      intercept = intercept, lb = lb, ub = ub,
-                     xtol_rel = xtol_rel, maxeval = maxeval, ...)
+                     xtol_rel = xtol_rel, maxeval = maxeval, ...))
 
-  # Phase 2: sign-flip sweep with the same coarse settings
+  # Phase 2: sign-flip sweep from the coarse fit's landing point.
+  # Tries up to 8 sign combinations of p1/qs1/qe1; returns the one with
+  # the lowest (coarse) objective. suppressWarnings is applied inside the function.
   mod1 <- mobius_vMF_signflip_refit(mod0, xtol_rel = xtol_rel, maxeval = maxeval, ...)
 
-  # Pick the best basin from phases 1 and 2
+  # Select whichever basin (original or sign-flipped) gave the better coarse objective.
+  # mod1 is NULL only if every sign-flip restart threw an error, in which case
+  # keep the phase-1 result.
   best <- if (!is.null(mod1) && mod1$nlopt$objective < mod0$nlopt$objective) mod1 else mod0
 
-  # Phase 3: tight final optimisation from the best starting point
+  # Phase 3: tight final optimisation from the best basin found above.
+  # No suppressWarnings here: if this fit fails to converge the warning IS informative.
   mobius_vMF(y, xs = xs, xe = xe, start = best$est,
              type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
              intercept = intercept, lb = lb, ub = ub, ...)

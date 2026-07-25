@@ -331,27 +331,48 @@ defaultstart <- function(preplist, type, estimatescales = TRUE){
     }
 
     if (estimatescales){
-    # Use linear regression to choose initial scaling paramaters
+      # Approximate the link equation linearised at P=I, Qs=I, Qe=I:
+      #   Sp(P^{-1} y) ≈ Bs * Sp(Qs^T xs)_i  +  Be * (Qe[,-1]^T xe) / (Qe[,1]^T xe + ce)
+      # Each diagonal Bs[i,i] and Be[i,i] can then be estimated independently by
+      # regressing the i-th stereographic coordinate of y against the i-th coordinate
+      # of the mapped predictors (no intercept: the equation has none).
+
+      # Response: stereographic projection of y rotated by P^{-1} (= I here)
       olsY <- Sp(preplist$y %*% t(solve(startP)))
+
       if (!is.null(preplist$xs)){
+        # Predictor for the spherical part: Sp maps the xs-projected-onto-Qs direction
+        # into the same (p-1)-dimensional space as olsY.
         olsX1 <- Sp(preplist$xs %*% startQs)
       }
       if (!is.null(preplist$xe)){
-        olsX2 <- (preplist$xe %*% startQe[,-1]) /
-                  drop(preplist$xe %*% startQe[,1, drop = FALSE] + startce)
+        # Predictor for the Euclidean part: the Möbius-Euclidean link maps xe through
+        # a fractional-linear transform; this is its linearised form with Qe = I.
+        olsX2 <- (preplist$xe %*% startQe[, -1]) /
+                  drop(preplist$xe %*% startQe[, 1, drop = FALSE] + startce)
       }
+
+      # Fit p-1 independent no-intercept regressions, one per stereographic coordinate.
+      # The i-th fit gives Bs[i,i] as the "xs" coefficient and Be[i,i] as the "xe" coefficient.
       diag_fits <- lapply(seq_len(p - 1), function(i) {
         df <- data.frame(y = olsY[, i])
         if (!is.null(preplist$xs)) df$xs <- olsX1[, i]
         if (!is.null(preplist$xe)) df$xe <- olsX2[, i]
-        lm(y ~ . - 1, data = df)
+        lm(y ~ . - 1, data = df)   # no intercept: the linearised link has none
       })
+
       if (!is.null(preplist$xs)){
+        # Extract the estimated Bs diagonals (one per fit, in order i = 1, ..., p-1).
         bs_vals <- sapply(diag_fits, function(f) coef(f)["xs"])
+        # A negative OLS coefficient means qs1 points in the "wrong" direction: absorb
+        # the sign into column i+1 of Qs (the non-pole column that drives coordinate i)
+        # so the canonical constraint Bs[i,i] >= 0 is satisfied.
+        # Index is i+1 because column 1 of Qs is the pole direction (qs1), not Omega.
         startQs[, which(bs_vals < 0) + 1] <- -startQs[, which(bs_vals < 0) + 1]
-        startBs <- diag(abs(bs_vals), p - 1)
+        startBs <- diag(abs(bs_vals), p - 1)   # Bs must be non-negative diagonal
       }
       if (!is.null(preplist$xe)){
+        # Same sign-absorption logic for the Euclidean scaling matrix Be.
         be_vals <- sapply(diag_fits, function(f) coef(f)["xe"])
         startQe[, which(be_vals < 0) + 1] <- -startQe[, which(be_vals < 0) + 1]
         startBe <- diag(abs(be_vals), p - 1)

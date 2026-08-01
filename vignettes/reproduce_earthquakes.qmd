@@ -615,6 +615,20 @@ idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
 mod_SvMF <- restarts[[idx]]
 ```
 
+# Automated multistart for SvMF
+```{r}
+mod_SvMF_multistart <- mobius_SvMF_multistart(
+  s4df_clean %>% select(s1, s2, sMrt, sMrf, sMtf) %>% st_drop_geometry() %>% as.matrix(),
+  xs = NULL,
+  xe = xestd %>% as.matrix(),
+  type = "LinEuc",
+  G01behaviour = "free"
+)
+cat("Best random-restart AIC: ", mod_SvMF$AIC, "\n",
+    "Multistart SvMF AIC:     ", mod_SvMF_multistart$AIC, "\n", sep = "")
+if (mod_SvMF_multistart$AIC < mod_SvMF$AIC) mod_SvMF <- mod_SvMF_multistart
+```
+
 # SI Table: Estimated Parameters
 Below is the estimated concentration, the AIC and degrees of freedom of this regression.
 ```{r}
@@ -1156,9 +1170,22 @@ lapply(mod_vMF_restarts, "[[", "AIC") %>%
   geom_vline(xintercept = mod_vMF$AIC, col = "blue") +
   geom_rug(aes(x = AIC))
 idx <- which.min(lapply(mod_vMF_restarts, "[[", "AIC") %>% unlist())
-mod_vMF <- mod_vMF_restarts[[idx]]  
+mod_vMF <- mod_vMF_restarts[[idx]]
 mod_vMF$k
 mod_vMF$AIC
+```
+
+## Automated multistart for vMF
+```{r}
+mod_vMF_multistart <- mobius_vMF_multistart(
+  y  = mod_SvMF$y,
+  xs = NULL,
+  xe = mod_SvMF$xe,
+  type = "LinEuc"
+)
+cat("Best random-restart vMF AIC: ", mod_vMF$AIC, "\n",
+    "Multistart vMF AIC:          ", mod_vMF_multistart$AIC, "\n", sep = "")
+if (mod_vMF_multistart$AIC < mod_vMF$AIC) mod_vMF <- mod_vMF_multistart
 ```
 
 Below is plot for comparing likelihoods for give simulated response `y`.

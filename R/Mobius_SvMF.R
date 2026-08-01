@@ -85,20 +85,95 @@ mobius_SvMF <- function(y, xs = NULL, xe = NULL, mean = NULL, k = NULL, a = NULL
   return(c(finalest, list(preest = preest)))
 }
 
-#' @title SvMF regression with vMF multistart mean initialisation
-#' @description Fits the SvMF regression in five phases:
-#' (1-3) the mean link is found via \code{\link{mobius_vMF_multistart}} (coarse initial
-#' fit, sign-flip sweep at the same tolerance, tight final vMF);
-#' (4) preliminary moment estimates of \eqn{k}, \eqn{G_0}, and \eqn{a} are obtained
-#' from the best mean;
-#' (5) a tight joint SvMF optimisation over all parameters.
+#' @title Sign-flip refit for a SvMF regression
+#' @description Re-runs the SvMF optimisation from starting points obtained by flipping
+#' the signs of the three "pole" directions (p1, qs1, qe1) in the fitted mean-link
+#' parameters, analogous to \code{\link{mobius_vMF_signflip_refit}}.
+#' At most 8 restarts are tried (2 x 2 x 2 for p1/qs1/qe1); fewer when xs or xe is
+#' absent or when \code{fix_qs1}/\code{fix_qe1} is \code{TRUE}.
+#' @param mod_SvMF Result of \code{\link{mobius_SvMF}}.
+#' @param type,fix_qs1,fix_qe1,intercept,G01behaviour As in \code{\link{mobius_SvMF}}.
+#' @param ... Additional arguments passed to \code{\link{mobius_SvMF}}.
+#' @return The SvMF fit with the lowest \code{obj} value across all restarts, or
+#'   \code{NULL} if every restart errored.
+#' @family regression
+#' @export
+mobius_SvMF_signflip_refit <- function(mod_SvMF, type, fix_qs1, fix_qe1, intercept,
+                                        G01behaviour = "p1", ...) {
+  cann0  <- as_mobius_link_cann(mod_SvMF$mean)
+  p      <- ncol(cann0$P)
+  has_xs <- !is.null(cann0$Qs)
+  has_xe <- !is.null(cann0$Qe)
+
+  # Only enumerate sign flips for poles that exist and were free during fitting.
+  fqs1_opts <- if (has_xs && !fix_qs1) c(FALSE, TRUE) else FALSE
+  fqe1_opts <- if (has_xe && !fix_qe1) c(FALSE, TRUE) else FALSE
+
+  starts <- vector("list", 2L * length(fqs1_opts) * length(fqe1_opts))
+  idx <- 0L
+  for (fp1 in c(FALSE, TRUE)) {
+    for (fqs1 in fqs1_opts) {
+      for (fqe1 in fqe1_opts) {
+        idx        <- idx + 1L
+        cann_trial <- cann0
+        if (fqs1) cann_trial$Qs[, 1L] <- -cann_trial$Qs[, 1L]
+        if (fqe1) cann_trial$Qe[, 1L] <- -cann_trial$Qe[, 1L]
+        # Negating only column 1 of P makes det(P) = -1; negate column p too to restore det = +1.
+        if (fp1 && p >= 2L) {
+          cann_trial$P[, 1L] <- -cann_trial$P[, 1L]
+          cann_trial$P[, p]  <- -cann_trial$P[, p]
+        }
+        starts[[idx]] <- cann_trial
+      }
+    }
+  }
+
+  best_fit <- NULL
+  best_obj <- Inf
+  for (cann_trial in starts) {
+    # suppressWarnings: warnings from the sign-flip fits are not informative to the caller.
+    # tryCatch: a sign-flipped start can be numerically ill-conditioned; skip those silently.
+    fit <- tryCatch(
+      suppressWarnings(mobius_SvMF(
+        y            = mod_SvMF$y,
+        xs           = mod_SvMF$xs,
+        xe           = mod_SvMF$xe,
+        mean         = cann_trial,
+        G0           = mod_SvMF$G0,
+        G0reference  = mod_SvMF$G0,
+        G01behaviour = G01behaviour,
+        type         = type,
+        fix_qs1      = fix_qs1,
+        fix_qe1      = fix_qe1,
+        intercept    = intercept,
+        doprelim     = TRUE,
+        ...
+      )),
+      error = function(e) NULL
+    )
+    # nloptr minimises -log-lik, so a lower obj = better fit.
+    if (!is.null(fit) && fit$obj < best_obj) {
+      best_obj <- fit$obj
+      best_fit <- fit
+    }
+  }
+  return(best_fit)
+}
+
+#' @title SvMF regression with multistart exploration via vMF sign-flips
+#' @description Fits the SvMF regression in three phases:
+#' (1) a vMF fit from the default starting point followed by sign-flip restarts
+#'     to find diverse candidate mean-link parameter sets — this uses vMF because
+#'     the vMF landscape reliably explores different values of the Euclidean offset
+#'     \code{ce}, which controls a key source of multimodality in the SvMF objective;
+#' (2) a full SvMF regression from each candidate mean link, selecting the best by the
+#'     SvMF log-likelihood — this is "running the usual SvMF regression multiple times
+#'     for different initial link values";
+#' (3) a final SvMF optimisation from the best candidate found in phase 2, starting from
+#'     its fitted \code{k, a, G0} as warm starts (no preliminary estimation).
 #' @param y,xs,xe,G0,G0reference,G01behaviour,type,fix_qs1,fix_qe1,intercept,lb,ub
 #'   As in \code{\link{mobius_SvMF}}.
-#' @param xtol_rel Relative tolerance for the mean-link exploration phases (1 and 2,
-#'   default \code{1e-4}).
-#' @param maxeval Maximum evaluations per fit in the exploration phases (default \code{500}).
-#' @param ... Additional arguments forwarded to every internal \code{\link{mobius_vMF}}
-#'   and \code{\link{mobius_SvMF_joint_fit}} call.
+#' @param ... Additional arguments forwarded to every internal \code{\link{mobius_SvMF}} call.
 #' @return Same structure as \code{\link{mobius_SvMF}}.
 #' @family regression
 #' @export
@@ -107,42 +182,65 @@ mobius_SvMF_multistart <- function(y, xs = NULL, xe = NULL,
                                     G01behaviour = "p1",
                                     type = "LinEuc", fix_qs1 = FALSE,
                                     fix_qe1 = (type == "LinEuc"),
-                                    intercept = TRUE, lb = NULL, ub = NULL,
-                                    xtol_rel = 1e-4, maxeval = 500, ...){
-  # Phases 1-3: find the best mean-link via vMF multistart.
-  # This runs a coarse vMF fit, explores sign-flips of p1/qs1/qe1, then does a
-  # tight final vMF fit. The result is a fully converged mean-link estimate.
-  best_mean <- mobius_vMF_multistart(y, xs = xs, xe = xe,
-                                      type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
-                                      intercept = intercept, lb = lb, ub = ub,
-                                      xtol_rel = xtol_rel, maxeval = maxeval, ...)
+                                    intercept = TRUE, lb = NULL, ub = NULL, ...) {
+  # Phase 1: vMF exploration to find diverse candidate mean-link values.
+  # A single vMF fit is run from the default start, then sign-flip restarts explore
+  # alternative basins (different p1/qs1/qe1 signs → different ce values at the optimum).
+  # We don't forward user '...' here: vMF doesn't accept SvMF-specific args (G0, lb, ub, etc.).
+  vMF_base <- suppressWarnings(mobius_vMF(
+    y = y, xs = xs, xe = xe,
+    type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1, intercept = intercept
+  ))
+  vMF_alt <- suppressWarnings(mobius_vMF_signflip_refit(vMF_base))
 
-  # Phase 4: moment-based preliminary estimates of k, G0, and a.
-  # We pass the coarse xtol_rel/maxeval so that the internal vMF re-optimisation
-  # inside prelim converges immediately (best_mean$est is already tight), keeping
-  # computation cheap. The precise values come from the joint fit in phase 5.
-  preest <- mobius_SvMF_partransport_prelim(y, xs, xe,
-                                             mean = best_mean$est,
-                                             G0 = G0, G01behaviour = G01behaviour,
-                                             type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
-                                             intercept = intercept,
-                                             xtol_rel = xtol_rel, maxeval = maxeval, ...)
+  # Build list of candidate mean links: always include the base; add the alternative
+  # if sign-flip restarts found a genuinely different optimum (lower vMF objective).
+  cand_means <- list(vMF_base$est)
+  if (!is.null(vMF_alt) && vMF_alt$nlopt$objective < vMF_base$nlopt$objective) {
+    cand_means <- c(cand_means, list(vMF_alt$est))
+  }
 
-  # Phase 5: tight joint SvMF optimisation over all parameters simultaneously.
-  # G0reference: the reference frame used to parameterise G0 in the optimiser.
-  # If not supplied by the caller, use the prelim's own G0 as reference
-  # (it is already close to the optimum, making the parameterisation well-conditioned).
-  finalest <- mobius_SvMF_joint_fit(y, xs, xe,
-                                     mean = preest$mean,
-                                     k = preest$k, a = preest$a, G0 = preest$G0,
-                                     G0reference = if (!is.null(G0reference)) G0reference else preest$G0,
-                                     G01behaviour = G01behaviour,
-                                     type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
-                                     intercept = intercept, lb = lb, ub = ub, ...)
+  # Phase 2: full SvMF regression from each candidate mean link.
+  # "Running the usual SvMF regression multiple times for different initial link values."
+  best_fit <- NULL
+  best_obj <- Inf
+  for (mean_cand in cand_means) {
+    fit <- tryCatch(
+      suppressWarnings(mobius_SvMF(
+        y = y, xs = xs, xe = xe,
+        mean = mean_cand, G0 = G0, G0reference = G0reference,
+        G01behaviour = G01behaviour,
+        type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
+        intercept = intercept, lb = lb, ub = ub,
+        ...
+      )),
+      error = function(e) NULL
+    )
+    if (!is.null(fit) && fit$obj < best_obj) {
+      best_obj <- fit$obj
+      best_fit <- fit
+    }
+  }
+  if (is.null(best_fit)) stop("All SvMF fits failed.")
 
-  # Attach prelim estimates as $preest so callers can inspect moment-based
-  # starting values separately from the final joint MLE.
-  return(c(finalest, list(preest = preest)))
+  # Phase 3: tight final SvMF from the best candidate's fitted parameters.
+  # No suppressWarnings: if this fails to converge the warning IS informative.
+  # Re-orthogonalize best_fit$G0: accumulated Cayley + rotation transforms can leave
+  # G0 with small FP violations (C++ threshold 1e-8). For G01behaviour == "p1", G0[,1]
+  # must equal p1 exactly; QR can perturb column 1, so pin it to best_fit$mean$p1.
+  first_col <- if (G01behaviour == "p1") best_fit$mean$p1 else {
+    v <- best_fit$G0[, 1L]; v / sqrt(sum(v^2))
+  }
+  G0_rest <- best_fit$G0[, -1L, drop = FALSE]
+  G0_rest <- G0_rest - first_col %*% (t(first_col) %*% G0_rest)
+  best_G0 <- as_rotation_mat(cbind(first_col, qr.Q(qr(G0_rest))))
+  mobius_SvMF(y, xs = xs, xe = xe,
+              mean = best_fit$mean, k = best_fit$k, a = best_fit$a, G0 = best_G0,
+              G0reference = if (!is.null(G0reference)) G0reference else best_G0,
+              G01behaviour = G01behaviour,
+              type = type, fix_qs1 = fix_qs1, fix_qe1 = fix_qe1,
+              intercept = intercept, lb = lb, ub = ub,
+              doprelim = FALSE, ...)
 }
 
 # Joint maximum likelihood optimisation of all SvMF regression parameters for fixed

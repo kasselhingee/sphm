@@ -14,7 +14,7 @@ xs <- matrix(rnorm(n * p), n, p)
 xs <- xs / sqrt(rowSums(xs^2))
 
 # Simulate responses from the model
-mean_params <- rmnlink_cann(p = p, qs = p, qe = 0)
+mean_params <- rand_mobius_link_cann(p = p, qs = p, qe = 0)
 sim <- rMobius_SvMF(xs = xs, xe = NULL, mean = mean_params,
                     k = 5, a = c(1, 2, 0.5), G0 = diag(p))
 y <- sim[, 1:p]
@@ -26,7 +26,7 @@ fit_vMF <- mobius_vMF(y = y, xs = xs)
 fit_SvMF <- mobius_SvMF(y = y, xs = xs, start = fit_vMF$mean)
 
 # Inspect the fitted mean link (canonical parameterisation: P, Bs, Qs)
-as_mnlink_cann(fit_SvMF$mean)
+as_mobius_link_cann(fit_SvMF$mean)
 ```
 
 ### Key functions
@@ -35,12 +35,12 @@ as_mnlink_cann(fit_SvMF$mean)
 |---|---|
 | Fit full regression | `mobius_SvMF()` |
 | Fast preliminary regression | `mobius_vMF()` |
-| Evaluate the link function | `mnlink()` |
+| Evaluate the link function | `mobius_link()` |
 | Simulate from the model | `rMobius_SvMF()` |
 | Rotated residuals | `rotatedresid()` |
 | Degrees of freedom | `mobius_DoF()` |
-| Link in canonical form | `mnlink_cann()`, `as_mnlink_cann()` |
-| Link in Omega form (for optimisation) | `mnlink_Omega()`, `as_mnlink_Omega()` |
+| Link in canonical form | `mobius_link_cann()`, `as_mobius_link_cann()` |
+| Link in Omega form (for optimisation) | `mobius_link_Omega()`, `as_mobius_link_Omega()` |
 
 Run `?sphm` for a full overview of all functions and the package workflow.
 

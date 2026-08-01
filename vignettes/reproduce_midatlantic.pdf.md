@@ -516,6 +516,33 @@ lapply(restarts, "[[", "obj") %>%
 
 Other initial parameters have not improved on the default initial parameters.
 
+## Automated multistart for vMF
+
+::: {.cell}
+
+```{.r .cell-code}
+mod_vMF_multistart <- mobius_vMF_multistart(
+  y  = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
+  xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
+  xe = xe %>% as.matrix(),
+  fix_qs1 = FALSE, type = "LinEuc"
+)
+cat("Default vMF obj:    ", mod$preest$nlopt$objective, "\n",
+    "Multistart vMF obj: ", mod_vMF_multistart$nlopt$objective, "\n", sep = "")
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+Default vMF obj:    -0.9960845
+Multistart vMF obj: -0.9960844
+```
+
+
+:::
+:::
+
+
 ## Check Other Starts for SvMF
 
 ::: {.cell}
@@ -551,10 +578,36 @@ lapply(restarts, "[[", "AIC") %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-16-1.pdf){fig-pos='H'}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-17-1.pdf){fig-pos='H'}
 :::
 :::
 
 
 Other initial parameters have not improved on the default initial parameters.
 
+## Automated multistart for SvMF
+
+::: {.cell}
+
+```{.r .cell-code}
+mod_SvMF_multistart <- mobius_SvMF_multistart(
+  y  = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
+  xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
+  xe = xestd %>% as.matrix(),
+  type = "LinEuc",
+  G01behaviour = "free"
+)
+cat("Default SvMF AIC:    ", mod$AIC, "\n",
+    "Multistart SvMF AIC: ", mod_SvMF_multistart$AIC, "\n", sep = "")
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+Default SvMF AIC:    -463.2407
+Multistart SvMF AIC: -463.2407
+```
+
+
+:::
+:::

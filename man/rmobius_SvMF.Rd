@@ -29,8 +29,12 @@ Function for simulating data given mean link and SvMF parameters
 Other regression: 
 \code{\link{mobius_SvMF}()},
 \code{\link{mobius_SvMF_log_lik}()},
+\code{\link{mobius_SvMF_multistart}()},
+\code{\link{mobius_SvMF_signflip_refit}()},
 \code{\link{mobius_dof}()},
 \code{\link{mobius_vMF}()},
-\code{\link{mobius_vMF_refit}()}
+\code{\link{mobius_vMF_multistart}()},
+\code{\link{mobius_vMF_refit}()},
+\code{\link{mobius_vMF_signflip_refit}()}
 }
 \concept{regression}

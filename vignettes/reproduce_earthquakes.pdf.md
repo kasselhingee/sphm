@@ -1027,6 +1027,52 @@ mod_SvMF <- restarts[[idx]]
 :::
 
 
+# Automated multistart for SvMF
+
+::: {.cell}
+
+```{.r .cell-code}
+mod_SvMF_multistart <- mobius_SvMF_multistart(
+  s4df_clean %>% select(s1, s2, sMrt, sMrf, sMtf) %>% st_drop_geometry() %>% as.matrix(),
+  xs = NULL,
+  xe = xestd %>% as.matrix(),
+  type = "LinEuc",
+  G01behaviour = "free"
+)
+```
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in tape_ld_mobius_SvMF_partransport_nota1(omvec = om0vec, k =
+preplist$k, : This function approximates the vMF normalising constant when
+p!=3.
+```
+
+
+:::
+
+```{.r .cell-code}
+cat("Best random-restart AIC: ", mod_SvMF$AIC, "\n",
+    "Multistart SvMF AIC:     ", mod_SvMF_multistart$AIC, "\n", sep = "")
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+Best random-restart AIC: -144.7217
+Multistart SvMF AIC:     -137.0572
+```
+
+
+:::
+
+```{.r .cell-code}
+if (mod_SvMF_multistart$AIC < mod_SvMF$AIC) mod_SvMF <- mod_SvMF_multistart
+```
+:::
+
+
 # SI Table: Estimated Parameters
 Below is the estimated concentration, the AIC and degrees of freedom of this regression.
 
@@ -1311,7 +1357,7 @@ get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s"))) %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-41-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-42-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1368,7 +1414,7 @@ obsplots/
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-42-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-43-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1430,7 +1476,7 @@ tibble::enframe(pred_ang_dist[lower.tri(pred_ang_dist)], value = "ang_dist") %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-45-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-46-1.pdf){fig-pos='H'}
 :::
 :::
 
@@ -1621,7 +1667,7 @@ defaultplot_pred(mod_SvMF, s4df_clean)
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-48-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-49-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1629,7 +1675,7 @@ defaultplot_pred(mod_SvMF, s4df_clean, focusaxes = TRUE)
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-48-2.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-49-2.pdf){fig-pos='H'}
 :::
 :::
 
@@ -1657,7 +1703,7 @@ mod_SvMF$rresids_G0 %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-49-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-50-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1952,7 +1998,7 @@ number 7.3434e-17
 :::
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-50-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-51-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -2246,7 +2292,7 @@ mod_SvMF$rresids_std %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-51-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-52-1.pdf){fig-pos='H'}
 :::
 :::
 
@@ -2275,7 +2321,7 @@ p1 + p2 + plot_layout(axes = "collect")
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-52-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-53-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -2303,7 +2349,7 @@ p1 + p2
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-53-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-54-1.pdf){fig-pos='H'}
 :::
 :::
 
@@ -2346,12 +2392,12 @@ lapply(mod_vMF_restarts, "[[", "AIC") %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-54-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-55-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
 idx <- which.min(lapply(mod_vMF_restarts, "[[", "AIC") %>% unlist())
-mod_vMF <- mod_vMF_restarts[[idx]]  
+mod_vMF <- mod_vMF_restarts[[idx]]
 mod_vMF$k
 ```
 
@@ -2376,6 +2422,37 @@ mod_vMF$AIC
 
 
 :::
+:::
+
+
+## Automated multistart for vMF
+
+::: {.cell}
+
+```{.r .cell-code}
+mod_vMF_multistart <- mobius_vMF_multistart(
+  y  = mod_SvMF$y,
+  xs = NULL,
+  xe = mod_SvMF$xe,
+  type = "LinEuc"
+)
+cat("Best random-restart vMF AIC: ", mod_vMF$AIC, "\n",
+    "Multistart vMF AIC:          ", mod_vMF_multistart$AIC, "\n", sep = "")
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+Best random-restart vMF AIC: -91.61656
+Multistart vMF AIC:          -91.61656
+```
+
+
+:::
+
+```{.r .cell-code}
+if (mod_vMF_multistart$AIC < mod_vMF$AIC) mod_vMF <- mod_vMF_multistart
+```
 :::
 
 

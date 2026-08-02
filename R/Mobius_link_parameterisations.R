@@ -494,7 +494,50 @@ dim.mobius_link_cann <- function(x){
 #' @export
 #' @method dim mobius_link_Omega
 dim.mobius_link_Omega <- function(x){
-  c(p = length(x$p1), 
+  c(p = length(x$p1),
     qs = length(x$qs1),
     qe = length(x$qe1))
+}
+
+# Enumerate sign-flip starting points for the Möbius link poles.
+# Returns a list of mobius_link_cann objects with p1, qs1, qe1 sign-flipped and, when Euclidean
+# covariates are present, an additional ce value from the opposite regime.
+# fix_qs1/fix_qe1: if TRUE, that pole was held fixed during fitting so its sign is not flipped.
+# ce regime: when xe is present the SvMF likelihood can be bimodal in ce. To escape a bad local
+# optimum we add one extra ce value from the opposite size regime (large -> 1; small -> 100).
+# The threshold (10) is arbitrary and a principled data-dependent choice is difficult because the
+# natural scale of ce depends on the scale of xe, which is not accessible here.
+signflip_starts <- function(cann0, fix_qs1, fix_qe1) {
+  p         <- ncol(cann0$P)
+  has_xs    <- !is.null(cann0$Qs)
+  has_xe    <- !is.null(cann0$Qe)
+  fqs1_opts <- if (has_xs && !fix_qs1) c(FALSE, TRUE) else FALSE
+  fqe1_opts <- if (has_xe && !fix_qe1) c(FALSE, TRUE) else FALSE
+  ce_alt    <- if (has_xe) (if (cann0$ce > 10) 1 else 100) else NULL
+  ce_vals   <- if (is.null(ce_alt)) cann0$ce else c(cann0$ce, ce_alt)
+  starts    <- vector("list", length(ce_vals) * 2L * length(fqs1_opts) * length(fqe1_opts))
+  idx <- 0L
+  for (ce_v in ce_vals) {
+    for (fp1 in c(FALSE, TRUE)) {
+      for (fqs1 in fqs1_opts) {
+        for (fqe1 in fqe1_opts) {
+          idx           <- idx + 1L
+          cann_trial    <- cann0
+          cann_trial$ce <- ce_v
+          # Flip the spherical-covariate pole: qs1 = Qs[,1].
+          if (fqs1) cann_trial$Qs[, 1L] <- -cann_trial$Qs[, 1L]
+          # Flip the Euclidean-covariate pole: qe1 = Qe[,1].
+          if (fqe1) cann_trial$Qe[, 1L] <- -cann_trial$Qe[, 1L]
+          # Flip the response pole p1 = P[,1].
+          # Negating only column 1 makes det(P) = -1; negate column p too to restore det = +1.
+          if (fp1 && p >= 2L) {
+            cann_trial$P[, 1L] <- -cann_trial$P[, 1L]
+            cann_trial$P[, p]  <- -cann_trial$P[, p]
+          }
+          starts[[idx]] <- cann_trial
+        }
+      }
+    }
+  }
+  starts
 }

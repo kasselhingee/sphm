@@ -443,34 +443,7 @@ mobius_vMF_signflip_refit <- function(mod_vMF, xtol_rel = 1e-4, maxeval = 500, .
   fqs1_opts <- if (has_xs && !fix_qs1) c(FALSE, TRUE) else FALSE
   fqe1_opts <- if (has_xe && !fix_qe1) c(FALSE, TRUE) else FALSE
 
-  # Pre-allocate: 2 (p1) x 2 (qs1) x 2 (qe1) = up to 8 starting points.
-  starts <- vector("list", 2L * length(fqs1_opts) * length(fqe1_opts))
-  idx <- 0L
-  for (fp1 in c(FALSE, TRUE)){
-    for (fqs1 in fqs1_opts){
-      for (fqe1 in fqe1_opts){
-        idx        <- idx + 1L
-        cann_trial <- cann0
-
-        # Flip the spherical-covariate pole direction.
-        # qs1 = Qs[,1] determines the stereographic projection axis for xs;
-        # flipping it moves to a genuinely different basin of the likelihood.
-        if (fqs1) cann_trial$Qs[, 1L] <- -cann_trial$Qs[, 1L]
-
-        # Same for the Euclidean-covariate pole direction qe1 = Qe[,1].
-        if (fqe1) cann_trial$Qe[, 1L] <- -cann_trial$Qe[, 1L]
-
-        # Flip the response pole p1 = P[,1].
-        # Negating only column 1 would make det(P) = -1 (breaking SO(p));
-        # negating both column 1 and column p restores det(P) = +1.
-        if (fp1 && p >= 2L){
-          cann_trial$P[, 1L] <- -cann_trial$P[, 1L]
-          cann_trial$P[, p]  <- -cann_trial$P[, p]
-        }
-        starts[[idx]] <- cann_trial
-      }
-    }
-  }
+  starts <- signflip_starts(cann0, fix_qs1, fix_qe1)
 
   best_fit <- NULL
   best_obj <- Inf

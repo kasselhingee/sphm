@@ -335,7 +335,7 @@ defaultstart <- function(preplist, type, estimatescales = TRUE){
       #   Sp(P^{-1} y) ≈ Bs * Sp(Qs^T xs)_i  +  Be * (Qe[,-1]^T xe) / (Qe[,1]^T xe + ce)
       # Each diagonal Bs[i,i] and Be[i,i] can then be estimated independently by
       # regressing the i-th stereographic coordinate of y against the i-th coordinate
-      # of the mapped predictors (no intercept: the equation has none).
+      # of the mapped predictors.
 
       # Response: stereographic projection of y rotated by P^{-1} (= I here)
       olsY <- Sp(preplist$y %*% t(solve(startP)))
@@ -358,7 +358,7 @@ defaultstart <- function(preplist, type, estimatescales = TRUE){
         df <- data.frame(y = olsY[, i])
         if (!is.null(preplist$xs)) df$xs <- olsX1[, i]
         if (!is.null(preplist$xe)) df$xe <- olsX2[, i]
-        lm(y ~ . - 1, data = df)   # no intercept: the linearised link has none
+        lm(y ~ . - 1, data = df)
       })
 
       if (!is.null(preplist$xs)){

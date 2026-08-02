@@ -601,11 +601,6 @@ cat("Default SvMF AIC:    ", mod$AIC, "\n",
 
 ## Likelihood Ratio Test of vMF vs SvMF
 
-The SvMF reduces to the vMF when all the scales `a` equal 1.
-Under that null the axes `G0` are unidentifiable, so the usual chi-squared asymptotics for the likelihood ratio do not apply and we use a parametric bootstrap instead.
-
-The Euclidean covariates below are taken from `mod$xe` rather than `xe`, so that the null and alternative models are fitted to exactly the same design matrix (`mod$xe` includes the dummy-zero and intercept columns added internally, and the standardisation used when `mod` was fitted).
-
 First get best vMF model
 ```{r}
 mod_vMF <- mobius_vMF(y = mod$y,
@@ -695,7 +690,6 @@ sum(!is.na(null_likRs_vec))
 ```
 
 A substantial fraction of the simulated fits stop at the evaluation limit rather than the convergence tolerance, and these have been discarded.
-This happens because under the null the axes `G0` are unidentifiable, so the SvMF likelihood is flat in those directions and the optimiser is slow to satisfy the tight `xtol_rel`.
 The discarded fits have systematically *smaller* likelihood ratios than the retained ones, so discarding them makes the test conservative rather than optimistic.
 
 ```{r}

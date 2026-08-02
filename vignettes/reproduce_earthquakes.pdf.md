@@ -2425,37 +2425,6 @@ mod_vMF$AIC
 :::
 
 
-## Automated multistart for vMF
-
-::: {.cell}
-
-```{.r .cell-code}
-mod_vMF_multistart <- mobius_vMF_multistart(
-  y  = mod_SvMF$y,
-  xs = NULL,
-  xe = mod_SvMF$xe,
-  type = "LinEuc"
-)
-cat("Best random-restart vMF AIC: ", mod_vMF$AIC, "\n",
-    "Multistart vMF AIC:          ", mod_vMF_multistart$AIC, "\n", sep = "")
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-Best random-restart vMF AIC: -91.61656
-Multistart vMF AIC:          -91.61656
-```
-
-
-:::
-
-```{.r .cell-code}
-if (mod_vMF_multistart$AIC < mod_vMF$AIC) mod_vMF <- mod_vMF_multistart
-```
-:::
-
-
 Below is plot for comparing likelihoods for give simulated response `y`.
 
 

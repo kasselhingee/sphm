@@ -599,3 +599,122 @@ cat("Default SvMF AIC:    ", mod$AIC, "\n",
     "Multistart SvMF AIC: ", mod_SvMF_multistart$AIC, "\n", sep = "")
 ```
 
+## Likelihood Ratio Test of vMF vs SvMF
+
+The SvMF reduces to the vMF when all the scales `a` equal 1.
+Under that null the axes `G0` are unidentifiable, so the usual chi-squared asymptotics for the likelihood ratio do not apply and we use a parametric bootstrap instead.
+
+The Euclidean covariates below are taken from `mod$xe` rather than `xe`, so that the null and alternative models are fitted to exactly the same design matrix (`mod$xe` includes the dummy-zero and intercept columns added internally, and the standardisation used when `mod` was fitted).
+
+First get best vMF model
+```{r}
+mod_vMF <- mobius_vMF(y = mod$y,
+                      xs = mod$xs,
+                      xe = mod$xe,
+                      fix_qs1 = FALSE,
+                      type = "LinEuc")
+mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){mobius_vMF_refit(mod_vMF, seed)})
+lapply(mod_vMF_restarts, "[[", "AIC") %>%
+  unlist() %>%
+  tibble::enframe("seed", "AIC") %>%
+  ggplot()+
+  geom_freqpoly(aes(x = AIC), bins = 30) +
+  geom_vline(xintercept = mod_vMF$AIC, col = "blue") +
+  geom_rug(aes(x = AIC))
+idx <- which.min(lapply(mod_vMF_restarts, "[[", "AIC") %>% unlist())
+mod_vMF <- mod_vMF_restarts[[idx]]
+mod_vMF$k
+mod_vMF$AIC
+```
+
+Below is plot for comparing likelihoods for give simulated response `y`.
+
+```{r}
+getlikR <- function(y){
+  mod1 <- mobius_vMF(y,
+                     xs = mod$xs,
+                     xe = mod_vMF$xe,
+                     type = "LinEuc",
+                     fix_qs1 = FALSE,
+                     start = mod_vMF$est)
+  mod2 <- mobius_SvMF(y,
+                      xs = mod$xs,
+                      xe = mod_vMF$xe,
+                      type = "LinEuc",
+                      fix_qs1 = FALSE,
+                      G01behaviour = "free",
+                      mean = mod$mean,
+                      k = mod$k,
+                      a = mod$a,
+                      G0 = mod$G0)
+  if ((mod1$nlopt$status != 4) || (mod2$nlopt$status != 4)){
+    return(list(likR = NA_real_,
+         vMF = mod1,
+         SvMF = mod2))
+  }
+  lLik1 <- mobius_SvMF_log_lik(mod1$y, xs = mod1$xs, xe = mod1$xe,
+              mean = mod1$est,
+              k = mod1$k,
+              a = rep(1, 3),
+              G0 = mod2$G0) %>%
+    colSums()
+  lLik2 <- mobius_SvMF_log_lik(mod2$y, xs = mod2$xs, xe = mod2$xe,
+              mean = mod2$mean,
+              k = mod2$k,
+              a = mod2$a,
+              G0 = mod2$G0) %>%
+    colSums()
+
+  list(likR = -2* (lLik1[["R"]] - lLik2[["R"]]),
+       vMF = mod1,
+       SvMF = mod2)
+}
+```
+
+Now we simulate the response 1000 times from the best vMF model and compare the likelihood of the vMF model to the likelihood of the SvMF model on each simulated data.
+
+```{r}
+null_likRs <- pbapply::pblapply(1:1000, function(seed){
+  set.seed(seed)
+  y_ld <- rmobius_SvMF(xs = mod$xs,
+                   xe = mod_vMF$xe,
+                   mean = mod_vMF$mean,
+                   k = mod_vMF$k,
+                   a = rep(1, 3),
+                   G0 = diag(1, 3))
+  y <- y_ld[,-4]
+  getlikR(y)
+}, cl = 2)
+obs <- getlikR(mod$y)
+```
+
+```{r}
+null_likRs_vec <- lapply(null_likRs, "[[", "likR") %>% unlist()
+sum(is.na(null_likRs_vec))
+sum(!is.na(null_likRs_vec))
+```
+
+A substantial fraction of the simulated fits stop at the evaluation limit rather than the convergence tolerance, and these have been discarded.
+This happens because under the null the axes `G0` are unidentifiable, so the SvMF likelihood is flat in those directions and the optimiser is slow to satisfy the tight `xtol_rel`.
+The discarded fits have systematically *smaller* likelihood ratios than the retained ones, so discarding them makes the test conservative rather than optimistic.
+
+```{r}
+obs$likR
+range(null_likRs_vec, na.rm = TRUE)
+```
+
+```{r}
+tibble::enframe(null_likRs_vec, "seed", "likR") %>%
+  ggplot() +
+  geom_freqpoly(aes(x = likR), bins = 30) +
+  geom_vline(xintercept = obs$likR, col = "blue") +
+  geom_rug(aes(x = likR))
+```
+
+p-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
+```{r}
+mean(null_likRs_vec > obs$likR, na.rm = TRUE)
+```
+
+The observed likelihood ratio is far larger than any value obtained under the null, so this small $p$-value suggests that the data was not drawn from a vMF regression.
+

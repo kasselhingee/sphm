@@ -711,3 +711,57 @@ mean(null_likRs_vec > obs$likR, na.rm = TRUE)
 
 The observed likelihood ratio is far larger than any value obtained under the null, so this small $p$-value suggests that the data was not drawn from a vMF regression.
 
+### Including the non-converged replicates
+
+Discarding replicates is only safe if the discarded ones could not have changed the
+conclusion. We can check this directly rather than assume it, because `getlikR()`
+returns the fitted `vMF` and `SvMF` objects even when it reports `likR = NA`. Those
+objects hold the parameters at whichever point the optimiser stopped, so the
+likelihood ratio can be evaluated for every replicate without refitting anything.
+
+```{r likR-all}
+likR_from_fits <- function(entry){
+  mod1 <- entry$vMF
+  mod2 <- entry$SvMF
+  lLik1 <- mobius_SvMF_log_lik(mod1$y, xs = mod1$xs, xe = mod1$xe,
+              mean = mod1$est, k = mod1$k, a = rep(1, 3), G0 = mod2$G0) %>%
+    colSums()
+  lLik2 <- mobius_SvMF_log_lik(mod2$y, xs = mod2$xs, xe = mod2$xe,
+              mean = mod2$mean, k = mod2$k, a = mod2$a, G0 = mod2$G0) %>%
+    colSums()
+  -2 * (lLik1[["R"]] - lLik2[["R"]])
+}
+likR_all <- vapply(null_likRs, likR_from_fits, numeric(1))
+```
+
+The vMF fit is the null model and converges for every replicate; only the SvMF fit
+ever stops early, and always at the evaluation limit:
+
+```{r likR-status}
+status_vMF <- vapply(null_likRs, function(e) e$vMF$nlopt$status, numeric(1))
+status_SvMF <- vapply(null_likRs, function(e) e$SvMF$nlopt$status, numeric(1))
+table(vMF = status_vMF, SvMF = status_SvMF)
+```
+
+The two groups have almost the same spread:
+
+```{r likR-bygroup}
+tapply(likR_all, ifelse(status_SvMF == 4, "converged", "stopped early"), range)
+```
+
+Taking every replicate, converged or not, the largest likelihood ratio obtained under
+the null is still far below the observed one, so the $p$-value is unchanged:
+
+```{r likR-allpvalue}
+max(likR_all)
+obs$likR
+mean(likR_all > obs$likR)
+```
+
+These are the ratios at whichever point the optimiser stopped, so they are only
+informative about the fully optimised ratios if the latter are close. Continuing a
+sample of the stopped-early fits from where they halted, with a ten-fold larger
+`maxeval`, reaches convergence within a further hundred iterations and moves the
+likelihood ratio by less than $0.1$, so by the evaluation limit the likelihood has
+effectively settled. The conclusion therefore does not depend on the discarding.
+

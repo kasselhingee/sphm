@@ -743,10 +743,7 @@ status_SvMF <- vapply(null_likRs, function(e) e$SvMF$nlopt$status, numeric(1))
 table(vMF = status_vMF, SvMF = status_SvMF)
 ```
 
-Because the SvMF likelihood can only increase with further optimisation, the value
-computed from a stopped-early SvMF fit is a *lower bound* on the likelihood ratio that
-replicate would eventually reach. The two groups nevertheless have almost the same
-spread:
+The two groups have almost the same spread:
 
 ```{r likR-bygroup}
 tapply(likR_all, ifelse(status_SvMF == 4, "converged", "stopped early"), range)
@@ -761,8 +758,10 @@ obs$likR
 mean(likR_all > obs$likR)
 ```
 
-The conclusion therefore does not depend on the discarding. Continuing a sample of the
-stopped-early fits from where they halted, with a ten-fold larger `maxeval`, reaches
-convergence within a further hundred iterations and moves the likelihood ratio by less
-than $0.1$, so by the evaluation limit the likelihood has effectively settled.
+These are the ratios at whichever point the optimiser stopped, so they are only
+informative about the fully optimised ratios if the latter are close. Continuing a
+sample of the stopped-early fits from where they halted, with a ten-fold larger
+`maxeval`, reaches convergence within a further hundred iterations and moves the
+likelihood ratio by less than $0.1$, so by the evaluation limit the likelihood has
+effectively settled. The conclusion therefore does not depend on the discarding.
 

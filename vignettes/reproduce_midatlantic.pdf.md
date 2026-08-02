@@ -936,10 +936,7 @@ vMF   4   5
 :::
 
 
-Because the SvMF likelihood can only increase with further optimisation, the value
-computed from a stopped-early SvMF fit is a *lower bound* on the likelihood ratio that
-replicate would eventually reach. The two groups nevertheless have almost the same
-spread:
+The two groups have almost the same spread:
 
 
 ::: {.cell}
@@ -1010,8 +1007,10 @@ mean(likR_all > obs$likR)
 :::
 
 
-The conclusion therefore does not depend on the discarding. Continuing a sample of the
-stopped-early fits from where they halted, with a ten-fold larger `maxeval`, reaches
-convergence within a further hundred iterations and moves the likelihood ratio by less
-than $0.1$, so by the evaluation limit the likelihood has effectively settled.
+These are the ratios at whichever point the optimiser stopped, so they are only
+informative about the fully optimised ratios if the latter are close. Continuing a
+sample of the stopped-early fits from where they halted, with a ten-fold larger
+`maxeval`, reaches convergence within a further hundred iterations and moves the
+likelihood ratio by less than $0.1$, so by the evaluation limit the likelihood has
+effectively settled. The conclusion therefore does not depend on the discarding.
 

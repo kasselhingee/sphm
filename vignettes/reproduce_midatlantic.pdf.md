@@ -1008,9 +1008,144 @@ mean(likR_all > obs$likR)
 
 
 These are the ratios at whichever point the optimiser stopped, so they are only
-informative about the fully optimised ratios if the latter are close. Continuing a
-sample of the stopped-early fits from where they halted, with a ten-fold larger
-`maxeval`, reaches convergence within a further hundred iterations and moves the
-likelihood ratio by less than $0.1$, so by the evaluation limit the likelihood has
-effectively settled. The conclusion therefore does not depend on the discarding.
+informative about the fully optimised ratios if the latter are close. Rather than
+assume that, continue every stopped-early fit from where it halted, allowing a
+ten-fold larger `maxeval`:
+
+
+::: {.cell}
+
+```{.r .cell-code}
+stopped <- which(status_SvMF == 5)
+continued <- pbapply::pblapply(stopped, function(i){
+  mod1 <- null_likRs[[i]]$vMF
+  mod2 <- null_likRs[[i]]$SvMF
+  cont <- mobius_SvMF(mod2$y,
+                      xs = mod2$xs,
+                      xe = mod2$xe,
+                      type = "LinEuc",
+                      fix_qs1 = FALSE,
+                      G01behaviour = "free",
+                      mean = mod2$mean,
+                      k = mod2$k,
+                      a = mod2$a,
+                      G0 = mod2$G0,
+                      maxeval = 1E5)
+  lLik1 <- mobius_SvMF_log_lik(mod1$y, xs = mod1$xs, xe = mod1$xe,
+              mean = mod1$est, k = mod1$k, a = rep(1, 3), G0 = cont$G0) %>%
+    colSums()
+  lLik2 <- mobius_SvMF_log_lik(cont$y, xs = cont$xs, xe = cont$xe,
+              mean = cont$mean, k = cont$k, a = cont$a, G0 = cont$G0) %>%
+    colSums()
+  c(status = cont$nlopt$status,
+    extra_iters = cont$nlopt$iterations,
+    likR_after = -2 * (lLik1[["R"]] - lLik2[["R"]]))
+}, cl = 2)
+continued <- do.call(rbind, continued)
+table(status = continued[, "status"])
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+status
+  4 
+448 
+```
+
+
+:::
+
+```{.r .cell-code}
+summary(continued[, "extra_iters"])
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  57.00   75.00   80.00   87.01   84.00 2810.00 
+```
+
+
+:::
+:::
+
+
+Every one of them converges, mostly within about eighty further iterations. The
+likelihood ratio usually barely moves, but not always:
+
+
+::: {.cell}
+
+```{.r .cell-code}
+summary(continued[, "likR_after"] - likR_all[stopped])
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+-0.941587 -0.000113  0.004862  0.231656  0.033197 16.027048 
+```
+
+
+:::
+:::
+
+
+The median change is under $0.01$, yet one replicate rises by $16$, so a sample of a
+dozen or so would not have been enough to characterise this. Substituting the
+continued values gives a null distribution in which every replicate has converged, so
+nothing has to be discarded at all:
+
+
+::: {.cell}
+
+```{.r .cell-code}
+likR_final <- likR_all
+likR_final[stopped] <- continued[, "likR_after"]
+range(likR_final)
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1]  0.2812075 25.8483420
+```
+
+
+:::
+
+```{.r .cell-code}
+obs$likR
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 116.5489
+```
+
+
+:::
+
+```{.r .cell-code}
+mean(likR_final > obs$likR)
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 0
+```
+
+
+:::
+:::
+
+
+The largest likelihood ratio under the null is still far below the observed one, so
+the $p$-value is zero on the full set of 1000 replicates and the conclusion does not
+depend on the discarding.
 

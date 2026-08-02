@@ -153,31 +153,31 @@ cann
 ```
 $P
          [,1]       [,2]        [,3]
-Y1  0.4913098  0.5626852 -0.66483081
-Y2 -0.4803628 -0.4616721 -0.74572812
-Y3 -0.7265440  0.6857435  0.04346908
+Y1  0.4913098  0.5626852 -0.66483080
+Y2 -0.4803628 -0.4616721 -0.74572813
+Y3 -0.7265440  0.6857436  0.04346904
 
 $Bs
-         [,1]      [,2]
-[1,] 0.902965 0.0000000
-[2,] 0.000000 0.7702707
+          [,1]      [,2]
+[1,] 0.9029649 0.0000000
+[2,] 0.0000000 0.7702704
 
 $Qs
          [,1]       [,2]       [,3]
-X1  0.2657935  0.5868953 -0.7647926
-X2 -0.5034122 -0.5920729 -0.6293059
-X3 -0.8221496  0.5522713  0.1380811
+X1  0.2657933  0.5868954 -0.7647926
+X2 -0.5034120 -0.5920730 -0.6293059
+X3 -0.8221498  0.5522710  0.1380812
 
 $Be
            [,1]      [,2]
-[1,] 0.07230433 0.0000000
+[1,] 0.07230452 0.0000000
 [2,] 0.00000000 0.2525752
 
 $Qe
           [,1]       [,2]      [,3]
 dummyzero    1  0.0000000 0.0000000
-westedge     0  0.1254317 0.9921023
-ones         0 -0.9921023 0.1254317
+westedge     0  0.1254316 0.9921023
+ones         0 -0.9921023 0.1254316
 
 $ce
 [1] 1
@@ -204,8 +204,8 @@ cann$Bs %*% t(cann$Qs[,-1])
 
 ```
              X1         X2        X3
-[1,]  0.5299459 -0.5346211 0.4986817
-[2,] -0.5890973 -0.4847359 0.1063598
+[1,]  0.5299460 -0.5346212 0.4986814
+[2,] -0.5890971 -0.4847357 0.1063598
 ```
 
 
@@ -219,8 +219,8 @@ cann$Be %*% t(cann$Qe[,-1])
 
 ```
      dummyzero    westedge        ones
-[1,]         0 0.009069259 -0.07173329
-[2,]         0 0.250580386  0.03168094
+[1,]         0 0.009069271 -0.07173348
+[2,]         0 0.250580391  0.03168090
 ```
 
 
@@ -242,7 +242,7 @@ cann$Qs[,1]
 
 ```
         X1         X2         X3 
- 0.2657935 -0.5034122 -0.8221496 
+ 0.2657933 -0.5034120 -0.8221498 
 ```
 
 
@@ -465,10 +465,10 @@ The term `(3-1) * (3 - 2) / 2` if for the commutativity constraint on Omega, whi
 ::: {.cell-output .cell-output-stdout}
 
 ```
- [1] 8.278212e+03 6.695310e+03 2.997127e+03 2.469711e+03 1.230022e+03
- [6] 3.528888e+02 9.513351e+01 2.857011e+01 2.110682e+01 9.720092e+00
-[11] 5.148329e+00 4.735748e+00 2.974174e+00 1.955083e+00 1.055983e+00
-[16] 4.074500e-01 2.936479e-06
+ [1] 8.254073e+03 6.672951e+03 2.990692e+03 2.470448e+03 1.236519e+03
+ [6] 3.582952e+02 9.508066e+01 2.869560e+01 2.125170e+01 9.630614e+00
+[11] 5.113127e+00 4.746740e+00 2.960021e+00 1.951306e+00 1.054189e+00
+[16] 4.074127e-01 2.936479e-06
 ```
 
 
@@ -611,3 +611,275 @@ Multistart SvMF AIC: -463.2407
 
 :::
 :::
+
+
+## Likelihood Ratio Test of vMF vs SvMF
+
+First get best vMF model
+
+::: {.cell}
+
+```{.r .cell-code}
+mod_vMF <- mobius_vMF(y = mod$y,
+                      xs = mod$xs,
+                      xe = mod$xe,
+                      fix_qs1 = FALSE,
+                      type = "LinEuc")
+mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){mobius_vMF_refit(mod_vMF, seed)})
+```
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in mobius_vMF(y = mod_vMF$y, xs = mod_vMF$xs, xe = mod_vMF$xe, fix_qs1
+= mod_vMF$linktype$fix_qs1, : NLOPT_MAXEVAL_REACHED: Optimization stopped
+because maxeval (above) was reached.
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stdout}
+
+```
+Error in mobius_link_Omega_check(projectedom) : 
+  The following checks failed. Omega_comm: 0.0043
+```
+
+
+:::
+
+```{.r .cell-code}
+lapply(mod_vMF_restarts, "[[", "AIC") %>%
+  unlist() %>%
+  tibble::enframe("seed", "AIC") %>%
+  ggplot()+
+  geom_freqpoly(aes(x = AIC), bins = 30) +
+  geom_vline(xintercept = mod_vMF$AIC, col = "blue") +
+  geom_rug(aes(x = AIC))
+```
+
+::: {.cell-output-display}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-19-1.pdf){fig-pos='H'}
+:::
+
+```{.r .cell-code}
+idx <- which.min(lapply(mod_vMF_restarts, "[[", "AIC") %>% unlist())
+mod_vMF <- mod_vMF_restarts[[idx]]
+mod_vMF$k
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 255.3967
+```
+
+
+:::
+
+```{.r .cell-code}
+mod_vMF$AIC
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] -354.6918
+```
+
+
+:::
+:::
+
+
+Below is plot for comparing likelihoods for give simulated response `y`.
+
+
+::: {.cell}
+
+```{.r .cell-code}
+getlikR <- function(y){
+  mod1 <- mobius_vMF(y,
+                     xs = mod$xs,
+                     xe = mod_vMF$xe,
+                     type = "LinEuc",
+                     fix_qs1 = FALSE,
+                     start = mod_vMF$est)
+  mod2 <- mobius_SvMF(y,
+                      xs = mod$xs,
+                      xe = mod_vMF$xe,
+                      type = "LinEuc",
+                      fix_qs1 = FALSE,
+                      G01behaviour = "free",
+                      mean = mod$mean,
+                      k = mod$k,
+                      a = mod$a,
+                      G0 = mod$G0)
+  if ((mod1$nlopt$status != 4) || (mod2$nlopt$status != 4)){
+    return(list(likR = NA_real_,
+         vMF = mod1,
+         SvMF = mod2))
+  }
+  lLik1 <- mobius_SvMF_log_lik(mod1$y, xs = mod1$xs, xe = mod1$xe,
+              mean = mod1$est,
+              k = mod1$k,
+              a = rep(1, 3),
+              G0 = mod2$G0) %>%
+    colSums()
+  lLik2 <- mobius_SvMF_log_lik(mod2$y, xs = mod2$xs, xe = mod2$xe,
+              mean = mod2$mean,
+              k = mod2$k,
+              a = mod2$a,
+              G0 = mod2$G0) %>%
+    colSums()
+
+  list(likR = -2* (lLik1[["R"]] - lLik2[["R"]]),
+       vMF = mod1,
+       SvMF = mod2)
+}
+```
+:::
+
+
+Now we simulate the response 1000 times from the best vMF model and compare the likelihood of the vMF model to the likelihood of the SvMF model on each simulated data.
+
+
+::: {.cell}
+
+```{.r .cell-code}
+null_likRs <- pbapply::pblapply(1:1000, function(seed){
+  set.seed(seed)
+  y_ld <- rmobius_SvMF(xs = mod$xs,
+                   xe = mod_vMF$xe,
+                   mean = mod_vMF$mean,
+                   k = mod_vMF$k,
+                   a = rep(1, 3),
+                   G0 = diag(1, 3))
+  y <- y_ld[,-4]
+  getlikR(y)
+}, cl = 2)
+obs <- getlikR(mod$y)
+```
+:::
+
+::: {.cell}
+
+```{.r .cell-code}
+null_likRs_vec <- lapply(null_likRs, "[[", "likR") %>% unlist()
+sum(is.na(null_likRs_vec))
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 448
+```
+
+
+:::
+
+```{.r .cell-code}
+sum(!is.na(null_likRs_vec))
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 552
+```
+
+
+:::
+:::
+
+
+A substantial fraction of the simulated fits stop at the evaluation limit rather than the convergence tolerance, and these have been discarded.
+
+
+::: {.cell}
+
+```{.r .cell-code}
+obs$likR
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 116.5489
+```
+
+
+:::
+
+```{.r .cell-code}
+range(null_likRs_vec, na.rm = TRUE)
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1]  0.2812075 23.1321965
+```
+
+
+:::
+:::
+
+::: {.cell}
+
+```{.r .cell-code}
+tibble::enframe(null_likRs_vec, "seed", "likR") %>%
+  ggplot() +
+  geom_freqpoly(aes(x = likR), bins = 30) +
+  geom_vline(xintercept = obs$likR, col = "blue") +
+  geom_rug(aes(x = likR))
+```
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning: Removed 448 rows containing non-finite outside the scale range
+(`stat_bin()`).
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning: Removed 448 rows containing missing values or values outside the scale range
+(`geom_rug()`).
+```
+
+
+:::
+
+::: {.cell-output-display}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-24-1.pdf){fig-pos='H'}
+:::
+:::
+
+
+p-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
+
+::: {.cell}
+
+```{.r .cell-code}
+mean(null_likRs_vec > obs$likR, na.rm = TRUE)
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 0
+```
+
+
+:::
+:::
+
+
+The observed likelihood ratio is far larger than any value obtained under the null, so this small $p$-value suggests that the data was not drawn from a vMF regression.
+

@@ -764,7 +764,5 @@ mean(likR_all > obs$likR)
 The conclusion therefore does not depend on the discarding. Continuing a sample of the
 stopped-early fits from where they halted, with a ten-fold larger `maxeval`, reaches
 convergence within a further hundred iterations and moves the likelihood ratio by less
-than $0.1$: by the evaluation limit the likelihood has effectively settled, and what is
-still drifting is the direction of `G0`, which is unidentifiable as the scales `a`
-approach 1.
+than $0.1$, so by the evaluation limit the likelihood has effectively settled.
 

@@ -690,7 +690,6 @@ sum(!is.na(null_likRs_vec))
 ```
 
 A substantial fraction of the simulated fits stop at the evaluation limit rather than the convergence tolerance, and these have been discarded.
-The discarded fits have systematically *smaller* likelihood ratios than the retained ones, so discarding them makes the test conservative rather than optimistic.
 
 ```{r}
 obs$likR

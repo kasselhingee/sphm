@@ -443,6 +443,7 @@ mobius_vMF_signflip_refit <- function(mod_vMF, xtol_rel = 1e-4, maxeval = 500, .
   fqs1_opts <- if (has_xs && !fix_qs1) c(FALSE, TRUE) else FALSE
   fqe1_opts <- if (has_xe && !fix_qe1) c(FALSE, TRUE) else FALSE
 
+  if (type == "LinEuc") {browser()} #to check if ce is properly fixed
   starts <- signflip_starts(cann0, fix_qs1, fix_qe1)
 
   best_fit <- NULL

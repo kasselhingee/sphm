@@ -105,6 +105,7 @@ mobius_SvMF_signflip_refit <- function(mod_SvMF, type, fix_qs1, fix_qe1, interce
                                         G01behaviour = "p1",
                                         xtol_rel = 1e-4, maxeval = 500, ...) {
   cann0  <- as_mobius_link_cann(mod_SvMF$mean)
+  if (type == "LinEuc") {browser()} #to check if ce is properly fixed
   starts <- signflip_starts(cann0, fix_qs1, fix_qe1)
 
   best_fit <- NULL
@@ -149,10 +150,9 @@ mobius_SvMF_signflip_refit <- function(mod_SvMF, type, fix_qs1, fix_qe1, interce
 #' @title SvMF regression with sign-flip multistart exploration
 #' @description Fits the SvMF regression in three phases:
 #' (1) \code{\link{mobius_vMF_multistart}} finds a reliable basin for the mean link
-#'     (the simpler vMF landscape is less prone to low-concentration local optima than
-#'     the full SvMF landscape), then a coarse SvMF fit is run from that starting point;
+#'     then a coarse SvMF fit is run from that starting point;
 #' (2) sign-flip restarts (see \code{\link{mobius_SvMF_signflip_refit}}) at the same
-#'     coarse tolerance to explore nearby basins;
+#'     coarse tolerance to explore other basins again;
 #' (3) a tight final SvMF optimisation from the best starting point found.
 #' @param y,xs,xe,G0,G0reference,G01behaviour,type,fix_qs1,fix_qe1,intercept,lb,ub
 #'   As in \code{\link{mobius_SvMF}}.
@@ -197,8 +197,9 @@ mobius_SvMF_multistart <- function(y, xs = NULL, xe = NULL,
   best <- if (!is.null(mod1) && mod1$obj < mod0$obj) mod1 else mod0
 
   # Phase 3: tight final SvMF from the best basin found in phases 1–2.
-  # Re-orthogonalise G0; for G01behaviour == "p1" pin column 1 to p1 exactly
-  # to satisfy the C++ constraint (G0[,1] must equal p1 within 1e-8).
+  if (G01behaviour == "p1") browser() # to check whether best$G0[,1] ever != best$mean$p1 when G01behaviour == "p1" 
+  # Slight re-orthogonalise G0; for G01behaviour == "p1" pin column 1 to p1 exactly
+  # to satisfy the constraint that G0[,1] must equal p1 exactly.
   first_col <- if (G01behaviour == "p1") best$mean$p1 else {
     v <- best$G0[, 1L]; v / sqrt(sum(v^2))
   }

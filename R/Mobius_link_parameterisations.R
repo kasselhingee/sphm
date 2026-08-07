@@ -500,44 +500,53 @@ dim.mobius_link_Omega <- function(x){
 }
 
 # Enumerate sign-flip starting points for the Möbius link poles.
-# Returns a list of mobius_link_cann objects with p1, qs1, qe1 sign-flipped and, when Euclidean
-# covariates are present, an additional ce value from the opposite regime.
+#
+# The three "pole" directions p1 = P[,1], qs1 = Qs[,1] and qe1 = Qe[,1] each carry a sign
+# ambiguity, and (when Euclidean covariates are present and ce is free) the SvMF likelihood can
+# be bimodal in ce. This enumerates the Cartesian product of those choices and returns one
+# mobius_link_cann per combination; the first element is cann0 unchanged.
+#
+# The enumeration is written as a factor grid rather than nested loops so that every factor
+# always contributes at least one level -- its "leave it alone" level. A component that is
+# absent or held fixed then drops quietly out of the product instead of collapsing it. The
+# nested-loop version had ce outermost and let it take the value NULL when there were no
+# Euclidean covariates, which silently suppressed the p1 and qs1 flips along with it.
+#
 # fix_qs1/fix_qe1: if TRUE, that pole was held fixed during fitting so its sign is not flipped.
-# ce regime: when xe is present the SvMF likelihood can be bimodal in ce. To escape a bad local
-# optimum we add one extra ce value from the opposite size regime (large -> 1; small -> 100).
+# fix_qe1 = TRUE also holds ce fixed (estprep_meanconstraints() fixes qe1 and ce together), so no
+# alternative ce is offered in that case either: varying it here would be silently overridden by
+# the optimiser's fixed mask or, for LinEuc starts, pin ce away from its required value of 1 and
+# trip the is_LinEuc() checks in mobius_vMF()/mobius_SvMF_joint_fit(). Deriving both the ce levels
+# and the qe1 flips from the single predicate flip_qe is what keeps the two in step.
+#
+# ce regime: the alternative value comes from the opposite size regime (large -> 1; small -> 100).
 # The threshold (10) is arbitrary and a principled data-dependent choice is difficult because the
 # natural scale of ce depends on the scale of xe, which is not accessible here.
 signflip_starts <- function(cann0, fix_qs1, fix_qe1) {
-  p         <- ncol(cann0$P)
-  has_xs    <- !is.null(cann0$Qs)
-  has_xe    <- !is.null(cann0$Qe)
-  fqs1_opts <- if (has_xs && !fix_qs1) c(FALSE, TRUE) else FALSE
-  fqe1_opts <- if (has_xe && !fix_qe1) c(FALSE, TRUE) else FALSE
-  ce_alt    <- if (has_xe) (if (cann0$ce > 10) 1 else 100) else NULL
-  ce_vals   <- if (is.null(ce_alt)) cann0$ce else c(cann0$ce, ce_alt)
-  starts    <- vector("list", length(ce_vals) * 2L * length(fqs1_opts) * length(fqe1_opts))
-  idx <- 0L
-  for (ce_v in ce_vals) {
-    for (fp1 in c(FALSE, TRUE)) {
-      for (fqs1 in fqs1_opts) {
-        for (fqe1 in fqe1_opts) {
-          idx           <- idx + 1L
-          cann_trial    <- cann0
-          cann_trial$ce <- ce_v
-          # Flip the spherical-covariate pole: qs1 = Qs[,1].
-          if (fqs1) cann_trial$Qs[, 1L] <- -cann_trial$Qs[, 1L]
-          # Flip the Euclidean-covariate pole: qe1 = Qe[,1].
-          if (fqe1) cann_trial$Qe[, 1L] <- -cann_trial$Qe[, 1L]
-          # Flip the response pole p1 = P[,1].
-          # Negating only column 1 makes det(P) = -1; negate column p too to restore det = +1.
-          if (fp1 && p >= 2L) {
-            cann_trial$P[, 1L] <- -cann_trial$P[, 1L]
-            cann_trial$P[, p]  <- -cann_trial$P[, p]
-          }
-          starts[[idx]] <- cann_trial
-        }
-      }
-    }
-  }
-  starts
+  p       <- ncol(cann0$P)
+  flip_qs <- !is.null(cann0$Qs) && !fix_qs1
+  flip_qe <- !is.null(cann0$Qe) && !fix_qe1
+
+  grid <- expand.grid(
+    # When ce is absent or fixed this level is a placeholder that is never read; it exists only
+    # so the factor contributes one row rather than emptying the grid.
+    ce   = if (flip_qe) c(cann0$ce, if (cann0$ce > 10) 1 else 100) else NA_real_,
+    # Negating P[,1] alone makes det(P) = -1, so column p is negated too to restore det = +1.
+    # That is impossible when p = 1, where the flip is simply unavailable.
+    fp1  = if (p >= 2L) c(FALSE, TRUE) else FALSE,
+    fqs1 = if (flip_qs) c(FALSE, TRUE) else FALSE,
+    fqe1 = if (flip_qe) c(FALSE, TRUE) else FALSE,
+    KEEP.OUT.ATTRS = FALSE
+  )
+
+  # Index the grid rather than apply()ing over its rows: the frame mixes logical and numeric
+  # columns, which apply() would coerce to a single type.
+  lapply(seq_len(nrow(grid)), function(i) {
+    trial <- cann0
+    if (flip_qe)      trial$ce            <- grid$ce[i]
+    if (grid$fqs1[i]) trial$Qs[, 1L]      <- -trial$Qs[, 1L]
+    if (grid$fqe1[i]) trial$Qe[, 1L]      <- -trial$Qe[, 1L]
+    if (grid$fp1[i])  trial$P[, c(1L, p)] <- -trial$P[, c(1L, p)]
+    trial
+  })
 }

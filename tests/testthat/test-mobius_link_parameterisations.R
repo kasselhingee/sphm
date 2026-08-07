@@ -225,3 +225,74 @@ test_that("rand_mobius_link_cann preseed gives identical results on repeated cal
   expect_equal(p1, p2)
 })
 
+
+test_that("signflip_starts() enumerates the right number of starts", {
+  both    <- rand_mobius_link_cann(3, 4, 5, preseed = 11)
+  xe_only <- rand_mobius_link_cann(3, 0, 5, preseed = 12)
+  xs_only <- rand_mobius_link_cann(3, 4, 0, preseed = 13)
+  neither <- rand_mobius_link_cann(3, 0, 0, preseed = 14)
+
+  # 2 (p1) x 2 (qs1) x 2 (qe1) x 2 (ce regime)
+  expect_length(signflip_starts(both, FALSE, FALSE), 16)
+  # fix_qe1 removes both the qe1 flip and the ce variation
+  expect_length(signflip_starts(both, FALSE, TRUE), 4)
+  expect_length(signflip_starts(both, TRUE, TRUE), 2)
+  expect_length(signflip_starts(xe_only, FALSE, TRUE), 2)
+  # An absent component must drop out of the product, not collapse it: these two returned
+  # zero starts when the enumeration was a nested loop with ce outermost.
+  expect_length(signflip_starts(xs_only, FALSE, FALSE), 4)
+  expect_length(signflip_starts(neither, FALSE, FALSE), 2)
+})
+
+test_that("signflip_starts() varies ce only when qe1 is free", {
+  obj <- rand_mobius_link_cann(3, 4, 5, preseed = 15)
+  ces <- function(starts) vapply(starts, function(x) x$ce, numeric(1))
+
+  # rand_mobius_link_cann draws ce from runif(1), so ce < 10 and the alternative regime is 100
+  expect_setequal(unique(ces(signflip_starts(obj, FALSE, FALSE))), c(obj$ce, 100))
+  # ce and qe1 are fixed together by estprep_meanconstraints(), so a fixed qe1 must leave ce alone
+  expect_identical(unique(ces(signflip_starts(obj, FALSE, TRUE))), obj$ce)
+
+  # the opposite size regime: ce > 10 sends the alternative to 1
+  big <- obj
+  big$ce <- 50
+  expect_setequal(unique(ces(signflip_starts(big, FALSE, FALSE))), c(50, 1))
+  expect_identical(unique(ces(signflip_starts(big, FALSE, TRUE))), 50)
+})
+
+test_that("signflip_starts() preserves LinEuc form when qe1 is fixed", {
+  rand_mobius_link_cann__place_in_env(3, 0, 4)
+  bigQe <- rbind(0, Qe)
+  bigQe[, 1] <- 0
+  bigQe[1, 1] <- 1
+  lin <- mobius_link_cann(P, Be = Be, Qe = bigQe, ce = 1)
+  expect_true(is_LinEuc(lin))
+
+  # LinEuc requires ce == 1 and qe1 == (1, 0, ...); every start must still satisfy that,
+  # otherwise the is_LinEuc() checks in mobius_vMF()/mobius_SvMF_joint_fit() trip.
+  starts <- signflip_starts(lin, FALSE, TRUE)
+  expect_true(all(vapply(starts, is_LinEuc, logical(1))))
+})
+
+test_that("signflip_starts() leaves fixed poles alone and returns the original first", {
+  both    <- rand_mobius_link_cann(3, 4, 5, preseed = 16)
+  xs_only <- rand_mobius_link_cann(3, 4, 0, preseed = 17)
+
+  # the unmodified starting point is always offered first
+  expect_identical(signflip_starts(both, FALSE, FALSE)[[1]], both)
+  expect_identical(signflip_starts(xs_only, FALSE, FALSE)[[1]], xs_only)
+
+  fixed <- signflip_starts(both, TRUE, TRUE)
+  expect_true(all(vapply(fixed, function(x) isTRUE(all.equal(x$Qs[, 1], both$Qs[, 1])), logical(1))))
+  expect_true(all(vapply(fixed, function(x) isTRUE(all.equal(x$Qe[, 1], both$Qe[, 1])), logical(1))))
+
+  free <- signflip_starts(both, FALSE, FALSE)
+  # both orientations of each free pole appear, and P stays a rotation (det = +1) throughout
+  expect_length(unique(lapply(free, function(x) sign(x$Qs[, 1]))), 2)
+  expect_length(unique(lapply(free, function(x) sign(x$Qe[, 1]))), 2)
+  expect_length(unique(lapply(free, function(x) sign(x$P[, 1]))), 2)
+  expect_equal(vapply(free, function(x) det(x$P), numeric(1)), rep(det(both$P), length(free)))
+
+  # ce is absent without Euclidean covariates and must stay that way
+  expect_true(all(vapply(signflip_starts(xs_only, FALSE, FALSE), function(x) is.null(x$ce), logical(1))))
+})

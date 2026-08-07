@@ -415,8 +415,11 @@ mobius_vMF_refit <- function(mod_vMF, preseed = 1){
 #' parameters.  These are the only elements of the Omega parameterisation that are
 #' not part of the Omega matrix itself; flipping them gives genuinely different
 #' basins without perturbing the scale structure (Bs, Be, Omega_s, Omega_e).
-#' At most 8 restarts are tried (2 × 2 × 2 for p1/qs1/qe1); fewer when xs or xe
-#' is absent or when \code{fix_qs1}/\code{fix_qe1} is \code{TRUE}.
+#' At most 16 restarts are tried: 2 × 2 × 2 for the p1/qs1/qe1 sign flips, doubled again
+#' by an alternative \code{ce} value from the opposite size regime. Fewer are tried when xs
+#' or xe is absent or when \code{fix_qs1}/\code{fix_qe1} is \code{TRUE} (\code{fix_qe1}
+#' suppresses the \code{ce} variation as well as the qe1 flip, since the two are fixed
+#' together).
 #' @param mod_vMF Result of \code{\link{mobius_vMF}}.
 #' @param xtol_rel Relative convergence tolerance passed to nloptr (default \code{1e-4},
 #'   coarser than the default \code{1e-10} so enumeration is fast).
@@ -430,20 +433,13 @@ mobius_vMF_signflip_refit <- function(mod_vMF, xtol_rel = 1e-4, maxeval = 500, .
   # Work in canonical form so p1, qs1, qe1 are directly accessible.
   # (The Omega form compresses them into Omega_s / Omega_e matrices.)
   cann0 <- as_mobius_link_cann(mod_vMF$est)
-  p     <- ncol(cann0$P)
 
-  # Recover which poles were held fixed during the original fit.
+  # Recover which poles were held fixed during the original fit. signflip_starts() uses these
+  # to enumerate sign flips only for poles that (a) exist and (b) were free during fitting;
+  # flipping a fixed pole would move outside the model constraint.
   fix_qs1 <- mod_vMF$linktype$fix_qs1
   fix_qe1 <- mod_vMF$linktype$fix_qe1
-  has_xs  <- !is.null(cann0$Qs)
-  has_xe  <- !is.null(cann0$Qe)
 
-  # Only enumerate sign flips for poles that (a) exist and (b) were free during fitting.
-  # Flipping a fixed pole would move outside the model constraint.
-  fqs1_opts <- if (has_xs && !fix_qs1) c(FALSE, TRUE) else FALSE
-  fqe1_opts <- if (has_xe && !fix_qe1) c(FALSE, TRUE) else FALSE
-
-  if (type == "LinEuc") {browser()} #to check if ce is properly fixed
   starts <- signflip_starts(cann0, fix_qs1, fix_qe1)
 
   best_fit <- NULL

@@ -365,3 +365,42 @@ test_that("Under high concentration, standardised residuals are the correct MVN"
   expect_gt(ks.test(rowSums(est1$rresids_std^2), "pchisq", df = ncol(est1$rresids_std))$p.value, 0.05)
 })
 
+
+test_that("mobius_SvMF() records linktype and G01behaviour, and the refit reads them back", {
+  # The refit helpers derive the model settings from the fit object rather than taking them
+  # as arguments, so a restart cannot silently optimise a different model. Guard the contract
+  # they rely on.
+  rand_mobius_link_cann__place_in_env(4, 5, 4, preseed = 1)
+  omegapar <- as_mobius_link_Omega(paramobj)
+  set.seed(4)
+  x <- rcovars(200, qs, qe)
+  set.seed(5)
+  G0_other <- mclust::randomOrthogonalMatrix(p, p)
+  G0_other[, p] <- det(G0_other) * G0_other[, p]
+  G0 <- cbind(omegapar$p1, -jupp_Rmat(G0_other[, 1], omegapar$p1) %*% G0_other[, -1])
+  set.seed(7)
+  k <- 30
+  a <- c(1, seq(1, 0.2, length.out = p - 1))
+  a[-1] <- a[-1] / prod(a[-1])^(1 / (p - 1))
+  y_ld <- rmobius_SvMF(x$xs, x$xe, mean = omegapar, k, a, G0)
+
+  expect_warning({
+    mod <- mobius_SvMF(y_ld[, 1:p], x$xs, x$xe, mean = omegapar, k = k, a = a, G0 = G0,
+                       G01behaviour = "p1", type = "SpEuc", fix_qs1 = FALSE, fix_qe1 = FALSE,
+                       intercept = FALSE, xtol_rel = 1E-4)
+  }, "p!=3")
+
+  expect_equal(mod$linktype,
+               list(type = "SpEuc", fix_qs1 = FALSE, fix_qe1 = FALSE, intercept = FALSE))
+  expect_identical(mod$G01behaviour, "p1")
+  # same field names as mobius_vMF() records (R/Mobius_vMF.R), so both refit helpers work alike
+  expect_named(mod$linktype, c("type", "fix_qs1", "fix_qe1", "intercept"))
+})
+
+test_that("mobius_SvMF_signflip_refit() rejects a fit with no recorded settings", {
+  # mobius_SvMF_joint_fit() results, and fits cached before these fields existed, lack
+  # linktype; without the guard the NULL would fall through to mobius_SvMF()'s defaults and
+  # silently refit a different model.
+  expect_error(mobius_SvMF_signflip_refit(list(mean = NULL, G01behaviour = "p1")),
+               "linktype")
+})

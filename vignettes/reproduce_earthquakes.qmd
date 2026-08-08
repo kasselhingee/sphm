@@ -555,14 +555,22 @@ xestd <- xe %>%
 cor(xestd)
 ```
 
+Below saves the covariates and response for use in a simulation study elsewhere.
+
+```{r}
+Ymat <- s4df_clean %>% 
+           select(s1, s2, sMrt, sMrf, sMtf) %>% 
+           st_drop_geometry() %>% 
+           as.matrix()
+Xemat <- Xemat
+saveRDS(list(Y = Ymat, X = Xemat), "earthquake_regression_data.rds")
+```
+
 # Default Start for SvMF Regression
 ```{r}
-mod_SvMF <- mobius_SvMF(s4df_clean %>% 
-                        select(s1, s2, sMrt, sMrf, sMtf) %>% 
-                        st_drop_geometry() %>% 
-                        as.matrix(),
+mod_SvMF <- mobius_SvMF(Ymat,
                       xs = NULL, 
-                      xe = xestd %>% as.matrix(),
+                      xe = Xemat,
                       type = "LinEuc",
                       G01behaviour = "free")
 mod_SvMF$k
@@ -584,12 +592,9 @@ restarts <- pbapply::pblapply(1:100, function(seed){
   bigQe[1,1] <- 1
   start$Qe <- bigQe
   start$ce <- 1
-  mobius_SvMF(s4df_clean %>% 
-                          select(s1, s2, sMrt, sMrf, sMtf) %>% 
-                          st_drop_geometry() %>% 
-                          as.matrix(),
+  mobius_SvMF(Ymat,
                       xs = NULL, 
-                      xe = xestd %>% as.matrix(),
+                      xe = Xemat,
                       type = "LinEuc",
                       G01behaviour = "free",
                       mean = start)
@@ -618,9 +623,9 @@ mod_SvMF <- restarts[[idx]]
 # Automated multistart for SvMF
 ```{r}
 mod_SvMF_multistart <- mobius_SvMF_multistart(
-  s4df_clean %>% select(s1, s2, sMrt, sMrf, sMtf) %>% st_drop_geometry() %>% as.matrix(),
+  Ymat,
   xs = NULL,
-  xe = xestd %>% as.matrix(),
+  xe = Xemat,
   type = "LinEuc",
   G01behaviour = "free"
 )
@@ -1175,7 +1180,7 @@ mod_vMF$k
 mod_vMF$AIC
 ```
 
-Below is plot for comparing likelihoods for give simulated response `y`.
+Below is a function for comparing likelihoods for responses `y`.
 
 ```{r}
 getlikR <- function(y){

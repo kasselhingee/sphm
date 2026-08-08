@@ -601,7 +601,7 @@ cat("Default SvMF AIC:    ", mod$AIC, "\n",
 
 ## Likelihood Ratio Test of vMF vs SvMF
 
-First get best vMF model
+First get best vMF model via a searching with 100 restarts.
 ```{r}
 mod_vMF <- mobius_vMF(y = mod$y,
                       xs = mod$xs,
@@ -622,7 +622,7 @@ mod_vMF$k
 mod_vMF$AIC
 ```
 
-Below is plot for comparing likelihoods for give simulated response `y`.
+Below is function for comparing likelihoods for responses `y`.
 
 ```{r}
 getlikR <- function(y){

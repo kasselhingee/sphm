@@ -618,6 +618,7 @@ ggsave("earthq_restarts.pdf", width = 7, height = 5)
 ```{r}
 idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
 mod_SvMF <- restarts[[idx]]
+saveRDS(mod_SvMF, "earthquake_model.rds")
 ```
 
 # Automated multistart for SvMF

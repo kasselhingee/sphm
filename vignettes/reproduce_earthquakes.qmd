@@ -562,7 +562,7 @@ Ymat <- s4df_clean %>%
            select(s1, s2, sMrt, sMrf, sMtf) %>% 
            st_drop_geometry() %>% 
            as.matrix()
-Xemat <- Xemat
+Xemat <- xestd %>% as.matrix()
 saveRDS(list(Y = Ymat, X = Xemat), "earthquake_regression_data.rds")
 ```
 

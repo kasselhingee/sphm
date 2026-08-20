@@ -16,13 +16,9 @@ format:
       }
 ---
 
-
-
 ---
 
-__Code version: 0.0.18__
-
-
+__Code version: 0.0.19__
 
 
 
@@ -34,10 +30,7 @@ __Code version: 0.0.18__
 
 
 
-
-
 # Angular Distance Between Observations
-
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -57,9 +50,7 @@ tibble::enframe(ang_dist[lower.tri(ang_dist)], value = "ang_dist") %>%
 :::
 :::
 
-
 # Euc Covariates
-
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -69,14 +60,10 @@ xestd <- xe %>% scale() %>% as_tibble()
 ```
 :::
 
-
 # Our SvMF Model
 
 
-
-
 # Pretty Data Plot
-
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -134,12 +121,10 @@ plotdata
 
 
 
-
 # Predictions
 The below 'ours' model is using LinEuc's link with an extra covariate for an intercept and G01 free.
 The results here are from a local optimisation using gradient from default starting values.
 I've checked that global search for the best vMF regression does not find anything better.
-
 
 ::: {.cell}
 
@@ -190,9 +175,7 @@ attr(,"class")
 :::
 :::
 
-
 Lets try to interpret the fitted link.
-
 
 ::: {.cell}
 
@@ -227,10 +210,8 @@ cann$Be %*% t(cann$Qe[,-1])
 :::
 :::
 
-
 The first direction away from $B_{01}$ (first row in above) is roughly equally influenced by X1, X2 and X3 (all are about 0.5) with west edge having very little influence (given the values of standardised westedge).
 The second direction away from $B_{01}$ (second row in above) is roughly equally influenced by X1 and X2 but much less by X3 (which is the N-S direction) and westedge plays a role.
-
 
 ::: {.cell}
 
@@ -249,11 +230,9 @@ cann$Qs[,1]
 :::
 :::
 
-
 Some general scaling occurs with greater influence from X3 (N-S direction), then X2 then X1.
 
 ## Table of Estimates
-
 
 ```{.r .cell-code}
 df <- cbind("diag($B_s$)" = diag(cann$Bs),
@@ -278,7 +257,6 @@ $t_3$ & 0.77 & 0.25 & 0.99 & 0.13\\
 \bottomrule
 \end{tabular}
 
-
 ## Plot
 
 
@@ -293,16 +271,13 @@ $t_3$ & 0.77 & 0.25 & 0.99 & 0.13\\
 
 Note that we have not optimised Q for ESAG2 because optimisation did not converge.
 
-
 ::: {.cell}
 ::: {.cell-output-display}
 ![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-7-1.pdf)
 :::
 :::
 
-
 # Angular Distance Between Predictions
-
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -319,9 +294,7 @@ tibble::enframe(pred_ang_dist[lower.tri(pred_ang_dist)], value = "ang_dist") %>%
 :::
 :::
 
-
 # LOOCV MSE
-
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -372,21 +345,17 @@ loocvmseSvMF(mod)
 :::
 :::
 
-
 Both of these are smaller than the LOOCV MSE that Rosenthal's PLT acheived of 0.074, which corresponds to the Euc metric MSE.
 
 # Residual Size
 Geodesic distance between predicted mean and observation
-
 ::: {.cell messages='false'}
 ::: {.cell-output-display}
 ![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-10-1.pdf)
 :::
 :::
 
-
 # DoF
-
 ::: {.cell}
 ::: {.cell-output .cell-output-stdout}
 
@@ -399,9 +368,7 @@ Geodesic distance between predicted mean and observation
 :::
 :::
 
-
 # AIC
-
 ::: {.cell}
 ::: {.cell-output .cell-output-stdout}
 
@@ -414,9 +381,7 @@ Geodesic distance between predicted mean and observation
 :::
 :::
 
-
 # Main Figure
-
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -435,7 +400,6 @@ Geodesic distance between predicted mean and observation
 ggsave("midatlantic_fig.pdf", width = 12, height = 3.5)
 ```
 :::
-
 
 Caption: Regression for the midatlantic ridge data.
 From left: midatlanic ridge (circles) and corresponding locations on the continent (crosses) from Rosenthal el at (2014);
@@ -460,7 +424,6 @@ The parameter vector is longer than the DoF because of the constraints in the op
 There should be DoF + `(3-1) * (3 - 2) / 2` positive eigenvalues.
 The term `(3-1) * (3 - 2) / 2` if for the commutativity constraint on Omega, which the likelihood computation does not account for, so appears as extra degrees of freedom in the Hessian of the likelihood.
 
-
 ::: {.cell}
 ::: {.cell-output .cell-output-stdout}
 
@@ -475,11 +438,9 @@ The term `(3-1) * (3 - 2) / 2` if for the commutativity constraint on Omega, whi
 :::
 :::
 
-
 These are all positive and non-zero, which confirms that the optimisation routine has found a local maximum of the likelihood.
 
 ## Check Other Starts for vMF
-
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -513,11 +474,9 @@ lapply(restarts, "[[", "obj") %>%
 :::
 :::
 
-
 Other initial parameters have not improved on the default initial parameters.
 
 ## Automated multistart for vMF
-
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -542,9 +501,7 @@ Multistart vMF obj: -0.9960844
 :::
 :::
 
-
 ## Check Other Starts for SvMF
-
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -582,11 +539,9 @@ lapply(restarts, "[[", "AIC") %>%
 :::
 :::
 
-
 Other initial parameters have not improved on the default initial parameters.
 
 ## Automated multistart for SvMF
-
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -612,11 +567,9 @@ Multistart SvMF AIC: -463.2407
 :::
 :::
 
-
 ## Likelihood Ratio Test of vMF vs SvMF
 
-First get best vMF model
-
+First get best vMF model via a searching with 100 restarts.
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -692,9 +645,7 @@ mod_vMF$AIC
 :::
 :::
 
-
-Below is plot for comparing likelihoods for give simulated response `y`.
-
+Below is function for comparing likelihoods for responses `y`.
 
 ::: {.cell}
 
@@ -741,9 +692,7 @@ getlikR <- function(y){
 ```
 :::
 
-
 Now we simulate the response 1000 times from the best vMF model and compare the likelihood of the vMF model to the likelihood of the SvMF model on each simulated data.
-
 
 ::: {.cell}
 
@@ -793,9 +742,7 @@ sum(!is.na(null_likRs_vec))
 :::
 :::
 
-
 A substantial fraction of the simulated fits stop at the evaluation limit rather than the convergence tolerance, and these have been discarded.
-
 
 ::: {.cell}
 
@@ -861,9 +808,7 @@ Warning: Removed 448 rows containing missing values or values outside the scale 
 :::
 :::
 
-
 p-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
-
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -880,7 +825,6 @@ mean(null_likRs_vec > obs$likR, na.rm = TRUE)
 :::
 :::
 
-
 The observed likelihood ratio is far larger than any value obtained under the null, so this small $p$-value suggests that the data was not drawn from a vMF regression.
 
 ### Including the non-converged replicates
@@ -890,7 +834,6 @@ conclusion. We can check this directly rather than assume it, because `getlikR()
 returns the fitted `vMF` and `SvMF` objects even when it reports `likR = NA`. Those
 objects hold the parameters at whichever point the optimiser stopped, so the
 likelihood ratio can be evaluated for every replicate without refitting anything.
-
 
 ::: {.cell}
 
@@ -910,10 +853,8 @@ likR_all <- vapply(null_likRs, likR_from_fits, numeric(1))
 ```
 :::
 
-
 The vMF fit is the null model and converges for every replicate; only the SvMF fit
 ever stops early, and always at the evaluation limit:
-
 
 ::: {.cell}
 
@@ -935,9 +876,7 @@ vMF   4   5
 :::
 :::
 
-
 The two groups have almost the same spread:
-
 
 ::: {.cell}
 
@@ -959,10 +898,8 @@ $`stopped early`
 :::
 :::
 
-
 Taking every replicate, converged or not, the largest likelihood ratio obtained under
 the null is still far below the observed one, so the $p$-value is unchanged:
-
 
 ::: {.cell}
 
@@ -1006,12 +943,10 @@ mean(likR_all > obs$likR)
 :::
 :::
 
-
 These are the ratios at whichever point the optimiser stopped, so they are only
 informative about the fully optimised ratios if the latter are close. Rather than
 assume that, continue every stopped-early fit from where it halted, allowing a
 ten-fold larger `maxeval`:
-
 
 ::: {.cell}
 
@@ -1071,10 +1006,8 @@ summary(continued[, "extra_iters"])
 :::
 :::
 
-
 Every one of them converges, mostly within about eighty further iterations. The
 likelihood ratio usually barely moves, but not always:
-
 
 ::: {.cell}
 
@@ -1093,12 +1026,10 @@ summary(continued[, "likR_after"] - likR_all[stopped])
 :::
 :::
 
-
 The median change is under $0.01$, yet one replicate rises by $16$, so a sample of a
 dozen or so would not have been enough to characterise this. Substituting the
 continued values gives a null distribution in which every replicate has converged, so
 nothing has to be discarded at all:
-
 
 ::: {.cell}
 
@@ -1143,7 +1074,6 @@ mean(likR_final > obs$likR)
 
 :::
 :::
-
 
 The largest likelihood ratio under the null is still far below the observed one, so
 the $p$-value is zero on the full set of 1000 replicates and the conclusion does not

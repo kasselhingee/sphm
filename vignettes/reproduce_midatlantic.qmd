@@ -113,6 +113,12 @@ mod <- mobius_SvMF(y = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
        fix_qs1 = FALSE, type = "LinEuc")
 mod[c("k", "DoF", "AIC")]
 mod$a
+
+list(Y = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
+     Xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
+     Xe = xestd %>% as.matrix()) |>
+saveRDS("midatlantic_regression_data.rds")
+saveRDS(mod, "midatlantic_model.rds")
 ```
 
 # Pretty Data Plot

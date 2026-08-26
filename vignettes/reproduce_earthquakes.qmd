@@ -610,7 +610,10 @@ lapply(restarts, "[[", "AIC") %>%
   ggplot()+
   geom_histogram(aes(x = AIC), bins = 30) +
   geom_vline(xintercept = mod_SvMF$AIC, col = "blue") +
-  geom_rug(aes(x = AIC))
+  geom_rug(aes(x = AIC)) +
+  geom_hline(yintercept = c(2, 97), lty = "dotted") +
+  scale_y_continuous(breaks = function(limits) sort(unique(c(scales::extended_breaks()(limits),
+  c(2, 97)))))
 
 ggsave("earthq_restarts.pdf", width = 7, height = 5)
 ```

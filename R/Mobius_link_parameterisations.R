@@ -56,6 +56,12 @@ mobius_link_cann <- function(P, Bs = NULL, Qs = NULL, Be = NULL, Qe = NULL, ce =
 as_mobius_link_cann <- function(obj){
   if (inherits(obj, "mobius_link_cann")){return(obj)}
   if (inherits(obj, "mobius_link_Omega")){return(Omega2cann(obj, check = FALSE))}
+  # The constrained links of Proposition 4 must be caught before the "P" %in% names(obj)
+  # branch below, which they would otherwise match on their Euclidean block.
+  # See .prop4_as_cann() for the conversion and its standardised-xe caveat.
+  if (inherits(obj, c("mobius_link_prop4i", "mobius_link_prop4ii"))){
+    return(.prop4_as_cann(obj))
+  }
   if (!inherits(obj, "list")){stop("obj isn't a mobius_link_cann or mobius_link_Omega class, or a list.")}
   if ("P" %in% names(obj)){return(do.call(mobius_link_cann, c(obj, list(check = FALSE))))}
   if ("p1" %in% names(obj)){return(Omega2cann(do.call(mobius_link_Omega, c(obj, list(check = FALSE))), check = FALSE))}

@@ -15,6 +15,9 @@ mobius_vMF(
   intercept = TRUE,
   lb = NULL,
   ub = NULL,
+  det_constraint = c("orthogonal", "rotation"),
+  prop4_algorithm = "NLOPT_LD_SLSQP",
+  prop4_opts = list(),
   ...
 )
 }
@@ -27,7 +30,15 @@ mobius_vMF(
 
 \item{start}{is a starting parameter object. For LinEuc mean link the Qe matrix must have an extra row and column that at the front/top, with 1 in the first entry (and zero elsewhere).}
 
-\item{type}{Specify the link type ("SpEuc" or "LinEuc")}
+\item{type}{The mean link form. \code{"SpEuc"} and \code{"LinEuc"} are the general links (see
+\code{\link{mobius_link_params}}). \code{"Prop4ii"} constrains \code{p = qs} and \code{Bs = I_(p-1)}, and
+\code{"Prop4i"} constrains \verb{Bs = beta_s I_(p-1)} with \verb{0 < beta_s <= 1} --- the submodels of
+Proposition 4 of the manuscript, fitted by dedicated optimisers that parameterise the
+constrained manifolds directly (see \code{\link{mobius_link_prop4i}}, \code{\link{mobius_link_prop4ii}}).
+Whether \code{xe} is supplied selects the variant with or without Euclidean covariates, and
+\code{fix_qs1}/\code{fix_qe1}/\code{lb}/\code{ub} are ignored for these two. Note that the Proposition 4
+fitters use central finite-difference gradients rather than the C++ automatic
+differentiation used by \code{"SpEuc"}/\code{"LinEuc"}, so they are slower.}
 
 \item{fix_qs1}{Fix qs1 to the starting values.}
 
@@ -35,11 +46,21 @@ mobius_vMF(
 
 \item{intercept}{\code{TRUE} to include a Euclidean intercept term using a covariate that is always \code{1}. This is needed for centering of Euclidean covariates, which is part of standardising the covariates. If \code{intercept = FALSE} then the Euclidean covariates will not be standardised.}
 
-\item{lb}{Passed to \code{\link[nloptr:nloptr]{nloptr::nloptr()}}. Usually not used.}
+\item{lb}{Passed to \code{\link[nloptr:nloptr]{nloptr()}}. Usually not used.}
 
-\item{ub}{Passed to \code{\link[nloptr:nloptr]{nloptr::nloptr()}}. Usually not used.}
+\item{ub}{Passed to \code{\link[nloptr:nloptr]{nloptr()}}. Usually not used.}
 
-\item{...}{Passed as options to \code{\link[nloptr:nloptr]{nloptr::nloptr()}}.}
+\item{det_constraint}{Only used when \code{type} is \code{"Prop4i"} or \code{"Prop4ii"}. Whether
+\code{Rtilde0} is constrained to be orthogonal (both determinant signs are tried and the
+better fit kept) or to be a rotation (determinant \code{+1}).}
+
+\item{prop4_algorithm}{Only used when \code{type} is \code{"Prop4i"} or \code{"Prop4ii"}. The nloptr
+algorithm for the constrained fit.}
+
+\item{prop4_opts}{Only used when \code{type} is \code{"Prop4i"} or \code{"Prop4ii"}. A list of nloptr
+options; anything passed through \code{...} is merged into it.}
+
+\item{...}{Passed as options to \code{\link[nloptr:nloptr]{nloptr()}}.}
 }
 \description{
 Regression of spherical response with vMF error and scaled Mobius link \code{\link[=mobius_link]{mobius_link()}}.
@@ -57,15 +78,15 @@ Before fitting, rotates y, xs and xe into standard form. If supplied, \code{star
 If \code{type == "LinEuc"} a column of zeros called \code{'dummyzero'} is added to the front of \code{xe}.
 }
 \seealso{
-Other regression: 
-\code{\link{mobius_SvMF}()},
-\code{\link{mobius_SvMF_log_lik}()},
-\code{\link{mobius_SvMF_multistart}()},
-\code{\link{mobius_SvMF_signflip_refit}()},
-\code{\link{mobius_dof}()},
-\code{\link{mobius_vMF_multistart}()},
-\code{\link{mobius_vMF_refit}()},
-\code{\link{mobius_vMF_signflip_refit}()},
-\code{\link{rmobius_SvMF}()}
+Other regression:
+\code{\link[=mobius_SvMF]{mobius_SvMF()}},
+\code{\link[=mobius_SvMF_log_lik]{mobius_SvMF_log_lik()}},
+\code{\link[=mobius_SvMF_multistart]{mobius_SvMF_multistart()}},
+\code{\link[=mobius_SvMF_signflip_refit]{mobius_SvMF_signflip_refit()}},
+\code{\link[=mobius_dof]{mobius_dof()}},
+\code{\link[=mobius_vMF_multistart]{mobius_vMF_multistart()}},
+\code{\link[=mobius_vMF_refit]{mobius_vMF_refit()}},
+\code{\link[=mobius_vMF_signflip_refit]{mobius_vMF_signflip_refit()}},
+\code{\link[=rmobius_SvMF]{rmobius_SvMF()}}
 }
 \concept{regression}

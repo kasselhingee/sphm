@@ -19,6 +19,9 @@ mobius_SvMF(
   fix_qe1 = (type == "LinEuc"),
   intercept = TRUE,
   doprelim = TRUE,
+  det_constraint = c("orthogonal", "rotation"),
+  prop4_algorithm = "NLOPT_LD_SLSQP",
+  prop4_opts = list(),
   ...
 )
 }
@@ -51,6 +54,16 @@ mobius_SvMF(
 
 \item{doprelim}{When \code{FALSE} the preliminary von Mises-Fisher regression and subsequent moment estimation of \code{a} and \code{G0} is omitted. The provided parameters are used as the initial values for an optimisation of all parameters of the SvMF regression all together using \code{\link[nloptr:nloptr]{nloptr::nloptr()}}.}
 
+\item{det_constraint}{Only used when \code{type} is \code{"Prop4i"} or \code{"Prop4ii"}. Whether
+\code{Rtilde0} is constrained to be orthogonal (both determinant signs are tried and the
+better fit kept) or to be a rotation (determinant \code{+1}).}
+
+\item{prop4_algorithm}{Only used when \code{type} is \code{"Prop4i"} or \code{"Prop4ii"}. The nloptr
+algorithm for the constrained fit.}
+
+\item{prop4_opts}{Only used when \code{type} is \code{"Prop4i"} or \code{"Prop4ii"}. A list of nloptr
+options; anything passed through \code{...} is merged into it.}
+
 \item{...}{Named optional arguments passed as a list to the \code{opts} argument of \code{\link[nloptr:nloptr]{nloptr::nloptr()}}.}
 }
 \value{
@@ -74,6 +87,8 @@ A list:
 \item{lLik}{Log-likelihood}
 \item{initial}{Initial values}
 \item{preest}{Results of the preliminary vMF regression}
+\item{linktype}{The mean link settings used for the fit: \code{type}, \code{fix_qs1}, \code{fix_qe1} and \code{intercept}. Refit helpers such as \code{\link[=mobius_SvMF_signflip_refit]{mobius_SvMF_signflip_refit()}} read these back so they refit the same model.}
+\item{G01behaviour}{The \code{G01behaviour} used for the fit}
 }
 }
 \description{
@@ -89,15 +104,15 @@ Unless requested by \code{doprelim = FALSE}, a preliminary regression using a vM
 When p!=3, the optimisation first approximates the normalising constant of the vMF distribution, then the concentration is optimised seperately.
 }
 \seealso{
-Other regression: 
-\code{\link{mobius_SvMF_log_lik}()},
-\code{\link{mobius_SvMF_multistart}()},
-\code{\link{mobius_SvMF_signflip_refit}()},
-\code{\link{mobius_dof}()},
-\code{\link{mobius_vMF}()},
-\code{\link{mobius_vMF_multistart}()},
-\code{\link{mobius_vMF_refit}()},
-\code{\link{mobius_vMF_signflip_refit}()},
-\code{\link{rmobius_SvMF}()}
+Other regression:
+\code{\link[=mobius_SvMF_log_lik]{mobius_SvMF_log_lik()}},
+\code{\link[=mobius_SvMF_multistart]{mobius_SvMF_multistart()}},
+\code{\link[=mobius_SvMF_signflip_refit]{mobius_SvMF_signflip_refit()}},
+\code{\link[=mobius_dof]{mobius_dof()}},
+\code{\link[=mobius_vMF]{mobius_vMF()}},
+\code{\link[=mobius_vMF_multistart]{mobius_vMF_multistart()}},
+\code{\link[=mobius_vMF_refit]{mobius_vMF_refit()}},
+\code{\link[=mobius_vMF_signflip_refit]{mobius_vMF_signflip_refit()}},
+\code{\link[=rmobius_SvMF]{rmobius_SvMF()}}
 }
 \concept{regression}

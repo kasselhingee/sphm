@@ -35,10 +35,57 @@ prelimobj <- function(y, xs = NULL, xe = NULL, param){
 #' @param intercept `TRUE` to include a Euclidean intercept term using a covariate that is always `1`. This is needed for centering of Euclidean covariates, which is part of standardising the covariates. If `intercept = FALSE` then the Euclidean covariates will not be standardised.
 #' @param lb Passed to [`nloptr()`]. Usually not used.
 #' @param ub Passed to [`nloptr()`]. Usually not used.
+#' @param type The mean link form. `"SpEuc"` and `"LinEuc"` are the general links (see
+#'   [`mobius_link_params`]). `"Prop4ii"` constrains `p = qs` and `Bs = I_(p-1)`, and
+#'   `"Prop4i"` constrains `Bs = beta_s I_(p-1)` with `0 < beta_s <= 1` --- the submodels of
+#'   Proposition 4 of the manuscript, fitted by dedicated optimisers that parameterise the
+#'   constrained manifolds directly (see [`mobius_link_prop4i`], [`mobius_link_prop4ii`]).
+#'   Whether `xe` is supplied selects the variant with or without Euclidean covariates, and
+#'   `fix_qs1`/`fix_qe1`/`lb`/`ub` are ignored for these two. Note that the Proposition 4
+#'   fitters use central finite-difference gradients rather than the C++ automatic
+#'   differentiation used by `"SpEuc"`/`"LinEuc"`, so they are slower.
+#' @param det_constraint Only used when `type` is `"Prop4i"` or `"Prop4ii"`. Whether
+#'   `Rtilde0` is constrained to be orthogonal (both determinant signs are tried and the
+#'   better fit kept) or to be a rotation (determinant `+1`).
+#' @param prop4_algorithm Only used when `type` is `"Prop4i"` or `"Prop4ii"`. The nloptr
+#'   algorithm for the constrained fit.
+#' @param prop4_opts Only used when `type` is `"Prop4i"` or `"Prop4ii"`. A list of nloptr
+#'   options; anything passed through `...` is merged into it.
 #' @inheritParams mobius_SvMF
 #' @family regression
 #' @export
-mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, lb = NULL, ub = NULL, ...){
+mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, lb = NULL, ub = NULL,
+                       det_constraint = c("orthogonal", "rotation"),
+                       prop4_algorithm = "NLOPT_LD_SLSQP", prop4_opts = list(), ...){
+  # The constrained links of Proposition 4 are fitted by their own optimisers, which
+  # parameterise the constrained manifolds directly rather than through Omega.
+  # Whether Euclidean covariates are present selects the variant.
+  if (.is_prop4i_type(type) || .is_prop4ii_type(type)){
+    dots <- list(...)
+    if (length(dots)){prop4_opts <- utils::modifyList(prop4_opts, dots)}
+    fitter <- if (.is_prop4i_type(type)){
+      if (.prop4_has_euc(xe)) mobius_vMF_prop4i_euc else mobius_vMF_prop4i
+    } else {
+      if (.prop4_has_euc(xe)) mobius_vMF_prop4ii_euc else mobius_vMF_prop4ii
+    }
+    # Only pass what each fitter takes: the spherical-only fitters have no `intercept`
+    # (there is no Euclidean term to centre against), and mobius_vMF_prop4ii has no
+    # optimiser settings because it is solved in closed form by Procrustes rotation.
+    args <- list(y = y, xs = xs, xe = xe, start = start,
+                 det_constraint = det_constraint, intercept = intercept,
+                 algorithm = prop4_algorithm, opts = prop4_opts)
+    return(do.call(fitter, args[names(args) %in% names(formals(fitter))]))
+  }
+  mobius_vMF_general(y = y, xs = xs, xe = xe, start = start, type = type,
+                     fix_qs1 = fix_qs1, fix_qe1 = fix_qe1, intercept = intercept,
+                     lb = lb, ub = ub, ...)
+}
+
+#' @noRd
+#' @title Unconstrained Mobius vMF regression
+#' @description The `SpEuc`/`LinEuc` fit. [`mobius_vMF()`] dispatches here for every
+#' `type` other than the constrained links of Proposition 4.
+mobius_vMF_general <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fix_qs1 = FALSE, fix_qe1 = (type == "LinEuc"), intercept = TRUE, lb = NULL, ub = NULL, ...){
   p <- ncol(y)
   preplist <- list(y = y, xs = xs, xe = xe, start = start)
   # For LinEuc: prepend a dummy-zero column to xe so the first covariate direction is always
@@ -354,6 +401,7 @@ estprep_meanconstraints <- function(om0, fix_qs1, fix_qe1){
 #' @family regression
 #' @export
 mobius_vMF_refit <- function(mod_vMF, preseed = 1){
+  .prop4_reject(mod_vMF, "mobius_vMF_refit")
   inparam <- as_mobius_link_Omega(mod_vMF$est)
   dims <- dim.mobius_link_Omega(inparam)
   start <- rand_mobius_link_cann(p = dims["p"], 
@@ -430,6 +478,7 @@ mobius_vMF_refit <- function(mod_vMF, preseed = 1){
 #' @family regression
 #' @export
 mobius_vMF_signflip_refit <- function(mod_vMF, xtol_rel = 1e-4, maxeval = 500, ...){
+  .prop4_reject(mod_vMF, "mobius_vMF_signflip_refit")
   # Work in canonical form so p1, qs1, qe1 are directly accessible.
   # (The Omega form compresses them into Omega_s / Omega_e matrices.)
   cann0 <- as_mobius_link_cann(mod_vMF$est)
@@ -492,6 +541,7 @@ mobius_vMF_multistart <- function(y, xs = NULL, xe = NULL, start = NULL,
                                   fix_qe1 = (type == "LinEuc"),
                                   intercept = TRUE, lb = NULL, ub = NULL,
                                   xtol_rel = 1e-4, maxeval = 500, ...){
+  .prop4_reject(type, "mobius_vMF_multistart")
   # Phase 1: coarse initial fit to establish a starting basin.
   # suppressWarnings: the coarse maxeval budget is expected to be exhausted
   # (nloptr status NLOPT_MAXEVAL_REACHED); that warning is not actionable here.

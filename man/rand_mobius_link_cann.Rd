@@ -24,8 +24,10 @@ The diagonal elements of \code{Bs} and \code{Be} are drawn uniformly from betwee
 The parameter \code{ce} is generated uniformly from between \code{0} and \code{1}.
 }
 \seealso{
-Other link-function: 
-\code{\link{mobius_link}()},
-\code{\link{mobius_link_params}}
+Other link-function:
+\code{\link[=mobius_link]{mobius_link()}},
+\code{\link{mobius_link_params}},
+\code{\link[=mobius_link_prop4i]{mobius_link_prop4i()}},
+\code{\link[=mobius_link_prop4ii]{mobius_link_prop4ii()}}
 }
 \concept{link-function}

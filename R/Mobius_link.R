@@ -4,7 +4,10 @@
 #' \deqn{\mu(x) = P\mathcal{S}^{-1}\left(B_s \mathcal{S}(Q_s^\top x_s)  +  \frac{B_e\left(Q_e[,-1]^\top x_e\right)}{Qe[,1]^\top x_e + c_e}\right).}
 #' @param xs A matrix of row-vectors of the spherical covariate.
 #' @param xe A matrix of row-vectors of the Euclidean covariates.
-#' @param param Parameters of the mean link. As an object of class "mobius_link_Omega" or "mobius_link_cann". See [`mobius_link_params`]. 
+#' @param param Parameters of the mean link. An object of class "mobius_link_Omega" or
+#'   "mobius_link_cann" for the general link, or "mobius_link_prop4i" or
+#'   "mobius_link_prop4ii" for the constrained links of Proposition 4.
+#'   See [`mobius_link_params`].
 #' @details
 #' This general form of the mean link encompases the primary form of the mean link in "Regression for spherical responses with linear and spherical covariates using a scaled link function" and a more general form that uses the a stereographic-like projection of the Euclidean covariates.
 #' See [`mobius_link_params`] for further details.
@@ -17,14 +20,16 @@
 #' @family link-function
 #' @export
 mobius_link <- function(xs = NULL, xe = NULL, param = NULL, check = TRUE){
+  paramclasses <- c("mobius_link_Omega", "mobius_link_cann",
+                    "mobius_link_prop4i", "mobius_link_prop4ii")
   if (!is.null(xs)){
-    if (inherits(xs, "mobius_link_Omega") | inherits(xs, "mobius_link_cann")){
-      stop("xs is a parameter object (mobius_link_Omega or mobius_link_cann), but should be a matrix of covariate values.")
+    if (inherits(xs, paramclasses)){
+      stop("xs is a parameter object (", paste(paramclasses, collapse = ", "), "), but should be a matrix of covariate values.")
     }
     stopifnot(inherits(xs, "matrix"))}
   if (!is.null(xe)){
-    if (inherits(xe, "mobius_link_Omega") | inherits(xe, "mobius_link_cann")){
-      stop("xe is a parameter object (mobius_link_Omega or mobius_link_cann), but should be a matrix of covariate values.")
+    if (inherits(xe, paramclasses)){
+      stop("xe is a parameter object (", paste(paramclasses, collapse = ", "), "), but should be a matrix of covariate values.")
     }
     stopifnot(inherits(xe, "matrix"))}
   if (inherits(param, "mobius_link_Omega")){
@@ -38,6 +43,12 @@ mobius_link <- function(xs = NULL, xe = NULL, param = NULL, check = TRUE){
     out <- mobius_link_cpp(xs, xe, mobius_link_Omega_vec(param), length(param$p1))
   } else if (inherits(param, "mobius_link_cann")){
     out <- mobius_link_pred_cann(xs, xe, param)
+  } else if (inherits(param, "mobius_link_prop4ii")){
+    # Proposition 4(ii): Bs fixed at I_(p-1). See Mobius_prop4ii.R.
+    out <- mobius_link_pred_prop4ii(xs, xe, param, check = check)
+  } else if (inherits(param, "mobius_link_prop4i")){
+    # Proposition 4(i): Bs fixed at beta_s I_(p-1). See Mobius_prop4i.R.
+    out <- mobius_link_pred_prop4i(xs, xe, param, check = check)
   } else {
     stop("param is not of the correct class")
   }

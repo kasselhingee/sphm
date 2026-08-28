@@ -1,5 +1,5 @@
 ---
-title: "Mid-Atlantic Regression"
+title: "Mid-Atlantic Regression --- Proposition 4 submodels (reference copy)"
 keep-md: true
 format:
   pdf:
@@ -20,6 +20,11 @@ format:
 
 __Code version: `r packageVersion("sphm")`__
 
+> **Reference copy.** This is Shogo Kato's original document for the four Proposition 4
+> submodels, kept only so its output can be compared against the merged
+> `reproduce_midatlantic.qmd`. It calls the preserved `obsolete_` implementation rather
+> than the package API. Do not develop against it.
+
 ```{r prep}
 #| include: false
 #| cache: false
@@ -33,9 +38,12 @@ library(dplyr)
 library(patchwork)
 library(kableExtra)
 
-# >>> PROPOSITION 4(ii) + OPTIONAL EUCLIDEAN COVARIATES: ADDED
-source("Mobius_Prop4i_Prop4ii_optional_Euc_four_models.R")
-# <<< PROPOSITION 4(ii) + OPTIONAL EUCLIDEAN COVARIATES
+# The Proposition 4 code this document was written against is preserved verbatim in the
+# package as R/obsolete_Mobius_prop4.R, under obsolete_-prefixed names. See that file's
+# header, and tests/testthat/test-prop4_vs_obsolete.R.
+mobius_SvMF            <- sphm:::obsolete_mobius_SvMF
+mobius_link            <- sphm:::obsolete_mobius_link
+as_mobius_link_prop4ii <- sphm:::obsolete_as_mobius_link_prop4ii
 ```
 
 ```{r Residual Plotting Function}

@@ -29,9 +29,9 @@ The log-likelihood using this parameterisation is in equation 11 of Scealy and W
 SvMF_cann(k = 0.5, a = c(1, rep(1, 5-1)), G = diag(1, 5))
 }
 \seealso{
-Other SvMF-distribution: 
+Other SvMF-distribution:
 \code{\link{SvMF_prelim}},
-\code{\link{dSvMF}()},
-\code{\link{rSvMF}()}
+\code{\link[=dSvMF]{dSvMF()}},
+\code{\link[=rSvMF]{rSvMF()}}
 }
 \concept{SvMF-distribution}

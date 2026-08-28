@@ -31,7 +31,7 @@ matrix in the \code{end} direction is returned.
 \seealso{
 \code{\link[=rotated_resid]{rotated_resid()}}
 
-Other residuals: 
-\code{\link{rotated_resid}()}
+Other residuals:
+\code{\link[=rotated_resid]{rotated_resid()}}
 }
 \concept{residuals}

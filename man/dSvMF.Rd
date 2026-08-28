@@ -20,9 +20,9 @@ A vector of values.
 Log-likelihood of SvMF
 }
 \seealso{
-Other SvMF-distribution: 
+Other SvMF-distribution:
 \code{\link{SvMF_prelim}},
 \code{\link{SvMFparams}},
-\code{\link{rSvMF}()}
+\code{\link[=rSvMF]{rSvMF()}}
 }
 \concept{SvMF-distribution}

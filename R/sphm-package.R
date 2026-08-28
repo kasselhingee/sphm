@@ -85,6 +85,7 @@
 #' - `reproduce_midatlantic.qmd` — midatlantic ridge data on \eqn{S^2}
 #' - `reproduce_earthquakes.qmd` — earthquake moment tensors on \eqn{S^4}
 #'
+#' @importFrom stats predict optimise plogis qlogis
 #' @name sphm-package
 #' @aliases sphm
 NULL

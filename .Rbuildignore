@@ -8,3 +8,5 @@ vignettes/reproduce_midatlantic_files
 .github
 data-raw/*
 
+^vignettes/obsolete_.*\.qmd$
+^\.claude$

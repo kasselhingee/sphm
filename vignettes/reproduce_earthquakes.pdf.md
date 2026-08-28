@@ -885,17 +885,30 @@ Longitude.L148  0.5725929 -0.5022031  0.8926280      1.0000000
 :::
 
 
+Below saves the covariates and response for use in a simulation study elsewhere.
+
+
+::: {.cell}
+
+```{.r .cell-code}
+Ymat <- s4df_clean %>% 
+           select(s1, s2, sMrt, sMrf, sMtf) %>% 
+           st_drop_geometry() %>% 
+           as.matrix()
+Xemat <- xestd %>% as.matrix()
+saveRDS(list(Y = Ymat, X = Xemat), "earthquake_regression_data.rds")
+```
+:::
+
+
 # Default Start for SvMF Regression
 
 ::: {.cell}
 
 ```{.r .cell-code}
-mod_SvMF <- mobius_SvMF(s4df_clean %>% 
-                        select(s1, s2, sMrt, sMrf, sMtf) %>% 
-                        st_drop_geometry() %>% 
-                        as.matrix(),
+mod_SvMF <- mobius_SvMF(Ymat,
                       xs = NULL, 
-                      xe = xestd %>% as.matrix(),
+                      xe = Xemat,
                       type = "LinEuc",
                       G01behaviour = "free")
 ```
@@ -982,12 +995,9 @@ restarts <- pbapply::pblapply(1:100, function(seed){
   bigQe[1,1] <- 1
   start$Qe <- bigQe
   start$ce <- 1
-  mobius_SvMF(s4df_clean %>% 
-                          select(s1, s2, sMrt, sMrf, sMtf) %>% 
-                          st_drop_geometry() %>% 
-                          as.matrix(),
+  mobius_SvMF(Ymat,
                       xs = NULL, 
-                      xe = xestd %>% as.matrix(),
+                      xe = Xemat,
                       type = "LinEuc",
                       G01behaviour = "free",
                       mean = start)
@@ -1010,7 +1020,7 @@ lapply(restarts, "[[", "AIC") %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-31-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-32-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1023,6 +1033,7 @@ ggsave("earthq_restarts.pdf", width = 7, height = 5)
 ```{.r .cell-code}
 idx <- which.min(lapply(restarts, "[[", "AIC") %>% unlist())
 mod_SvMF <- restarts[[idx]]
+saveRDS(mod_SvMF, "earthquake_model.rds")
 ```
 :::
 
@@ -1033,9 +1044,9 @@ mod_SvMF <- restarts[[idx]]
 
 ```{.r .cell-code}
 mod_SvMF_multistart <- mobius_SvMF_multistart(
-  s4df_clean %>% select(s1, s2, sMrt, sMrf, sMtf) %>% st_drop_geometry() %>% as.matrix(),
+  Ymat,
   xs = NULL,
-  xe = xestd %>% as.matrix(),
+  xe = Xemat,
   type = "LinEuc",
   G01behaviour = "free"
 )
@@ -1357,7 +1368,7 @@ get_predobspairsdf_nat(mod_SvMF, s4df_clean %>% select(-starts_with("s"))) %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-42-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-43-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1414,7 +1425,7 @@ obsplots/
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-43-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-44-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1476,7 +1487,7 @@ tibble::enframe(pred_ang_dist[lower.tri(pred_ang_dist)], value = "ang_dist") %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-46-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-47-1.pdf){fig-pos='H'}
 :::
 :::
 
@@ -1667,7 +1678,7 @@ defaultplot_pred(mod_SvMF, s4df_clean)
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-49-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-50-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1675,7 +1686,7 @@ defaultplot_pred(mod_SvMF, s4df_clean, focusaxes = TRUE)
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-49-2.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-50-2.pdf){fig-pos='H'}
 :::
 :::
 
@@ -1703,7 +1714,7 @@ mod_SvMF$rresids_G0 %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-50-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-51-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -1998,7 +2009,7 @@ number 7.3434e-17
 :::
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-51-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-52-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -2292,7 +2303,7 @@ mod_SvMF$rresids_std %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-52-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-53-1.pdf){fig-pos='H'}
 :::
 :::
 
@@ -2321,7 +2332,7 @@ p1 + p2 + plot_layout(axes = "collect")
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-53-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-54-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -2349,7 +2360,7 @@ p1 + p2
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-54-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-55-1.pdf){fig-pos='H'}
 :::
 :::
 
@@ -2392,7 +2403,7 @@ lapply(mod_vMF_restarts, "[[", "AIC") %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-55-1.pdf){fig-pos='H'}
+![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-56-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -2425,7 +2436,7 @@ mod_vMF$AIC
 :::
 
 
-Below is plot for comparing likelihoods for give simulated response `y`.
+Below is a function for comparing likelihoods for responses `y`.
 
 
 ::: {.cell}

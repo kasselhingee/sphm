@@ -1,12 +1,16 @@
 Package: sphm
 Title: Spherical Regression by Scaled Mobius Link
-Version: 0.0.19
-Authors@R: 
+Version: 0.0.20
+Authors@R: c(
     person("Kassel Liam", "Hingee", email = "kassel.hingee@anu.edu.au", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0001-9894-2407"))
+           comment = c(ORCID = "0000-0001-9894-2407")),
+    person("Shogo", "Kato", role = "aut",
+           comment = "Proposition 4(i) and 4(ii) constrained link implementations"))
 Description: Regression for spherical response data and scaled von Mises-Fisher error distribution as described in the manuscript "Regression for spherical responses with linear and spherical covariates using a scaled link function" by Shogo Kato, Kassel L. Hingee, Janice L. Scealy, and Andrew T.A. Wood.
 Imports:
   Rcpp (>= 1.0.11),
+  stats,
+  utils,
   Rdpack,
   movMF,
   mclust,
@@ -15,13 +19,14 @@ Imports:
   nloptr
 Suggests:
   testthat (>= 3.0.0),
-  Bessel
+  Bessel,
+  R.matlab
 RdMacros: Rdpack
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 LinkingTo: Rcpp, RcppEigen, scorematchingad (>= 0.1.4)
 Config/testthat/edition: 3
 Depends: 
     R (>= 3.5)
+Config/roxygen2/version: 8.1.0

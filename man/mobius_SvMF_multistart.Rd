@@ -2,7 +2,7 @@
 % Please edit documentation in R/Mobius_SvMF.R
 \name{mobius_SvMF_multistart}
 \alias{mobius_SvMF_multistart}
-\title{SvMF regression with multistart exploration via vMF sign-flips}
+\title{SvMF regression with sign-flip multistart exploration}
 \usage{
 mobius_SvMF_multistart(
   y,
@@ -17,39 +17,42 @@ mobius_SvMF_multistart(
   intercept = TRUE,
   lb = NULL,
   ub = NULL,
+  xtol_rel = 1e-04,
+  maxeval = 500,
   ...
 )
 }
 \arguments{
 \item{y, xs, xe, G0, G0reference, G01behaviour, type, fix_qs1, fix_qe1, intercept, lb, ub}{As in \code{\link{mobius_SvMF}}.}
 
-\item{...}{Additional arguments forwarded to every internal \code{\link{mobius_SvMF}} call.}
+\item{xtol_rel}{Relative tolerance for phases 1 and 2 (default \code{1e-4}).}
+
+\item{maxeval}{Maximum evaluations per fit in phases 1 and 2 (default \code{500}).}
+
+\item{...}{Additional arguments forwarded to every internal \code{\link{mobius_SvMF}} and
+\code{\link{mobius_vMF_multistart}} call.}
 }
 \value{
 Same structure as \code{\link{mobius_SvMF}}.
 }
 \description{
 Fits the SvMF regression in three phases:
-(1) a vMF fit from the default starting point followed by sign-flip restarts
-to find diverse candidate mean-link parameter sets — this uses vMF because
-the vMF landscape reliably explores different values of the Euclidean offset
-\code{ce}, which controls a key source of multimodality in the SvMF objective;
-(2) a full SvMF regression from each candidate mean link, selecting the best by the
-SvMF log-likelihood — this is "running the usual SvMF regression multiple times
-for different initial link values";
-(3) a final SvMF optimisation from the best candidate found in phase 2, starting from
-its fitted \code{k, a, G0} as warm starts (no preliminary estimation).
+(1) \code{\link{mobius_vMF_multistart}} finds a reliable basin for the mean link
+then a coarse SvMF fit is run from that starting point;
+(2) sign-flip restarts (see \code{\link{mobius_SvMF_signflip_refit}}) at the same
+coarse tolerance to explore other basins again;
+(3) a tight final SvMF optimisation from the best starting point found.
 }
 \seealso{
-Other regression: 
-\code{\link{mobius_SvMF}()},
-\code{\link{mobius_SvMF_log_lik}()},
-\code{\link{mobius_SvMF_signflip_refit}()},
-\code{\link{mobius_dof}()},
-\code{\link{mobius_vMF}()},
-\code{\link{mobius_vMF_multistart}()},
-\code{\link{mobius_vMF_refit}()},
-\code{\link{mobius_vMF_signflip_refit}()},
-\code{\link{rmobius_SvMF}()}
+Other regression:
+\code{\link[=mobius_SvMF]{mobius_SvMF()}},
+\code{\link[=mobius_SvMF_log_lik]{mobius_SvMF_log_lik()}},
+\code{\link[=mobius_SvMF_signflip_refit]{mobius_SvMF_signflip_refit()}},
+\code{\link[=mobius_dof]{mobius_dof()}},
+\code{\link[=mobius_vMF]{mobius_vMF()}},
+\code{\link[=mobius_vMF_multistart]{mobius_vMF_multistart()}},
+\code{\link[=mobius_vMF_refit]{mobius_vMF_refit()}},
+\code{\link[=mobius_vMF_signflip_refit]{mobius_vMF_signflip_refit()}},
+\code{\link[=rmobius_SvMF]{rmobius_SvMF()}}
 }
 \concept{regression}

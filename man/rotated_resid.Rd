@@ -30,7 +30,7 @@ plane at \code{ypred}) is parallel transported along the geodesic to a common
 \seealso{
 \code{\link[=parallel_transport_mat]{parallel_transport_mat()}}
 
-Other residuals: 
-\code{\link{parallel_transport_mat}()}
+Other residuals:
+\code{\link[=parallel_transport_mat]{parallel_transport_mat()}}
 }
 \concept{residuals}

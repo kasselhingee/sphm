@@ -108,5 +108,11 @@ manuscript:
 \author{
 \strong{Maintainer}: Kassel Liam Hingee \email{kassel.hingee@anu.edu.au} (\href{https://orcid.org/0000-0001-9894-2407}{ORCID})
 
+Authors:
+\itemize{
+  \item Kassel Liam Hingee \email{kassel.hingee@anu.edu.au} (\href{https://orcid.org/0000-0001-9894-2407}{ORCID})
+  \item Shogo Kato (Proposition 4(i) and 4(ii) constrained link implementations)
+}
+
 }
 \keyword{internal}

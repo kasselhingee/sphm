@@ -18,7 +18,7 @@ format:
 
 ---
 
-__Code version: 0.0.19__
+__Code version: 0.0.20__
 
 
 
@@ -61,6 +61,105 @@ xestd <- xe %>% scale() %>% as_tibble()
 :::
 
 # Our SvMF Model
+
+
+# Proposition 4 Submodels
+
+The four submodels discussed in the second paragraph of Section 5.1: the constrained
+links of Proposition 4(i) and 4(ii), each with and without the Euclidean covariate.
+Proposition 4(ii) fixes $B_s = I_{p-1}$, so the spherical part of the link is a plain
+rotation $\mu(x_s) = \widetilde R_0 x_s$. Proposition 4(i) relaxes that to an isotropic
+scale $B_s = \beta_s I_{p-1}$ with $0 < \beta_s \le 1$, so $\beta_s = 1$ recovers
+Proposition 4(ii).
+
+Proposition 4(i) is stated in the manuscript for $q_e = 0$. The `+ Euclidean` variants
+below keep the restriction on the spherical component and add the same linear Euclidean
+term the `LinEuc` model uses. Unlike `mod` above, these are given the *unstandardised*
+covariate: the Proposition 4 fitters centre and scale it internally and store the
+transformation on the fitted link.
+
+
+
+
+::: {.cell}
+
+```{.r .cell-code}
+bind_rows(lapply(prop4mods, function(m) {
+  tibble(k = m$k, DoF = m$DoF, logLik = m$lLik, AIC = m$AIC)
+}), .id = "Model")
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+# A tibble: 4 x 5
+  Model                                            k   DoF logLik   AIC
+  <chr>                                        <dbl> <dbl>  <dbl> <dbl>
+1 Proposition 4(i): spherical only              66.3    11  103.  -184.
+2 Proposition 4(i): spherical + all Euclidean  488.     15  235.  -440.
+3 Proposition 4(ii): spherical only             62.2     8   98.8 -182.
+4 Proposition 4(ii): spherical + all Euclidean 476.     14  233.  -439.
+```
+
+
+:::
+:::
+
+
+The isotropic spherical scale estimated by the Proposition 4(i) models.
+$\beta_s = 1$ corresponds to Proposition 4(ii), and $\phi = (1-\beta_s)/(1+\beta_s)$.
+
+
+::: {.cell}
+
+```{.r .cell-code}
+bind_rows(lapply(prop4mods[1:2], function(m) {
+  tibble(beta_s = m$mean$beta_s, phi = m$mean$phi,
+         psi_norm = sqrt(sum(m$mean$psi^2)))
+}), .id = "Model")
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+# A tibble: 2 x 4
+  Model                                       beta_s    phi psi_norm
+  <chr>                                        <dbl>  <dbl>    <dbl>
+1 Proposition 4(i): spherical only             0.872 0.0683   0.0683
+2 Proposition 4(i): spherical + all Euclidean  0.929 0.0369   0.0369
+```
+
+
+:::
+:::
+
+
+The estimated scales $a$ of the SvMF error distribution.
+
+
+::: {.cell}
+
+```{.r .cell-code}
+bind_rows(lapply(prop4mods, function(m) {
+  as_tibble_row(setNames(as.list(m$a), paste0("a", seq_along(m$a))))
+}), .id = "Model")
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+# A tibble: 4 x 4
+  Model                                           a1    a2    a3
+  <chr>                                        <dbl> <dbl> <dbl>
+1 Proposition 4(i): spherical only                 1  3.21 0.312
+2 Proposition 4(i): spherical + all Euclidean      1  1.96 0.511
+3 Proposition 4(ii): spherical only                1  3.17 0.316
+4 Proposition 4(ii): spherical + all Euclidean     1  1.95 0.513
+```
+
+
+:::
+:::
 
 
 # Pretty Data Plot
@@ -356,30 +455,62 @@ Geodesic distance between predicted mean and observation
 :::
 
 # DoF
+
 ::: {.cell}
 ::: {.cell-output .cell-output-stdout}
 
 ```
- Ours  IAG1 ESAG1 ESAG2 
-   16    17    22    25 
+                                        Ours 
+                                          16 
+                                        IAG1 
+                                          17 
+                                       ESAG1 
+                                          22 
+                                       ESAG2 
+                                          25 
+            Proposition 4(i): spherical only 
+                                          11 
+ Proposition 4(i): spherical + all Euclidean 
+                                          15 
+           Proposition 4(ii): spherical only 
+                                           8 
+Proposition 4(ii): spherical + all Euclidean 
+                                          14 
 ```
 
 
 :::
 :::
+
 
 # AIC
+
 ::: {.cell}
 ::: {.cell-output .cell-output-stdout}
 
 ```
-     Ours      IAG1     ESAG1     ESAG2 
--463.2407 -370.7254 -459.5946 -436.2852 
+                                        Ours 
+                                   -463.2407 
+                                        IAG1 
+                                   -370.7254 
+                                       ESAG1 
+                                   -459.5946 
+                                       ESAG2 
+                                   -436.2852 
+            Proposition 4(i): spherical only 
+                                   -184.0309 
+ Proposition 4(i): spherical + all Euclidean 
+                                   -439.9135 
+           Proposition 4(ii): spherical only 
+                                   -181.5131 
+Proposition 4(ii): spherical + all Euclidean 
+                                   -438.5591 
 ```
 
 
 :::
 :::
+
 
 # Main Figure
 ::: {.cell}

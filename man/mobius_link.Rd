@@ -11,7 +11,10 @@ mobius_link(xs = NULL, xe = NULL, param = NULL, check = TRUE)
 
 \item{xe}{A matrix of row-vectors of the Euclidean covariates.}
 
-\item{param}{Parameters of the mean link. As an object of class "mobius_link_Omega" or "mobius_link_cann". See \code{\link{mobius_link_params}}.}
+\item{param}{Parameters of the mean link. An object of class "mobius_link_Omega" or
+"mobius_link_cann" for the general link, or "mobius_link_prop4i" or
+"mobius_link_prop4ii" for the constrained links of Proposition 4.
+See \code{\link{mobius_link_params}}.}
 }
 \description{
 Implements mean link:
@@ -28,8 +31,10 @@ where
 and \eqn{x_s} and \eqn{x_e} are the spherical and Euclidean covariate.
 }
 \seealso{
-Other link-function: 
+Other link-function:
 \code{\link{mobius_link_params}},
-\code{\link{rand_mobius_link_cann}()}
+\code{\link[=mobius_link_prop4i]{mobius_link_prop4i()}},
+\code{\link[=mobius_link_prop4ii]{mobius_link_prop4ii()}},
+\code{\link[=rand_mobius_link_cann]{rand_mobius_link_cann()}}
 }
 \concept{link-function}

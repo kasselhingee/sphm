@@ -31,14 +31,9 @@ Both \code{SvMF_moment_axes()} and \code{SvMF_prelim_scales()} ignore the compon
 
 }}
 \seealso{
-Other SvMF-distribution: 
+Other SvMF-distribution:
 \code{\link{SvMFparams}},
-\code{\link{dSvMF}()},
-\code{\link{rSvMF}()}
-
-Other SvMF-distribution: 
-\code{\link{SvMFparams}},
-\code{\link{dSvMF}()},
-\code{\link{rSvMF}()}
+\code{\link[=dSvMF]{dSvMF()}},
+\code{\link[=rSvMF]{rSvMF()}}
 }
 \concept{SvMF-distribution}

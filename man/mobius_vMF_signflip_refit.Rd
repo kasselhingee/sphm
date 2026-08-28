@@ -26,19 +26,22 @@ signs of the three "pole" directions (p1, qs1, qe1) in the fitted canonical
 parameters.  These are the only elements of the Omega parameterisation that are
 not part of the Omega matrix itself; flipping them gives genuinely different
 basins without perturbing the scale structure (Bs, Be, Omega_s, Omega_e).
-At most 8 restarts are tried (2 × 2 × 2 for p1/qs1/qe1); fewer when xs or xe
-is absent or when \code{fix_qs1}/\code{fix_qe1} is \code{TRUE}.
+At most 16 restarts are tried: 2 × 2 × 2 for the p1/qs1/qe1 sign flips, doubled again
+by an alternative \code{ce} value from the opposite size regime. Fewer are tried when xs
+or xe is absent or when \code{fix_qs1}/\code{fix_qe1} is \code{TRUE} (\code{fix_qe1}
+suppresses the \code{ce} variation as well as the qe1 flip, since the two are fixed
+together).
 }
 \seealso{
-Other regression: 
-\code{\link{mobius_SvMF}()},
-\code{\link{mobius_SvMF_log_lik}()},
-\code{\link{mobius_SvMF_multistart}()},
-\code{\link{mobius_SvMF_signflip_refit}()},
-\code{\link{mobius_dof}()},
-\code{\link{mobius_vMF}()},
-\code{\link{mobius_vMF_multistart}()},
-\code{\link{mobius_vMF_refit}()},
-\code{\link{rmobius_SvMF}()}
+Other regression:
+\code{\link[=mobius_SvMF]{mobius_SvMF()}},
+\code{\link[=mobius_SvMF_log_lik]{mobius_SvMF_log_lik()}},
+\code{\link[=mobius_SvMF_multistart]{mobius_SvMF_multistart()}},
+\code{\link[=mobius_SvMF_signflip_refit]{mobius_SvMF_signflip_refit()}},
+\code{\link[=mobius_dof]{mobius_dof()}},
+\code{\link[=mobius_vMF]{mobius_vMF()}},
+\code{\link[=mobius_vMF_multistart]{mobius_vMF_multistart()}},
+\code{\link[=mobius_vMF_refit]{mobius_vMF_refit()}},
+\code{\link[=rmobius_SvMF]{rmobius_SvMF()}}
 }
 \concept{regression}

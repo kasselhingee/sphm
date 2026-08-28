@@ -17,9 +17,9 @@ rSvMF(n, param, check = TRUE)
 Simulate the SvMF Distribution
 }
 \seealso{
-Other SvMF-distribution: 
+Other SvMF-distribution:
 \code{\link{SvMF_prelim}},
 \code{\link{SvMFparams}},
-\code{\link{dSvMF}()}
+\code{\link[=dSvMF]{dSvMF()}}
 }
 \concept{SvMF-distribution}

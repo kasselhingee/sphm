@@ -11,3 +11,9 @@ vignettes/*.log
 vignettes/*.aux
 SphRegByMobiusLink.Rproj
 
+
+*.Rcheck
+*.tar.gz
+.claude
+vignettes/*.html
+vignettes/*.md

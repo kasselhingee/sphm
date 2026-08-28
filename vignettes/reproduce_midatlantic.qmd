@@ -121,6 +121,78 @@ saveRDS("midatlantic_regression_data.rds")
 saveRDS(mod, "midatlantic_model.rds")
 ```
 
+# Proposition 4 Submodels
+
+The four submodels discussed in the second paragraph of Section 5.1: the constrained
+links of Proposition 4(i) and 4(ii), each with and without the Euclidean covariate.
+Proposition 4(ii) fixes $B_s = I_{p-1}$, so the spherical part of the link is a plain
+rotation $\mu(x_s) = \widetilde R_0 x_s$. Proposition 4(i) relaxes that to an isotropic
+scale $B_s = \beta_s I_{p-1}$ with $0 < \beta_s \le 1$, so $\beta_s = 1$ recovers
+Proposition 4(ii).
+
+Proposition 4(i) is stated in the manuscript for $q_e = 0$. The `+ Euclidean` variants
+below keep the restriction on the spherical component and add the same linear Euclidean
+term the `LinEuc` model uses. Unlike `mod` above, these are given the *unstandardised*
+covariate: the Proposition 4 fitters centre and scale it internally and store the
+transformation on the fitted link.
+
+```{r prop4 submodels}
+#| include: false
+y_data  <- fulldf %>% select(starts_with("Y")) %>% as.matrix()
+xs_data <- fulldf %>% select(starts_with("X")) %>% as.matrix()
+xe_raw  <- xe %>% as.matrix()
+
+mod_prop4i <- mobius_SvMF(
+  y = y_data, xs = xs_data, xe = NULL,
+  type = "Prop4i", det_constraint = "orthogonal", G01behaviour = "free")
+
+# started from the spherical-only fit
+mod_prop4i_all <- mobius_SvMF(
+  y = y_data, xs = xs_data, xe = xe_raw, mean = mod_prop4i$mean,
+  type = "Prop4i", intercept = TRUE,
+  det_constraint = "orthogonal", G01behaviour = "free")
+
+mod_prop4ii <- mobius_SvMF(
+  y = y_data, xs = xs_data, xe = NULL,
+  type = "Prop4ii", det_constraint = "orthogonal", G01behaviour = "free")
+
+mod_prop4ii_all <- mobius_SvMF(
+  y = y_data, xs = xs_data, xe = xe_raw,
+  type = "Prop4ii", intercept = TRUE,
+  det_constraint = "orthogonal", G01behaviour = "free")
+
+prop4mods <- list(
+  `Proposition 4(i): spherical only`             = mod_prop4i,
+  `Proposition 4(i): spherical + all Euclidean`  = mod_prop4i_all,
+  `Proposition 4(ii): spherical only`            = mod_prop4ii,
+  `Proposition 4(ii): spherical + all Euclidean` = mod_prop4ii_all
+)
+```
+
+```{r prop4 comparison}
+bind_rows(lapply(prop4mods, function(m) {
+  tibble(k = m$k, DoF = m$DoF, logLik = m$lLik, AIC = m$AIC)
+}), .id = "Model")
+```
+
+The isotropic spherical scale estimated by the Proposition 4(i) models.
+$\beta_s = 1$ corresponds to Proposition 4(ii), and $\phi = (1-\beta_s)/(1+\beta_s)$.
+
+```{r prop4 beta}
+bind_rows(lapply(prop4mods[1:2], function(m) {
+  tibble(beta_s = m$mean$beta_s, phi = m$mean$phi,
+         psi_norm = sqrt(sum(m$mean$psi^2)))
+}), .id = "Model")
+```
+
+The estimated scales $a$ of the SvMF error distribution.
+
+```{r prop4 scales}
+bind_rows(lapply(prop4mods, function(m) {
+  as_tibble_row(setNames(as.list(m$a), paste0("a", seq_along(m$a))))
+}), .id = "Model")
+```
+
 # Pretty Data Plot
 ```{r}
 ymean <- colMeans(fulldf %>% select(starts_with("Y")))
@@ -465,13 +537,15 @@ d1plot/d2plot + plot_layout(axes = "collect", guides = "collect")
 # DoF
 ```{r}
 #| echo: false
-c(Ours = mod$DoF, IAG1 = IAG1$DoF, ESAG1 = ESAG1$DoF, ESAG2 = ESAG2$DoF)
+c(Ours = mod$DoF, IAG1 = IAG1$DoF, ESAG1 = ESAG1$DoF, ESAG2 = ESAG2$DoF,
+  vapply(prop4mods, function(m) m$DoF, numeric(1)))
 ```
 
 # AIC
 ```{r}
 #| echo: false
-c(Ours = mod$AIC, IAG1 = IAG1$AIC, ESAG1 = ESAG1$AIC, ESAG2 = ESAG2$AIC)
+c(Ours = mod$AIC, IAG1 = IAG1$AIC, ESAG1 = ESAG1$AIC, ESAG2 = ESAG2$AIC,
+  vapply(prop4mods, function(m) m$AIC, numeric(1)))
 ```
 
 # Main Figure

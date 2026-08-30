@@ -52,6 +52,13 @@ iSp=function(y){
 #' guaranteed to produce an orthogonal matrix for any skew-symmetric A, making it useful
 #' for parameterising rotation matrices without explicit orthogonality constraints.
 #' The inverse operation is `inverse_cayley_transform()` (exported from C++).
+#'
+#' No longer called anywhere in the package: the Proposition 4 code was its last caller and
+#' now goes through the C++ `cayley_transform()` instead, so that every skew coordinate in
+#' the package uses the one strict-lower-triangle convention. Note the two differ by a
+#' transpose -- `cayley()` computes \eqn{(I-A)(I+A)^{-1}}, `cayley_transform()` computes
+#' \eqn{(I-A)^{-1}(I+A)} -- and fill opposite triangles. Kept for reference and use at the
+#' console.
 #' @param x numeric vector of length `d*(d-1)/2`: the upper-triangle entries of a
 #'   `d x d` skew-symmetric matrix, filled column-by-column.
 #' @examples

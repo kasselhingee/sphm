@@ -30,7 +30,8 @@ prop4_rot <- function(p) {
 # The fitted parameters (k, a, G0, and the mean link) agree to ~1e-7 relative rather than
 # exactly, because the merge made two numerically-equivalent-but-not-bit-identical
 # substitutions: vMF_log_norm_const_exact() in place of the delivered fallback (they agree
-# to 1e-16 relative), and .prop4_cayley() built on cayley() (1e-15). Those perturbations
+# to 1e-16 relative), and the Cayley pair moved onto the package's C++ cayley_transform() /
+# inverse_cayley_transform() and their lower-triangle vectorisers. Those perturbations
 # move where the optimisers land, not what they land on: k is found by optimise(), whose
 # default convergence tolerance is .Machine$double.eps^0.25 ~ 1.2e-4 relative, and the
 # likelihood is very flat near the optimum -- for the midatlantic fits k ~ 490 shifts by

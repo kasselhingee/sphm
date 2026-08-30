@@ -57,9 +57,9 @@ mobius_SvMF <- function(y, xs = NULL, xe = NULL, mean = NULL, k = NULL, a = NULL
   # own two-phase estimators in Mobius_prop4i.R / Mobius_prop4ii.R.
   if (.is_prop4i_type(type) || .is_prop4ii_type(type)){
     fitter <- if (.is_prop4i_type(type)){
-      if (.prop4_has_euc(xe)) mobius_SvMF_prop4i_euc else mobius_SvMF_prop4i
+      if (.is_xe_nonempty(xe)) mobius_SvMF_prop4i_euc else mobius_SvMF_prop4i
     } else {
-      if (.prop4_has_euc(xe)) mobius_SvMF_prop4ii_euc else mobius_SvMF_prop4ii
+      if (.is_xe_nonempty(xe)) mobius_SvMF_prop4ii_euc else mobius_SvMF_prop4ii
     }
     # The spherical-only fitters take no `intercept` (there is no Euclidean term).
     args <- list(y = y, xs = xs, xe = xe, mean = mean, k = k, a = a,

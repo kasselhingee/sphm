@@ -64,9 +64,9 @@ mobius_vMF <- function(y, xs = NULL, xe = NULL, start = NULL, type = "SpEuc", fi
     dots <- list(...)
     if (length(dots)){prop4_opts <- utils::modifyList(prop4_opts, dots)}
     fitter <- if (.is_prop4i_type(type)){
-      if (.prop4_has_euc(xe)) mobius_vMF_prop4i_euc else mobius_vMF_prop4i
+      if (.is_xe_nonempty(xe)) mobius_vMF_prop4i_euc else mobius_vMF_prop4i
     } else {
-      if (.prop4_has_euc(xe)) mobius_vMF_prop4ii_euc else mobius_vMF_prop4ii
+      if (.is_xe_nonempty(xe)) mobius_vMF_prop4ii_euc else mobius_vMF_prop4ii
     }
     # Only pass what each fitter takes: the spherical-only fitters have no `intercept`
     # (there is no Euclidean term to centre against), and mobius_vMF_prop4ii has no

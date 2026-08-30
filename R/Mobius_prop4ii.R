@@ -204,7 +204,7 @@ mobius_link_pred_prop4ii <- function(xs = NULL, xe = NULL, param = NULL, check =
   }
 
   if (is.null(param$P)) {
-    if (.prop4_has_euc(xe)) {
+    if (.is_xe_nonempty(xe)) {
       stop("This fitted Proposition 4(ii) link has no Euclidean component.")
     }
     return(xs %*% t(param$Rtilde0))

@@ -14,11 +14,14 @@
 #
 # Naming: internals carry a leading dot and a .prop4_ / .prop4i_ / .prop4ii_ prefix.
 #
-# Future unification candidates (deliberately NOT merged, because doing so would change
+# Skew-symmetric coordinates use the package's strict-lower-triangle convention throughout,
+# via the C++ cayley_transform() / inverse_cayley_transform() and their vectorisers -- the
+# same pairing src/mobius_SvMF.cpp uses for G0 on the SpEuc/LinEuc path.
+#
+# Future unification candidate (deliberately NOT merged, because doing so would change
 # optimiser coordinates and shift fitted values): the four parallel
 # _mean_spec / _unpack_* / _joint_loglik / _fit_component / _joint_fit families in
-# Mobius_prop4i.R and Mobius_prop4ii.R, and .prop4_inverse_cayley versus the C++
-# inverse_cayley_transform() (which uses the lower-triangle convention).
+# Mobius_prop4i.R and Mobius_prop4ii.R.
 
 #' @noRd
 #' @title Recognise the Proposition 4 link types
@@ -40,7 +43,7 @@
 
 #' @noRd
 #' @description TRUE when `xe` supplies at least one Euclidean covariate.
-.prop4_has_euc <- function(xe) {
+.is_xe_nonempty <- function(xe) {
   !is.null(xe) && ncol(as.matrix(xe)) > 0L
 }
 
@@ -144,31 +147,40 @@
 .prop4_skew_dim <- function(p) as.integer(p * (p - 1L) / 2L)
 
 #' @noRd
-#' @title Cayley transform, Proposition 4 sign convention
-#' @description Maps the upper-triangle entries of a skew-symmetric `A` to the orthogonal
-#' matrix \eqn{(I - A)^{-1}(I + A)}. The package's `cayley()` computes
-#' \eqn{(I - A)(I + A)^{-1}}; for skew-symmetric `A` the two are transposes of each other,
-#' so this is `t(cayley(theta))` (equivalently `cayley(-theta)`). The Proposition 4 code
-#' uses this orientation throughout, paired with `.prop4_inverse_cayley()`.
-#' @param theta numeric vector of length `p*(p-1)/2`, the upper triangle of `A` filled
-#'   column by column -- the same ordering `cayley()` uses.
-#' @param p dimension of the resulting orthogonal matrix.
+#' @title Cayley transform of a vector of skew coordinates
+#' @description Builds the skew-symmetric matrix whose strict lower triangle is `theta` and
+#' returns the orthogonal matrix \eqn{(I - A)^{-1}(I + A)}. Thin wrapper over the package's
+#' C++ [`inverse_vectorize_lower_triangle()`] and [`cayley_transform()`], which is the same
+#' pairing the SpEuc/LinEuc code uses for `G0` (see `src/mobius_SvMF.cpp`), so there is one
+#' skew-coordinate convention across the package.
+#' @param theta numeric vector of length `p*(p-1)/2`: the strict lower triangle of `A`,
+#'   read row by row -- `A[2,1], A[3,1], A[3,2], A[4,1], ...`.
+#' @param p dimension of the resulting orthogonal matrix; checked against `length(theta)`.
+#' @seealso `.prop4_inverse_cayley()`, its inverse.
 .prop4_cayley <- function(theta, p) {
   stopifnot(length(theta) == p * (p - 1L) / 2L)
-  t(cayley(theta))
+  cayley_transform(inverse_vectorize_lower_triangle(theta))
 }
 
 #' @noRd
+#' @title Skew coordinates of an orthogonal matrix
+#' @description Inverse of `.prop4_cayley()`: returns the strict lower triangle of
+#' \eqn{(Q - I)(Q + I)^{-1}}.
+#' @param Q a `p` by `p` orthogonal matrix with no eigenvalue at -1.
+#' @param tol Conditioning floor for `Q + I`; below it the origin is returned.
 .prop4_inverse_cayley <- function(Q, tol = 1e-10) {
   Q <- as.matrix(Q)
   p <- nrow(Q)
-  I <- diag(p)
-  if (ncol(Q) != p || rcond(Q + I) < tol) {
+  # inverse_cayley_transform() has no guard of its own and returns NaN when Q + I is
+  # singular (Q with an eigenvalue at -1); callers rely on getting the origin back.
+  if (ncol(Q) != p || rcond(Q + diag(p)) < tol) {
     return(rep(0, .prop4_skew_dim(p)))
   }
-  A <- (Q - I) %*% solve(Q + I)
+  A <- inverse_cayley_transform(Q)
+  # vectorize_lower_triangle() reads one triangle, so average out any asymmetry from
+  # rounding first rather than silently taking whichever half is stored.
   A <- (A - t(A)) / 2
-  A[upper.tri(A)]
+  vectorize_lower_triangle(A)
 }
 
 #' @noRd
@@ -195,11 +207,11 @@
   dB <- (m - k) * k
   if (length(theta) != dA + dB) stop("Incorrect Stiefel-coordinate length.")
 
-  A <- matrix(0, k, k)
-  if (dA > 0L) {
-    ij <- which(upper.tri(A), arr.ind = TRUE)
-    A[ij] <- theta[seq_len(dA)]
-    A[cbind(ij[, 2], ij[, 1])] <- -theta[seq_len(dA)]
+  # same strict-lower-triangle convention as .prop4_cayley()
+  A <- if (dA > 0L) {
+    inverse_vectorize_lower_triangle(theta[seq_len(dA)])
+  } else {
+    matrix(0, k, k)
   }
   B <- if (dB > 0L) {
     matrix(theta[dA + seq_len(dB)], nrow = m - k, ncol = k)
@@ -215,7 +227,8 @@
   }
 
   Qref <- .prop4_complete_orthogonal(Vref)
-  Qref %*% .prop4_cayley(K[upper.tri(K)], m)[, seq_len(k), drop = FALSE]
+  # K is already the skew matrix, so it goes straight to the transform
+  Qref %*% cayley_transform(K)[, seq_len(k), drop = FALSE]
 }
 
 #' @noRd

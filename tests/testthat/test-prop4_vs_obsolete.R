@@ -6,24 +6,44 @@
 # individual substitutions so that a failure here can be localised quickly.
 
 test_that("the helper substitutions match what they replaced", {
-  # .prop4_cayley uses cayley() where the delivered code had its own implementation.
-  # For skew-symmetric A, (I-A)(I+A)^-1 and (I-A)^-1(I+A) are transposes of each other.
+  # The Cayley pair now goes through the package's C++ cayley_transform() /
+  # inverse_cayley_transform() and their lower-triangle vectorisers, where the delivered
+  # code filled the UPPER triangle in R. The C++ row-major-lower traversal transposes onto
+  # R's column-major-upper order, so the coordinate ORDER is unchanged and only the sign
+  # differs: theta_new = -theta_old. Forward and inverse flip together, so every
+  # inverse -> optimise -> forward composition is preserved.
   set.seed(7)
   for (p in 2:6) {
     theta <- stats::rnorm(p * (p - 1) / 2, sd = 2)
     expect_equal(.prop4_cayley(theta, p),
-                 .obsolete_prop4ii_cayley(theta, p), tolerance = 1e-12)
-    expect_equal(.prop4_cayley(theta, p), t(cayley(theta)), tolerance = 1e-12)
-    expect_equal(.prop4_cayley(theta, p), cayley(-theta), tolerance = 1e-12)
+                 .obsolete_prop4ii_cayley(-theta, p), tolerance = 1e-12)
+
+    Q <- prop4_rot(p)
+    expect_equal(.prop4_inverse_cayley(Q),
+                 -.obsolete_prop4ii_inverse_cayley(Q), tolerance = 1e-10)
+
+    # the invariant that holds whatever the convention
+    expect_equal(.prop4_cayley(.prop4_inverse_cayley(Q), p), Q, tolerance = 1e-10)
+    expect_equal(crossprod(.prop4_cayley(theta, p)), diag(p), tolerance = 1e-12)
   }
 
-  # .prop4_stiefel_cayley consumes it
+  # inverse_cayley_transform() returns NaN when Q + I is singular; the guard in
+  # .prop4_inverse_cayley() is the only thing between the callers and that.
+  Qsing <- diag(c(-1, -1, 1))
+  expect_equal(rcond(Qsing + diag(3)), 0)
+  expect_equal(.prop4_inverse_cayley(Qsing), rep(0, 3))
+
+  # .prop4_stiefel_cayley consumes the same convention, so its skew sub-block flips too
+  # (its coordinates always start at zero, so nothing downstream can observe the sign)
   set.seed(9)
   for (m in 3:5) for (k in 1:(m - 1)) {
     V <- qr.Q(qr(matrix(stats::rnorm(m * k), m, k)))[, seq_len(k), drop = FALSE]
-    theta <- stats::rnorm(k * (k - 1) / 2 + (m - k) * k, sd = 0.5)
+    dA <- k * (k - 1) / 2
+    dB <- (m - k) * k
+    theta <- stats::rnorm(dA + dB, sd = 0.5)
+    theta_old <- c(if (dA > 0) -theta[seq_len(dA)] else numeric(0), theta[dA + seq_len(dB)])
     expect_equal(.prop4_stiefel_cayley(theta, V),
-                 .obsolete_prop4ii_stiefel_cayley(theta, V), tolerance = 1e-12)
+                 .obsolete_prop4ii_stiefel_cayley(theta_old, V), tolerance = 1e-11)
   }
 
   # DoF_Stiefel replaces .prop4ii_stiefel_dim

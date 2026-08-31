@@ -1,5 +1,7 @@
-# Unit tests for the Proposition 4 API. The behaviour-preservation check against the
-# code as delivered lives in test-prop4_vs_obsolete.R.
+# Unit tests for the Proposition 4 API: the link functions, the parameter classes and the
+# guards. The behaviour-preservation check against the code as delivered lives in
+# test-prop4_vs_obsolete.R, and the simulate-and-recover checks on the fitters live in
+# test-prop4_recovery.R.
 
 test_that("the Proposition 4(ii) link is a plain rotation of xs", {
   set.seed(11)
@@ -97,28 +99,4 @@ test_that("the sign-flip and multistart helpers reject Proposition 4", {
   fake <- structure(list(mean = mobius_link_prop4ii(diag(3))), class = "list")
   expect_error(mobius_SvMF_signflip_refit(fake), "Proposition 4")
   expect_error(mobius_vMF_signflip_refit(fake), "Proposition 4")
-})
-
-test_that("the four types fit simulated data and recover Rtilde0", {
-  skip_on_cran()
-  set.seed(15)
-  p <- 3; n <- 300
-  R0 <- prop4_rot(p)
-  xs <- matrix(stats::rnorm(n * p), n, p); xs <- xs / sqrt(rowSums(xs^2))
-  sim <- rmobius_SvMF(xs = xs, xe = NULL, mean = mobius_link_prop4ii(R0),
-                      k = 60, a = c(1, 1.4, 1 / 1.4), G0 = diag(p))
-  y <- sim[, seq_len(p)]
-
-  fit <- mobius_SvMF(y, xs = xs, type = "Prop4ii",
-                     det_constraint = "orthogonal", G01behaviour = "free")
-  expect_s3_class(fit$mean, "mobius_link_prop4ii")
-  expect_true(all(is.finite(c(fit$lLik, fit$AIC, fit$DoF, fit$k))))
-  expect_lt(max(abs(fit$mean$Rtilde0 - R0)), 0.15)
-
-  # Proposition 4(i) nests Proposition 4(ii), so it cannot fit worse
-  fit4i <- mobius_SvMF(y, xs = xs, type = "Prop4i",
-                       det_constraint = "orthogonal", G01behaviour = "free")
-  expect_s3_class(fit4i$mean, "mobius_link_prop4i")
-  expect_gte(fit4i$lLik, fit$lLik - 1e-6)
-  expect_lte(fit4i$mean$beta_s, 1)
 })

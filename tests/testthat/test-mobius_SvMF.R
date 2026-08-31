@@ -61,20 +61,6 @@ test_that("to and from vecparams functions correctly", {
   expect_equal(vecparams_free[incommon], vecparams_p1[incommon])
 })
 
-# function for computing axial differences (ignoring sign)
-axis_distance <- function(angle1, angle2 = 0){
-  diff <- abs(angle1 - angle2)
-  pmin(diff, pi - diff)
-}
-rcovars <- function(n, qs, qe){
-  #generate covariates Gaussianly
-  xe <- matrix(rnorm(n*qe), nrow = n)
-  #generate covariates on the sphere
-  xs <- matrix(rnorm(n*qs), nrow = n)
-  xs <- sweep(xs, 1, apply(xs, 1, vnorm), FUN = "/")
-  return(list(xe = xe, xs = xs))
-}
-
 test_that("MLE with p1 = G01", {
   rand_mobius_link_cann__place_in_env(4, 5, 4, preseed = 1)
   omegapar <- as_mobius_link_Omega(paramobj)

@@ -14,6 +14,23 @@
 #
 # Naming: internals carry a leading dot and a .prop4_ / .prop4i_ / .prop4ii_ prefix.
 #
+# The Euclidean form of both links carries an exact finite symmetry, so P, Qe_star and Be
+# are NOT individually identified. Writing Qs = t(Rtilde0) %*% P and M = Qe_star diag(Be),
+# the prediction is iSp(Sp(xs Qs) + xe_model M) t(P). Since Sp(x diag(1,D)) = Sp(x) D and
+# iSp(v D) = iSp(v) diag(1,D) for orthogonal D of size p-1, mapping
+#     P -> P diag(1, D),  M -> M D
+# leaves every predicted value unchanged, and leaves Rtilde0 = P Qs^T unchanged too. M
+# keeps the orthogonal columns the parameterisation requires only when D is a signed
+# permutation, and det(P) > 0 is enforced, so for p = 3 four representatives survive --
+# two of which SWAP the two entries of Be. Fits of the same data therefore return Be in
+# either order with identical likelihood.
+#
+# Consequently Rtilde0, beta_s, psi and rs1 (= Qs[,1], untouched by diag(1,D)) are
+# identified and comparable across fits, while P, Qe_star and Be are only identified up to
+# that group. The invariants to compare instead are M %*% t(M) and sort(Be); see
+# tests/testthat/test-prop4_recovery.R. No canonical representative is imposed here,
+# because doing so would shift fitted output and invalidate test-prop4_vs_obsolete.R.
+#
 # Skew-symmetric coordinates use the package's strict-lower-triangle convention throughout,
 # via the C++ cayley_transform() / inverse_cayley_transform() and their vectorisers -- the
 # same pairing src/mobius_SvMF.cpp uses for G0 on the SpEuc/LinEuc path.

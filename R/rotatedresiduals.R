@@ -61,23 +61,31 @@ jupp_Rmat <- function(y, base){
 #' parallel transport; this version uses a rotation-based formula.
 #' @param start Starting location as a unit vector.
 #' @param end End location as a unit vector.
+#' @param tol Norms below this are treated as zero when deciding whether `start` and `end`
+#'   are numerically parallel or antiparallel. In that case no transporting geodesic is
+#'   determined and the convention in the details below applies.
 #' @return A square orthogonal matrix.
 #' @details If `end = -start` (antipodal points), there is no unique geodesic and a reflection
-#' matrix in the `end` direction is returned.
+#' matrix in the `end` direction is returned. If `end = start` the identity is returned.
+#' Both cases are detected with `tol`, because rounding in `(end %*% start)` leaves the
+#' tangent direction at a norm of ~1e-16 rather than exactly zero.
 #' @seealso [rotated_resid()]
 #' @family residuals
 #' @export
-parallel_transport_mat <- function(start, end){ #assumes a and b are unit vectors
+parallel_transport_mat <- function(start, end, tol = sqrt(.Machine$double.eps)){ #assumes a and b are unit vectors
   ab <- (end %*% start)[[1]]
   if (ab > 1){ab <- min(ab, 1)}
   if (ab < -1){ab <- max(ab, -1)}
   alpha <- acos(ab)          # geodesic angle from end to start
   cvec <- start - end*ab     # unit tangent vector at end pointing toward start (after normalising)
-  if ((cvec %*% cvec)[[1]] > 0){
+  # cvec is numerically close to a 0-sized vector when start ~ -end or start ~ end
+  if ((cvec %*% cvec)[[1]] > tol^2){ #i.e. if cvec is numerically non-zero in size
     cvec <- cvec/sqrt(cvec %*% cvec)[[1]] #if statement here is useful when start==end
+    A <- end%o%cvec - cvec%o%end  # skew-symmetric generator of the geodesic rotation
+    Q = diag(length(end)) + sin(alpha)*A + (cos(alpha) - 1)*(end%o%end + cvec%o%cvec)
+  } else {
+    Q = diag(length(end)) + (ab - 1)*(end%o%end)
   }
-  A <- end%o%cvec - cvec%o%end  # skew-symmetric generator of the geodesic rotation
-  Q = diag(length(end)) + sin(alpha)*A + (cos(alpha) - 1)*(end%o%end + cvec%o%cvec)
   return(Q)
 }
 

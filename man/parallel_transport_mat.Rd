@@ -4,12 +4,16 @@
 \alias{parallel_transport_mat}
 \title{Parallel transport matrix}
 \usage{
-parallel_transport_mat(start, end)
+parallel_transport_mat(start, end, tol = sqrt(.Machine$double.eps))
 }
 \arguments{
 \item{start}{Starting location as a unit vector.}
 
 \item{end}{End location as a unit vector.}
+
+\item{tol}{Norms below this are treated as zero when deciding whether \code{start} and \code{end}
+are numerically parallel or antiparallel. In that case no transporting geodesic is
+determined and the convention in the details below applies.}
 }
 \value{
 A square orthogonal matrix.
@@ -26,7 +30,9 @@ parallel transport; this version uses a rotation-based formula.
 }
 \details{
 If \code{end = -start} (antipodal points), there is no unique geodesic and a reflection
-matrix in the \code{end} direction is returned.
+matrix in the \code{end} direction is returned. If \code{end = start} the identity is returned.
+Both cases are detected with \code{tol}, because rounding in \code{(end \%*\% start)} leaves the
+tangent direction at a norm of ~1e-16 rather than exactly zero.
 }
 \seealso{
 \code{\link[=rotated_resid]{rotated_resid()}}

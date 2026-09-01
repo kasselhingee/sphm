@@ -450,3 +450,54 @@
   }
   invisible(NULL)
 }
+
+#' @noRd
+#' @title Choose the parallel-transport base for the SvMF starting values
+#' @description The SvMF prelims estimate `G0` and the scales `a` from residuals parallel
+#' transported to a base direction, via `SvMF_moment_axes()` and `SvMF_prelim_scales()`.
+#' Both estimators are sound, but only if that base is roughly right: transport on a sphere
+#' is path dependent, so a base far from the true `G0[,1]` scrambles the residual frame by a
+#' holonomy that varies with the predicted mean, and the anisotropy averages away. The
+#' scales then come back near isotropic and the joint optimiser starts in a basin it cannot
+#' leave -- for a spread-out Proposition 4(ii) truth that cost ~74 log-likelihood units
+#' against the value at the true parameters.
+#'
+#' The old choice, `Rtilde0[,1]`, has no connection to where the errors are centred and was
+#' 85 degrees out on the test fixture. Search instead: the preliminary likelihood is a clean
+#' objective for this, picking a base within about 1 degree of the truth.
+#'
+#' Only for `G01behaviour = "free"`. Under `"p1"` the base is pinned to the identifiable
+#' representative and under `"fixed"` the caller supplies it, so in both the base is not
+#' ours to choose.
+#' @param y,pred Response and predicted means, as matrices of unit row vectors.
+#' @param k Concentration from the preliminary vMF fit, used only to rank candidates.
+#' @param base The base the caller would otherwise have used. Always tried, so the result is
+#'   never worse than the unsearched choice.
+#' @param ncand Number of predicted means to subsample as candidates.
+#' @return List with `G0` and `a`, ready to start the joint fit.
+.prop4_choose_G0_start <- function(y, pred, k, base, ncand = 64L) {
+  p <- ncol(y)
+  # Deliberately deterministic: no set.seed() and no rnorm(). A fitter that touched the RNG
+  # would shift every subsequent draw in the caller's session.
+  # The predicted means are dense wherever the model puts mass and need no dimension-specific
+  # construction; the signed identity columns keep the sphere covered when they are clustered.
+  idx <- unique(round(seq.int(1L, nrow(pred), length.out = min(ncand, nrow(pred)))))
+  cand <- rbind(base, pred[idx, , drop = FALSE], diag(p), -diag(p))
+
+  fit_at <- function(g) {
+    rresid <- rotated_resid(y, pred, base = g)
+    G0 <- SvMF_moment_axes(rresid, g)
+    list(G0 = G0, a = c(1, SvMF_prelim_scales(rresid, G0)))
+  }
+  score <- apply(cand, 1, function(g) {
+    z <- try(fit_at(g), silent = TRUE)
+    if (inherits(z, "try-error")) return(-Inf)
+    ll <- try(sum(SvMF_log_lik_cann(undo_partransport(y, pred, G01 = z$G0[, 1]),
+                                    SvMF_cann(k = k, a = z$a, G = z$G0))), silent = TRUE)
+    if (inherits(ll, "try-error") || !is.finite(ll)) -Inf else ll
+  })
+  # score[1] is `base`, so which.max() falls back to it when nothing beats it and when every
+  # candidate fails.
+  if (!any(is.finite(score))) return(fit_at(base))
+  fit_at(cand[which.max(score), ])
+}

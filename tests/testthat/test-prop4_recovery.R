@@ -185,53 +185,36 @@ test_that("SvMF Prop4ii recovers the mean link from a spherical Prop 4(ii) truth
   expect_s3_class(fit$mean, "mobius_link_prop4ii")
   expect_true(all(is.finite(c(fit$lLik, fit$AIC, fit$DoF, fit$k))))
 
-  # MC over 8 noise draws (sd): pred 0.0028, dR 0.0050.
+  # MC over 8 noise draws (sd): pred 0.0038, dR 0.0066.
   # k, a and G0 are deliberately NOT checked here -- see the next test.
   expect_prop4_recovers(fit, f$ii_sph, f$xs,
-                        tol_pred = prop4_tol_pred(3, f$n, f$k, 0.0028),
-                        tol_R = prop4_tol_R(0.0050))
+                        tol_pred = prop4_tol_pred(3, f$n, f$k, 0.0038),
+                        tol_R = prop4_tol_R(0.0066))
 })
 
 
 test_that("SvMF Prop4ii recovers the error structure from a spherical Prop 4(ii) truth", {
   skip_on_cran()
-  # THIS TEST IS EXPECTED TO FAIL: it documents an open defect in the cold-start path of
-  # mobius_SvMF_prop4ii() (spherical-only, i.e. xe = NULL). It is deliberately left failing
-  # rather than skipped, so the suite stays red until the prelim is fixed.
-  #
-  # From the default cold start the fit lands about 74 log-likelihood units BELOW the
-  # likelihood at the true parameters (532.3 vs 606.0), with a collapsed to isotropic
-  # (1.03, 0.97) against a true (1.4, 0.714) and the G0 axes about 84 degrees out.
-  # Starting the same fit at the truth, or supplying the true G0, reaches 612.0 -- above
-  # the truth, as an MLE should -- and recovers a to 0.05 and the axes to 0.02 rad. The
-  # objective and the joint optimiser are therefore sound; the starting values from
-  # mobius_SvMF_partransport_prelim_prop4ii() are at fault.
-  #
-  # The failure is truth-dependent rather than universal, which is what makes it a
-  # starting-value problem rather than a broken objective: it occurs for this fixture's G0
-  # in all 8 Monte Carlo replicates, and for a true G0 of diag(3) (the configuration the
-  # previous Rtilde0-only test used, lLik 72.5 below truth), but at least one other random
-  # rotation recovers correctly (+5.7 above truth, axes to 0.016 rad). It occurs for
-  # G01behaviour "p1" and "free" alike.
-  #
-  # Rtilde0 is unaffected either way -- it comes from the closed-form Procrustes prelim --
-  # which is why the previous Rtilde0-only test never caught this. Prop4ii+Euclidean and
-  # both Prop4i fitters recover correctly.
-
   f <- prop4_recovery_fixture()
   set.seed(2001)
   y <- rmobius_SvMF(xs = f$xs, xe = NULL, mean = f$ii_sph,
                     k = f$k, a = f$a, G0 = f$G0)[, seq_len(f$p)]
   fit <- mobius_SvMF(y, xs = f$xs, type = "Prop4ii",
                      det_constraint = "orthogonal", G01behaviour = "free")
-  # 3 sd; a, G0 and k SDs carried over from the Prop4i spherical MC, the closest measured
-  # case (this fit's own SDs describe the broken optimum, not a working estimator)
+  # MC over 8 noise draws (sd): pred 0.0038, dR 0.0066, k 2.45, max|a - a_true| 0.0164,
+  # G0 axis error 0.0284 rad. Measured after the starting-value fix below; the earlier
+  # figures described a stranded optimum rather than a working estimator.
+  #
+  # The transport base for the SvMF starting values is chosen by search rather than fixed at
+  # Rtilde0[,1] -- see .prop4_choose_G0_start(). Without that this fit lands about 74
+  # log-likelihood units below the value at the true parameters, with a collapsed to
+  # isotropic and the G0 axes about 84 degrees out.
   expect_prop4_recovers(fit, f$ii_sph, f$xs,
-                        tol_pred = prop4_tol_pred(3, f$n, f$k, 0.0028),
-                        tol_R = prop4_tol_R(0.0050),
-                        k_true = f$k, tol_k = 7.1,
-                        a_true = f$a, tol_a = prop4_tol_maxabs(2, 0.0149),
-                        G0_true = f$G0, tol_G0 = prop4_tol_maxabs(3, 0.0347))
+                        tol_pred = prop4_tol_pred(3, f$n, f$k, 0.0038),
+                        tol_R = prop4_tol_R(0.0066),
+                        k_true = f$k, tol_k = 7.4,
+                        a_true = f$a, tol_a = prop4_tol_maxabs(2, 0.0164),
+                        G0_true = f$G0, tol_G0 = prop4_tol_maxabs(3, 0.0284))
 })
 
 

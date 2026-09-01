@@ -915,6 +915,14 @@ mobius_SvMF_partransport_prelim_prop4i <- function(
                         G0[, -1, drop = FALSE])
     }
     aremaining <- SvMF_prelim_scales(rresid, G0)
+  } else if (G01behaviour == "free") {
+    # A base far from the true G0[,1] leaves the moment estimates near isotropic and strands
+    # the joint optimiser, so search for a better one -- see .prop4_choose_G0_start().
+    # Only for "free": "p1" pins the base to the identifiable representative and "fixed"
+    # takes it from the caller, so in neither is the base ours to choose.
+    Gstart <- .prop4_choose_G0_start(as.matrix(y), prelim$pred, prelim$k, G01)
+    G0 <- Gstart$G0
+    aremaining <- Gstart$a[-1]
   } else {
     G0 <- SvMF_moment_axes(rresid, G01)
     aremaining <- SvMF_prelim_scales(rresid, G0)
@@ -975,6 +983,14 @@ mobius_SvMF_partransport_prelim_prop4i_euc <- function(
       )
     }
     aremaining <- SvMF_prelim_scales(rresid, G0)
+  } else if (G01behaviour == "free") {
+    # A base far from the true G0[,1] leaves the moment estimates near isotropic and strands
+    # the joint optimiser, so search for a better one -- see .prop4_choose_G0_start().
+    # Only for "free": "p1" pins the base to the identifiable representative and "fixed"
+    # takes it from the caller, so in neither is the base ours to choose.
+    Gstart <- .prop4_choose_G0_start(as.matrix(y), prelim$pred, prelim$k, G01)
+    G0 <- Gstart$G0
+    aremaining <- Gstart$a[-1]
   } else {
     G0 <- SvMF_moment_axes(rresid, G01)
     aremaining <- SvMF_prelim_scales(rresid, G0)

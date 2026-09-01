@@ -139,15 +139,6 @@ test_that("MLE with p1 = G01", {
   expect_equal(est2$k, est1$k, tolerance = 0.2)
   expect_equal(est2$a, est1$a, tolerance = 1E-1, ignore_attr = "names")
   expect_equal(axis_distance(acos(colSums(est2$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
-  
-  # from default starts with vMF multistart
-  expect_warning({est3 <- mobius_SvMF_multistart(y_ld[, 1:p], x$xs, x$xe,
-                       G01behaviour = "p1",
-                       type = "SpEuc", intercept = FALSE)}, "p!=3")
-  expect_equal(est3$mean, est1$mean, tolerance = 1E-1)
-  expect_equal(est3$k, est1$k, tolerance = 0.2)
-  expect_equal(est3$a, est1$a, tolerance = 1E-1, ignore_attr = "names")
-  expect_equal(axis_distance(acos(colSums(est3$G0 * est1$G0))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
 })
 
 test_that("MLE with G01 fixed", {
@@ -223,16 +214,6 @@ test_that("MLE with G01 fixed", {
   expect_equal(est2$mean, est1$mean, tolerance = 1E-2)
   expect_equal(est2[c("k", "a")], est1[c("k", "a")], tolerance = 1E-1, ignore_attr = "names")
   expect_equal(est2$G0, est1$G0, tolerance = 1E-2, ignore_attr = TRUE)
-  
-  # from default starts with vMF multistart
-  expect_warning({est3 <- mobius_SvMF_multistart(y_ld[, 1:p], x$xs, x$xe,
-                      G0 = cbind(G0[,1], matrix(NA, p, p-1)),
-                      G01behaviour = "fixed",
-                      type = "SpEuc", intercept = FALSE)}, "p!=3")
-  expect_equal(est3$mean, est1$mean, tolerance = 1E-1)
-  expect_equal(est3$k, est1$k, tolerance = 0.2)
-  expect_equal(est3$a, est1$a, tolerance = 1E-1, ignore_attr = "names")
-  expect_equal(axis_distance(acos(pmin(colSums(est3$G0 * est1$G0),1))), rep(0, p), tolerance = 1E-1, ignore_attr = TRUE)
 })
 
 test_that("MLE with G01 free, p=5", {
@@ -352,10 +333,9 @@ test_that("Under high concentration, standardised residuals are the correct MVN"
 })
 
 
-test_that("mobius_SvMF() records linktype and G01behaviour, and the refit reads them back", {
-  # The refit helpers derive the model settings from the fit object rather than taking them
-  # as arguments, so a restart cannot silently optimise a different model. Guard the contract
-  # they rely on.
+test_that("mobius_SvMF() records linktype and G01behaviour", {
+  # These fields record which model was actually fitted, so a caller can reproduce or refit it
+  # without re-supplying the settings. Guard that contract.
   rand_mobius_link_cann__place_in_env(4, 5, 4, preseed = 1)
   omegapar <- as_mobius_link_Omega(paramobj)
   set.seed(4)
@@ -379,14 +359,6 @@ test_that("mobius_SvMF() records linktype and G01behaviour, and the refit reads 
   expect_equal(mod$linktype,
                list(type = "SpEuc", fix_qs1 = FALSE, fix_qe1 = FALSE, intercept = FALSE))
   expect_identical(mod$G01behaviour, "p1")
-  # same field names as mobius_vMF() records (R/Mobius_vMF.R), so both refit helpers work alike
+  # same field names as mobius_vMF() records (R/Mobius_vMF.R), which mobius_vMF_refit() reads
   expect_named(mod$linktype, c("type", "fix_qs1", "fix_qe1", "intercept"))
-})
-
-test_that("mobius_SvMF_signflip_refit() rejects a fit with no recorded settings", {
-  # mobius_SvMF_joint_fit() results, and fits cached before these fields existed, lack
-  # linktype; without the guard the NULL would fall through to mobius_SvMF()'s defaults and
-  # silently refit a different model.
-  expect_error(mobius_SvMF_signflip_refit(list(mean = NULL, G01behaviour = "p1")),
-               "linktype")
 })

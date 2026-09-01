@@ -426,10 +426,10 @@
 }
 
 #' @noRd
-#' @title Reject Proposition 4 fits in the sign-flip / multistart helpers
-#' @description These helpers explore sign flips of the pole directions p1, qs1 and qe1 in
-#' the canonical parameterisation (see `signflip_starts()`), which the constrained links
-#' of Proposition 4 do not have -- their mean is an orthogonal `Rtilde0` (plus, optionally,
+#' @title Reject Proposition 4 fits in the restart helpers
+#' @description These helpers rebuild starting values from the pole directions p1, qs1 and qe1
+#' of the canonical parameterisation (see `rand_mobius_link_cann()`), which the constrained
+#' links of Proposition 4 do not have -- their mean is an orthogonal `Rtilde0` (plus, optionally,
 #' `beta_s` and a Euclidean block). Fail with a clear message rather than deep inside.
 #' @param x A fitted model, or a `type` string.
 #' @param what Name of the calling function, used in the error message.
@@ -445,8 +445,8 @@
   }
   if (isTRUE(is_prop4)){
     stop(what, "() does not support the constrained links of Proposition 4: they have no ",
-         "qs1/qe1 pole directions to sign-flip. Refit with mobius_vMF()/mobius_SvMF() and ",
-         "type = \"Prop4i\" or \"Prop4ii\" instead.")
+         "P/Qs/Qe pole structure to draw random starting values from. Refit with ",
+         "mobius_vMF()/mobius_SvMF() and type = \"Prop4i\" or \"Prop4ii\" instead.")
   }
   invisible(NULL)
 }

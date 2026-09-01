@@ -621,18 +621,6 @@ lapply(restarts, "[[", "obj") %>%
 
 Other initial parameters have not improved on the default initial parameters.
 
-## Automated multistart for vMF
-```{r}
-mod_vMF_multistart <- mobius_vMF_multistart(
-  y  = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
-  xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
-  xe = xe %>% as.matrix(),
-  fix_qs1 = FALSE, type = "LinEuc"
-)
-cat("Default vMF obj:    ", mod$preest$nlopt$objective, "\n",
-    "Multistart vMF obj: ", mod_vMF_multistart$nlopt$objective, "\n", sep = "")
-```
-
 ## Check Other Starts for SvMF
 ```{r}
 restarts <- pbapply::pblapply(1:100, function(seed){
@@ -665,19 +653,6 @@ lapply(restarts, "[[", "AIC") %>%
 ```
 
 Other initial parameters have not improved on the default initial parameters.
-
-## Automated multistart for SvMF
-```{r}
-mod_SvMF_multistart <- mobius_SvMF_multistart(
-  y  = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
-  xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
-  xe = xestd %>% as.matrix(),
-  type = "LinEuc",
-  G01behaviour = "free"
-)
-cat("Default SvMF AIC:    ", mod$AIC, "\n",
-    "Multistart SvMF AIC: ", mod_SvMF_multistart$AIC, "\n", sep = "")
-```
 
 ## Likelihood Ratio Test of vMF vs SvMF
 

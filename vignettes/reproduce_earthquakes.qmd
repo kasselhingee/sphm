@@ -624,20 +624,6 @@ mod_SvMF <- restarts[[idx]]
 saveRDS(mod_SvMF, "earthquake_model.rds")
 ```
 
-# Automated multistart for SvMF
-```{r}
-mod_SvMF_multistart <- mobius_SvMF_multistart(
-  Ymat,
-  xs = NULL,
-  xe = Xemat,
-  type = "LinEuc",
-  G01behaviour = "free"
-)
-cat("Best random-restart AIC: ", mod_SvMF$AIC, "\n",
-    "Multistart SvMF AIC:     ", mod_SvMF_multistart$AIC, "\n", sep = "")
-if (mod_SvMF_multistart$AIC < mod_SvMF$AIC) mod_SvMF <- mod_SvMF_multistart
-```
-
 # SI Table: Estimated Parameters
 Below is the estimated concentration, the AIC and degrees of freedom of this regression.
 ```{r}

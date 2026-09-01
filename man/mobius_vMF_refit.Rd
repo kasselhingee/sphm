@@ -24,12 +24,8 @@ Given a vMF regression, repeat the optimisation from initial parameters randomly
 Other regression:
 \code{\link[=mobius_SvMF]{mobius_SvMF()}},
 \code{\link[=mobius_SvMF_log_lik]{mobius_SvMF_log_lik()}},
-\code{\link[=mobius_SvMF_multistart]{mobius_SvMF_multistart()}},
-\code{\link[=mobius_SvMF_signflip_refit]{mobius_SvMF_signflip_refit()}},
 \code{\link[=mobius_dof]{mobius_dof()}},
 \code{\link[=mobius_vMF]{mobius_vMF()}},
-\code{\link[=mobius_vMF_multistart]{mobius_vMF_multistart()}},
-\code{\link[=mobius_vMF_signflip_refit]{mobius_vMF_signflip_refit()}},
 \code{\link[=rmobius_SvMF]{rmobius_SvMF()}}
 }
 \concept{regression}

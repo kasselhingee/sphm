@@ -87,7 +87,7 @@ A list:
 \item{lLik}{Log-likelihood}
 \item{initial}{Initial values}
 \item{preest}{Results of the preliminary vMF regression}
-\item{linktype}{The mean link settings used for the fit: \code{type}, \code{fix_qs1}, \code{fix_qe1} and \code{intercept}. Refit helpers such as \code{\link[=mobius_SvMF_signflip_refit]{mobius_SvMF_signflip_refit()}} read these back so they refit the same model.}
+\item{linktype}{The mean link settings used for the fit: \code{type}, \code{fix_qs1}, \code{fix_qe1} and \code{intercept}.}
 \item{G01behaviour}{The \code{G01behaviour} used for the fit}
 }
 }
@@ -106,13 +106,9 @@ When p!=3, the optimisation first approximates the normalising constant of the v
 \seealso{
 Other regression:
 \code{\link[=mobius_SvMF_log_lik]{mobius_SvMF_log_lik()}},
-\code{\link[=mobius_SvMF_multistart]{mobius_SvMF_multistart()}},
-\code{\link[=mobius_SvMF_signflip_refit]{mobius_SvMF_signflip_refit()}},
 \code{\link[=mobius_dof]{mobius_dof()}},
 \code{\link[=mobius_vMF]{mobius_vMF()}},
-\code{\link[=mobius_vMF_multistart]{mobius_vMF_multistart()}},
 \code{\link[=mobius_vMF_refit]{mobius_vMF_refit()}},
-\code{\link[=mobius_vMF_signflip_refit]{mobius_vMF_signflip_refit()}},
 \code{\link[=rmobius_SvMF]{rmobius_SvMF()}}
 }
 \concept{regression}

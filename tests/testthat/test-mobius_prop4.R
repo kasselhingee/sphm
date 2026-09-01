@@ -93,10 +93,7 @@ test_that("the parameter class round-trips and reports its dimensions", {
   expect_error(mobius_link_prop4i(R0, beta_s = 1.5), "beta_s")
 })
 
-test_that("the sign-flip and multistart helpers reject Proposition 4", {
-  expect_error(mobius_vMF_multistart(matrix(0), type = "Prop4i"), "Proposition 4")
-  expect_error(mobius_SvMF_multistart(matrix(0), type = "Prop4ii"), "Proposition 4")
-  fake <- structure(list(mean = mobius_link_prop4ii(diag(3))), class = "list")
-  expect_error(mobius_SvMF_signflip_refit(fake), "Proposition 4")
-  expect_error(mobius_vMF_signflip_refit(fake), "Proposition 4")
+test_that("the restart helper rejects Proposition 4", {
+  fake <- structure(list(est = mobius_link_prop4ii(diag(3))), class = "list")
+  expect_error(mobius_vMF_refit(fake), "Proposition 4")
 })

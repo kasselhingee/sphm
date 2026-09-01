@@ -607,32 +607,8 @@ lapply(restarts, "[[", "obj") %>%
 
 Other initial parameters have not improved on the default initial parameters.
 
-## Automated multistart for vMF
-::: {.cell}
-
-```{.r .cell-code}
-mod_vMF_multistart <- mobius_vMF_multistart(
-  y  = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
-  xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
-  xe = xe %>% as.matrix(),
-  fix_qs1 = FALSE, type = "LinEuc"
-)
-cat("Default vMF obj:    ", mod$preest$nlopt$objective, "\n",
-    "Multistart vMF obj: ", mod_vMF_multistart$nlopt$objective, "\n", sep = "")
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-Default vMF obj:    -0.9960845
-Multistart vMF obj: -0.9960844
-```
-
-
-:::
-:::
-
 ## Check Other Starts for SvMF
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -666,41 +642,17 @@ lapply(restarts, "[[", "AIC") %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-17-1.pdf){fig-pos='H'}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-16-1.pdf){fig-pos='H'}
 :::
 :::
+
 
 Other initial parameters have not improved on the default initial parameters.
-
-## Automated multistart for SvMF
-::: {.cell}
-
-```{.r .cell-code}
-mod_SvMF_multistart <- mobius_SvMF_multistart(
-  y  = fulldf %>% select(starts_with("Y")) %>% as.matrix(),
-  xs = fulldf %>% select(starts_with("X")) %>% as.matrix(),
-  xe = xestd %>% as.matrix(),
-  type = "LinEuc",
-  G01behaviour = "free"
-)
-cat("Default SvMF AIC:    ", mod$AIC, "\n",
-    "Multistart SvMF AIC: ", mod_SvMF_multistart$AIC, "\n", sep = "")
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-Default SvMF AIC:    -463.2407
-Multistart SvMF AIC: -463.2407
-```
-
-
-:::
-:::
 
 ## Likelihood Ratio Test of vMF vs SvMF
 
 First get best vMF model via a searching with 100 restarts.
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -715,9 +667,9 @@ mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){mobius_vMF_refit(mod
 ::: {.cell-output .cell-output-stderr}
 
 ```
-Warning in mobius_vMF(y = mod_vMF$y, xs = mod_vMF$xs, xe = mod_vMF$xe, fix_qs1
-= mod_vMF$linktype$fix_qs1, : NLOPT_MAXEVAL_REACHED: Optimization stopped
-because maxeval (above) was reached.
+Warning in mobius_vMF_general(y = y, xs = xs, xe = xe, start = start, type =
+type, : NLOPT_MAXEVAL_REACHED: Optimization stopped because maxeval (above) was
+reached.
 ```
 
 
@@ -744,7 +696,7 @@ lapply(mod_vMF_restarts, "[[", "AIC") %>%
 ```
 
 ::: {.cell-output-display}
-![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-19-1.pdf){fig-pos='H'}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-17-1.pdf){fig-pos='H'}
 :::
 
 ```{.r .cell-code}
@@ -776,7 +728,9 @@ mod_vMF$AIC
 :::
 :::
 
+
 Below is function for comparing likelihoods for responses `y`.
+
 
 ::: {.cell}
 
@@ -823,7 +777,9 @@ getlikR <- function(y){
 ```
 :::
 
+
 Now we simulate the response 1000 times from the best vMF model and compare the likelihood of the vMF model to the likelihood of the SvMF model on each simulated data.
+
 
 ::: {.cell}
 
@@ -843,6 +799,8 @@ obs <- getlikR(mod$y)
 ```
 :::
 
+
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -853,7 +811,7 @@ sum(is.na(null_likRs_vec))
 ::: {.cell-output .cell-output-stdout}
 
 ```
-[1] 448
+[1] 440
 ```
 
 
@@ -866,14 +824,16 @@ sum(!is.na(null_likRs_vec))
 ::: {.cell-output .cell-output-stdout}
 
 ```
-[1] 552
+[1] 560
 ```
 
 
 :::
 :::
 
+
 A substantial fraction of the simulated fits stop at the evaluation limit rather than the convergence tolerance, and these have been discarded.
+
 
 ::: {.cell}
 
@@ -897,12 +857,14 @@ range(null_likRs_vec, na.rm = TRUE)
 ::: {.cell-output .cell-output-stdout}
 
 ```
-[1]  0.2812075 23.1321965
+[1]  0.3178334 23.1321966
 ```
 
 
 :::
 :::
+
+
 
 ::: {.cell}
 
@@ -917,7 +879,7 @@ tibble::enframe(null_likRs_vec, "seed", "likR") %>%
 ::: {.cell-output .cell-output-stderr}
 
 ```
-Warning: Removed 448 rows containing non-finite outside the scale range
+Warning: Removed 440 rows containing non-finite outside the scale range
 (`stat_bin()`).
 ```
 
@@ -927,7 +889,7 @@ Warning: Removed 448 rows containing non-finite outside the scale range
 ::: {.cell-output .cell-output-stderr}
 
 ```
-Warning: Removed 448 rows containing missing values or values outside the scale range
+Warning: Removed 440 rows containing missing values or values outside the scale range
 (`geom_rug()`).
 ```
 
@@ -935,11 +897,13 @@ Warning: Removed 448 rows containing missing values or values outside the scale 
 :::
 
 ::: {.cell-output-display}
-![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-24-1.pdf){fig-pos='H'}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-22-1.pdf){fig-pos='H'}
 :::
 :::
 
+
 p-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -955,6 +919,7 @@ mean(null_likRs_vec > obs$likR, na.rm = TRUE)
 
 :::
 :::
+
 
 The observed likelihood ratio is far larger than any value obtained under the null, so this small $p$-value suggests that the data was not drawn from a vMF regression.
 

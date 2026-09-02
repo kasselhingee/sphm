@@ -12,14 +12,33 @@ vnorm=function(x) sqrt(vnorm2(x))
 #' @export
 vnorm2=function(x) sum(x^2)
 
-#' @noRd
-#' @title Stereographic projection from south pole
-#' @description Stereographic projection from the south pole `-e1 = (-1,0,...,0)` of
-#' S^{p-1} to R^{p-1}: for x = (x_1,...,x_p) on the sphere,
-#' `Sp(x)_j = x_{j+1} / (1 + x_1)` for j = 1,...,p-1.
-#' Undefined at the south pole (projection point); those rows are set to 1e9.
-#' @param x is a matrix of row vectors on the sphere
-#' @noRd
+#' @title Stereographic projection from the south pole
+#' @description `Sp()` is the stereographic projection from the south pole
+#' \eqn{-e_1 = (-1, 0, \ldots, 0)} of \eqn{S^{p-1}} to \eqn{R^{p-1}}: for
+#' \eqn{x = (x_1, \ldots, x_p)} on the sphere,
+#' \deqn{Sp(x)_j = x_{j+1} / (1 + x_1), \quad j = 1, \ldots, p-1.}
+#' `iSp()` is its inverse.
+#'
+#' This is the projection used by the scaled Mobius link [`mobius_link()`], which applies
+#' `Sp()` to the spherical covariates, accumulates the scaled displacements linearly in
+#' \eqn{R^{p-1}}, and maps the result back to the sphere with `iSp()`.
+#' @details `Sp()` is undefined at the projection point itself, the south pole
+#' \eqn{-e_1}. Rows of `x` equal to \eqn{-e_1} are returned as `1e9` rather than
+#' `Inf`, so that downstream optimisation sees a large finite number.
+#' @param x A matrix of row vectors on the sphere \eqn{S^{p-1}}, or a single such vector.
+#' @param y A matrix of row vectors in \eqn{R^{p-1}}, or a single such vector.
+#' @return A matrix with the same number of rows as the input: `p-1` columns for `Sp()`
+#' and `p` columns for `iSp()`. If the input is a single vector (or a matrix with one
+#' row) the result is returned as a plain vector rather than a one-row matrix.
+#' @family link-function
+#' @examples
+#' x <- rbind(north_pole(3), c(0, 1, 0), c(0, 0, 1))
+#' Sp(x)
+#' iSp(Sp(x))  # recovers x
+#'
+#' Sp(north_pole(3))          # the north pole maps to the origin
+#' Sp(c(-1, 0, 0))            # the south pole: undefined, returned as 1e9
+#' @export
 Sp=function(x) {
   if (is.vector(x)){x <- matrix(x, nrow = 1)}
   # detect south-pole vectors (x = -e1 = (-1,0,...,0)), where the projection is undefined
@@ -31,11 +50,11 @@ Sp=function(x) {
   else {return(out)}
 }
 
-#' @noRd
-#' @title Inverse stereographic projection from south pole
-#' @description Inverse of `Sp()`: maps y in R^{p-1} back to S^{p-1} via
-#' `(1 - ||y||^2, 2*y) / (1 + ||y||^2)`.
-#' @param y is a matrix of row vectors in R^{p-1}
+#' @rdname Sp
+#' @description `iSp()` maps \eqn{y} in \eqn{R^{p-1}} back to \eqn{S^{p-1}} via
+#' \deqn{iSp(y) = (1 - \|y\|^2, 2y) / (1 + \|y\|^2).}
+#' It is defined everywhere on \eqn{R^{p-1}} and never returns the south pole.
+#' @export
 iSp=function(y){
   if (is.vector(y)){y <- matrix(y, nrow = 1)}
   norms2 <- rowSums(y^2)

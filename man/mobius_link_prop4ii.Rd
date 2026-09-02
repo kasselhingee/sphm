@@ -68,6 +68,7 @@ canonical object with \code{Bs = I} and \code{p = qs}.
 \code{\link[=mobius_SvMF]{mobius_SvMF()}}.
 
 Other link-function:
+\code{\link[=Sp]{Sp()}},
 \code{\link[=mobius_link]{mobius_link()}},
 \code{\link{mobius_link_params}},
 \code{\link[=mobius_link_prop4i]{mobius_link_prop4i()}},

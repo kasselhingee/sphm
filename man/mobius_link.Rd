@@ -32,6 +32,7 @@ and \eqn{x_s} and \eqn{x_e} are the spherical and Euclidean covariate.
 }
 \seealso{
 Other link-function:
+\code{\link[=Sp]{Sp()}},
 \code{\link{mobius_link_params}},
 \code{\link[=mobius_link_prop4i]{mobius_link_prop4i()}},
 \code{\link[=mobius_link_prop4ii]{mobius_link_prop4ii()}},

@@ -81,6 +81,7 @@ parameterisation.
 \code{\link{mobius_link_prop4ii}}, \code{\link[=mobius_link]{mobius_link()}}, \code{\link[=mobius_SvMF]{mobius_SvMF()}}.
 
 Other link-function:
+\code{\link[=Sp]{Sp()}},
 \code{\link[=mobius_link]{mobius_link()}},
 \code{\link{mobius_link_params}},
 \code{\link[=mobius_link_prop4ii]{mobius_link_prop4ii()}},

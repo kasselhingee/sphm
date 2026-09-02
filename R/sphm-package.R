@@ -42,7 +42,7 @@
 #'
 #' fit_vMF  <- mobius_vMF(y = y, xs = xs)           # Step 1
 #' fit_SvMF <- mobius_SvMF(y = y, xs = xs,           # Step 2
-#'                          start = fit_vMF$mean)
+#'                         mean = fit_vMF$mean)
 #' ```
 #'
 #' @section Key functions:
@@ -58,6 +58,7 @@
 #' | **Link parameterisations** | [`mobius_link_cann()`], [`mobius_link_Omega()`], [`cann2Omega()`] |
 #' | **SvMF parameterisations** | [`SvMF_cann()`], [`SvMF_muV()`] |
 #' | **Data standardisation** | [`standardise_sph()`], [`second_moment_mat()`] |
+#' | **Stereographic projection** | [`Sp()`], [`iSp()`] |
 #' | **Degrees of freedom** | [`mobius_dof()`] |
 #'
 #' @section Link function parameterisations:

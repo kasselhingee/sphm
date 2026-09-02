@@ -51,7 +51,7 @@ y <- sim[, 1:p]
 
 fit_vMF  <- mobius_vMF(y = y, xs = xs)           # Step 1
 fit_SvMF <- mobius_SvMF(y = y, xs = xs,           # Step 2
-                         start = fit_vMF$mean)
+                        mean = fit_vMF$mean)
 }\if{html}{\out{</div>}}
 }
 
@@ -67,6 +67,7 @@ fit_SvMF <- mobius_SvMF(y = y, xs = xs,           # Step 2
    \strong{Link parameterisations} \tab \code{\link[=mobius_link_cann]{mobius_link_cann()}}, \code{\link[=mobius_link_Omega]{mobius_link_Omega()}}, \code{\link[=cann2Omega]{cann2Omega()}} \cr
    \strong{SvMF parameterisations} \tab \code{\link[=SvMF_cann]{SvMF_cann()}}, \code{\link[=SvMF_muV]{SvMF_muV()}} \cr
    \strong{Data standardisation} \tab \code{\link[=standardise_sph]{standardise_sph()}}, \code{\link[=second_moment_mat]{second_moment_mat()}} \cr
+   \strong{Stereographic projection} \tab \code{\link[=Sp]{Sp()}}, \code{\link[=iSp]{iSp()}} \cr
    \strong{Degrees of freedom} \tab \code{\link[=mobius_dof]{mobius_dof()}} \cr
 }
 }

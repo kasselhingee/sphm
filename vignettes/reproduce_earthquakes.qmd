@@ -1314,14 +1314,14 @@ y_ld <- sphm::rmobius_SvMF(xs = NULL, xe = mod_SvMF$xe, mean = mod_SvMF$mean,
                              k = mod_SvMF$k, a = mod_SvMF$a, G0 = mod_SvMF$G0)
 ```
 
-or for the lower concentration situaton
+or for the lower concentration situation
 
 ```{r}
 y_ld <- sphm::rmobius_SvMF(xs = NULL, xe = mod_SvMF$xe, mean = mod_SvMF$mean,
                              k = mod_SvMF$k/8, a = mod_SvMF$a, G0 = mod_SvMF$G0)
 ```
 
-The return `y_ld` was a matrix of 42 rows and 6 columns, with the final column being the log-density of the simulated response. Our Mobius-link regression with scaled von Mises-Fisher error distribution was then fitted to the simulation by
+The return `y_ld` was a matrix of 42 rows and 6 columns, with the first 5 columns being the simulated response and the final column being the log-density of the simulated response. Our Mobius-link regression with scaled von Mises-Fisher error distribution was then fitted to the simulation by
 
 ```{r}
 newmod <- mobius_SvMF(y_ld[,-6], xe = mod_SvMF$xe, type = "LinEuc",

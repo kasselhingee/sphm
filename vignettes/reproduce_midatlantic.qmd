@@ -640,7 +640,7 @@ restarts <- pbapply::pblapply(1:100, function(seed){
               type = "LinEuc",
               G01behaviour = "free",
               mean = start)
-}, cl = 2)
+}, cl = 4)
 badrestarts <- unlist(lapply(restarts, inherits, "try-error"))
 restarts <- restarts[!badrestarts]
 lapply(restarts, "[[", "AIC") %>%
@@ -677,26 +677,25 @@ mod_vMF$k
 mod_vMF$AIC
 ```
 
-Below is function for comparing likelihoods for responses `y`.
+Below is function for comparing likelihoods for responses `y`. The scaled von Mises Fisher regression uses `mod_vMF` for initial parameters of concentration and the mean link.
+We use the default initial parameters for `a` and `G0` because under the null these aren't identifiable, and so on simulated data they are unstable.
 
 ```{r}
 getlikR <- function(y){
   mod1 <- mobius_vMF(y,
-                     xs = mod$xs,
+                     xs = mod_vMF$xs,
                      xe = mod_vMF$xe,
                      type = "LinEuc",
                      fix_qs1 = FALSE,
                      start = mod_vMF$est)
   mod2 <- mobius_SvMF(y,
-                      xs = mod$xs,
+                      xs = mod_vMF$xs,
                       xe = mod_vMF$xe,
                       type = "LinEuc",
                       fix_qs1 = FALSE,
                       G01behaviour = "free",
-                      mean = mod$mean,
-                      k = mod$k,
-                      a = mod$a,
-                      G0 = mod$G0)
+                      mean = mod_vMF$mean,
+                      k = mod_vMF$k)
   if ((mod1$nlopt$status != 4) || (mod2$nlopt$status != 4)){
     return(list(likR = NA_real_,
          vMF = mod1,
@@ -734,142 +733,85 @@ null_likRs <- pbapply::pblapply(1:1000, function(seed){
                    G0 = diag(1, 3))
   y <- y_ld[,-4]
   getlikR(y)
-}, cl = 2)
+}, cl = 3)
+
 obs <- getlikR(mod$y)
 ```
 
 ```{r}
 null_likRs_vec <- lapply(null_likRs, "[[", "likR") %>% unlist()
+
 sum(is.na(null_likRs_vec))
 sum(!is.na(null_likRs_vec))
 ```
 
-A substantial fraction of the simulated fits stop at the evaluation limit rather than the convergence tolerance, and these have been discarded.
+Three didn't converge before the default number of iterations. Suspect the initial `G0` was a long way from the optimum `G0` and with the Cayley transform iterations are getting less effective. Restart using current `G0` estimate as the reference coordinates for `G0`.
 
 ```{r}
-obs$likR
+finished_likRs <- lapply(null_likRs[is.na(null_likRs_vec)], function(x){x$SvMF
+  mod2 <- mobius_SvMF(x$SvMF$y,
+                      xs = x$SvMF$xs,
+                      xe = x$SvMF$xe,
+                      type = "LinEuc",
+                      fix_qs1 = FALSE,
+                      G01behaviour = "free",
+                      mean = x$SvMF$mean,
+                      k = x$SvMF$k,
+                      G0 = x$SvMF$G0,
+                      a = x$SvMF$a)
+  lLik2 <- mobius_SvMF_log_lik(mod2$y, xs = mod2$xs, xe = mod2$xe,
+              mean = mod2$mean,
+              k = mod2$k,
+              a = mod2$a,
+              G0 = mod2$G0) %>%
+    colSums()
+  lLik1 <- mobius_SvMF_log_lik(x$vMF$y, xs = x$vMF$xs, xe = x$vMF$xe,
+              mean = x$vMF$est,
+              k = x$vMF$k,
+              a = rep(1, 3),
+              G0 = mod2$G0) %>%
+    colSums()
+  list(likR = -2* (lLik1[["R"]] - lLik2[["R"]]),
+       vMF = x$vMF,
+       SvMF = mod2)
+})
+lapply(finished_likRs, function(x) x$SvMF$nlopt$status) |> unlist()
+```
+
+They all converge very quickly with good reference coordinates for `G0`.
+
+```{r}
+null_likRs[is.na(null_likRs_vec)] <- finished_likRs
+null_likRs_vec <- lapply(null_likRs, "[[", "likR") %>% unlist()
+```
+
+```{r}
+
+obs$likR 
 range(null_likRs_vec, na.rm = TRUE)
 ```
 
 ```{r}
+
 tibble::enframe(null_likRs_vec, "seed", "likR") %>%
   ggplot() +
   geom_freqpoly(aes(x = likR), bins = 30) +
   geom_vline(xintercept = obs$likR, col = "blue") +
-  geom_rug(aes(x = likR))
+  geom_rug(aes(x = likR)) 
 ```
 
 p-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
+
 ```{r}
-mean(null_likRs_vec > obs$likR, na.rm = TRUE)
+
+mean(null_likRs_vec > obs$likR, na.rm = TRUE) 
 ```
 
 The observed likelihood ratio is far larger than any value obtained under the null, so this small $p$-value suggests that the data was not drawn from a vMF regression.
 
-### Including the non-converged replicates
 
-Discarding replicates is only safe if the discarded ones could not have changed the
-conclusion. We can check this directly rather than assume it, because `getlikR()`
-returns the fitted `vMF` and `SvMF` objects even when it reports `likR = NA`. Those
-objects hold the parameters at whichever point the optimiser stopped, so the
-likelihood ratio can be evaluated for every replicate without refitting anything.
+## Session Information
 
-```{r likR-all}
-likR_from_fits <- function(entry){
-  mod1 <- entry$vMF
-  mod2 <- entry$SvMF
-  lLik1 <- mobius_SvMF_log_lik(mod1$y, xs = mod1$xs, xe = mod1$xe,
-              mean = mod1$est, k = mod1$k, a = rep(1, 3), G0 = mod2$G0) %>%
-    colSums()
-  lLik2 <- mobius_SvMF_log_lik(mod2$y, xs = mod2$xs, xe = mod2$xe,
-              mean = mod2$mean, k = mod2$k, a = mod2$a, G0 = mod2$G0) %>%
-    colSums()
-  -2 * (lLik1[["R"]] - lLik2[["R"]])
-}
-likR_all <- vapply(null_likRs, likR_from_fits, numeric(1))
+```{r}
+sessionInfo()
 ```
-
-The vMF fit is the null model and converges for every replicate; only the SvMF fit
-ever stops early, and always at the evaluation limit:
-
-```{r likR-status}
-status_vMF <- vapply(null_likRs, function(e) e$vMF$nlopt$status, numeric(1))
-status_SvMF <- vapply(null_likRs, function(e) e$SvMF$nlopt$status, numeric(1))
-table(vMF = status_vMF, SvMF = status_SvMF)
-```
-
-The two groups have almost the same spread:
-
-```{r likR-bygroup}
-tapply(likR_all, ifelse(status_SvMF == 4, "converged", "stopped early"), range)
-```
-
-Taking every replicate, converged or not, the largest likelihood ratio obtained under
-the null is still far below the observed one, so the $p$-value is unchanged:
-
-```{r likR-allpvalue}
-max(likR_all)
-obs$likR
-mean(likR_all > obs$likR)
-```
-
-These are the ratios at whichever point the optimiser stopped, so they are only
-informative about the fully optimised ratios if the latter are close. Rather than
-assume that, continue every stopped-early fit from where it halted, allowing a
-ten-fold larger `maxeval`:
-
-```{r likR-continue}
-stopped <- which(status_SvMF == 5)
-continued <- pbapply::pblapply(stopped, function(i){
-  mod1 <- null_likRs[[i]]$vMF
-  mod2 <- null_likRs[[i]]$SvMF
-  cont <- mobius_SvMF(mod2$y,
-                      xs = mod2$xs,
-                      xe = mod2$xe,
-                      type = "LinEuc",
-                      fix_qs1 = FALSE,
-                      G01behaviour = "free",
-                      mean = mod2$mean,
-                      k = mod2$k,
-                      a = mod2$a,
-                      G0 = mod2$G0,
-                      maxeval = 1E5)
-  lLik1 <- mobius_SvMF_log_lik(mod1$y, xs = mod1$xs, xe = mod1$xe,
-              mean = mod1$est, k = mod1$k, a = rep(1, 3), G0 = cont$G0) %>%
-    colSums()
-  lLik2 <- mobius_SvMF_log_lik(cont$y, xs = cont$xs, xe = cont$xe,
-              mean = cont$mean, k = cont$k, a = cont$a, G0 = cont$G0) %>%
-    colSums()
-  c(status = cont$nlopt$status,
-    extra_iters = cont$nlopt$iterations,
-    likR_after = -2 * (lLik1[["R"]] - lLik2[["R"]]))
-}, cl = 2)
-continued <- do.call(rbind, continued)
-table(status = continued[, "status"])
-summary(continued[, "extra_iters"])
-```
-
-Every one of them converges, mostly within about eighty further iterations. The
-likelihood ratio usually barely moves, but not always:
-
-```{r likR-continue-delta}
-summary(continued[, "likR_after"] - likR_all[stopped])
-```
-
-The median change is under $0.01$, yet one replicate rises by $16$, so a sample of a
-dozen or so would not have been enough to characterise this. Substituting the
-continued values gives a null distribution in which every replicate has converged, so
-nothing has to be discarded at all:
-
-```{r likR-final}
-likR_final <- likR_all
-likR_final[stopped] <- continued[, "likR_after"]
-range(likR_final)
-obs$likR
-mean(likR_final > obs$likR)
-```
-
-The largest likelihood ratio under the null is still far below the observed one, so
-the $p$-value is zero on the full set of 1000 replicates and the conclusion does not
-depend on the discarding.
-

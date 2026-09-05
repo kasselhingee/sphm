@@ -1178,7 +1178,8 @@ getlikR <- function(y){
                      xs = NULL, 
                      xe = mod_vMF$xe,
                      type = "LinEuc",
-                     start = mod_vMF$est)
+                     start = mod_vMF$est,
+                     maxeval = 1E5)
   mod2 <- withCallingHandlers({mobius_SvMF(y,
                       xs = NULL, 
                       xe = mod_vMF$xe,
@@ -1187,7 +1188,8 @@ getlikR <- function(y){
                       mean = mod_SvMF$mean,
                       k = mod_SvMF$k,
                       a = mod_SvMF$a,
-                      G0 = mod_SvMF$G0)},
+                      G0 = mod_SvMF$G0,
+                      maxeval = 1E5)},
         warning = function(w){
         if (grepl("p!=3", conditionMessage(w))) {
           invokeRestart("muffleWarning")
@@ -1231,7 +1233,8 @@ null_likRs <- pbapply::pblapply(1:1000, function(seed){
   sum(y_ld[,6])
   y <- y_ld[,-6]
   getlikR(y)
-})
+}, cl = 4)
+
 obs <- getlikR(s4df_clean %>% 
                         select(s1, s2, sMrt, sMrf, sMtf) %>% 
                         st_drop_geometry() %>% 
@@ -1337,3 +1340,9 @@ acos(pmin(pmax(rowSums(means * newmod$pred), -1), 1))
 
 The `pmax` and `pmin` here enforce that the input to `acos` is within -1 and 1, which is needed due to floating point errors.
 
+
+# Session Information
+
+```{r}
+sessionInfo()
+```

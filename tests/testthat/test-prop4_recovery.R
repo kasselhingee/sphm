@@ -1,7 +1,6 @@
 # Simulate-and-recover checks for the Proposition 4 fitters: draw data from a known
-# Proposition 4 link and confirm the fitter gets that link back. This is what
-# test-prop4_vs_obsolete.R cannot do -- that file pins the implementation against the code
-# as delivered, which shows the merge changed nothing, not that the estimator is right.
+# Proposition 4 link and confirm the fitter gets that link back. This is the check that the
+# estimator is right, as opposed to merely unchanged.
 #
 # All eight fitters are covered: {vMF, SvMF} x {Prop4i, Prop4ii} x {xs only, xs and xe}.
 #

@@ -29,7 +29,8 @@
 # identified and comparable across fits, while P, Qe_star and Be are only identified up to
 # that group. The invariants to compare instead are M %*% t(M) and sort(Be); see
 # tests/testthat/test-prop4_recovery.R. No canonical representative is imposed here,
-# because doing so would shift fitted output and invalidate test-prop4_vs_obsolete.R.
+# because fixing one would shift fitted output for no gain: the tests already compare the
+# invariants rather than the representatives.
 #
 # Skew-symmetric coordinates use the package's strict-lower-triangle convention throughout,
 # via the C++ cayley_transform() / inverse_cayley_transform() and their vectorisers -- the

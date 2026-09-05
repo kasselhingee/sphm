@@ -1,7 +1,5 @@
 # Unit tests for the Proposition 4 API: the link functions, the parameter classes and the
-# guards. The behaviour-preservation check against the code as delivered lives in
-# test-prop4_vs_obsolete.R, and the simulate-and-recover checks on the fitters live in
-# test-prop4_recovery.R.
+# guards. The simulate-and-recover checks on the fitters live in test-prop4_recovery.R.
 
 test_that("the Proposition 4(ii) link is a plain rotation of xs", {
   set.seed(11)

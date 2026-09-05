@@ -15,6 +15,7 @@ format:
 ## Raw Data
 This data is copied directly from Hejrani et al (2017) Table 1.
 
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -51,6 +52,7 @@ Number & Origin.Time & Lon & Lat & Depth & Mrr & Mtt & Mff & Mrt & Mrf & Mtf & E
 :::
 :::
 
+
 In this raw data:
 
 + `Origin.Time`. Hejrani references the GCMT project for origin times. Though not explicitly in Hejrani et al (2017), it seems this column is the format that GCMT uses for modern earthquakes, which is XYYYYMMDDhhmmZ where X is the type of data used, Z is for distinguishing events at the same time (day?) and the stuff in between ti time.
@@ -63,6 +65,7 @@ In this raw data:
 
 For later lets record the names of the `M**` columns in the same order as the symmetric-matrix vectorisation function `vech`:
 
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -72,9 +75,11 @@ elementnames <- c("Mrr", "Mrt", "Mrf",
 ```
 :::
 
+
 ## Transform to $S^4$
 ### Enforce Trace=0 and Scale=1
 The moment tensors have traces that are nearly 0.
+
 
 ::: {.cell}
 
@@ -92,7 +97,9 @@ traces %>%
 :::
 :::
 
+
 Here I'll make the trace exactly zero.
+
 
 ::: {.cell}
 
@@ -102,7 +109,9 @@ stddf <- raw %>%
 ```
 :::
 
+
 Now we scale the moment tensors to have a Frobenius norm of 1. The function `gettr2()` below is a fast way to compute the square of the Frobenius norm without winding the 6 `M**` columns up into individual 3 x 3 matrices.
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -120,7 +129,9 @@ stddf <- stddf %>%
 ```
 :::
 
+
 Lets verify the result of these transformations on the first earthquake.
+
 
 ::: {.cell}
 
@@ -187,11 +198,13 @@ sum(diag(tmpM))
 :::
 :::
 
+
 The trace and norm are exactly 0 and 1 as desired.
 
 ### Moment Tensors as Unit Vectors in $R^5$
 The diagonal elements must sum to zero, which puts them on a plane through the origin.
 I'll use the Helmert submatrix to express these diagonal elements with respect to an orthonormal basis on this plane. The plane is two dimensions, so I'll call these new coordinates `s1` and `s2`.
+
 
 ::: {.cell}
 
@@ -203,7 +216,9 @@ colnames(diagproj) <- c("s1", "s2")
 ```
 :::
 
+
 I'll scale the off diagonal elements by $\sqrt{2}$ because off-diagonal elements are counted twice in the Frobenius norm.
+
 
 ::: {.cell}
 
@@ -216,7 +231,9 @@ offdiag <- stddf %>%
 ```
 :::
 
+
 Combined these are unit vectors in $R^5$
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -241,7 +258,9 @@ sqrt(rowSums(cbind(diagproj, offdiag)^2))
 :::
 :::
 
+
 Lets add these unit vectors into full data frame
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -249,8 +268,10 @@ s4df <- bind_cols(diagproj, offdiag, raw)
 ```
 :::
 
+
 ## Hejrani et al (2017)'s Regions
 Here I have captured the regions from Fig 16 of Hejrani et al (2017) by visual assessment.
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -275,9 +296,11 @@ regions <- st_sf(region = factor(1:8, ordered = TRUE), geom = regions)
 ```
 :::
 
+
 ## Keep Only Shallow Earthquakes in Regions 2-4
 The below keeps only earthquakes in regions 2 to 4 with depth smaller than 20.
 It assumes that the longitude and latitude are follow the GPS coordinate system.
+
 
 ::: {.cell}
 
@@ -315,8 +338,10 @@ nrow(s4df)
 :::
 :::
 
+
 ## $S^4$ Plot Helpers
 Below makes circles for plotting the edge of S^4 later.
+
 
 ::: {.cell}
 
@@ -345,7 +370,9 @@ circle_df_long <- bind_rows(pair_dfs)
 ```
 :::
 
+
 And the following is useful for orthogonal projection of locations on to pairs of axes:
+
 
 ::: {.cell}
 
@@ -423,7 +450,9 @@ pairedplotggprep <- function(df){
 :::
 
 
+
 ## Pairwise Projections of Earthquake Moment Tensors (SI Figure)
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -444,12 +473,14 @@ ggsave("earthq_mtensors.pdf", width = 12, height = 13)
 ```
 :::
 
+
 ## Additional Covariates
 For each earthquake we find the distance to the BSSL and also the direction (up to $\pm \pi$) of the fault at this closest point.
 This direction is known as the strike in seismology (For BSSL, the fault plane is vertical so strike may as well be below $\pi$).
 
 ### Distance to BSSL
 Plate information was obtained from github `https://github.com/fraxen/tectonicplates`.
+
 
 ::: {.cell}
 
@@ -458,6 +489,8 @@ tmp <- paste0("https://github.com/fraxen/tectonicplates/raw/refs/heads/master/PB
   lapply(function(x){download.file(x, basename(x))})
 ```
 :::
+
+
 
 ::: {.cell}
 
@@ -496,6 +529,8 @@ tecbound <- tecbound %>%
 ```
 :::
 
+
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -510,10 +545,12 @@ s4df <- s4df %>%
 ```
 :::
 
+
 ### Strike of BSSL
 The strike (up to $\pm \pi$) of the faults at the closest point to each earthquake.
 
 First need to split the faults into segments
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -546,6 +583,8 @@ segs$NiceName <- tecbound_interest$NiceName[segs$fault]
 :::
 
 
+
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -554,6 +593,8 @@ segs <- segs %>%
                              TRUE ~ strike))
 ```
 :::
+
+
 
 ::: {.cell}
 
@@ -570,7 +611,9 @@ segs %>%
 ![](reproduce_earthquakes_files/figure-pdf/unnamed-chunk-20-1.pdf){fig-pos='H'}
 :::
 :::
+
 Find closest segment to each earthquake and use that for strike.
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -580,7 +623,9 @@ s4df <- bind_cols(s4df, fstrike = strike_BSSL)
 ```
 :::
 
+
 Below plots the assigned fault's strike (`fstrike`) closest to each earthquake
+
 
 ::: {.cell}
 
@@ -602,6 +647,7 @@ segs %>%
 :::
 :::
 
+
 ## Look for Outliers (SI Figure)
 Here I'll look for outliers.
 I'll view the moment tensors orthogonally projected onto axes determined by the first and second moment of the data such that
@@ -611,6 +657,7 @@ I'll view the moment tensors orthogonally projected onto axes determined by the 
 Point colour is given by earthquake longitude.
 Background colour is the average earthquake longitude for that part of projected $S^4$.
 The identified outliers are labelled.
+
 
 ::: {.cell}
 
@@ -663,6 +710,7 @@ ggsave("earthq_mtensors_outlier.pdf", width = 12, height = 13)
 ```
 :::
 
+
 From these plots we can see 6 earthquakes very different to the rest in at least some of the coordinates Y1 - Y5.
 Earthquakes 182, 306, 76, 87 and 169 were outlying in Y1.
 Earthquake 254 is an outlier in Y5.
@@ -674,6 +722,7 @@ There also appears to be a shift in earthquake moment tensors with longitude < 1
 
 ## Remove Outliers
 The outliers by region are:
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -706,6 +755,8 @@ s4df %>%
 
 :::
 :::
+
+
 
 
 ::: {.cell}
@@ -741,7 +792,9 @@ s4df_clean$Depth %>% as.factor() %>% summary()
 :::
 :::
 
+
 ## Angular Distance Between Earthquakes
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -762,7 +815,9 @@ tibble::enframe(ang_dist[lower.tri(ang_dist)], value = "ang_dist") %>%
 :::
 :::
 
+
 ## Main Figure: Earthquake Locations
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -797,12 +852,14 @@ ggsave("earthquakelocations.pdf", width = 7, height = 2)
 :::
 
 
+
 Caption: Shallow earthquake locations near the Bismarck Sea Seismic Lineation (solid line).
 Some jitter has been introduced because
 12 are colocated.
 
 ## Build covariates
 Scale and center all Euclidean covariates to have mean 0 and sd of 1.
+
 
 ::: {.cell}
 
@@ -835,7 +892,9 @@ Longitude.L148  0.5725929 -0.5022031  0.8926280      1.0000000
 :::
 :::
 
+
 Below saves the covariates and response for use in a simulation study elsewhere.
+
 
 ::: {.cell}
 
@@ -849,7 +908,9 @@ saveRDS(list(Y = Ymat, X = Xemat), "earthquake_regression_data.rds")
 ```
 :::
 
+
 # Default Start for SvMF Regression
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -925,7 +986,9 @@ mod_SvMF$DoF
 :::
 :::
 
+
 # SI Figure: Random Starts
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -953,6 +1016,7 @@ restarts <- restarts[!badrestarts]
 :::
 
 
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -978,6 +1042,7 @@ ggsave("earthq_restarts.pdf", width = 7, height = 5)
 :::
 
 
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -986,6 +1051,7 @@ mod_SvMF <- restarts[[idx]]
 saveRDS(mod_SvMF, "earthquake_model.rds")
 ```
 :::
+
 
 # SI Table: Estimated Parameters
 Below is the estimated concentration, the AIC and degrees of freedom of this regression.
@@ -2292,10 +2358,8 @@ mod_vMF_restarts <- pbapply::pblapply(1:100, function(seed){mobius_vMF_refit(mod
 
 ```
 Warning in mobius_vMF_general(y = y, xs = xs, xe = xe, start = start, type =
-type, : NLOPT_ROUNDOFF_LIMITED: Roundoff errors led to a breakdown of the
-optimization algorithm. In this case, the returned minimum may still be useful.
-(e.g. this error occurs in NEWUOA if one tries to achieve a tolerance too close
-to machine precision.)
+type, : NLOPT_MAXEVAL_REACHED: Optimization stopped because maxeval (above) was
+reached.
 ```
 
 
@@ -2356,7 +2420,8 @@ getlikR <- function(y){
                      xs = NULL, 
                      xe = mod_vMF$xe,
                      type = "LinEuc",
-                     start = mod_vMF$est)
+                     start = mod_vMF$est,
+                     maxeval = 1E5)
   mod2 <- withCallingHandlers({mobius_SvMF(y,
                       xs = NULL, 
                       xe = mod_vMF$xe,
@@ -2365,7 +2430,8 @@ getlikR <- function(y){
                       mean = mod_SvMF$mean,
                       k = mod_SvMF$k,
                       a = mod_SvMF$a,
-                      G0 = mod_SvMF$G0)},
+                      G0 = mod_SvMF$G0,
+                      maxeval = 1E5)},
         warning = function(w){
         if (grepl("p!=3", conditionMessage(w))) {
           invokeRestart("muffleWarning")
@@ -2414,41 +2480,8 @@ null_likRs <- pbapply::pblapply(1:1000, function(seed){
   sum(y_ld[,6])
   y <- y_ld[,-6]
   getlikR(y)
-})
-```
+}, cl = 4)
 
-::: {.cell-output .cell-output-stderr}
-
-```
-Warning in mobius_vMF_general(y = y, xs = xs, xe = xe, start = start, type =
-type, : NLOPT_MAXEVAL_REACHED: Optimization stopped because maxeval (above) was
-reached.
-```
-
-
-:::
-
-::: {.cell-output .cell-output-stderr}
-
-```
-Warning in mobius_SvMF_joint_fit(y, xs, xe, mean = preest$mean, k = if
-(!is.null(k)) {: NLOPT_MAXEVAL_REACHED: Optimization stopped because maxeval
-(above) was reached.
-Warning in mobius_SvMF_joint_fit(y, xs, xe, mean = preest$mean, k = if
-(!is.null(k)) {: NLOPT_MAXEVAL_REACHED: Optimization stopped because maxeval
-(above) was reached.
-Warning in mobius_SvMF_joint_fit(y, xs, xe, mean = preest$mean, k = if
-(!is.null(k)) {: NLOPT_MAXEVAL_REACHED: Optimization stopped because maxeval
-(above) was reached.
-Warning in mobius_SvMF_joint_fit(y, xs, xe, mean = preest$mean, k = if
-(!is.null(k)) {: NLOPT_MAXEVAL_REACHED: Optimization stopped because maxeval
-(above) was reached.
-```
-
-
-:::
-
-```{.r .cell-code}
 obs <- getlikR(s4df_clean %>% 
                         select(s1, s2, sMrt, sMrf, sMtf) %>% 
                         st_drop_geometry() %>% 
@@ -2468,7 +2501,7 @@ sum(is.na(null_likRs_vec))
 ::: {.cell-output .cell-output-stdout}
 
 ```
-[1] 4
+[1] 0
 ```
 
 
@@ -2481,7 +2514,7 @@ sum(!is.na(null_likRs_vec))
 ::: {.cell-output .cell-output-stdout}
 
 ```
-[1] 996
+[1] 1000
 ```
 
 
@@ -2501,7 +2534,7 @@ mean(null_likRs_vec > obs$likR, na.rm = TRUE)
 ::: {.cell-output .cell-output-stdout}
 
 ```
-[1] 0.001004016
+[1] 0.002
 ```
 
 
@@ -2562,12 +2595,12 @@ summary(Bests_a)
 
 ```
        a1          a2              a3               a4               a5        
- Min.   :1   Min.   :1.694   Min.   :0.9795   Min.   :0.5848   Min.   :0.1353  
- 1st Qu.:1   1st Qu.:2.269   1st Qu.:1.3954   1st Qu.:0.8992   1st Qu.:0.2427  
- Median :1   Median :2.454   Median :1.5151   Median :0.9890   Median :0.2756  
- Mean   :1   Mean   :2.462   Mean   :1.5331   Mean   :0.9932   Mean   :0.2789  
- 3rd Qu.:1   3rd Qu.:2.640   3rd Qu.:1.6706   3rd Qu.:1.0767   3rd Qu.:0.3110  
- Max.   :1   Max.   :3.616   Max.   :2.2851   Max.   :1.4721   Max.   :0.5947  
+ Min.   :1   Min.   :1.718   Min.   :0.9883   Min.   :0.6278   Min.   :0.1288  
+ 1st Qu.:1   1st Qu.:2.266   1st Qu.:1.3965   1st Qu.:0.9007   1st Qu.:0.2405  
+ Median :1   Median :2.457   Median :1.5239   Median :0.9874   Median :0.2742  
+ Mean   :1   Mean   :2.467   Mean   :1.5330   Mean   :0.9952   Mean   :0.2776  
+ 3rd Qu.:1   3rd Qu.:2.656   3rd Qu.:1.6567   3rd Qu.:1.0797   3rd Qu.:0.3073  
+ Max.   :1   Max.   :3.414   Max.   :2.5347   Max.   :1.5542   Max.   :0.6289  
 ```
 
 
@@ -2599,7 +2632,178 @@ mykbl
   & a2 & a3 & a4 & a5\\
 \midrule
 Estimate & 2.08 & 1.40 & 1.00 & 0.34\\
-Lower & 1.97 & 1.15 & 0.75 & 0.18\\
-Upper & 3.04 & 1.97 & 1.29 & 0.41\\
+Lower & 1.95 & 1.17 & 0.75 & 0.19\\
+Upper & 3.04 & 1.94 & 1.31 & 0.40\\
 \bottomrule
 \end{tabular}
+
+# Simulation Study
+We conducted a simulation study by simulating from `mod_SvMF` at its original concentration and at an eighth of the concentration.
+Simulation in each case was achieved by the following
+
+::: {.cell}
+
+```{.r .cell-code}
+y_ld <- sphm::rmobius_SvMF(xs = NULL, xe = mod_SvMF$xe, mean = mod_SvMF$mean,
+                             k = mod_SvMF$k, a = mod_SvMF$a, G0 = mod_SvMF$G0)
+```
+:::
+
+
+or for the lower concentration situation
+
+
+::: {.cell}
+
+```{.r .cell-code}
+y_ld <- sphm::rmobius_SvMF(xs = NULL, xe = mod_SvMF$xe, mean = mod_SvMF$mean,
+                             k = mod_SvMF$k/8, a = mod_SvMF$a, G0 = mod_SvMF$G0)
+```
+:::
+
+
+The return `y_ld` was a matrix of 42 rows and 6 columns, with the first 5 columns being the simulated response and the final column being the log-density of the simulated response. Our Mobius-link regression with scaled von Mises-Fisher error distribution was then fitted to the simulation by
+
+
+::: {.cell}
+
+```{.r .cell-code}
+newmod <- mobius_SvMF(y_ld[,-6], xe = mod_SvMF$xe, type = "LinEuc",
+                        G01behaviour = "free", fix_qs1 = FALSE)
+```
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in SvMF_unimodalcriterion(obj): Given the axial scales, concentration
+is small so the SvMF may be multimodal.
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in tape_ld_mobius_SvMF_partransport_nota1(omvec = om0vec, k =
+preplist$k, : This function approximates the vMF normalising constant when
+p!=3.
+```
+
+
+:::
+
+::: {.cell-output .cell-output-stderr}
+
+```
+Warning in SvMF_unimodalcriterion(obj): Given the axial scales, concentration
+is small so the SvMF may be multimodal.
+Warning in SvMF_unimodalcriterion(obj): Given the axial scales, concentration
+is small so the SvMF may be multimodal.
+```
+
+
+:::
+:::
+
+
+Distances between the mean given by the model `mod_SvMF` and the mean predicted by the fit were computed by
+
+
+::: {.cell}
+
+```{.r .cell-code}
+means <- mobius_link(xe = mod_SvMF$xe, param = mod_SvMF$mean)
+acos(pmin(pmax(rowSums(means * newmod$pred), -1), 1))
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+ [1] 0.24599658 0.33226107 0.16141374 0.22855310 0.18533015 0.18894473
+ [7] 0.11726337 0.43697730 0.27987940 0.43697730 0.29654131 0.18898607
+[13] 0.12349603 1.22213885 0.26494916 0.17643431 0.13336319 0.14425928
+[19] 0.40702793 0.24388199 0.19777234 0.09714340 0.40976824 0.15032389
+[25] 0.07524462 0.17789407 0.11611228 0.40976824 0.11611228 0.09714340
+[31] 0.30286628 0.48355452 0.65120383 0.75703554 0.22390958 0.75703554
+[37] 0.70190199 0.48835283 0.22390958 0.36095070 0.21843628 0.36095070
+```
+
+
+:::
+:::
+
+
+The `pmax` and `pmin` here enforce that the input to `acos` is within -1 and 1, which is needed due to floating point errors.
+
+
+# Session Information
+
+
+::: {.cell}
+
+```{.r .cell-code}
+sessionInfo()
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+R version 4.3.3 (2024-02-29)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 24.04.4 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0 
+LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Australia/Sydney
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] kableExtra_1.4.1        rnaturalearthdata_1.0.0 rnaturalearth_1.2.0    
+[4] sf_1.1-2                sphm_0.0.20             patchwork_1.3.2        
+[7] GGally_2.4.0            dplyr_1.2.1             ggplot2_4.0.3          
+
+loaded via a namespace (and not attached):
+ [1] gtable_0.3.6          xfun_0.60             ggrepel_0.9.8        
+ [4] lattice_0.22-5        vctrs_0.7.2           tools_4.3.3          
+ [7] Rdpack_2.6.6          generics_0.1.4        parallel_4.3.3       
+[10] tibble_3.3.1          proxy_0.4-29          pkgconfig_2.0.3      
+[13] Matrix_1.6-5          scorematchingad_0.1.6 KernSmooth_2.23-22   
+[16] RColorBrewer_1.1-3    S7_0.2.2              lifecycle_1.0.5      
+[19] compiler_4.3.3        farver_2.1.2          stringr_1.6.0        
+[22] progress_1.2.3        textshaping_1.0.5     codetools_0.2-19     
+[25] htmltools_0.5.9       class_7.3-22          yaml_2.3.12          
+[28] nloptr_2.2.1          crayon_1.5.3          pillar_1.11.1        
+[31] tidyr_1.3.2           classInt_0.4-11       lwgeom_0.2-17        
+[34] wk_0.9.5              mclust_6.1.3          nlme_3.1-164         
+[37] ggstats_0.13.0        tidyselect_1.2.1      digest_0.6.39        
+[40] stringi_1.8.9         purrr_1.2.2           splines_4.3.3        
+[43] labeling_0.4.3        fastmap_1.2.0         grid_4.3.3           
+[46] cli_3.6.5             magrittr_2.0.4        dichromat_2.0-0.1    
+[49] e1071_1.7-17          withr_3.0.2           prettyunits_1.2.0    
+[52] scales_1.4.0          rmarkdown_2.31        otel_0.2.0           
+[55] RcppEigen_0.3.4.0.2   hms_1.1.4             ragg_1.2.7           
+[58] pbapply_1.7-4         evaluate_1.0.5        knitr_1.51           
+[61] rbibutils_2.4.1       viridisLite_0.4.3     mgcv_1.9-1           
+[64] s2_1.1.11             rlang_1.1.7           Rcpp_1.1.2           
+[67] glue_1.8.0            DBI_1.3.0             xml2_1.6.0           
+[70] svglite_2.2.2         rstudioapi_0.19.0     jsonlite_2.0.0       
+[73] R6_2.6.1              systemfonts_1.3.2     units_1.0-1          
+```
+
+
+:::
+:::

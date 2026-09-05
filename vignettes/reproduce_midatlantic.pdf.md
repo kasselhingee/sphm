@@ -31,6 +31,7 @@ __Code version: 0.0.20__
 
 
 # Angular Distance Between Observations
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -50,7 +51,9 @@ tibble::enframe(ang_dist[lower.tri(ang_dist)], value = "ang_dist") %>%
 :::
 :::
 
+
 # Euc Covariates
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -59,6 +62,7 @@ xe <- fulldf %>%
 xestd <- xe %>% scale() %>% as_tibble()
 ```
 :::
+
 
 # Our SvMF Model
 
@@ -163,6 +167,7 @@ bind_rows(lapply(prop4mods, function(m) {
 
 
 # Pretty Data Plot
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -220,10 +225,12 @@ plotdata
 
 
 
+
 # Predictions
 The below 'ours' model is using LinEuc's link with an extra covariate for an intercept and G01 free.
 The results here are from a local optimisation using gradient from default starting values.
 I've checked that global search for the best vMF regression does not find anything better.
+
 
 ::: {.cell}
 
@@ -237,19 +244,19 @@ cann
 ```
 $P
          [,1]       [,2]        [,3]
-Y1  0.4913098  0.5626852 -0.66483080
-Y2 -0.4803628 -0.4616721 -0.74572813
-Y3 -0.7265440  0.6857436  0.04346904
+Y1  0.4913098  0.5626852 -0.66483084
+Y2 -0.4803629 -0.4616721 -0.74572810
+Y3 -0.7265440  0.6857436  0.04346906
 
 $Bs
           [,1]      [,2]
 [1,] 0.9029649 0.0000000
-[2,] 0.0000000 0.7702704
+[2,] 0.0000000 0.7702703
 
 $Qs
          [,1]       [,2]       [,3]
-X1  0.2657933  0.5868954 -0.7647926
-X2 -0.5034120 -0.5920730 -0.6293059
+X1  0.2657932  0.5868954 -0.7647927
+X2 -0.5034121 -0.5920731 -0.6293058
 X3 -0.8221498  0.5522710  0.1380812
 
 $Be
@@ -274,7 +281,9 @@ attr(,"class")
 :::
 :::
 
+
 Lets try to interpret the fitted link.
+
 
 ::: {.cell}
 
@@ -286,8 +295,8 @@ cann$Bs %*% t(cann$Qs[,-1])
 
 ```
              X1         X2        X3
-[1,]  0.5299460 -0.5346212 0.4986814
-[2,] -0.5890971 -0.4847357 0.1063598
+[1,]  0.5299459 -0.5346212 0.4986813
+[2,] -0.5890971 -0.4847356 0.1063599
 ```
 
 
@@ -301,16 +310,18 @@ cann$Be %*% t(cann$Qe[,-1])
 
 ```
      dummyzero    westedge        ones
-[1,]         0 0.009069271 -0.07173348
-[2,]         0 0.250580391  0.03168090
+[1,]         0 0.009069273 -0.07173348
+[2,]         0 0.250580394  0.03168091
 ```
 
 
 :::
 :::
 
+
 The first direction away from $B_{01}$ (first row in above) is roughly equally influenced by X1, X2 and X3 (all are about 0.5) with west edge having very little influence (given the values of standardised westedge).
 The second direction away from $B_{01}$ (second row in above) is roughly equally influenced by X1 and X2 but much less by X3 (which is the N-S direction) and westedge plays a role.
+
 
 ::: {.cell}
 
@@ -322,12 +333,13 @@ cann$Qs[,1]
 
 ```
         X1         X2         X3 
- 0.2657933 -0.5034120 -0.8221498 
+ 0.2657932 -0.5034121 -0.8221498 
 ```
 
 
 :::
 :::
+
 
 Some general scaling occurs with greater influence from X3 (N-S direction), then X2 then X1.
 
@@ -370,13 +382,16 @@ $t_3$ & 0.77 & 0.25 & 0.99 & 0.13\\
 
 Note that we have not optimised Q for ESAG2 because optimisation did not converge.
 
+
 ::: {.cell}
 ::: {.cell-output-display}
 ![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-7-1.pdf)
 :::
 :::
 
+
 # Angular Distance Between Predictions
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -393,7 +408,9 @@ tibble::enframe(pred_ang_dist[lower.tri(pred_ang_dist)], value = "ang_dist") %>%
 :::
 :::
 
+
 # LOOCV MSE
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -444,15 +461,18 @@ loocvmseSvMF(mod)
 :::
 :::
 
+
 Both of these are smaller than the LOOCV MSE that Rosenthal's PLT acheived of 0.074, which corresponds to the Euc metric MSE.
 
 # Residual Size
 Geodesic distance between predicted mean and observation
+
 ::: {.cell messages='false'}
 ::: {.cell-output-display}
 ![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-10-1.pdf)
 :::
 :::
+
 
 # DoF
 
@@ -513,6 +533,7 @@ Proposition 4(ii): spherical + all Euclidean
 
 
 # Main Figure
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -531,6 +552,7 @@ Proposition 4(ii): spherical + all Euclidean
 ggsave("midatlantic_fig.pdf", width = 12, height = 3.5)
 ```
 :::
+
 
 Caption: Regression for the midatlantic ridge data.
 From left: midatlanic ridge (circles) and corresponding locations on the continent (crosses) from Rosenthal el at (2014);
@@ -555,23 +577,26 @@ The parameter vector is longer than the DoF because of the constraints in the op
 There should be DoF + `(3-1) * (3 - 2) / 2` positive eigenvalues.
 The term `(3-1) * (3 - 2) / 2` if for the commutativity constraint on Omega, which the likelihood computation does not account for, so appears as extra degrees of freedom in the Hessian of the likelihood.
 
+
 ::: {.cell}
 ::: {.cell-output .cell-output-stdout}
 
 ```
- [1] 8.254073e+03 6.672951e+03 2.990692e+03 2.470448e+03 1.236519e+03
- [6] 3.582952e+02 9.508066e+01 2.869560e+01 2.125170e+01 9.630614e+00
-[11] 5.113127e+00 4.746740e+00 2.960021e+00 1.951306e+00 1.054189e+00
-[16] 4.074127e-01 2.936479e-06
+ [1] 8.254097e+03 6.672960e+03 2.990692e+03 2.470445e+03 1.236501e+03
+ [6] 3.582921e+02 9.508065e+01 2.869573e+01 2.125180e+01 9.630585e+00
+[11] 5.113148e+00 4.746750e+00 2.960024e+00 1.951304e+00 1.054190e+00
+[16] 4.074145e-01 2.936479e-06
 ```
 
 
 :::
 :::
 
+
 These are all positive and non-zero, which confirms that the optimisation routine has found a local maximum of the likelihood.
 
 ## Check Other Starts for vMF
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -605,6 +630,7 @@ lapply(restarts, "[[", "obj") %>%
 :::
 :::
 
+
 Other initial parameters have not improved on the default initial parameters.
 
 ## Check Other Starts for SvMF
@@ -629,7 +655,7 @@ restarts <- pbapply::pblapply(1:100, function(seed){
               type = "LinEuc",
               G01behaviour = "free",
               mean = start)
-}, cl = 2)
+}, cl = 4)
 badrestarts <- unlist(lapply(restarts, inherits, "try-error"))
 restarts <- restarts[!badrestarts]
 lapply(restarts, "[[", "AIC") %>%
@@ -729,7 +755,8 @@ mod_vMF$AIC
 :::
 
 
-Below is function for comparing likelihoods for responses `y`.
+Below is function for comparing likelihoods for responses `y`. The scaled von Mises Fisher regression uses `mod_vMF` for initial parameters of concentration and the mean link.
+We use the default initial parameters for `a` and `G0` because under the null these aren't identifiable, and so on simulated data they are unstable.
 
 
 ::: {.cell}
@@ -737,21 +764,19 @@ Below is function for comparing likelihoods for responses `y`.
 ```{.r .cell-code}
 getlikR <- function(y){
   mod1 <- mobius_vMF(y,
-                     xs = mod$xs,
+                     xs = mod_vMF$xs,
                      xe = mod_vMF$xe,
                      type = "LinEuc",
                      fix_qs1 = FALSE,
                      start = mod_vMF$est)
   mod2 <- mobius_SvMF(y,
-                      xs = mod$xs,
+                      xs = mod_vMF$xs,
                       xe = mod_vMF$xe,
                       type = "LinEuc",
                       fix_qs1 = FALSE,
                       G01behaviour = "free",
-                      mean = mod$mean,
-                      k = mod$k,
-                      a = mod$a,
-                      G0 = mod$G0)
+                      mean = mod_vMF$mean,
+                      k = mod_vMF$k)
   if ((mod1$nlopt$status != 4) || (mod2$nlopt$status != 4)){
     return(list(likR = NA_real_,
          vMF = mod1,
@@ -794,7 +819,8 @@ null_likRs <- pbapply::pblapply(1:1000, function(seed){
                    G0 = diag(1, 3))
   y <- y_ld[,-4]
   getlikR(y)
-}, cl = 2)
+}, cl = 3)
+
 obs <- getlikR(mod$y)
 ```
 :::
@@ -805,13 +831,14 @@ obs <- getlikR(mod$y)
 
 ```{.r .cell-code}
 null_likRs_vec <- lapply(null_likRs, "[[", "likR") %>% unlist()
+
 sum(is.na(null_likRs_vec))
 ```
 
 ::: {.cell-output .cell-output-stdout}
 
 ```
-[1] 440
+[1] 3
 ```
 
 
@@ -824,7 +851,7 @@ sum(!is.na(null_likRs_vec))
 ::: {.cell-output .cell-output-stdout}
 
 ```
-[1] 560
+[1] 997
 ```
 
 
@@ -832,19 +859,76 @@ sum(!is.na(null_likRs_vec))
 :::
 
 
-A substantial fraction of the simulated fits stop at the evaluation limit rather than the convergence tolerance, and these have been discarded.
+Three didn't converge before the default number of iterations. Suspect the initial `G0` was a long way from the optimum `G0` and with the Cayley transform iterations are getting less effective. Restart using current `G0` estimate as the reference coordinates for `G0`.
 
 
 ::: {.cell}
 
 ```{.r .cell-code}
-obs$likR
+finished_likRs <- lapply(null_likRs[is.na(null_likRs_vec)], function(x){x$SvMF
+  mod2 <- mobius_SvMF(x$SvMF$y,
+                      xs = x$SvMF$xs,
+                      xe = x$SvMF$xe,
+                      type = "LinEuc",
+                      fix_qs1 = FALSE,
+                      G01behaviour = "free",
+                      mean = x$SvMF$mean,
+                      k = x$SvMF$k,
+                      G0 = x$SvMF$G0,
+                      a = x$SvMF$a)
+  lLik2 <- mobius_SvMF_log_lik(mod2$y, xs = mod2$xs, xe = mod2$xe,
+              mean = mod2$mean,
+              k = mod2$k,
+              a = mod2$a,
+              G0 = mod2$G0) %>%
+    colSums()
+  lLik1 <- mobius_SvMF_log_lik(x$vMF$y, xs = x$vMF$xs, xe = x$vMF$xe,
+              mean = x$vMF$est,
+              k = x$vMF$k,
+              a = rep(1, 3),
+              G0 = mod2$G0) %>%
+    colSums()
+  list(likR = -2* (lLik1[["R"]] - lLik2[["R"]]),
+       vMF = x$vMF,
+       SvMF = mod2)
+})
+lapply(finished_likRs, function(x) x$SvMF$nlopt$status) |> unlist()
 ```
 
 ::: {.cell-output .cell-output-stdout}
 
 ```
-[1] 116.5489
+[1] 4 4 4
+```
+
+
+:::
+:::
+
+
+They all converge very quickly with good reference coordinates for `G0`.
+
+
+::: {.cell}
+
+```{.r .cell-code}
+null_likRs[is.na(null_likRs_vec)] <- finished_likRs
+null_likRs_vec <- lapply(null_likRs, "[[", "likR") %>% unlist()
+```
+:::
+
+
+
+::: {.cell}
+
+```{.r .cell-code}
+obs$likR 
+```
+
+::: {.cell-output .cell-output-stdout}
+
+```
+[1] 92.53948
 ```
 
 
@@ -857,7 +941,7 @@ range(null_likRs_vec, na.rm = TRUE)
 ::: {.cell-output .cell-output-stdout}
 
 ```
-[1]  0.3178334 23.1321966
+[1]  0.6434721 28.7225790
 ```
 
 
@@ -873,41 +957,22 @@ tibble::enframe(null_likRs_vec, "seed", "likR") %>%
   ggplot() +
   geom_freqpoly(aes(x = likR), bins = 30) +
   geom_vline(xintercept = obs$likR, col = "blue") +
-  geom_rug(aes(x = likR))
+  geom_rug(aes(x = likR)) 
 ```
-
-::: {.cell-output .cell-output-stderr}
-
-```
-Warning: Removed 440 rows containing non-finite outside the scale range
-(`stat_bin()`).
-```
-
-
-:::
-
-::: {.cell-output .cell-output-stderr}
-
-```
-Warning: Removed 440 rows containing missing values or values outside the scale range
-(`geom_rug()`).
-```
-
-
-:::
 
 ::: {.cell-output-display}
-![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-22-1.pdf){fig-pos='H'}
+![](reproduce_midatlantic_files/figure-pdf/unnamed-chunk-24-1.pdf){fig-pos='H'}
 :::
 :::
 
 
 p-value is the probability, under the null, of getting a likelihood-ratio that is at least as large as the observed ratio:
 
+
 ::: {.cell}
 
 ```{.r .cell-code}
-mean(null_likRs_vec > obs$likR, na.rm = TRUE)
+mean(null_likRs_vec > obs$likR, na.rm = TRUE) 
 ```
 
 ::: {.cell-output .cell-output-stdout}
@@ -923,255 +988,70 @@ mean(null_likRs_vec > obs$likR, na.rm = TRUE)
 
 The observed likelihood ratio is far larger than any value obtained under the null, so this small $p$-value suggests that the data was not drawn from a vMF regression.
 
-### Including the non-converged replicates
 
-Discarding replicates is only safe if the discarded ones could not have changed the
-conclusion. We can check this directly rather than assume it, because `getlikR()`
-returns the fitted `vMF` and `SvMF` objects even when it reports `likR = NA`. Those
-objects hold the parameters at whichever point the optimiser stopped, so the
-likelihood ratio can be evaluated for every replicate without refitting anything.
+## Session Information
+
 
 ::: {.cell}
 
 ```{.r .cell-code}
-likR_from_fits <- function(entry){
-  mod1 <- entry$vMF
-  mod2 <- entry$SvMF
-  lLik1 <- mobius_SvMF_log_lik(mod1$y, xs = mod1$xs, xe = mod1$xe,
-              mean = mod1$est, k = mod1$k, a = rep(1, 3), G0 = mod2$G0) %>%
-    colSums()
-  lLik2 <- mobius_SvMF_log_lik(mod2$y, xs = mod2$xs, xe = mod2$xe,
-              mean = mod2$mean, k = mod2$k, a = mod2$a, G0 = mod2$G0) %>%
-    colSums()
-  -2 * (lLik1[["R"]] - lLik2[["R"]])
-}
-likR_all <- vapply(null_likRs, likR_from_fits, numeric(1))
-```
-:::
-
-The vMF fit is the null model and converges for every replicate; only the SvMF fit
-ever stops early, and always at the evaluation limit:
-
-::: {.cell}
-
-```{.r .cell-code}
-status_vMF <- vapply(null_likRs, function(e) e$vMF$nlopt$status, numeric(1))
-status_SvMF <- vapply(null_likRs, function(e) e$SvMF$nlopt$status, numeric(1))
-table(vMF = status_vMF, SvMF = status_SvMF)
+sessionInfo()
 ```
 
 ::: {.cell-output .cell-output-stdout}
 
 ```
-   SvMF
-vMF   4   5
-  4 552 448
+R version 4.3.3 (2024-02-29)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 24.04.4 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0 
+LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Australia/Sydney
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] kableExtra_1.4.1 patchwork_1.3.2  dplyr_1.2.1      tibble_3.3.1    
+[5] sphm_0.0.20      ggplot2_4.0.3    R.matlab_3.7.0  
+
+loaded via a namespace (and not attached):
+ [1] tidyr_1.3.2           utf8_1.2.6            generics_0.1.4       
+ [4] xml2_1.6.0            stringi_1.8.9         hms_1.1.4            
+ [7] digest_0.6.39         magrittr_2.0.4        RcppEigen_0.3.4.0.2  
+[10] evaluate_1.0.5        grid_4.3.3            RColorBrewer_1.1-3   
+[13] fastmap_1.2.0         R.oo_1.27.1           jsonlite_2.0.0       
+[16] R.utils_2.13.0        progress_1.2.3        scorematchingad_0.1.6
+[19] mclust_6.1.3          purrr_1.2.2           viridisLite_0.4.3    
+[22] scales_1.4.0          pbapply_1.7-4         codetools_0.2-19     
+[25] textshaping_1.0.5     Rdpack_2.6.6          cli_3.6.5            
+[28] crayon_1.5.3          rlang_1.1.7           rbibutils_2.4.1      
+[31] R.methodsS3_1.8.2     withr_3.0.2           yaml_2.3.12          
+[34] otel_0.2.0            ggbeeswarm_0.7.2      parallel_4.3.3       
+[37] tools_4.3.3           nloptr_2.2.1          vctrs_0.7.2          
+[40] R6_2.6.1              lifecycle_1.0.5       stringr_1.6.0        
+[43] vipor_0.4.7           ragg_1.2.7            beeswarm_0.4.0       
+[46] pkgconfig_2.0.3       pillar_1.11.1         gtable_0.3.6         
+[49] glue_1.8.0            Rcpp_1.1.2            systemfonts_1.3.2    
+[52] xfun_0.60             tidyselect_1.2.1      rstudioapi_0.19.0    
+[55] knitr_1.51            dichromat_2.0-0.1     farver_2.1.2         
+[58] htmltools_0.5.9       rmarkdown_2.31        svglite_2.2.2        
+[61] labeling_0.4.3        compiler_4.3.3        prettyunits_1.2.0    
+[64] S7_0.2.2             
 ```
 
 
 :::
 :::
-
-The two groups have almost the same spread:
-
-::: {.cell}
-
-```{.r .cell-code}
-tapply(likR_all, ifelse(status_SvMF == 4, "converged", "stopped early"), range)
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-$converged
-[1]  0.2812075 23.1321965
-
-$`stopped early`
-[1]  0.4407624 25.8468222
-```
-
-
-:::
-:::
-
-Taking every replicate, converged or not, the largest likelihood ratio obtained under
-the null is still far below the observed one, so the $p$-value is unchanged:
-
-::: {.cell}
-
-```{.r .cell-code}
-max(likR_all)
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-[1] 25.84682
-```
-
-
-:::
-
-```{.r .cell-code}
-obs$likR
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-[1] 116.5489
-```
-
-
-:::
-
-```{.r .cell-code}
-mean(likR_all > obs$likR)
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-[1] 0
-```
-
-
-:::
-:::
-
-These are the ratios at whichever point the optimiser stopped, so they are only
-informative about the fully optimised ratios if the latter are close. Rather than
-assume that, continue every stopped-early fit from where it halted, allowing a
-ten-fold larger `maxeval`:
-
-::: {.cell}
-
-```{.r .cell-code}
-stopped <- which(status_SvMF == 5)
-continued <- pbapply::pblapply(stopped, function(i){
-  mod1 <- null_likRs[[i]]$vMF
-  mod2 <- null_likRs[[i]]$SvMF
-  cont <- mobius_SvMF(mod2$y,
-                      xs = mod2$xs,
-                      xe = mod2$xe,
-                      type = "LinEuc",
-                      fix_qs1 = FALSE,
-                      G01behaviour = "free",
-                      mean = mod2$mean,
-                      k = mod2$k,
-                      a = mod2$a,
-                      G0 = mod2$G0,
-                      maxeval = 1E5)
-  lLik1 <- mobius_SvMF_log_lik(mod1$y, xs = mod1$xs, xe = mod1$xe,
-              mean = mod1$est, k = mod1$k, a = rep(1, 3), G0 = cont$G0) %>%
-    colSums()
-  lLik2 <- mobius_SvMF_log_lik(cont$y, xs = cont$xs, xe = cont$xe,
-              mean = cont$mean, k = cont$k, a = cont$a, G0 = cont$G0) %>%
-    colSums()
-  c(status = cont$nlopt$status,
-    extra_iters = cont$nlopt$iterations,
-    likR_after = -2 * (lLik1[["R"]] - lLik2[["R"]]))
-}, cl = 2)
-continued <- do.call(rbind, continued)
-table(status = continued[, "status"])
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-status
-  4 
-448 
-```
-
-
-:::
-
-```{.r .cell-code}
-summary(continued[, "extra_iters"])
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  57.00   75.00   80.00   87.01   84.00 2810.00 
-```
-
-
-:::
-:::
-
-Every one of them converges, mostly within about eighty further iterations. The
-likelihood ratio usually barely moves, but not always:
-
-::: {.cell}
-
-```{.r .cell-code}
-summary(continued[, "likR_after"] - likR_all[stopped])
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
--0.941587 -0.000113  0.004862  0.231656  0.033197 16.027048 
-```
-
-
-:::
-:::
-
-The median change is under $0.01$, yet one replicate rises by $16$, so a sample of a
-dozen or so would not have been enough to characterise this. Substituting the
-continued values gives a null distribution in which every replicate has converged, so
-nothing has to be discarded at all:
-
-::: {.cell}
-
-```{.r .cell-code}
-likR_final <- likR_all
-likR_final[stopped] <- continued[, "likR_after"]
-range(likR_final)
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-[1]  0.2812075 25.8483420
-```
-
-
-:::
-
-```{.r .cell-code}
-obs$likR
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-[1] 116.5489
-```
-
-
-:::
-
-```{.r .cell-code}
-mean(likR_final > obs$likR)
-```
-
-::: {.cell-output .cell-output-stdout}
-
-```
-[1] 0
-```
-
-
-:::
-:::
-
-The largest likelihood ratio under the null is still far below the observed one, so
-the $p$-value is zero on the full set of 1000 replicates and the conclusion does not
-depend on the discarding.
-
